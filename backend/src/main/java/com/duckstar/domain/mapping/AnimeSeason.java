@@ -18,10 +18,10 @@ public class AnimeSeason extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "anime_id")
+    @JoinColumn(name = "anime_id", nullable = false)
     private Anime anime;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "season_id")
+    @JoinColumn(name = "season_id", nullable = false)
     private Season season;
 }
