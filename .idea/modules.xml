@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.duckstar.duckstar.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.duckstar.duckstar.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/duckstar.iml" filepath="$PROJECT_DIR$/.idea/duckstar.iml" />
     </modules>
   </component>
 </project>
