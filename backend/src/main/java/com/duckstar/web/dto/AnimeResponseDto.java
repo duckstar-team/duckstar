@@ -3,8 +3,10 @@ package com.duckstar.web.dto;
 import com.duckstar.domain.enums.*;
 import com.duckstar.validation.annotation.MedalTypeSubset;
 import com.duckstar.web.dto.MedalDto.MedalPreviewDto;
-import com.duckstar.web.dto.SummaryDto.RankSummaryDto;
-import com.duckstar.web.dto.WeekResponseDto.WeekDataDto;
+import com.duckstar.web.dto.MedalDto.RackUnitDto;
+import com.duckstar.web.dto.RankInfoDto.RankPreviewDto;
+import com.duckstar.web.dto.RankInfoDto.VoteRatioDto;
+import com.duckstar.web.dto.WeekResponseDto.EpisodeDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,20 +15,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import static com.duckstar.web.dto.VoteResponseDto.*;
-
 public class AnimeResponseDto {
 
     @Builder
     @Getter
     public static class AnimeHomeDto {
-        AnimeInfoDto info;
+        AnimeInfoDto animeInfoDto;
 
-        AnimeStatDto stat;
+        AnimeStatDto animeStatDto;
 
-        WeekDataDto weekDataDto;
+        List<EpisodeDto> episodeDtos;
 
-        List<CastPreviewDto> castPreviewDtos;
+        List<RackUnitDto> rackUnitDtos;
+
+        List<CastPreviewDto> castPreviews;
     }
     
     @Builder
@@ -34,7 +36,7 @@ public class AnimeResponseDto {
     public static class AnimeRankDto {
         Long animeId;
 
-        RankSummaryDto rankSummaryDto;
+        RankPreviewDto rankPreviewDto;
 
         @MedalTypeSubset(anyOf = {
                 MedalType.GOLD,
