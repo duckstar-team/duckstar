@@ -1,6 +1,7 @@
 package com.duckstar.domain;
 
 import com.duckstar.domain.common.BaseEntity;
+import com.duckstar.domain.enums.VoteStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -13,7 +14,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         indexes = {
-                @Index(name = "idx_week_q", columnList = "quarter_id")
+                @Index(name = "idx_week_q",
+                        columnList = "quarter_id")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_week_qw",
@@ -29,6 +31,10 @@ public class Week extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quarter_id", nullable = false)
     private Quarter quarter;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private VoteStatus status;
 
     @Column(nullable = false)
     private Integer weekValue;

@@ -3,18 +3,20 @@ package com.duckstar.service;
 import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.QuarterHandler;
 import com.duckstar.apiPayload.exception.handler.WeekHandler;
-import com.duckstar.repository.AnimeWeek.WeekAnimeRepository;
+import com.duckstar.domain.Week;
+import com.duckstar.repository.AnimeCandidate.AnimeCandidateRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.web.dto.AnimeResponseDto.AnimeRankDto;
 import com.duckstar.web.dto.ChartDto.AnimeRankSliceDto;
 import com.duckstar.web.dto.PageInfo;
-import com.duckstar.web.dto.SummaryDto.RankSummaryDto;
+import com.duckstar.web.dto.RankInfoDto.RankPreviewDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -23,7 +25,14 @@ import java.util.List;
 public class WeekService {
 
     private final WeekRepository weekRepository;
-    private final WeekAnimeRepository weekAnimeRepository;
+    private final AnimeCandidateRepository animeCandidateRepository;
+
+    public Week getCurrentWeek() {
+        LocalDateTime now = LocalDateTime.now();
+
+        return weekRepository.findWeekByStartDateTimeLessThanEqualAndEndDateTimeGreaterThan(now, now)
+                .orElseThrow(() -> new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
+    }
 
     public Long getQuarterIdByYQ(Integer year, Integer quarter) {
         return weekRepository.findQuarterIdByYQ(year, quarter)
@@ -46,13 +55,13 @@ public class WeekService {
         );
 
         List<AnimeRankDto> rows =
-                weekAnimeRepository.getAnimeRankDtosByWeekId(weekId, overFetch);
+                animeCandidateRepository.getAnimeRankDtosByWeekId(weekId, overFetch);
         boolean duckstarHasNext = rows.size() > size;
 
-        List<RankSummaryDto> animeTrendRankDtos = null;
+        List<RankPreviewDto> animeTrendRankDtos = null;
         boolean animeTrendHasNext = false;
 
-        List<RankSummaryDto> aniLabRankDtos = null;
+        List<RankPreviewDto> aniLabRankDtos = null;
         boolean aniLabHasNext = false;
 
         boolean hasNextTotal = duckstarHasNext || animeTrendHasNext || aniLabHasNext;

@@ -2,19 +2,20 @@ package com.duckstar.service;
 
 import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.AnimeHandler;
-import com.duckstar.apiPayload.exception.handler.WeekHandler;
 import com.duckstar.domain.Anime;
+import com.duckstar.domain.Week;
 import com.duckstar.domain.enums.DayOfWeekShort;
-import com.duckstar.domain.mapping.WeekAnime;
+import com.duckstar.domain.mapping.AnimeCandidate;
 import com.duckstar.repository.AnimeCharacter.AnimeCharacterRepository;
 import com.duckstar.repository.AnimeOtt.AnimeOttRepository;
 import com.duckstar.repository.AnimeSeason.AnimeSeasonRepository;
 import com.duckstar.repository.AnimeRepository;
-import com.duckstar.repository.AnimeWeek.WeekAnimeRepository;
-import com.duckstar.repository.Week.WeekRepository;
+import com.duckstar.repository.AnimeCandidate.AnimeCandidateRepository;
+import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.web.dto.AnimeResponseDto.AnimeHomeDto;
 import com.duckstar.web.dto.SearchResponseDto.AnimePreviewDto;
-import com.duckstar.web.dto.SummaryDto.RankPreviewDto;
+import com.duckstar.web.dto.RankInfoDto.DuckstarRankPreviewDto;
+import com.duckstar.web.dto.SearchResponseDto.AnimePreviewListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.duckstar.web.dto.AnimeResponseDto.*;
+import static com.duckstar.web.dto.WeekResponseDto.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,23 +35,18 @@ import static com.duckstar.web.dto.AnimeResponseDto.*;
 public class AnimeService {
 
     private final AnimeRepository animeRepository;
-    private final WeekAnimeRepository weekAnimeRepository;
+    private final AnimeCandidateRepository animeCandidateRepository;
     private final AnimeSeasonRepository animeSeasonRepository;
     private final AnimeOttRepository animeOttRepository;
     private final AnimeCharacterRepository animeCharacterRepository;
-    private final WeekRepository weekRepository;
+    private final EpisodeRepository episodeRepository;
+    private final WeekService weekService;
 
-    private Long getCurrentWeekId() {
-        LocalDateTime now = LocalDateTime.now();
+    public AnimePreviewListDto getScheduleByQuarterId(Long quarterId) {
+        Week currentWeek = weekService.getCurrentWeek();
 
-        return weekRepository.findWeekIdByStartDateTimeLessThanEqualAndEndDateTimeGreaterThan(now, now)
-                .orElseThrow(() -> new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
-    }
-
-    public Map<DayOfWeekShort, List<AnimePreviewDto>> getScheduleByQuarterId(Long quarterId) {
-        Long currentWeekId = getCurrentWeekId();
         List<AnimePreviewDto> animePreviews =
-                animeSeasonRepository.getSeasonAnimesByQuarterId(quarterId, currentWeekId);
+                animeSeasonRepository.getSeasonAnimePreviewsByQuarterId(quarterId, currentWeek.getId());
 
         Map<DayOfWeekShort, List<AnimePreviewDto>> schedule = animePreviews.stream()
                 .collect(
@@ -66,17 +63,20 @@ public class AnimeService {
             schedule.putIfAbsent(key, List.of());
         }
 
-        return schedule;
+        return AnimePreviewListDto.builder()
+                .weekDto(WeekDto.from(currentWeek))
+                .schedule(schedule)
+                .build();
     }
 
-    public List<RankPreviewDto> getAnimeRankPreviewDtosByWeekId(Long weekId, int size) {
-        List<WeekAnime> weekAnimes = weekAnimeRepository.getWeekAnimesByWeekId(
+    public List<DuckstarRankPreviewDto> getAnimeRankPreviewsByWeekId(Long weekId, int size) {
+        List<AnimeCandidate> animeCandidates = animeCandidateRepository.getAnimeCandidatesByWeekId(
                 weekId,
                 PageRequest.of(0, size)
         );
 
-        return weekAnimes.stream()
-                .map(RankPreviewDto::from)
+        return animeCandidates.stream()
+                .map(DuckstarRankPreviewDto::from)
                 .toList();
     }
 
@@ -87,7 +87,7 @@ public class AnimeService {
 
         LocalDateTime premiereDateTime = anime.getPremiereDateTime();
 
-        AnimeInfoDto info = AnimeInfoDto.builder()
+        AnimeInfoDto animeInfoDto = AnimeInfoDto.builder()
                 .medium(anime.getMedium())
                 .status(anime.getStatus())
                 .totalEpisodes(anime.getTotalEpisodes())
@@ -111,7 +111,7 @@ public class AnimeService {
                 )
                 .build();
 
-        AnimeStatDto stat = AnimeStatDto.builder()
+        AnimeStatDto animeStatDto = AnimeStatDto.builder()
                 .debutRank(anime.getDebutRank())
                 .debutDate(anime.getDebutDate())
                 .peakRank(anime.getPeakRank())
@@ -123,12 +123,15 @@ public class AnimeService {
 
 
         return AnimeHomeDto.builder()
-                .info(info)
-                .stat(stat)
-                .weekDataDto(
-                        weekAnimeRepository.getWeekDataByAnimeInfo(animeId, premiereDateTime)
+                .animeInfoDto(animeInfoDto)
+                .animeStatDto(animeStatDto)
+                .episodeDtos(
+                        episodeRepository.getEpisodeDtosByAnimeId(animeId)
                 )
-                .castPreviewDtos(
+                .rackUnitDtos(
+                        animeCandidateRepository.getRackUnitDtosByAnimeId(animeId)
+                )
+                .castPreviews(
                         animeCharacterRepository.getAllCharacterHomePreviewsByAnimeId(animeId)
                 )
                 .build();
