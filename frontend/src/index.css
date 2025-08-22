@@ -18,3 +18,4 @@ html, body, #root {
 .btn-danger {
 	@apply bg-red-500 hover:bg-red-400 text-white;
 }
+

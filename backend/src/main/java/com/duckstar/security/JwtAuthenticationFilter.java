@@ -1,8 +1,8 @@
 package com.duckstar.security;
 
-import com.duckstar.security.domain.Member;
+import com.duckstar.domain.Member;
 import com.duckstar.security.repository.MemberRepository;
-import jakarta.annotation.PostConstruct;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -30,18 +29,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
 
-        String token = resolveBearer(req);
-        if (token == null) {
-            token = resolveFromCookie(req, "ACCESS_TOKEN");
+        String jwtAccessToken = resolveBearer(req);
+        if (jwtAccessToken == null) {
+            jwtAccessToken = jwtTokenProvider.resolveFromCookie(req, "ACCESS_TOKEN");
         }
 
-        if (token != null && jwtTokenProvider.validateToken(token)
+        Claims accessClaims = jwtTokenProvider.parseClaims(jwtAccessToken);
+        if (jwtAccessToken != null && jwtTokenProvider.validateClaims(accessClaims)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                Long userId = jwtTokenProvider.getUserId(token);
-                Member member = memberRepository.findById(userId).orElse(null);
+                Long memberId = Long.valueOf(accessClaims.getSubject());
+                Member member = memberRepository.findById(memberId).orElse(null);
                 if (member != null) {
-                    MemberPrincipal principal = MemberPrincipal.of(member, Map.of());
+                    MemberPrincipal principal = MemberPrincipal.of(member);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     principal,
@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
             } catch (Exception e) {
-                log.warn("토큰에서 사용자 ID 추출 실패", e);
+                log.warn("{} - JWT 파싱 실패: {}", req.getRequestURI(), e.getMessage());
             }
         }
 
@@ -64,14 +64,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String auth = req.getHeader("Authorization");
         if (auth != null && auth.startsWith("Bearer ")) {
             return auth.substring(7);
-        }
-        return null;
-    }
-
-    private String resolveFromCookie(HttpServletRequest req, String name) {
-        if (req.getCookies() == null) return null;
-        for (var c : req.getCookies()) {
-            if (name.equals(c.getName())) return c.getValue();
         }
         return null;
     }

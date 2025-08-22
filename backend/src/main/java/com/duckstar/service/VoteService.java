@@ -2,7 +2,7 @@ package com.duckstar.service;
 
 import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.VoteHandler;
-import com.duckstar.security.domain.Member;
+import com.duckstar.domain.Member;
 import com.duckstar.domain.Week;
 import com.duckstar.domain.enums.BallotType;
 import com.duckstar.domain.enums.VoteCategory;
@@ -36,6 +36,7 @@ public class VoteService {
     private final WeekRepository weekRepository;
     private final AnimeVoteRepository animeVoteRepository;
     private final WeekVoteSubmissionRepository weekVoteSubmissionRepository;
+    private final MemberService memberService;
 
     public AnimeCandidateListDto getAnimeCandidateList() {
         Week currentWeek = weekService.getCurrentWeek();
@@ -49,14 +50,23 @@ public class VoteService {
                 .build();
     }
 
-    public AnimeVoteHistoryDto getAnimeVoteHistory(String principalKey) {
+    public VoteCheckDto checkVoted(String principalKey) {
         Week currentWeek = weekService.getCurrentWeek();
 
-        WeekVoteSubmission submission =
-                weekVoteSubmissionRepository.findByWeekIdAndPrincipalKey(currentWeek.getId(), principalKey)
-                        .orElseThrow(() -> new VoteHandler(ErrorStatus.NOT_VOTED_YET));
+        Optional<WeekVoteSubmission> submissionOpt =
+                weekVoteSubmissionRepository.findByWeekIdAndPrincipalKey(currentWeek.getId(), principalKey);
 
-        Long submissionId = submission.getId();
+        Long submissionId = submissionOpt.map(WeekVoteSubmission::getId)
+                .orElse(null);
+
+        return VoteCheckDto.of(submissionId);
+    }
+
+    public AnimeVoteHistoryDto getAnimeVoteHistory(Long submissionId) {
+        Week currentWeek = weekService.getCurrentWeek();
+
+        WeekVoteSubmission submission = weekVoteSubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new VoteHandler(ErrorStatus.NOT_VOTED_YET));
 
         return AnimeVoteHistoryDto.builder()
                 .submissionId(submissionId)
@@ -72,11 +82,11 @@ public class VoteService {
     @Transactional
     public VoteReceiptDto voteAnime(
             AnimeVoteRequest request,
-            Member member,
+            Long memberId,
             String cookieId,
             String principalKey
     ) {
-        // 투표 주차 유효성 검사
+        //=== 투표 주차 유효성 검사 ===//
         Long ballotWeekId = request.getWeekId();
         Week ballotWeek = weekRepository.findWeekById(ballotWeekId).orElseThrow(() ->
                 new VoteHandler(ErrorStatus.WEEK_NOT_FOUND));
@@ -90,7 +100,9 @@ public class VoteService {
             throw new VoteHandler(ErrorStatus.VOTE_CLOSED);
         }
 
-        // 중복 투표 방지
+        Member member = memberService.findByIdOrThrow(memberId);
+
+        //=== 중복 투표 방지 ===//
         WeekVoteSubmission submission = WeekVoteSubmission.create(
                 currentWeek,
                 member,
@@ -105,11 +117,8 @@ public class VoteService {
             throw new VoteHandler(ErrorStatus.ALREADY_VOTED);
         }
 
-        // 실제 투표지 검사: 후보 유효성(중복 포함됨, 이번 주 후보 아님)
+        //=== 실제 투표지 검사: 후보 유효성(중복 포함됨, 이번 주 후보 아님) ===//
         List<AnimeBallotDto> ballotDtos = request.getBallotDtos();
-        if (ballotDtos == null || ballotDtos.isEmpty()) {
-            throw new VoteHandler(ErrorStatus.EMPTY_BALLOTS);
-        }
 
         List<Long> candidateIds = ballotDtos.stream()
                 .map(AnimeBallotDto::getAnimeCandidateId)
@@ -127,15 +136,11 @@ public class VoteService {
             throw new VoteHandler(ErrorStatus.INVALID_CANDIDATE_INCLUDED);
         }
 
-        // 투표 제한 초과 여부 검사
         int normalCount = (int) ballotDtos.stream()
                 .filter(dto -> dto.getBallotType() == BallotType.NORMAL)
                 .count();
-        if (normalCount > 30) {
-            throw new VoteHandler(ErrorStatus.VOTE_LIMIT_SURPASSED);
-        }
 
-        // 저장
+        //=== 저장 ===//
         List<AnimeVote> rows = new ArrayList<>();
         for (AnimeBallotDto dto : ballotDtos) {
             AnimeCandidate candidate =
