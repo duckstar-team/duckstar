@@ -7,27 +7,8 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-
-import static com.duckstar.web.dto.MedalDto.*;
 
 public class WeekResponseDto {
-
-    @Builder
-    @Getter
-    public static class EpisodeDto {
-        Integer episodeNumber;
-
-        Boolean isBreak;
-
-        Integer quarter;
-
-        Integer week;
-
-        LocalDateTime airDateTime;
-
-        LocalDateTime airDateTimePlusWeek;
-    }
 
     @Builder
     @Getter

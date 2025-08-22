@@ -1,4 +1,4 @@
-package com.duckstar.security.domain;
+package com.duckstar.domain;
 
 import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.AuthHandler;
@@ -19,9 +19,9 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_member_kakao_id", columnNames = "kakao_id"),
-                @UniqueConstraint(name = "uk_member_naver_id", columnNames = "naver_id"),
-                @UniqueConstraint(name = "uk_member_google_id", columnNames = "google_id")
+                @UniqueConstraint(name = "uk_member_k", columnNames = "kakao_id"),
+                @UniqueConstraint(name = "uk_member_n", columnNames = "naver_id"),
+                @UniqueConstraint(name = "uk_member_g", columnNames = "google_id")
         }
 )
 public class Member extends BaseEntity {
@@ -39,8 +39,6 @@ public class Member extends BaseEntity {
     private String nickname;
 
     private String profileImageUrl;
-
-    private String cookieId;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 15, nullable = false)
@@ -64,7 +62,6 @@ public class Member extends BaseEntity {
             String googleId,
             String nickname,
             String profileImageUrl,
-            String cookieId,
             Gender gender,
             Role role
     ) {
@@ -73,7 +70,6 @@ public class Member extends BaseEntity {
         this.googleId = googleId;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
-        this.cookieId = cookieId;
         this.gender = gender;
         this.role = role;
     }
@@ -83,7 +79,6 @@ public class Member extends BaseEntity {
             String socialId,
             String nickname,
             String profileImageUrl,
-            String cookieId,
             Gender gender,
             Role role
     ) {
@@ -94,7 +89,6 @@ public class Member extends BaseEntity {
                     null,
                     nickname,
                     profileImageUrl,
-                    cookieId,
                     gender,
                     role
             );

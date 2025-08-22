@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -32,8 +31,8 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(
-            @AuthenticationPrincipal MemberPrincipal principal) {
-        return authService.getCurrentUser(principal.getId());
+            @AuthenticationPrincipal(expression = "id") Long principalId) {
+        return authService.getCurrentUser(principalId);
     }
 
     @PostMapping("/logout")
@@ -42,7 +41,8 @@ public class AuthController {
             HttpServletResponse res
     ) {
         String refreshToken = jwtTokenProvider.resolveFromCookie(req, "REFRESH_TOKEN");
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        boolean tokenIsValid = jwtTokenProvider.validateToken(refreshToken);
+        if (!tokenIsValid) {
             throw new AuthHandler(ErrorStatus.INVALID_TOKEN);
         }
 
@@ -53,9 +53,9 @@ public class AuthController {
     @PostMapping("/withdraw/kakao")
     public ResponseEntity<Void> withdrawKakao(
             HttpServletResponse res,
-            @AuthenticationPrincipal MemberPrincipal principal
+            @AuthenticationPrincipal(expression = "id") Long principalId
     ) {
-        authService.withdrawKakao(res, principal.getId());
+        authService.withdrawKakao(res, principalId);
         return ResponseEntity.ok().build();
     }
 }

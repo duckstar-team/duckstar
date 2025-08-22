@@ -22,6 +22,9 @@ public enum ErrorStatus implements BaseErrorCode {
     // 주 관련
     WEEK_NOT_FOUND(HttpStatus.BAD_REQUEST, "WEEK4001", "존재하지 않는 주입니다."),
 
+    // 순위 정보, 메달
+    MEDAL_TYPE_NOT_VALID(HttpStatus.BAD_REQUEST, "MEDAL4001", "허용되지 않는 메달 타입입니다."),
+
     // 애니메이션
     ANIME_NOT_FOUND(HttpStatus.BAD_REQUEST, "ANIME4001", "존재하지 않는 애니메이션입니다."),
 
@@ -32,7 +35,8 @@ public enum ErrorStatus implements BaseErrorCode {
     EMPTY_BALLOTS(HttpStatus.BAD_REQUEST, "VOTE4004", "투표지가 비어있습니다."),
     DUPLICATE_CANDIDATE_INCLUDED(HttpStatus.BAD_REQUEST, "VOTE4005", "중복된 후보가 요청에 포함되어 있습니다."),
     INVALID_CANDIDATE_INCLUDED(HttpStatus.BAD_REQUEST, "VOTE4006", "이번 주 후보가 아닌 대상이 포함되어 있습니다."),
-    VOTE_LIMIT_SURPASSED(HttpStatus.BAD_REQUEST, "VOTE4007", "기본 투표 제한 수를 넘어섰습니다."),
+    NORMAL_VOTE_LIMIT_SURPASSED(HttpStatus.BAD_REQUEST, "VOTE4007", "기본 투표 제한 수를 넘어섰습니다."),
+    NORMAL_VOTE_REQUIRED(HttpStatus.BAD_REQUEST, "VOTE4007", "기본 투표는 1표 이상이어야 합니다."),
     NOT_VOTED_YET(HttpStatus.BAD_REQUEST, "VOTE4008", "아직 투표에 참여하지 않았습니다."),
 
     VOTE_AUTH_REQUIRED(HttpStatus.CONFLICT, "VOTE4090", "투표 인증 정보가 존재하지 않습니다."),
@@ -49,6 +53,16 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 회원 관련
     MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "존재하지 않는 회원입니다."),
+    PRINCIPAL_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4002", "로그인 중인 id로 회원을 찾을 수 없습니다."),
+
+    // 댓글 관련
+    COMMENT_CONTENT_REQUIRED(HttpStatus.BAD_REQUEST, "COMMENT4001", "댓글 작성 시 사진이나 글 중 하나는 있어야 합니다."),
+    COMMENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "COMMENT4002", "댓글이 존재하지 않습니다."),
+
+    DELETE_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMENT4010", "삭제 권한이 없습니다."),
+
+    // 답글 관련
+    REPLY_NOT_FOUND(HttpStatus.BAD_REQUEST, "REPLY4001", "답글이 존재하지 않습니다."),
     ;
 
     private final HttpStatus httpStatus;

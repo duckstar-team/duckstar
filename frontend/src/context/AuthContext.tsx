@@ -1,113 +1,95 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getUserInfo, logout, withdraw } from '../api/client';
 
 interface User {
-	id: number;
-	email?: string;
-	nickname?: string;
-	profileImageUrl?: string;
+  id: number;
+  nickname: string;
+  profileImageUrl?: string;
+  role: string;
 }
 
-interface AuthContextValue {
-	isAuthenticated: boolean;
-	user: User | null;
-	accessToken: string | null;
-	setAuthenticated: (value: boolean, token?: string, userData?: User) => void;
-	logout: () => void;
-	updateAccessToken: (token: string) => void;
-	updateUser: (userData: User) => void;
+interface AuthContextType {
+  isAuthenticated: boolean;
+  user: User | null;
+  accessToken: string | null;
+  login: (userData: User) => void;
+  logout: () => Promise<void>;
+  withdraw: () => Promise<void>;
+  updateUser: (userData: User) => void;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-	const [accessToken, setAccessToken] = useState<string | null>(null);
-	const [user, setUser] = useState<User | null>(null);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-	const setAuthenticated = useCallback((value: boolean, token?: string, userData?: User) => {
-		console.log('AuthContext - setAuthenticated called:', { value, hasToken: !!token, hasUserData: !!userData });
-		
-		setIsAuthenticated(value);
-		if (token) {
-			setAccessToken(token);
-			localStorage.setItem('accessToken', token);
-			console.log('AuthContext - Token saved to localStorage');
-		}
-		if (userData) {
-			setUser(userData);
-			localStorage.setItem('user', JSON.stringify(userData));
-			console.log('AuthContext - User data saved to localStorage');
-		}
-		if (!value) {
-			setAccessToken(null);
-			setUser(null);
-			localStorage.removeItem('accessToken');
-			localStorage.removeItem('user');
-			console.log('AuthContext - Logged out, cleared localStorage');
-		}
-	}, []);
-
-	const updateAccessToken = useCallback((token: string) => {
-		setAccessToken(token);
-		localStorage.setItem('accessToken', token);
-	}, []);
-
-	const updateUser = useCallback((userData: User) => {
-		setUser(userData);
-		localStorage.setItem('user', JSON.stringify(userData));
-	}, []);
-
-	const logout = useCallback(() => {
-		setAuthenticated(false);
-	}, [setAuthenticated]);
-
-	// 초기 로드 시 저장된 토큰과 사용자 정보 복원
-	useEffect(() => {
-		const savedToken = localStorage.getItem('accessToken');
-		const savedUser = localStorage.getItem('user');
-		
-		console.log('AuthContext - Initial load - savedToken:', savedToken ? 'exists' : 'null');
-		console.log('AuthContext - Initial load - savedUser:', savedUser ? 'exists' : 'null');
-		
-		if (savedToken) {
-			console.log('AuthContext - Restoring authentication state');
-			// access token이 있으면 로그인 상태로 복원
-			setIsAuthenticated(true);
-			setAccessToken(savedToken);
-			
-			// 사용자 정보가 있으면 함께 복원
-			if (savedUser) {
-				try {
-					const userData = JSON.parse(savedUser);
-					setUser(userData);
-					console.log('AuthContext - User data restored:', userData);
-				} catch (error) {
-					console.error('Failed to parse saved user data:', error);
-					localStorage.removeItem('user');
-				}
-			}
-		} else {
-			console.log('AuthContext - No saved token found, staying logged out');
-		}
-	}, []);
-
-	return (
-		<AuthContext.Provider value={{ 
-			isAuthenticated, 
-			user, 
-			accessToken, 
-			setAuthenticated, 
-			logout,
-			updateAccessToken,
-			updateUser
-		}}>
-			{children}
-		</AuthContext.Provider>
-	);
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-export function useAuth() {
-	const ctx = useContext(AuthContext);
-	if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-	return ctx;
-}
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  const login = (userData: User) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
+  const logoutUser = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setAccessToken(null);
+    }
+  };
+
+  const withdrawUser = async () => {
+    try {
+      await withdraw();
+    } catch (error) {
+      console.error('Withdraw error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setAccessToken(null);
+    }
+  };
+
+  const updateUser = (userData: User) => {
+    setUser(userData);
+  };
+
+  useEffect(() => {
+    // 페이지 로드 시 사용자 정보 확인
+    getUserInfo()
+      .then((userData) => {
+        login(userData);
+      })
+      .catch((error) => {
+        console.log('User not authenticated:', error);
+      });
+  }, []);
+
+  const value: AuthContextType = {
+    isAuthenticated,
+    user,
+    accessToken,
+    login,
+    logout: logoutUser,
+    withdraw: withdrawUser,
+    updateUser,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

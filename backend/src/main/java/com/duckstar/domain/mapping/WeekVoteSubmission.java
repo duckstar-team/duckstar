@@ -1,6 +1,6 @@
 package com.duckstar.domain.mapping;
 
-import com.duckstar.security.domain.Member;
+import com.duckstar.domain.Member;
 import com.duckstar.domain.Week;
 import com.duckstar.domain.common.BaseEntity;
 import com.duckstar.domain.enums.VoteCategory;
@@ -13,8 +13,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
+        indexes = {
+                @Index(name = "idx_submission_m",
+                        columnList = "member_id")
+        },
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_week_principal_category",
+                @UniqueConstraint(name = "uk_submission_wpc",
                         columnNames = {"week_id", "principal_key", "category"})
         }
 )
