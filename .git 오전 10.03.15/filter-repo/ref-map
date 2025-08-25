@@ -1,0 +1,15 @@
+old                                      new                                      ref
+b599115865af2c2db011eafdb49fd4c69109f1e9 ea550141fd4f79b0fc68907a12c4cfcbcecb7a07 refs/heads/dev
+91295c1e9dba9cd0172db68a4b9bb82f04c8dc05 91295c1e9dba9cd0172db68a4b9bb82f04c8dc05 refs/heads/feat/#1-domain
+9d6e957fa1e44a78a9dd475b634e2a59c922168f da3d05432c2dbdb1130037319c1e2cacef262dfa refs/heads/feat/#10-vote
+9e7201a30e90a5746eb222837af9c65f2fa46f18 3b4ee27e2bc298e6fca80946e0e65d2fd8c9458c refs/heads/feat/#12-login
+c8da0fc752177c7703138503ff885cf79bee2335 7a19defb39216e33d7c8cf30e24e07efe6724969 refs/heads/feat/#14-auth
+8402bc0eb17ede05b0fb5392bdf0ba46bd85cf09 4535d8dce2d0cf6c04beeabd46e0719209144d2d refs/heads/feat/#16-member
+a9db419ae55fe667534def21b6b573246f5b933b 02be9d8b56bfc8c0d4da415ee4fc6613c0e4d4a0 refs/heads/feat/#19-anime
+e8536b9169871e66780be08f58e5c9e3a94fa973 2559257b3e7818b38889bf2dedd747671e672950 refs/heads/feat/#3-anime
+b43ae74bb6891139f6b20b4ca99940d9ce5265f9 470aa42b30cd32505295c8e170797c6103e3419f refs/heads/feat/#4-anime
+d8ed777cda0d1655b983e450bd598a50001361fe 0cacae60862321a1ad2934792a207b12bf020782 refs/heads/feat/#6-anime
+5368d7b8d64e88bd8cfd4bd872ce2810317aa401 7804f2d702d128e75ef79dfa375c8ee9325cba3d refs/heads/feat/#8-anime
+2bdf2c4e1baecf33e817b5945d4fabfcf2a1176b 2bdf2c4e1baecf33e817b5945d4fabfcf2a1176b refs/heads/master
+78bbd4db0b23c90e309902bd8912f4c2331fa28e 054e53cb173f2c96165bc775f53a6df9f2ef6b4e refs/heads/refactor/#20-anime
+31b1be7c7d29d24e7a0671711bee67acab8e5b9c b7f67240d60152b75977ed256c5866f3406de8b3 refs/stash

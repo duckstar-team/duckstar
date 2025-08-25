@@ -1,0 +1,16 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[branch "feat/#4-anime"]
+	vscode-merge-base = origin/dev
+[branch "feat/#14-auth"]
+	vscode-merge-base = origin/dev
+[branch "refactor/#20-anime"]
+	vscode-merge-base = origin/dev
+[remote "origin"]
+	url = https://github.com/Godot-B/duckstar.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
