@@ -5,6 +5,7 @@ import com.duckstar.apiPayload.exception.handler.VoteHandler;
 import com.duckstar.domain.Member;
 import com.duckstar.domain.Week;
 import com.duckstar.domain.enums.BallotType;
+import com.duckstar.domain.enums.Gender;
 import com.duckstar.domain.enums.VoteCategory;
 import com.duckstar.domain.enums.VoteStatus;
 import com.duckstar.domain.mapping.AnimeCandidate;
@@ -16,6 +17,7 @@ import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.repository.WeekVoteSubmissionRepository;
 import com.duckstar.web.dto.VoteRequestDto.AnimeBallotDto;
 import com.duckstar.web.dto.VoteRequestDto.AnimeVoteRequest;
+import com.duckstar.web.dto.VoteResponseDto;
 import com.duckstar.web.dto.WeekResponseDto.WeekDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -41,12 +43,16 @@ public class VoteService {
     public AnimeCandidateListDto getAnimeCandidateList() {
         Week currentWeek = weekService.getCurrentWeek();
 
+        List<AnimeCandidateDto> animeCandidates =
+                animeCandidateRepository.getAnimeCandidateDtosByWeekId(currentWeek.getId());
+
         return AnimeCandidateListDto.builder()
                 .weekId(currentWeek.getId())
                 .weekDto(WeekDto.from(currentWeek))
                 .animeCandidates(
-                        animeCandidateRepository.getAnimeCandidateDtosByWeekId(currentWeek.getId())
+                        animeCandidates
                 )
+                .candidatesCount(animeCandidates.size())
                 .build();
     }
 
@@ -62,20 +68,28 @@ public class VoteService {
         return VoteCheckDto.of(submissionId);
     }
 
-    public AnimeVoteHistoryDto getAnimeVoteHistory(Long submissionId) {
+    public AnimeVoteHistoryDto getAnimeVoteHistory(Long submissionId, String principalKey) {
         Week currentWeek = weekService.getCurrentWeek();
 
         WeekVoteSubmission submission = weekVoteSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new VoteHandler(ErrorStatus.NOT_VOTED_YET));
 
+        if (!submission.getPrincipalKey().equals(principalKey)) {
+            throw new VoteHandler(ErrorStatus.VOTE_HISTORY_ACCESS_DENIED);
+        }
+
+        List<VoteResponseDto.AnimeBallotDto> ballotDtos = animeVoteRepository.getVoteHistoryBySubmissionId(submissionId);
+        int size = ballotDtos.size();
+        int normalCount = (int) ballotDtos.stream().filter(dto -> dto.getBallotType() == BallotType.NORMAL).count();
+
         return AnimeVoteHistoryDto.builder()
                 .submissionId(submissionId)
                 .weekDto(WeekDto.from(currentWeek))
                 .category(VoteCategory.ANIME)
+                .normalCount(normalCount)
+                .bonusCount(size - normalCount)
                 .submittedAt(submission.getCreatedAt())
-                .animeBallotDtos(
-                        animeVoteRepository.getVoteHistoryBySubmissionId(submissionId)
-                )
+                .animeBallotDtos(ballotDtos)
                 .build();
     }
 
@@ -100,7 +114,11 @@ public class VoteService {
             throw new VoteHandler(ErrorStatus.VOTE_CLOSED);
         }
 
-        Member member = memberService.findByIdOrThrow(memberId);
+        Member member = memberId != null ?
+                memberService.findByIdOrThrow(memberId) :
+                null;
+
+        Gender gender = request.getGender();
 
         //=== 중복 투표 방지 ===//
         WeekVoteSubmission submission = WeekVoteSubmission.create(
@@ -108,6 +126,7 @@ public class VoteService {
                 member,
                 cookieId,
                 principalKey,
+                gender,
                 VoteCategory.ANIME
         );
 
@@ -141,6 +160,7 @@ public class VoteService {
                 .count();
 
         //=== 저장 ===//
+
         List<AnimeVote> rows = new ArrayList<>();
         for (AnimeBallotDto dto : ballotDtos) {
             AnimeCandidate candidate =
@@ -149,7 +169,8 @@ public class VoteService {
             AnimeVote animeVote = AnimeVote.create(
                     submission,
                     candidate,
-                    dto.getBallotType()
+                    dto.getBallotType(),
+                    gender
             );
             rows.add(animeVote);
         }
@@ -159,6 +180,7 @@ public class VoteService {
         return VoteReceiptDto.builder()
                 .submissionId(submission.getId())
                 .weekDto(WeekDto.from(ballotWeek))
+                .category(submission.getCategory())
                 .normalCount(normalCount)
                 .bonusCount(ballotDtos.size() - normalCount)
                 .submittedAt(submission.getCreatedAt())

@@ -1,10 +1,11 @@
 package com.duckstar.web.dto;
 
 import com.duckstar.domain.enums.BallotType;
+import com.duckstar.domain.enums.Medium;
+import com.duckstar.domain.enums.SeasonType;
 import com.duckstar.domain.enums.VoteCategory;
 import com.duckstar.web.dto.WeekResponseDto.WeekDto;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,6 +53,10 @@ public class VoteResponseDto {
 
         VoteCategory category;
 
+        Integer normalCount;
+
+        Integer bonusCount;
+
         LocalDateTime submittedAt;
 
         List<AnimeBallotDto> animeBallotDtos;
@@ -59,12 +64,17 @@ public class VoteResponseDto {
 
     @Builder
     @Getter
+    @AllArgsConstructor
     public static class AnimeBallotDto {
         BallotType ballotType;
 
         Long animeId;
 
         String mainThumbnailUrl;
+
+        String titleKor;
+
+        Medium medium;
     }
 
     @Builder
@@ -75,15 +85,18 @@ public class VoteResponseDto {
         WeekDto weekDto;
 
         List<AnimeCandidateDto> animeCandidates;
+        Integer candidatesCount;
     }
 
-    @Builder
     @Getter
+    @AllArgsConstructor
     public static class AnimeCandidateDto {
         Long animeCandidateId;
 
         String mainThumbnailUrl;
 
         String titleKor;
+
+        Medium medium;
     }
 }

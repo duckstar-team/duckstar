@@ -40,7 +40,8 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsSource()))
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(
+                        sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -75,7 +76,7 @@ public class SecurityConfig {
                         .authenticated()
 
                         .requestMatchers(
-                                "/api/v1/**"
+                                "/api/v1/**", "/import/**"
                         ).permitAll()
 
                         .requestMatchers(
