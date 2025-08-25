@@ -25,13 +25,15 @@ public class AnimeVoteRepositoryCustomImpl implements AnimeVoteRepositoryCustom 
                                 AnimeBallotDto.class,
                                 animeVote.ballotType,
                                 anime.id,
-                                anime.mainThumbnailUrl
+                                anime.mainThumbnailUrl,
+                                anime.titleKor,
+                                anime.medium
                         )
                 )
                 .from(animeVote)
                 .join(anime).on(anime.id.eq(animeVote.animeCandidate.anime.id))
                 .where(animeVote.weekVoteSubmission.id.eq(submissionId))
-                .orderBy(animeVote.typeOrder.asc(), anime.titleKor.asc())
+                .orderBy(animeVote.score.desc(), anime.titleKor.asc())
                 .fetch();
     }
 }
