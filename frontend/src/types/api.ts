@@ -234,6 +234,7 @@ export type ApiResponseReplySliceDto = ApiResponse<ReplySliceDto>;
 // Character Rank DTO
 export interface CharacterRankDto {
   // Empty object in Swagger, will be extended as needed
+  _placeholder?: never;
 }
 
 // Character Rank Slice DTO

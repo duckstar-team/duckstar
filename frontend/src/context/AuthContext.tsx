@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // 페이지 로드 시 사용자 정보 확인
     getUserInfo()
       .then((userData) => {
-        login(userData);
+        login(userData as unknown as User);
       })
       .catch((error) => {
         console.log('User not authenticated:', error);

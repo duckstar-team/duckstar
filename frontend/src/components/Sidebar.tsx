@@ -15,7 +15,9 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/home-default.svg",
     activeIcon: "/icons/home-active.svg",
     iconSize: "h-[17.75px] w-[18px]",
-    iconClass: "absolute flex h-[17.75px] items-center justify-center left-0 top-0 w-[18px]"
+    iconClass: "absolute flex h-[17.75px] items-center justify-center left-0 top-0 w-[18px]",
+    isBeta: true,
+    badgeText: "8/31 출시"
   },
   { 
     label: "주간 차트", 
@@ -23,7 +25,9 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/chart-default.svg",
     activeIcon: "/icons/chart-active.svg",
     iconSize: "size-[22px]",
-    iconClass: "relative size-full"
+    iconClass: "relative size-full",
+    isBeta: true,
+    badgeText: "8/31 출시"
   },
   { 
     label: "투표하기", 
@@ -31,15 +35,17 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/vote-default.svg",
     activeIcon: "/icons/vote-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full"
+    iconClass: "relative size-full",
+    isBeta: false
   },
   { 
-    label: "애니/캐릭터 찾기", 
+    label: "애니 찾기", 
     href: "/search",
     defaultIcon: "/icons/search-default.svg",
     activeIcon: "/icons/search-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full"
+    iconClass: "relative size-full",
+    isBeta: true
   },
   { 
     label: "마이페이지", 
@@ -47,46 +53,47 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/mypage-default.svg",
     activeIcon: "/icons/mypage-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full"
+    iconClass: "relative size-full",
+    isBeta: true
   },
 ];
 
-// Nav button variants using exact Figma specifications
-const navButtonVariants = cva(
+// Vote button variants based on Figma specifications
+const voteButtonVariants = cva(
   // Base classes from Figma
-  "w-[167px] h-[40px] py-[10px] pl-[10px] pr-[12px] bg-white rounded-lg flex justify-start items-start gap-[10px] transition-all duration-200 ease-in-out",
+  "w-[167px] h-[40px] py-[10px] pl-[10px] pr-[12px] rounded-lg flex justify-start items-center gap-[10px] transition-all duration-200 ease-in-out",
   {
     variants: {
-      variant: {
+      state: {
         default: "bg-white",
         hover: "bg-[#ffd4e2]",
         active: "bg-gradient-to-r from-[#cb285e] to-[#9c1f49]",
       },
     },
     defaultVariants: {
-      variant: "default",
+      state: "default",
     },
   }
 );
 
-// Text variants using exact Figma specifications
+// Text variants based on Figma specifications
 const textVariants = cva(
-  "flex justify-center flex-col text-[#586672] text-[16px] font-[Pretendard] font-medium break-words",
+  "flex justify-center flex-col text-[16px] font-[Pretendard] break-words leading-[normal] whitespace-pre",
   {
     variants: {
-      variant: {
-        default: "text-[#586672]",
-        hover: "text-[#586672]",
+      state: {
+        default: "text-[#586672] font-medium",
+        hover: "text-[#586672] font-medium",
         active: "text-[#ffffff] font-bold",
       },
     },
     defaultVariants: {
-      variant: "default",
+      state: "default",
     },
   }
 );
 
-interface NavButtonProps extends VariantProps<typeof navButtonVariants> {
+interface NavButtonProps extends VariantProps<typeof voteButtonVariants> {
   href: string;
   label: string;
   defaultIcon: string;
@@ -95,6 +102,8 @@ interface NavButtonProps extends VariantProps<typeof navButtonVariants> {
   iconClass: string;
   isActive?: boolean;
   isHovered?: boolean;
+  isBeta?: boolean;
+  badgeText?: string;
 }
 
 function NavButton({ 
@@ -105,47 +114,97 @@ function NavButton({
   iconSize, 
   iconClass,
   isActive, 
-  isHovered 
+  isHovered,
+  isBeta = false,
+  badgeText
 }: NavButtonProps) {
-  const variant = isActive ? 'active' : isHovered ? 'hover' : 'default';
+  const state = isActive ? 'active' : isHovered ? 'hover' : 'default';
+  // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
 
   return (
-    <Link href={href}>
-      <div className={cn(navButtonVariants({ variant }))}>
-        {/* Icon container */}
-        <div className={cn(iconSize, "relative")}>
-          <div className={iconClass}>
-            {label === "홈" ? (
-              <div className="flex-none rotate-[90deg]">
-                <div className="h-[18px] relative w-[17.75px]">
+    <>
+      {isBeta ? (
+        <div className={cn(voteButtonVariants({ state }), "opacity-50", "relative", "cursor-not-allowed")}>
+          {/* Icon container */}
+          <div className={cn(iconSize, "relative")}>
+            <div className={iconClass}>
+              {label === "홈" ? (
+                <div className="flex-none rotate-[90deg]">
+                  <div className="h-[18px] relative w-[17.75px]">
+                    <Image
+                      src={iconSrc}
+                      alt={label}
+                      width={18}
+                      height={17.75}
+                      className="block max-w-none size-full"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <Image
+                  src={iconSrc}
+                  alt={label}
+                  width={20}
+                  height={20}
+                  className="block max-w-none size-full"
+                />
+              )}
+            </div>
+          </div>
+          
+          {/* Text container */}
+          <div className={cn(textVariants({ state }))}>
+            <span>{label}</span>
+          </div>
+          
+          {/* 베타 표시 */}
+          <div className="absolute -right-1 bottom-2 z-10">
+            <span className={`text-[12px] px-1 py-0.5 rounded ${
+              badgeText === "8/31 출시" 
+                ? "bg-gray-200 text-gray-900" 
+                : "bg-gray-100 text-gray-600"
+            }`}>{badgeText || "준비중"}</span>
+          </div>
+        </div>
+      ) : (
+        <Link href={href}>
+          <div className={cn(voteButtonVariants({ state }), "relative")}>
+            {/* Icon container */}
+            <div className={cn(iconSize, "relative")}>
+              <div className={iconClass}>
+                {label === "홈" ? (
+                  <div className="flex-none rotate-[90deg]">
+                    <div className="h-[18px] relative w-[17.75px]">
+                      <Image
+                        src={iconSrc}
+                        alt={label}
+                        width={18}
+                        height={17.75}
+                        className="block max-w-none size-full"
+                      />
+                    </div>
+                  </div>
+                ) : (
                   <Image
                     src={iconSrc}
                     alt={label}
-                    width={18}
-                    height={17.75}
+                    width={20}
+                    height={20}
                     className="block max-w-none size-full"
                   />
-                </div>
+                )}
               </div>
-            ) : (
-              <Image
-                src={iconSrc}
-                alt={label}
-                width={20}
-                height={20}
-                className="block max-w-none size-full"
-              />
-            )}
+            </div>
+            
+            {/* Text container */}
+            <div className={cn(textVariants({ state }))}>
+              <span>{label}</span>
+            </div>
           </div>
-        </div>
-        
-        {/* Text container */}
-        <div className={cn(textVariants({ variant }))}>
-          <span>{label}</span>
-        </div>
-      </div>
-    </Link>
+        </Link>
+      )}
+    </>
   );
 }
 
@@ -176,7 +235,6 @@ export default function Sidebar() {
         {NAV_ITEMS.map((item, index) => (
           <div
             key={item.href}
-            className={item.label === "마이페이지" ? "h-[78px] flex flex-col justify-center items-start gap-[10px]" : ""}
             onMouseEnter={() => setHoveredItem(item.href)}
             onMouseLeave={() => setHoveredItem(null)}
           >
@@ -189,6 +247,8 @@ export default function Sidebar() {
               iconClass={item.iconClass}
               isActive={pathname === item.href}
               isHovered={hoveredItem === item.href && pathname !== item.href}
+              isBeta={item.isBeta}
+              badgeText={item.badgeText}
             />
           </div>
         ))}
@@ -223,14 +283,13 @@ export default function Sidebar() {
             </div>
           </div>
           
-          {/* 상단 링크 */}
-          <div className="w-[65px] h-[21px] left-[0.5px] top-0 absolute">
-            <Link 
-              href="/about" 
-              className="left-0 top-0 absolute flex justify-center flex-col text-[#586672] text-[14px] font-[Pretendard] font-normal leading-[21px] break-words hover:text-gray-800 transition-colors"
+          {/* 상단 링크 - 숨김 처리 */}
+          <div className="w-[65px] h-[21px] left-[0.5px] top-0 absolute hidden">
+            <div 
+              className="left-0 top-0 absolute flex justify-center flex-col text-[#586672] text-[14px] font-[Pretendard] font-normal leading-[21px] break-words opacity-50 cursor-not-allowed"
             >
               덕스타 소개
-            </Link>
+            </div>
           </div>
         </div>
 

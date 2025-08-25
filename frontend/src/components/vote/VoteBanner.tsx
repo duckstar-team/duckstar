@@ -9,9 +9,11 @@ const star2 = "/banners/star-2.svg";
 
 interface VoteBannerProps {
   weekDto?: WeekDto;
+  customTitle?: string;
+  customSubtitle?: string;
 }
 
-export default function VoteBanner({ weekDto }: VoteBannerProps) {
+export default function VoteBanner({ weekDto, customTitle, customSubtitle }: VoteBannerProps) {
   // 기본값 설정
   const year = weekDto?.year || 2025;
   const startDate = weekDto?.startDate || "2025-07-13";
@@ -37,14 +39,14 @@ export default function VoteBanner({ weekDto }: VoteBannerProps) {
           {/* 타이틀 */}
           <div className="flex flex-col justify-center mb-[-5px] relative shrink-0">
             <p className="font-[Pretendard] font-bold text-[33.833px] leading-tight whitespace-pre">
-              {year} {seasonKorean} 애니메이션 투표
+              {customTitle || `${year} ${seasonKorean} 애니메이션 투표`}
             </p>
           </div>
 
           {/* 날짜 */}
           <div className="flex flex-col justify-center relative shrink-0">
             <p className="font-[Pretendard] font-light text-[16px] tracking-[0.8px] leading-[22px]">
-              {formatDate(startDate)} - {formatDate(endDate)} ({quarter}분기 {week}주차)
+              {customSubtitle || `${formatDate(startDate)} - ${formatDate(endDate)} (${quarter}분기 ${week}주차)`}
             </p>
           </div>
         </div>

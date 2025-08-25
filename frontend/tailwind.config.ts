@@ -20,6 +20,9 @@ const config: Config = {
           DEFAULT: "#FFB310",
           hover: "#EAA000",
         },
+        vote: {
+          hover: "#ffd4e2",
+        },
       },
       backgroundImage: {
         "banner-gradient": "linear-gradient(to right, #212529, #460E06)",
