@@ -1,5 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+프로젝트를 실행하기 전에 환경 변수를 설정해야 합니다.
+
+1. `frontend` 디렉토리에 `.env.local` 파일을 생성하세요:
+```bash
+# API URL 설정
+NEXT_PUBLIC_API_URL=http://localhost:8080
+```
+
+2. 프로덕션 환경에서는 적절한 API URL로 변경하세요:
+```bash
+NEXT_PUBLIC_API_URL=https://your-api-domain.com
+```
+
 ## Getting Started
 
 First, run the development server:

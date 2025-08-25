@@ -11,6 +11,8 @@ type VoteToggleProps = {
   bonusVotesUsed?: number;
   isBonusVote?: boolean;
   onClick: (isBonusVote?: boolean) => void;
+  disabled?: boolean;
+  cardHoverSide?: 'left' | 'right' | null;
 };
 
 export default function VoteToggle({ 
@@ -22,7 +24,9 @@ export default function VoteToggle({
   isBonusMode = false,
   bonusVotesUsed = 0,
   isBonusVote = false,
-  onClick 
+  onClick,
+  disabled = false,
+  cardHoverSide = null
 }: VoteToggleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hoverSide, setHoverSide] = useState<'left' | 'right' | null>(null);
@@ -38,12 +42,15 @@ export default function VoteToggle({
     (isHybridMode) || (!justDeselected && (currentVotes < maxVotes || isFullBonusMode))
   );
 
-  // 카드 호버 시 왼쪽 호버 상태로 설정 (단, 기표칸 직접 호버 시에는 마우스 위치 우선)
+  // 카드 호버 시 카드의 hoverSide에 따라 호버 이미지 결정 (단, 기표칸 직접 호버 시에는 마우스 위치 우선)
   const shouldShowLeftHover = isHybridMode && !selected && (
-    (isCardHovered && !isHovered) || // 카드 호버만 있을 때
+    (isCardHovered && !isHovered && cardHoverSide === 'left') || // 카드 왼쪽 호버
     (isHovered && hoverSide === 'left') // 기표칸 왼쪽 직접 호버
   );
-  const shouldShowRightHover = isHovered && hoverSide === 'right' && isHybridMode && !selected;
+  const shouldShowRightHover = isHybridMode && !selected && (
+    (isCardHovered && !isHovered && cardHoverSide === 'right') || // 카드 오른쪽 호버
+    (isHovered && hoverSide === 'right') // 기표칸 오른쪽 직접 호버
+  );
 
   // 일반 모드에서 호버 이미지 표시 (상태 1, 2)
   const shouldShowNormalHover = !isBonusMode && !selected && shouldShowHover;
@@ -63,6 +70,8 @@ export default function VoteToggle({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled) return; // disabled 상태에서는 클릭 무시
+    
     e.stopPropagation(); // 카드 클릭과 중복 방지
     
     if (isHybridMode) {
@@ -93,10 +102,10 @@ export default function VoteToggle({
       <button
         type="button"
         aria-pressed={selected}
-        onClick={handleClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={handleMouseLeave}
-        onMouseMove={isHybridMode ? handleMouseMove : undefined}
+        onClick={!disabled ? handleClick : undefined}
+        onMouseEnter={!disabled ? () => setIsHovered(true) : undefined}
+        onMouseLeave={!disabled ? handleMouseLeave : undefined}
+        onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
         className={`
           size-24
           relative
@@ -110,7 +119,7 @@ export default function VoteToggle({
           items-center
           justify-center
           focus:outline-none
-          cursor-pointer
+          ${disabled ? 'cursor-default' : 'cursor-pointer'}
           overflow-hidden
         `}
       >

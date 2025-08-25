@@ -12,17 +12,22 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
     >
       {/* Background Layer */}
       <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
+      
       {/* 검색창 및 로그인 영역 */}
       <div className="w-[336px] h-[38px] right-[40px] top-[11px] absolute z-10">
         {/* 로그인 버튼 */}
         <div className="w-[42px] h-[22px] right-0 top-[7px] absolute">
-          <button className="text-center text-[#8E8E93] text-[16px] font-[Pretendard] font-semibold leading-[22px] break-words hover:text-gray-700 transition-colors">
+          <button 
+            disabled
+            className="text-center text-[#8E8E93] text-[16px] font-[Pretendard] font-semibold leading-[22px] break-words opacity-30 cursor-not-allowed relative"
+          >
             로그인
+            <span className="absolute -top-2 -right-8 text-[10px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded">준비중</span>
           </button>
         </div>
         
         {/* 검색창 */}
-        <div className="w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] left-0 top-0 absolute bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4">
+        <div className="w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] left-0 top-0 absolute bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50">
           {/* 검색 아이콘 */}
           <div className="w-5 h-5 relative overflow-hidden">
             <Image
@@ -41,10 +46,13 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="검색어를 입력하세요"
-              className="w-full bg-transparent outline-none text-sm text-gray-600 placeholder-gray-400"
+              disabled
+              placeholder="베타 - 곧 업데이트됩니다."
+              className="w-full bg-transparent outline-none text-sm text-gray-400 placeholder-gray-400 cursor-not-allowed"
             />
           </div>
+          
+
         </div>
       </div>
       

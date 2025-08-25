@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export function startKakaoLogin() {
 	// 전체 페이지 리디렉트로 OAuth 플로우 시작 (백엔드 스프링 시큐리티 기본 엔드포인트)
@@ -33,7 +33,7 @@ export async function withdraw(): Promise<void> {
 }
 
 // 사용자 정보 조회 (HttpOnly 쿠키로 토큰 전송)
-export async function getUserInfo(): Promise<any> {
+export async function getUserInfo(): Promise<Record<string, unknown>> {
 	console.log('getUserInfo - Request details:');
 	console.log('- URL:', `${BASE_URL}/api/v1/auth/me`);
 	console.log('- Method: GET');
