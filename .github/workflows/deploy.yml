@@ -24,25 +24,28 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-          cd /home/ubuntu/duckstar
-          
-          # 최신 코드 가져오기
-          git fetch origin main
-          git reset --hard origin/main
+            cd /home/ubuntu/duckstar
+            
+            # 최신 코드 가져오기
+            git fetch origin main
+            git reset --hard origin/main
 
-          # Github Secrets 환경 변수 적용
-          export SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
-          export SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          export SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          export JWT_SECRET=${{ secrets.JWT_SECRET }}
-          export KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
-          export KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
-          export KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
-          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            # 새 .env 생성
+            cat > .env << 'EOL'
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
+SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
+NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+EOL
 
-          # Docker Compose 재배포
-          docker compose down
-          docker compose build --no-cache
-          docker compose up -d
-          docker image prune -f
+            # Docker Compose 재배포
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
+            docker image prune -f
           EOF
