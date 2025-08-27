@@ -17,7 +17,7 @@ const NAV_ITEMS = [
     iconSize: "h-[17.75px] w-[18px]",
     iconClass: "absolute flex h-[17.75px] items-center justify-center left-0 top-0 w-[18px]",
     isBeta: true,
-    badgeText: "8/31 출시"
+    badgeText: "곧 출시"
   },
   { 
     label: "주간 차트", 
@@ -27,7 +27,7 @@ const NAV_ITEMS = [
     iconSize: "size-[22px]",
     iconClass: "relative size-full",
     isBeta: true,
-    badgeText: "8/31 출시"
+    badgeText: "준비중"
   },
   { 
     label: "투표하기", 
@@ -45,7 +45,8 @@ const NAV_ITEMS = [
     activeIcon: "/icons/search-active.svg",
     iconSize: "size-5",
     iconClass: "relative size-full",
-    isBeta: true
+    isBeta: true,
+    badgeText: "곧 출시"
   },
   { 
     label: "마이페이지", 
@@ -61,7 +62,7 @@ const NAV_ITEMS = [
 // Vote button variants based on Figma specifications
 const voteButtonVariants = cva(
   // Base classes from Figma
-  "w-[167px] h-[40px] py-[10px] pl-[10px] pr-[12px] rounded-lg flex justify-start items-center gap-[10px] transition-all duration-200 ease-in-out",
+  "w-[44px] md:w-[167px] h-[40px] py-[10px] pl-[10px] pr-[10px] md:pr-[12px] rounded-lg flex justify-start items-center gap-0 md:gap-[10px] transition-all duration-200 ease-in-out group-hover:w-[167px] group-hover:pr-[12px] group-hover:gap-[10px]",
   {
     variants: {
       state: {
@@ -154,12 +155,12 @@ function NavButton({
           </div>
           
           {/* Text container */}
-          <div className={cn(textVariants({ state }))}>
+          <div className={cn(textVariants({ state }), "hidden md:block group-hover:block")}>
             <span>{label}</span>
           </div>
           
           {/* 베타 표시 */}
-          <div className="absolute -right-1 bottom-2 z-10">
+          <div className="absolute -right-1 bottom-2 z-10 hidden md:block group-hover:block">
             <span className={`text-[12px] px-1 py-0.5 rounded ${
               badgeText === "8/31 출시" 
                 ? "bg-gray-200 text-gray-900" 
@@ -198,7 +199,7 @@ function NavButton({
             </div>
             
             {/* Text container */}
-            <div className={cn(textVariants({ state }))}>
+            <div className={cn(textVariants({ state }), "hidden md:block group-hover:block")}>
               <span>{label}</span>
             </div>
           </div>
@@ -229,9 +230,9 @@ export default function Sidebar() {
   const footerTop = Math.max(windowHeight - headerHeight - footerHeight - 20, 400); // 최소 400px, 여백 20px
 
   return (
-    <div className="w-[200px] h-screen bg-white border-r border-[#DADCE0] relative">
+    <div className="w-[60px] md:w-[200px] h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]">
       {/* Navigation items */}
-      <div className="w-[167px] pb-[4px] left-[16px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px]">
+      <div className="w-[44px] md:w-[167px] pb-[4px] left-[8px] md:left-[16px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px] transition-all duration-300 ease-in-out group-hover:w-[167px] group-hover:left-[16px]">
         {NAV_ITEMS.map((item, index) => (
           <div
             key={item.href}
@@ -256,10 +257,19 @@ export default function Sidebar() {
       
       {/* Footer - 동적 위치 */}
       <div 
-        className="left-[16.5px] absolute flex flex-col justify-start items-start gap-[21px]"
+        className="left-[8px] md:left-[16.5px] absolute flex flex-col justify-start items-start gap-[21px] transition-all duration-300 ease-in-out group-hover:left-[16.5px] opacity-0 md:opacity-100 group-hover:opacity-100"
         style={{ top: `${footerTop}px` }}
       >
         <div className="w-[161px] h-[42px] relative">
+          {/* 상단 링크 */}
+          <div className="w-[65px] h-[21px] left-[0.5px] top-0 absolute">
+            <Link 
+              href="/about" 
+              className="left-0 top-0 absolute flex justify-center flex-col text-[#586672] text-[14px] font-[Pretendard] font-normal leading-[21px] break-words hover:text-gray-800 transition-colors"
+            >
+              덕스타 소개
+            </Link>
+          </div>
           {/* 하단 링크들 */}
           <div className="left-[0.5px] top-[21px] absolute flex justify-start items-center gap-[5px]">
             <div className="w-[49px] h-[21px] relative">
@@ -275,20 +285,11 @@ export default function Sidebar() {
             </div>
             <div className="w-[97px] h-[21px] relative">
               <Link 
-                href="/privacy" 
+                href="/privacy-policy" 
                 className="left-0 top-0 absolute flex justify-center flex-col text-[#586672] text-[14px] font-[Pretendard] font-normal leading-[21px] break-words hover:text-gray-800 transition-colors"
               >
                 개인정보처리방침
               </Link>
-            </div>
-          </div>
-          
-          {/* 상단 링크 - 숨김 처리 */}
-          <div className="w-[65px] h-[21px] left-[0.5px] top-0 absolute hidden">
-            <div 
-              className="left-0 top-0 absolute flex justify-center flex-col text-[#586672] text-[14px] font-[Pretendard] font-normal leading-[21px] break-words opacity-50 cursor-not-allowed"
-            >
-              덕스타 소개
             </div>
           </div>
         </div>

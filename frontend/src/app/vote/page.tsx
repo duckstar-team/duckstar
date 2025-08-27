@@ -1,22 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import VoteCard from "@/components/vote/VoteCard";
 import VoteBanner from "@/components/vote/VoteBanner";
 import VoteSection from "@/components/vote/VoteSection";
 import VoteStamp from "@/components/vote/VoteStamp";
-import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto } from '@/types/api';
+import ConfettiEffect from "@/components/vote/ConfettiEffect";
+import ConfirmDialog from "@/components/vote/ConfirmDialog";
+import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, VoteHistoryResponseDto, ApiResponseVoteCheckDto } from '@/types/api';
 import useSWR from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
-
-// SWR fetcher 함수 (쿠키 포함)
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(res => res.json());
+import { fetcher, getVoteHistory, submitVote } from '@/api/client';
 
 interface Anime {
   id: number;
   title: string;
   thumbnailUrl: string;
-  medium: "TVA" | "MOVIE";
+  medium: 'TVA' | 'MOVIE';
 }
 
 export default function VotePage() {
@@ -29,108 +30,77 @@ export default function VotePage() {
   const [showGenderSelection, setShowGenderSelection] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
   const [showVoteResult, setShowVoteResult] = useState(false);
-  const [voteHistory, setVoteHistory] = useState<any>(null);
+  const [voteHistory, setVoteHistory] = useState<VoteHistoryResponseDto | null>(null);
   const [showNextError, setShowNextError] = useState(false);
+  const [scrollCompleted, setScrollCompleted] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [bonusVotesRecalled, setBonusVotesRecalled] = useState(false);
 
-  // 투표 참여 여부 확인
+  // 에러 카드 관리 헬퍼 함수
+  const updateErrorCards = (animeId: number, shouldAdd: boolean) => {
+    setErrorCards(prevErrors => {
+      const newErrors = new Set(prevErrors);
+      if (shouldAdd) {
+        newErrors.add(animeId);
+      } else {
+        newErrors.delete(animeId);
+      }
+      return newErrors;
+    });
+  };
+
+  // 투표 참여 여부 및 후보 목록 조회
   const { data: voteCheckData } = useSWR(
     '/api/v1/vote/anime/check-voted',
-    fetcher
+    fetcher<ApiResponseVoteCheckDto>
   );
 
-  // API에서 투표 후보 목록을 가져오기
   const { data, error, isLoading } = useSWR<ApiResponseAnimeCandidateListDto>(
     '/api/v1/vote/anime',
-    fetcher
+    fetcher<ApiResponseAnimeCandidateListDto>
   );
 
   const handleSelect = (animeId: number, isBonusVote?: boolean) => {
     if (isBonusMode) {
-      // 보너스 모드에서는 일반 투표와 보너스 투표를 구분
+      // 보너스 모드: 일반/보너스 투표 구분
       if (selected.includes(animeId)) {
-        // 일반 투표 해제
         setSelected(prev => prev.filter(id => id !== animeId));
-        setErrorCards(prevErrors => {
-          const newErrors = new Set(prevErrors);
-          newErrors.delete(animeId);
-          return newErrors;
-        });
+        updateErrorCards(animeId, false);
       } else if (bonusSelected.includes(animeId)) {
-        // 보너스 투표 해제
         setBonusSelected(prev => prev.filter(id => id !== animeId));
-        setErrorCards(prevErrors => {
-          const newErrors = new Set(prevErrors);
-          newErrors.delete(animeId);
-          return newErrors;
-        });
+        updateErrorCards(animeId, false);
       } else {
-        // 새로운 투표 추가
         if (isBonusVote) {
-          // 보너스 투표 추가 (무제한)
           setBonusSelected(prev => [...prev, animeId]);
-          setErrorCards(prevErrors => {
-            const newErrors = new Set(prevErrors);
-            newErrors.delete(animeId);
-            return newErrors;
-          });
+          updateErrorCards(animeId, false);
         } else if (selected.length < 10) {
-          // 일반 투표 추가
           setSelected(prev => [...prev, animeId]);
-          setErrorCards(prevErrors => {
-            const newErrors = new Set(prevErrors);
-            newErrors.delete(animeId);
-            return newErrors;
-          });
+          updateErrorCards(animeId, false);
         } else {
-          // 일반 투표가 10개에 도달했는데 일반 투표 시도
-          setErrorCards(prevErrors => {
-            const newErrors = new Set(prevErrors);
-            newErrors.add(animeId);
-            return newErrors;
-          });
+          updateErrorCards(animeId, true);
         }
       }
     } else {
-      // 일반 모드 (기존 로직)
+      // 일반 모드
       setSelected(prev => {
         if (prev.includes(animeId)) {
-          // 선택 해제
-          setErrorCards(prevErrors => {
-            const newErrors = new Set(prevErrors);
-            newErrors.delete(animeId);
-            return newErrors;
-          });
+          updateErrorCards(animeId, false);
           return prev.filter(id => id !== animeId);
         } else if (prev.length < 10) {
-          // 일반 투표 (10개 미만)
-          setErrorCards(prevErrors => {
-            const newErrors = new Set(prevErrors);
-            newErrors.delete(animeId);
-            return newErrors;
-          });
+          updateErrorCards(animeId, false);
           return [...prev, animeId];
         } else {
-          // 10표 초과 시도
-          setErrorCards(prevErrors => {
-            const newErrors = new Set(prevErrors);
-            newErrors.add(animeId);
-            return newErrors;
-          });
-          
-          return prev; // 선택 상태 변경하지 않음
+          updateErrorCards(animeId, true);
+          return prev;
         }
       });
     }
   };
 
   const handleCardMouseLeave = (animeId: number) => {
-    // 1초 후에 해당 카드의 에러 메시지 숨기기
     setTimeout(() => {
-      setErrorCards(prevErrors => {
-        const newErrors = new Set(prevErrors);
-        newErrors.delete(animeId);
-        return newErrors;
-      });
+      updateErrorCards(animeId, false);
     }, 1000);
   };
 
@@ -140,67 +110,87 @@ export default function VotePage() {
   };
 
   const handleNextClick = () => {
-    // 일반 투표 수가 0표이면 에러 메시지 표시
     if (selected.length === 0) {
       setShowNextError(true);
-      // 1초 후 에러 메시지 숨기기
       setTimeout(() => {
         setShowNextError(false);
       }, 1000);
       return;
     }
+
+    // 보너스 투표 사용 중이고 일반 투표가 10개 미만인 경우 확인 다이얼로그 표시
+    if (bonusSelected.length > 0 && selected.length < 10) {
+      setShowConfirmDialog(true);
+      return;
+    }
+    
+    // 일반적인 NEXT 처리
+    proceedToNext();
+  };
+
+  const proceedToNext = () => {
+    // 1단계: 모든 카드들이 투명해짐 (showGenderSelection이 true가 되면서 animate 조건이 활성화됨)
     setShowGenderSelection(true);
+    
+    // 2단계: 투명해지는 애니메이션 완료 후 페이지 최상단으로 이동
+    setTimeout(() => {
+      window.scrollTo({ 
+        top: 0, // 페이지 최상단
+        behavior: 'auto' 
+      });
+    }, 500); // 투명해지는 시간 (0.5초)
+    
+    // 3단계: 선택한 후보들이 나타남 (0.8초 동안 선명해짐)
+    setTimeout(() => {
+      setScrollCompleted(true);
+    }, 500); // 투명해진 후 바로 시작 (총 0.8초)
+  };
+
+  const handleConfirmDialogConfirm = () => {
+    // 보너스 투표를 모두 제거하고 일반 투표만 유지
+    setBonusSelected([]);
+    setBonusVotesRecalled(true);
+    setShowConfirmDialog(false);
+    // 다음 단계로 진행
+    proceedToNext();
+  };
+
+  const handleConfirmDialogCancel = () => {
+    setShowConfirmDialog(false);
   };
 
   const handleBackClick = () => {
     setShowGenderSelection(false);
+    setScrollCompleted(false);
   };
+
+  const handleConfettiComplete = () => {
+    setShowConfetti(false);
+  };
+
 
   const handleGenderSelect = (gender: 'male' | 'female') => {
     setSelectedGender(gender);
   };
 
   const handleSubmitClick = async () => {
-    if (!selectedGender) {
-      console.log('성별을 선택해주세요!');
-      return;
-    }
+    if (!selectedGender) return;
 
     try {
-      // 투표 데이터를 ballotDtos 형태로 변환
       const ballotDtos = [
         ...selected.map(id => ({ animeCandidateId: id, ballotType: "NORMAL" as const })),
         ...bonusSelected.map(id => ({ animeCandidateId: id, ballotType: "BONUS" as const }))
       ];
 
-      // POST API 호출 (쿠키 포함)
       const requestBody = {
         weekId: data?.result?.weekId,
         gender: selectedGender === 'male' ? 'MALE' : 'FEMALE',
-        ballotDtos: ballotDtos
+        ballotDtos
       };
       
-      console.log('투표 제출 요청 데이터:', requestBody);
+      const result = await submitVote(requestBody);
       
-      const response = await fetch('/api/v1/vote/anime', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // 쿠키 포함
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API 응답 에러:', response.status, errorText);
-        throw new Error(`투표 제출에 실패했습니다. (${response.status}: ${errorText})`);
-      }
-
-      const result = await response.json();
-      console.log('투표 제출 완료:', result);
-      
-      // 성공 시 투표 내역 조회 API 호출 (VoteReceiptDto와 AnimeVoteHistoryDto는 다른 구조)
+      // 성공 시 투표 내역 조회 API 호출
       if (result.result) {
         // 투표 완료 후 투표 체크 데이터 업데이트
         if (voteCheckData && voteCheckData.result) {
@@ -208,37 +198,29 @@ export default function VotePage() {
           voteCheckData.result.submissionId = result.result.submissionId;
         }
         
-        // 투표 내역 조회 API 호출 (AnimeVoteHistoryDto 구조)
+        // 투표 내역 조회 API 호출
         try {
-          const historyResponse = await fetch(`/api/v1/vote/anime/history/${result.result.submissionId}`, {
-            credentials: 'include'
-          });
-          
-          if (historyResponse.ok) {
-            const historyResult = await historyResponse.json();
-            if (historyResult.result) {
-              // AnimeVoteHistoryDto 구조로 결과 화면 업데이트
-              setVoteHistory(historyResult.result);
-              setShowVoteResult(true);
-            } else {
-              console.error('투표 내역 데이터가 올바르지 않습니다:', historyResult);
-              alert('투표는 완료되었지만 내역을 불러올 수 없습니다.');
-            }
+          const historyResult = await getVoteHistory(result.result.submissionId);
+          if (historyResult.result) {
+            setVoteHistory(historyResult.result);
+            setShowVoteResult(true);
           } else {
-            console.error('투표 내역 조회 실패:', historyResponse.status);
             alert('투표는 완료되었지만 내역을 불러올 수 없습니다.');
           }
         } catch (error) {
-          console.error('투표 내역 조회 실패:', error);
           alert('투표는 완료되었지만 내역을 불러올 수 없습니다.');
         }
       } else {
-        console.error('투표 결과 데이터가 올바르지 않습니다:', result);
         alert('투표는 완료되었지만 결과를 불러올 수 없습니다.');
       }
       
+      // API 호출 성공 시 바로 TOP으로 이동
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'auto' 
+      });
+      
     } catch (error) {
-      console.error('투표 제출 오류:', error);
       alert('투표 제출에 실패했습니다. 다시 시도해주세요.');
     }
   };
@@ -283,53 +265,27 @@ export default function VotePage() {
   useEffect(() => {
     if (voteCheckData?.result?.hasVoted && voteCheckData?.result?.submissionId) {
       // 이미 투표한 경우, 투표 내역 가져오기
-      fetch(`/api/v1/vote/anime/history/${voteCheckData.result.submissionId}`, {
-        credentials: 'include'
-      })
-        .then(res => {
-          // 401 오류는 인증 실패이므로 조용히 처리하고 투표 화면을 계속 표시
-          if (res.status === 401) {
-            console.log('인증되지 않은 사용자입니다. 투표 화면을 계속 표시합니다.');
-            return null;
-          }
-          
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          
-          // 응답이 비어있는지 확인
-          const contentType = res.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('응답이 JSON 형식이 아닙니다');
-          }
-          return res.text().then(text => {
-            if (!text) {
-              throw new Error('빈 응답입니다');
-            }
-            try {
-              return JSON.parse(text);
-            } catch (e) {
-              throw new Error('JSON 파싱 실패: ' + text);
-            }
-          });
-        })
+      getVoteHistory(voteCheckData.result.submissionId)
         .then(data => {
           if (data && data.result) {
             setVoteHistory(data.result);
             setShowVoteResult(true);
-          } else if (data === null) {
-            // 401 오류로 인해 null이 반환된 경우 - 정상적인 상황
-            console.log('인증되지 않은 사용자입니다. 투표 화면을 계속 표시합니다.');
           } else {
-            console.error('투표 내역 데이터가 올바르지 않습니다:', data);
+            // 투표 내역 데이터 오류 처리
           }
         })
         .catch(err => {
-          console.error('투표 내역 조회 실패:', err);
           // 에러가 발생해도 투표 화면은 계속 표시
         });
     }
   }, [voteCheckData]);
+
+  // 투표 결과 화면이 표시될 때 빵빠레 효과 시작
+  useEffect(() => {
+    if (showVoteResult && voteHistory) {
+      setShowConfetti(true);
+    }
+  }, [showVoteResult, voteHistory]);
 
   // 로딩 상태 처리
   if (isLoading) {
@@ -382,8 +338,8 @@ export default function VotePage() {
         anime.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-  // 상태 4에서 투표된 아이템만 필터링하고 정렬
-  const animeList: Anime[] = showGenderSelection 
+  // 상태 4에서 투표된 아이템만 필터링하고 정렬 (애니메이션 완료 후에만 필터링)
+  const animeList: Anime[] = (showGenderSelection && scrollCompleted)
     ? filteredAnimeList
         .filter(anime => selected.includes(anime.id) || bonusSelected.includes(anime.id))
         .sort((a, b) => {
@@ -402,9 +358,14 @@ export default function VotePage() {
 
   // 투표 결과 화면 렌더링
   if (showVoteResult && voteHistory) {
-    return (
-      <main className="w-full">
-        {/* 배너 - 전체 너비, 패딩 없음 */}
+          return (
+        <main className="w-full bg-gray-50">
+          {/* 빵빠레 효과 */}
+          <ConfettiEffect 
+            isActive={showConfetti} 
+            onComplete={handleConfettiComplete}
+          />
+          {/* 배너 - 전체 너비, 패딩 없음 */}
         <section>
           <VoteBanner 
             customTitle={`이번 주 ${categoryText} 투표 기록`}
@@ -427,6 +388,7 @@ export default function VotePage() {
                     currentVotes={voteHistory.normalCount || 0}
                     maxVotes={10}
                     showResult={true}
+                    showGenderSelection={true}
                   />
                   
                   {/* Bonus Vote Result */}
@@ -465,11 +427,9 @@ export default function VotePage() {
           {/* 투표된 아이템 리스트 */}
           <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold mb-4">투표한 {categoryText}</h2>
-            {(() => {
-              console.log('투표 결과 데이터:', voteHistory);
-              return voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-                  {voteHistory.animeBallotDtos.map((ballot: any) => (
+            {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                  {voteHistory.animeBallotDtos.map((ballot) => (
                     <VoteCard
                       key={ballot.animeId}
                       thumbnailUrl={ballot.mainThumbnailUrl}
@@ -493,8 +453,7 @@ export default function VotePage() {
                               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">투표한 {categoryText}이 없습니다.</p>
               </div>
-              );
-            })()}
+            )}
           </div>
         </div>
       </main>
@@ -569,6 +528,7 @@ export default function VotePage() {
                 showGenderSelection={showGenderSelection}
                 selectedGender={selectedGender}
                 showNextError={showNextError}
+                showConfirmDialog={showConfirmDialog}
                 external={true}
                 onSearchQueryChange={setSearchQuery}
                 onNextClick={handleNextClick}
@@ -612,30 +572,73 @@ export default function VotePage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-              {animeList.map((anime) => (
-                <VoteCard
+                        <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full"
+              initial={{ opacity: 1 }}
+              animate={{ 
+                opacity: 1
+              }}
+              transition={{ 
+                duration: 0.3,
+                ease: "easeInOut"
+              }}
+            >
+              {animeList.map((anime, index) => (
+                <motion.div
                   key={anime.id}
-                  thumbnailUrl={anime.thumbnailUrl}
-                  title={anime.title}
-                  checked={selected.includes(anime.id) || bonusSelected.includes(anime.id)}
-                  onChange={showGenderSelection ? undefined : (isBonusVote) => handleSelect(anime.id, isBonusVote)}
-                  showError={!isBonusMode && errorCards.has(anime.id)}
-                  currentVotes={selected.length}
-                  maxVotes={10}
-                  isBonusMode={isBonusMode}
-                  bonusVotesUsed={bonusVotesUsed}
-                  isBonusVote={bonusSelected.includes(anime.id)}
-                  onMouseLeave={() => handleCardMouseLeave(anime.id)}
-                  weekDto={data?.result?.weekDto}
-                  medium={anime.medium}
-                  disabled={showGenderSelection}
-                />
+                  initial={{ opacity: 1, y: 0, scale: 1 }}
+                  animate={{ 
+                    opacity: showGenderSelection 
+                      ? (scrollCompleted ? [0, 1] : [1, 0.8, 0.5, 0.2, 0]) // 모든 카드: 단계적으로 투명해짐
+                      : 1,
+                    y: 0, // y 이동 제거
+                    scale: 1 // scale 애니메이션 제거
+                  }}
+                  transition={{ 
+                    duration: showGenderSelection ? 0.5 : 0.3, // 투명해지는 시간 0.5초, 선명해지는 시간 0.8초
+                    delay: showGenderSelection 
+                      ? (scrollCompleted ? index * 0.05 : 0) // 투명해질 때는 동시에, 나타날 때만 순차적으로
+                      : 0,
+                    ease: "easeInOut",
+                    times: showGenderSelection && !scrollCompleted 
+                      ? [0, 0.2, 0.4, 0.6, 1] // 단계적 투명화 시간
+                      : undefined
+                  }}
+
+                                  style={{
+                    pointerEvents: showGenderSelection ? 'none' : 'auto'
+                  }}
+                >
+                  <VoteCard
+                    thumbnailUrl={anime.thumbnailUrl}
+                    title={anime.title}
+                    checked={selected.includes(anime.id) || bonusSelected.includes(anime.id)}
+                    onChange={showGenderSelection ? undefined : (isBonusVote) => handleSelect(anime.id, isBonusVote)}
+                    showError={!isBonusMode && errorCards.has(anime.id)}
+                    currentVotes={selected.length}
+                    maxVotes={10}
+                    isBonusMode={isBonusMode}
+                    bonusVotesUsed={bonusVotesUsed}
+                    isBonusVote={bonusSelected.includes(anime.id)}
+                    onMouseLeave={() => handleCardMouseLeave(anime.id)}
+                    weekDto={data?.result?.weekDto}
+                    medium={anime.medium}
+                    disabled={showGenderSelection}
+                    showGenderSelection={showGenderSelection}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </section>
       </div>
+
+      {/* 확인 다이얼로그 */}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onConfirm={handleConfirmDialogConfirm}
+        onCancel={handleConfirmDialogCancel}
+      />
     </main>
   );
 }

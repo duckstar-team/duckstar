@@ -130,6 +130,28 @@ export interface AnimeVoteHistoryDto {
   animeBallotDtos: AnimeBallotDto[];
 }
 
+// Vote History Ballot DTO (실제 API 응답에서 사용되는 구조)
+export interface VoteHistoryBallotDto {
+  animeId: number;
+  mainThumbnailUrl: string;
+  titleKor: string;
+  medium: "TVA" | "MOVIE";
+  ballotType: "NORMAL" | "BONUS";
+}
+
+// Vote History Response DTO
+export interface VoteHistoryResponseDto {
+  submissionId: number;
+  weekDto: WeekDto;
+  category: "ANIME" | "HERO" | "HEROINE";
+  submittedAt: string;
+  normalCount: number;
+  bonusCount: number;
+  animeBallotDtos: VoteHistoryBallotDto[];
+}
+
+export type ApiResponseVoteHistoryResponseDto = ApiResponse<VoteHistoryResponseDto>;
+
 export type ApiResponseAnimeVoteHistoryDto = ApiResponse<AnimeVoteHistoryDto>;
 
 // Vote Check DTO

@@ -2,8 +2,6 @@ import type { NextPage } from "next";
 
 export type ButtonType = {
   className?: string;
-
-  /** Variant props */
   property1?: string;
 };
 
