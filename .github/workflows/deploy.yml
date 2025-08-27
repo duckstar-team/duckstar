@@ -3,7 +3,10 @@ name: Deploy Duckstar
 on:
   push:
     branches:
-      - master   # master 브랜치에 push될 때만 실행
+      - master            # master에 push되면 실제 배포 실행
+  pull_request:
+    branches:
+      - master            # master에 PR 올리면 CI만 실행
 
 jobs:
   deploy:
