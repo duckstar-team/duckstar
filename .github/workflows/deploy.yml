@@ -30,6 +30,16 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
 
+          # Github Secrets 환경 변수 적용
+          export SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
+          export SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          export SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          export JWT_SECRET=${{ secrets.JWT_SECRET }}
+          export KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+          export KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+          export KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
+          export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+
           # Docker Compose 재배포
           docker compose down
           docker compose build --no-cache
