@@ -1,0 +1,38 @@
+name: Deploy Duckstar
+
+on:
+  push:
+    branches:
+      - master   # master 브랜치에 push될 때만 실행
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. SSH 키 등록
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      # 3. EC2에 배포 스크립트 실행
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ubuntu/duckstar
+          
+          # 최신 코드 가져오기
+          git fetch origin main
+          git reset --hard origin/main
+
+          # Docker Compose 재배포
+          docker compose down
+          docker compose build --no-cache
+          docker compose up -d
+          docker image prune -f
+          EOF

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="3ec250eb-1c1f-43f9-b55e-cceac9f33e77" name="duckstar-prod">
+        <fileTransfer accessType="SFTP" host="15.164.224.189" port="22" sshConfigId="93fceadb-f420-473e-9e30-0ee904195b79" sshConfig="ubuntu@15.164.224.189:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
