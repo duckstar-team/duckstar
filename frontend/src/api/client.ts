@@ -1,59 +1,109 @@
+import { 
+  ApiResponseAnimeCandidateListDto, 
+  ApiResponseVoteCheckDto, 
+  ApiResponseVoteHistoryResponseDto, 
+  ApiResponseVoteReceiptDto 
+} from '@/types/api';
+
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
+// API Configuration
+const API_CONFIG = {
+  baseUrl: BASE_URL,
+  defaultHeaders: {
+    'Content-Type': 'application/json',
+  },
+  credentials: 'include' as const,
+} as const;
+
+// API Endpoints
+const ENDPOINTS = {
+  auth: {
+    kakaoLogin: '/oauth2/authorization/kakao',
+    refreshToken: '/api/v1/auth/token/refresh',
+    logout: '/api/v1/auth/logout',
+    withdraw: '/api/v1/auth/withdraw/kakao',
+    userInfo: '/api/v1/auth/me',
+  },
+  vote: {
+    candidates: '/api/v1/vote/anime',
+    checkStatus: '/api/v1/vote/anime/check-voted',
+    history: (submissionId: number) => `/api/v1/vote/anime/history/${submissionId}`,
+  },
+} as const;
+
+// Default fetch options
+const getDefaultOptions = (): RequestInit => ({
+  credentials: API_CONFIG.credentials,
+  headers: API_CONFIG.defaultHeaders,
+});
+
+// API call helper function
+async function apiCall<T>(
+  endpoint: string, 
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${API_CONFIG.baseUrl}${endpoint}`;
+  const config = {
+    ...getDefaultOptions(),
+    ...options,
+    headers: {
+      ...getDefaultOptions().headers,
+      ...options.headers,
+    },
+  };
+
+  const response = await fetch(url, config);
+  
+  if (!response.ok) {
+    throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+// Auth API functions
 export function startKakaoLogin() {
-	// 전체 페이지 리디렉트로 OAuth 플로우 시작 (백엔드 스프링 시큐리티 기본 엔드포인트)
-	window.location.href = `${BASE_URL}/oauth2/authorization/kakao`;
+  window.location.href = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.kakaoLogin}`;
 }
 
 export async function refreshToken(): Promise<{ accessToken: string }> {
-	const res = await fetch(`${BASE_URL}/api/v1/auth/token/refresh`, {
-		method: 'POST',
-		credentials: 'include',
-	});
-	if (!res.ok) throw new Error('토큰 재발급 실패');
-	
-	const data = await res.json();
-	return { accessToken: data.accessToken };
+  return apiCall(ENDPOINTS.auth.refreshToken, { method: 'POST' });
 }
 
 export async function logout(): Promise<void> {
-	const res = await fetch(`${BASE_URL}/api/v1/auth/logout`, {
-		method: 'POST',
-		credentials: 'include',
-	});
-	if (!res.ok) throw new Error('로그아웃 실패');
+  await apiCall(ENDPOINTS.auth.logout, { method: 'POST' });
 }
 
 export async function withdraw(): Promise<void> {
-	const res = await fetch(`${BASE_URL}/api/v1/auth/withdraw/kakao`, {
-		method: 'POST',
-		credentials: 'include',
-	});
-	if (!res.ok) throw new Error('회원탈퇴 실패');
+  await apiCall(ENDPOINTS.auth.withdraw, { method: 'POST' });
 }
 
-// 사용자 정보 조회 (HttpOnly 쿠키로 토큰 전송)
 export async function getUserInfo(): Promise<Record<string, unknown>> {
-	console.log('getUserInfo - Request details:');
-	console.log('- URL:', `${BASE_URL}/api/v1/auth/me`);
-	console.log('- Method: GET');
-	console.log('- Credentials: include');
-	console.log('- Cookies:', document.cookie);
-	
-	const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
-		method: 'GET',
-		credentials: 'include',
-	});
-	
-	console.log('getUserInfo - Response status:', res.status);
-	console.log('getUserInfo - Response headers:', Object.fromEntries(res.headers.entries()));
-	
-	if (!res.ok) {
-		console.error('getUserInfo - Error response:', res.status, res.statusText);
-		throw new Error('사용자 정보 조회 실패');
-	}
-	
-	const data = await res.json();
-	console.log('getUserInfo - Success response:', data);
-	return data;
+  return apiCall(ENDPOINTS.auth.userInfo);
 }
+
+// Vote API functions
+export async function getVoteCandidates() {
+  return apiCall<ApiResponseAnimeCandidateListDto>(ENDPOINTS.vote.candidates);
+}
+
+export async function checkVoteStatus() {
+  return apiCall<ApiResponseVoteCheckDto>(ENDPOINTS.vote.checkStatus);
+}
+
+export async function getVoteHistory(submissionId: number) {
+  return apiCall<ApiResponseVoteHistoryResponseDto>(ENDPOINTS.vote.history(submissionId));
+}
+
+export async function submitVote(voteData: Record<string, unknown>) {
+  return apiCall<ApiResponseVoteReceiptDto>(ENDPOINTS.vote.candidates, {
+    method: 'POST',
+    body: JSON.stringify(voteData),
+  });
+}
+
+// SWR fetcher function
+export const fetcher = <T>(url: string): Promise<T> => {
+  return apiCall<T>(url);
+};

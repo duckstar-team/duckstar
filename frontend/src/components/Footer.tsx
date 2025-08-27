@@ -2,6 +2,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Footer() {
+  const supportLinks = [
+    { href: "/help", label: "도움말" },
+    { href: "/contact", label: "문의하기" },
+    { href: "/terms", label: "이용약관" },
+    { href: "/privacy-policy", label: "개인정보처리방침" },
+  ];
+
+  const bottomLinks = [
+    { href: "/about", label: "덕스타 소개" },
+    { href: "/terms", label: "이용약관" },
+    { href: "/privacy-policy", label: "개인정보처리방침" },
+    { href: "/cookies", label: "쿠키 정책" },
+  ];
+
   return (
     <footer className="w-full bg-gray-900 text-white">
       {/* 메인 푸터 컨텐츠 */}
@@ -101,10 +115,13 @@ export default function Footer() {
               © 2025 Duckstar. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
+              <Link href="/about" className="text-gray-400 hover:text-white transition-colors text-sm">
+                덕스타 소개
+              </Link>
               <Link href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">
                 이용약관
               </Link>
-              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
+              <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors text-sm">
                 개인정보처리방침
               </Link>
               <Link href="/cookies" className="text-gray-400 hover:text-white transition-colors text-sm">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import VoteToggle from "./VoteToggle";
 import { WeekDto } from "@/types/api";
 import { getSeasonFromDate, getSeasonInKorean } from "@/lib/utils";
@@ -18,6 +19,7 @@ interface VoteCardProps {
   medium?: "TVA" | "MOVIE";
   onMouseLeave?: () => void;
   disabled?: boolean;
+  showGenderSelection?: boolean;
 }
 
 export default function VoteCard({
@@ -35,6 +37,7 @@ export default function VoteCard({
   medium,
   onMouseLeave,
   disabled = false,
+  showGenderSelection = false,
 }: VoteCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [justDeselected, setJustDeselected] = useState(false);
@@ -123,27 +126,25 @@ export default function VoteCard({
 
   return (
     <div className="relative">
-      <div
+      <motion.div
         className={`
-          w-full
-          bg-white
-          rounded-xl
-          shadow
-          border-2
-          flex
-          items-center
-          gap-4
-          p-4
-          ${disabled ? 'cursor-default' : 'cursor-pointer'}
-          ${!disabled ? 'hover:shadow-lg' : ''}
-          transition-all
-          duration-200
-          ease-in-out
+          w-full bg-white rounded-xl shadow border-2
+          flex items-center gap-4 p-4
+          transition-all duration-200 ease-in-out
+          ${disabled ? 'cursor-default' : 'cursor-pointer hover:shadow-lg'}
           ${showError 
             ? 'border-[#CB285E]/80 shadow-red-200/50' 
             : 'border-gray-200'
           }
         `}
+        initial={{ scale: 1 }}
+        animate={{ 
+          scale: 1
+        }}
+        transition={{ 
+          duration: 0.2,
+          ease: "easeInOut"
+        }}
         onMouseEnter={!disabled ? () => setIsHovered(true) : undefined}
         onMouseLeave={!disabled ? handleMouseLeave : undefined}
         onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
@@ -191,7 +192,7 @@ export default function VoteCard({
             일반 투표 횟수(10회)를 모두 소진하였습니다.
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }
