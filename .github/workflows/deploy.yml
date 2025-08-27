@@ -3,10 +3,10 @@ name: Deploy Duckstar
 on:
   push:
     branches:
-      - master            # master에 push되면 실제 배포 실행
+      - master
   pull_request:
     branches:
-      - master            # master에 PR 올리면 CI만 실행
+      - master
 
 jobs:
   deploy:
@@ -24,40 +24,32 @@ jobs:
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
     steps:
-      # 1. 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. SSH 키 등록
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      # 3. EC2에 배포 스크립트 실행
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<EOF
             cd /home/ubuntu/duckstar
-            
-            # 최신 코드 가져오기
+
             git fetch origin main
             git reset --hard origin/main
 
-            # 새 .env 생성
-            cat > .env << EOL
-SPRING_PROFILES_ACTIVE=prod
-SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
-SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
-SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-JWT_SECRET=${{ secrets.JWT_SECRET }}
-KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
-KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
-KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
-NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-EOL
+            echo "SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE" > .env
+            echo "SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL" >> .env
+            echo "SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME" >> .env
+            echo "SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD" >> .env
+            echo "JWT_SECRET=$JWT_SECRET" >> .env
+            echo "KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID" >> .env
+            echo "KAKAO_CLIENT_SECRET=$KAKAO_CLIENT_SECRET" >> .env
+            echo "KAKAO_ADMIN_KEY=$KAKAO_ADMIN_KEY" >> .env
+            echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" >> .env
 
-            # Docker Compose 재배포
             docker compose down
             docker compose build --no-cache
             docker compose up -d
