@@ -45,7 +45,7 @@ jobs:
             git reset --hard origin/main
 
             # 새 .env 생성
-            cat > .env << 'EOL'
+            cat > .env << EOL
 SPRING_PROFILES_ACTIVE=prod
 SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
 SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
