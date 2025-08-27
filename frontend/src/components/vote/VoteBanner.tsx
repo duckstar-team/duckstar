@@ -38,7 +38,7 @@ export default function VoteBanner({ weekDto, customTitle, customSubtitle }: Vot
         <div className="flex flex-col items-center justify-center text-white text-center relative shrink-0">
           {/* 타이틀 */}
           <div className="flex flex-col justify-center mb-[-5px] relative shrink-0">
-            <p className="font-[Pretendard] font-bold text-[33.833px] leading-tight whitespace-pre">
+            <p className="font-[Pretendard] font-bold leading-tight whitespace-pre" style={{ fontSize: 'min(calc(24px + (33.833 - 24) * ((100vw - 320px) / (1200 - 320))), 33.833px)' }}>
               {customTitle || `${year} ${seasonKorean} 애니메이션 투표`}
             </p>
           </div>

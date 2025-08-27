@@ -1,12 +1,6 @@
-import type { Configuration } from "webpack";
+import type { NextConfig } from "next";
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // App Router만 사용하도록 설정
-  experimental: {
-    appDir: true,
-  },
-  
+const nextConfig: NextConfig = {
   // API 프록시 설정
   async rewrites() {
     return [
@@ -30,7 +24,7 @@ const nextConfig = {
   },
 
   // webpack 설정
-  webpack(config: Configuration) {
+  webpack(config) {
     config.module?.rules?.push({
       test: /\.svg$/,
       use: ["@svgr/webpack"],

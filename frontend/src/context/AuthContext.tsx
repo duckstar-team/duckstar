@@ -37,6 +37,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
+  const resetAuthState = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    setAccessToken(null);
+  };
+
   const login = (userData: User) => {
     setUser(userData);
     setIsAuthenticated(true);
@@ -46,11 +52,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      // 에러 처리 로직 추가 가능
     } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-      setAccessToken(null);
+      resetAuthState();
     }
   };
 
@@ -58,11 +62,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await withdraw();
     } catch (error) {
-      console.error('Withdraw error:', error);
+      // 에러 처리 로직 추가 가능
     } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-      setAccessToken(null);
+      resetAuthState();
     }
   };
 
@@ -71,17 +73,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // 페이지 로드 시 사용자 정보 확인
-    getUserInfo()
-      .then((userData) => {
+    const checkUserAuth = async () => {
+      try {
+        const userData = await getUserInfo();
         login(userData as unknown as User);
-      })
-      .catch((error) => {
-        console.log('User not authenticated:', error);
-      });
+      } catch (error) {
+        // 사용자 인증 실패 처리
+      }
+    };
+
+    checkUserAuth();
   }, []);
 
-  const value: AuthContextType = {
+  const contextValue: AuthContextType = {
     isAuthenticated,
     user,
     accessToken,
@@ -91,5 +95,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

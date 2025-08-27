@@ -130,6 +130,7 @@ export default function VoteToggle({
             alt="Selected"
             width={isBonusVote ? 60 : 96}
             height={isBonusVote ? 60 : 96}
+            priority={true}
             className={isBonusVote ? "w-[60px] h-[60px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl"}
           />
         )}
