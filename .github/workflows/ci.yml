@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - master
+
+jobs:
+  # 백엔드 빌드 및 테스트
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend  # backend 폴더 기준 실행
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. JDK 세팅
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+
+      # 3. Gradle 캐싱 (속도 최적화)
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('backend/**/*.gradle*', 'backend/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 4. feature → dev PR: 단위 테스트만 실행
+      - name: Run Unit Tests
+        if: github.base_ref == 'dev'
+        run: ./gradlew clean test
+
+      # 5. dev → master PR: 전체 빌드 및 통합 테스트 실행
+      - name: Full Build & Integration Tests
+        if: github.base_ref == 'master'
+        run: ./gradlew clean build
+
+  # 프론트 빌드 및 테스트
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend  # frontend 폴더 기준 실행
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Node.js 세팅 (Next.js)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3. npm 캐싱 (속도 최적화)
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      # 4. 패키지 설치
+      - name: Install dependencies
+        run: npm ci
+
+      # 5. feature → dev PR: 프론트 단위 테스트만 실행
+      - name: Run Frontend Unit Tests
+        if: github.base_ref == 'dev'
+        run: npm run test --if-present
+
+      # 6. dev → master PR: 프로덕션 빌드까지 확인
+      - name: Build Next.js App
+        if: github.base_ref == 'master'
+        run: npm run build

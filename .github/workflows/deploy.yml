@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
 
 jobs:
   deploy:
@@ -37,8 +34,8 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<EOF
             cd /home/ubuntu/duckstar
 
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin master
+            git reset --hard origin/master
 
             echo "SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE" > .env
             echo "SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL" >> .env
