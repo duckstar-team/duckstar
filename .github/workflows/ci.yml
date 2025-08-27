@@ -35,14 +35,14 @@ jobs:
             ${{ runner.os }}-gradle-
 
       # 4. feature → dev PR: 단위 테스트만 실행
-      - name: Run Unit Tests
+      - name: Run Unit Tests (H2)
         if: github.base_ref == 'dev'
-        run: ./gradlew clean test
+        run: ./gradlew clean test -Dspring.profiles.active=test
 
       # 5. dev → master PR: 전체 빌드 및 통합 테스트 실행
       - name: Full Build & Integration Tests
         if: github.base_ref == 'master'
-        run: ./gradlew clean build
+        run: ./gradlew clean build -Dspring.profiles.active=test
 
   # 프론트 빌드 및 테스트
   frontend:
