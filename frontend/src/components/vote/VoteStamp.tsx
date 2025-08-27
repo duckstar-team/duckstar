@@ -10,6 +10,9 @@ interface VoteStampProps {
   maxVotes: number;
   bonusVotesUsed?: number;
   showResult?: boolean; // 투표 결과 모드 (× 기호 사용, 분모 제거)
+  showTooltip?: boolean; // 보너스 도장 내부 알림 표시 여부
+  onHideTooltip?: () => void; // 알림 숨기기 콜백
+  showGenderSelection?: boolean; // 성별 선택 화면 여부
 }
 
 const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({ 
@@ -18,21 +21,26 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
   currentVotes, 
   maxVotes, 
   bonusVotesUsed = 0,
-  showResult = false
+  showResult = false,
+  showTooltip = false,
+  onHideTooltip,
+  showGenderSelection = false
 }, ref) => {
   if (type === 'normal') {
     return (
       <div className="flex items-center gap-[16px]">
         {/* Normal Vote Stamp */}
         <div className={`flex items-center justify-center w-[54px] h-[54px] rounded-[30px] ${
-          isActive 
+          showGenderSelection || currentVotes < maxVotes
             ? 'bg-[rgba(153,0,51,0.15)]' 
             : 'bg-neutral-600/20'
         }`}>
           <Image
-            src={isActive 
+            src={showGenderSelection
               ? "/icons/voteSection-normal-default.svg" 
-              : "/icons/voteSection-normal-full.svg"
+              : currentVotes >= maxVotes
+                ? "/icons/voteSection-normal-full.svg"
+                : "/icons/voteSection-normal-default.svg"
             }
             alt="Normal Vote Stamp"
             width={54}
@@ -55,9 +63,9 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
               </div>
               
               <div className="pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className={`text-right justify-center text-[32px] font-bold font-['Pretendard'] leading-none ${
+                <span className={`text-right justify-center font-bold font-['Pretendard'] leading-none whitespace-nowrap ${
                   isActive ? 'text-[#990033]' : 'text-neutral-600'
-                }`}>
+                } ${currentVotes >= 100 ? 'text-[24px]' : currentVotes >= 10 ? 'text-[28px]' : 'text-[32px]'}`}>
                   {currentVotes}표
                 </span>
               </div>
@@ -65,10 +73,10 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
           ) : (
             // 기존 모드: 분자/분모 사용
             <>
-              <div className="w-16 pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className={`text-right justify-center text-[32px] font-bold font-['Pretendard'] leading-none ${
-                  isActive ? 'text-[#990033]' : 'text-neutral-600'
-                }`}>
+              <div className="w-20 pt-2.5 pb-[5px] flex justify-center items-center">
+                <span className={`text-right justify-center font-bold font-['Pretendard'] leading-none whitespace-nowrap ${
+                  showGenderSelection || currentVotes < maxVotes ? 'text-[#990033]' : 'text-neutral-600'
+                } ${currentVotes >= 100 ? 'text-[24px]' : currentVotes >= 10 ? 'text-[28px]' : 'text-[32px]'}`}>
                   {currentVotes}표
                 </span>
               </div>
@@ -120,7 +128,9 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
               </div>
               
               <div className="pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className="font-['Pretendard',_sans-serif] font-bold text-[#ffb310] text-[32px]">
+                <span className={`font-['Pretendard',_sans-serif] font-bold text-[#ffb310] whitespace-nowrap ${
+                  bonusVotesUsed >= 100 ? 'text-[24px]' : bonusVotesUsed >= 10 ? 'text-[28px]' : 'text-[32px]'
+                }`}>
                   {bonusVotesUsed}표
                 </span>
               </div>
@@ -128,8 +138,10 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
           ) : (
             // 기존 모드: 분자/분모 사용
             <>
-              <div className="w-16 pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className="font-['Pretendard',_sans-serif] font-bold text-[32px] text-[#ffb310]">
+              <div className="w-20 pt-2.5 pb-[5px] flex justify-center items-center">
+                <span className={`font-['Pretendard',_sans-serif] font-bold text-[#ffb310] whitespace-nowrap ${
+                  bonusVotesUsed >= 100 ? 'text-[24px]' : bonusVotesUsed >= 10 ? 'text-[28px]' : 'text-[32px]'
+                }`}>
                   {bonusVotesUsed}표
                 </span>
               </div>

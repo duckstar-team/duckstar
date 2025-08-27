@@ -4,6 +4,7 @@ import localFont from 'next/font/local';
 import "./globals.css";
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import Footer from '@/components/Footer';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,21 +50,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        {/* 투표 이미지 프리로딩 */}
+        <link rel="preload" href="/voted-normal.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/voted-bonus.svg" as="image" type="image/svg+xml" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${pretendard.variable} antialiased`}
       >
         {/* Fixed Header */}
-        <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="fixed top-0 left-0 right-0 z-[9999]">
           <Header />
         </div>
         
         {/* Fixed Sidebar */}
-        <div className="fixed top-[60px] left-0 bottom-0 z-40">
+        <div className="fixed top-[60px] left-0 bottom-0 z-[9999999]">
           <Sidebar />
         </div>
         
         {/* Main Content */}
-        <main className="ml-[200px] mt-[60px] bg-gray-50 min-h-screen">
+        <main className="ml-[60px] md:ml-[200px] mt-[60px] bg-gray-50 min-h-screen transition-all duration-300 ease-in-out group-hover:ml-[200px]">
           {children}
         </main>
       </body>
