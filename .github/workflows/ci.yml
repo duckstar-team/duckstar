@@ -38,29 +38,11 @@ jobs:
       - name: Run Unit Tests (H2)
         if: github.base_ref == 'dev'
         run: ./gradlew clean test -Dspring.profiles.active=test
-        env:
-          SPRING_PROFILES_ACTIVE: test
-          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
-          SPRING_DATASOURCE_USERNAME: sa
-          SPRING_DATASOURCE_PASSWORD:
-          JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-          KAKAO_CLIENT_ID: dummy
-          KAKAO_CLIENT_SECRET: dummy
-          KAKAO_ADMIN_KEY: dummy
 
       # 5. dev → master PR: 전체 빌드 및 통합 테스트 실행
       - name: Full Build & Integration Tests
         if: github.base_ref == 'master'
         run: ./gradlew clean build -Dspring.profiles.active=test
-        env:
-          SPRING_PROFILES_ACTIVE: test
-          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
-          SPRING_DATASOURCE_USERNAME: sa
-          SPRING_DATASOURCE_PASSWORD:
-          JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-          KAKAO_CLIENT_ID: dummy
-          KAKAO_CLIENT_SECRET: dummy
-          KAKAO_ADMIN_KEY: dummy
 
   # 프론트 빌드 및 테스트
   frontend:
