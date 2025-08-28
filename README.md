@@ -1,7 +1,7 @@
 # DUCK⭐️STAR - 애니메이션 투표 플랫폼
 
 <div align="center">
-  <img src="frontend/public/logo.svg" alt="DuckStar Logo" width="200"/>
+  <img src="screenshots/logo.svg" alt="DuckStar Logo" width="200"/>
   
   [![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
   [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-6DB33F?style=for-the-badge&logo=spring-boot)](https://spring.io/projects/spring-boot)
@@ -119,12 +119,12 @@ duckstar/
 ## 🖼️ 디자인 데모
 
 <div align="center">
-  <img src="screenshots/덕스타 홈 - 애니메이션 순위.png" alt="홈페이지-애니" width="300"/>
-  <img src="screenshots/덕스타 홈 - 캐릭터 순위.png" alt="홈페이지-캐릭터" width="300"/>
-  <img src="screenshots/주간 랭킹 - 메인 메뉴 접기.png" alt="차트 페이지" width="300"/>
-  <img src="screenshots/애니메이션 홈 - 분기 성적.png" alt="애니메이션 홈" width="300"/>
-  <img src="screenshots/캐릭터 홈.png" alt="캐릭터 홈" width="300"/>
-  <img src="screenshots/캐릭터 찾기.png" alt="검색 페이지" width="300"/>
+  <img src="screenshots/1.png" alt="홈페이지-애니" width="300"/>
+  <img src="screenshots/2.png" alt="홈페이지-캐릭터" width="300"/>
+  <img src="screenshots/4.png" alt="차트 페이지" width="300"/>
+  <img src="screenshots/3.png" alt="애니메이션 홈" width="300"/>
+  <img src="screenshots/6.png" alt="캐릭터 홈" width="300"/>
+  <img src="screenshots/5.png" alt="검색 페이지" width="300"/>
 </div>
 
 <div align="center">
@@ -135,7 +135,7 @@ duckstar/
 </div>
 
 <div align="center">
-  <img src="screenshots/투표 페이지.png" alt="투표 페이지" width="900"/>
+  <img src="screenshots/7.png" alt="투표 페이지" width="900"/>
 <div align="center">
 ---
 
