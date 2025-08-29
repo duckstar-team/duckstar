@@ -24,6 +24,13 @@ const config: Config = {
       backgroundImage: {
         "banner-gradient": "linear-gradient(to right, #212529, #460E06)",
       },
+      screens: {
+        'xs': '280px', // 갤럭시 Z 폴드 5 폴드 상태
+        'sm': '400px', // 갤럭시 Z 폴드 5 펼친 상태 근처
+        'md': '768px', // 기존 태블릿
+        'lg': '1024px', // 기존 데스크톱
+        'xl': '1280px', // 기존 대형 데스크톱
+      },
     },
   },
   plugins: [],

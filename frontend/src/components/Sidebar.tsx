@@ -213,15 +213,17 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [windowHeight, setWindowHeight] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(0);
 
   useEffect(() => {
-    const updateHeight = () => {
+    const updateDimensions = () => {
       setWindowHeight(window.innerHeight);
+      setWindowWidth(window.innerWidth);
     };
 
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
   // Footer 위치 계산 (화면 높이에서 헤더 높이(56px)와 Footer 높이를 뺀 값)
@@ -229,10 +231,22 @@ export default function Sidebar() {
   const footerHeight = 100; // Footer 대략적 높이
   const footerTop = Math.max(windowHeight - headerHeight - footerHeight - 20, 400); // 최소 400px, 여백 20px
 
+  // 갤럭시 Z 폴드 5와 같은 좁은 기기 감지 (280px-400px)
+  const isNarrowDevice = windowWidth >= 280 && windowWidth < 400;
+  const isVeryNarrowDevice = windowWidth < 280;
+
   return (
-    <div className="w-[60px] md:w-[200px] h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]">
+    <div className={`${
+      isVeryNarrowDevice ? 'w-[50px]' : 
+      isNarrowDevice ? 'w-[55px]' : 
+      'w-[60px] md:w-[200px]'
+    } h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]`}>
       {/* Navigation items */}
-      <div className="w-[44px] md:w-[167px] pb-[4px] left-[8px] md:left-[16px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px] transition-all duration-300 ease-in-out group-hover:w-[167px] group-hover:left-[16px]">
+      <div className={`${
+        isVeryNarrowDevice ? 'w-[34px] left-[8px]' : 
+        isNarrowDevice ? 'w-[39px] left-[8px]' : 
+        'w-[44px] md:w-[167px] left-[8px] md:left-[16px]'
+      } pb-[4px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px] transition-all duration-300 ease-in-out group-hover:w-[167px] group-hover:left-[16px]`}>
         {NAV_ITEMS.map((item, index) => (
           <div
             key={item.href}
@@ -257,7 +271,11 @@ export default function Sidebar() {
       
       {/* Footer - 동적 위치 */}
       <div 
-        className="left-[8px] md:left-[16.5px] absolute flex flex-col justify-start items-start gap-[21px] transition-all duration-300 ease-in-out group-hover:left-[16.5px] opacity-0 md:opacity-100 group-hover:opacity-100"
+        className={`${
+          isVeryNarrowDevice ? 'left-[8px]' : 
+          isNarrowDevice ? 'left-[8px]' : 
+          'left-[8px] md:left-[16.5px]'
+        } absolute flex flex-col justify-start items-start gap-[21px] transition-all duration-300 ease-in-out group-hover:left-[16.5px] opacity-0 md:opacity-100 group-hover:opacity-100`}
         style={{ top: `${footerTop}px` }}
       >
         <div className="w-[161px] h-[42px] relative">

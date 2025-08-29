@@ -108,3 +108,6 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Cursor Rules
+.cursor/rules/
