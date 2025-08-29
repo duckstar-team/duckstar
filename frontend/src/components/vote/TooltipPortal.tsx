@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
+// Types
 interface TooltipPortalProps {
   type: 'bonus' | 'max-votes';
   position: { x: number; y: number };
@@ -11,6 +12,190 @@ interface TooltipPortalProps {
   show: boolean;
 }
 
+interface TooltipConfig {
+  image: string;
+  text: string;
+  showHideButton: boolean;
+  mobileWidth: number;
+  desktopWidth: string;
+}
+
+interface PositionStyle {
+  top: number;
+  transform: string;
+  zIndex: number;
+}
+
+// Constants
+const TOOLTIP_CONFIG: Record<'bonus' | 'max-votes', TooltipConfig> = {
+  'bonus': {
+    image: "/icons/textBalloon-long.svg",
+    text: "보너스 표는 2개가 모여야 일반 표 1개와 같습니다.",
+    showHideButton: true,
+    mobileWidth: 155,
+    desktopWidth: 'auto',
+  },
+  'max-votes': {
+    image: "/icons/textBalloon.svg",
+    text: "더 투표하고 싶으신가요?",
+    showHideButton: false,
+    mobileWidth: 90,
+    desktopWidth: 'auto',
+  },
+} as const;
+
+const STYLES = {
+  tooltip: {
+    filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.15))',
+  },
+  position: {
+    top: -26,
+    transform: 'translateX(-50%)',
+    zIndex: 999999,
+  },
+  desktopBonusPosition: {
+    top: -45,
+    transform: 'translateX(-50%)',
+    zIndex: 999999,
+  },
+  desktopMaxVotesPosition: {
+    top: -55,
+    transform: 'translateX(-50%)',
+    zIndex: 999999,
+  },
+} as const;
+
+const MOBILE_BREAKPOINT = 768;
+
+// Utility functions
+const getDesktopPosition = (type: 'bonus' | 'max-votes'): PositionStyle => {
+  if (typeof window === 'undefined' || window.innerWidth < MOBILE_BREAKPOINT) {
+    return STYLES.position;
+  }
+  
+  return type === 'bonus' 
+    ? STYLES.desktopBonusPosition 
+    : STYLES.desktopMaxVotesPosition;
+};
+
+const getTextContent = (type: 'bonus' | 'max-votes') => {
+  if (type === 'bonus') {
+    return {
+      mobile: (
+        <>
+          <span className="block md:hidden">보너스 표는 2개가 모여야</span>
+          <span className="block md:hidden"> 일반 표 1개와 같습니다.</span>
+          <span className="hidden md:inline">보너스 표는 2개가 모여야 일반 표 1개와 같습니다.</span>
+        </>
+      )
+    };
+  }
+  
+  return {
+    mobile: (
+      <>
+        <span className="block md:hidden">더 투표할까요?</span>
+        <span className="hidden md:inline">더 투표하고 싶으신가요?</span>
+      </>
+    )
+  };
+};
+
+const getTextClasses = (type: 'bonus' | 'max-votes') => {
+  const baseClasses = 'flex flex-col font-["Pretendard",_sans-serif] font-normal justify-center text-[#000000]';
+  const sizeClasses = type === 'bonus' 
+    ? 'text-[11px] md:text-base' 
+    : 'text-xs md:text-base';
+  
+  return `${baseClasses} ${sizeClasses}`;
+};
+
+const getLineHeightClasses = (type: 'bonus' | 'max-votes') => {
+  return type === 'bonus' 
+    ? 'leading-[14px] md:leading-[22px]' 
+    : 'leading-[16px] md:leading-[22px]';
+};
+
+const getOverlayClasses = (type: 'bonus' | 'max-votes') => {
+  const baseClasses = 'absolute inset-0 flex items-center justify-center';
+  const positionClasses = type === 'bonus' 
+    ? 'px-3 py-1 -translate-y-1 md:px-6 md:py-2' 
+    : 'px-3 py-1 -translate-y-0.5 md:px-6 md:py-2 md:-translate-y-1';
+  
+  return `${baseClasses} ${positionClasses}`;
+};
+
+const getContainerClasses = (type: 'bonus' | 'max-votes') => {
+  const baseClasses = 'relative w-max pointer-events-auto';
+  const transformClasses = type === 'bonus' 
+    ? 'translate-x-[5px] -translate-y-[5px]' 
+    : '';
+  
+  return `${baseClasses} ${transformClasses}`.trim();
+};
+
+// Components
+const TooltipBalloon = ({ type }: { type: 'bonus' | 'max-votes' }) => {
+  const config = TOOLTIP_CONFIG[type];
+  
+  return (
+    <>
+      {/* Mobile balloon */}
+      <img
+        src="/icons/textBalloon.svg"
+        alt="Text Balloon"
+        height={50}
+        width={config.mobileWidth}
+        className="md:hidden"
+        style={STYLES.tooltip}
+      />
+      
+      {/* Desktop balloon */}
+      <img
+        src={config.image}
+        alt="Text Balloon"
+        height={55}
+        className="w-auto h-auto hidden md:block"
+        style={STYLES.tooltip}
+      />
+    </>
+  );
+};
+
+const TooltipText = ({ type }: { type: 'bonus' | 'max-votes' }) => {
+  const textContent = getTextContent(type);
+  
+  return (
+    <div className={getOverlayClasses(type)}>
+      <div className={getTextClasses(type)}>
+        <p className={`whitespace-pre ${getLineHeightClasses(type)}`}>
+          {textContent.mobile}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const HideButton = ({ onHide }: { onHide: () => void }) => (
+  <div className="absolute top-1 right-1">
+    <motion.button
+      className="w-4 h-4 flex items-center justify-center cursor-pointer"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
+      onClick={onHide}
+    >
+      <Image
+        src="/icons/voteSection-notify-hide.svg"
+        alt="Hide Notification"
+        width={16}
+        height={16}
+        className="w-full h-full"
+      />
+    </motion.button>
+  </div>
+);
+
+// Main component
 export default function TooltipPortal({ 
   type, 
   position, 
@@ -21,90 +206,25 @@ export default function TooltipPortal({
     return null;
   }
 
-  const tooltipContent = {
-    'bonus': {
-      image: "/icons/textBalloon-long.svg",
-      text: "보너스 표는 2개가 모여야 일반 표 1개와 같습니다.",
-      showHideButton: true
-    },
-    'max-votes': {
-      image: "/icons/textBalloon.svg",
-      text: "더 투표하고 싶으신가요?",
-      showHideButton: false
-    }
-  };
-
-  const content = tooltipContent[type];
+  const config = TOOLTIP_CONFIG[type];
+  const desktopPosition = getDesktopPosition(type);
 
   return createPortal(
     <div 
       className="fixed pointer-events-none"
       style={{
         left: `${position.x}px`,
-        top: `${position.y - 55}px`,
-        transform: 'translateX(-50%)',
-        zIndex: 999999 // 헤더(z-50)보다 훨씬 높은 z-index
+        top: `${position.y + desktopPosition.top}px`,
+        transform: desktopPosition.transform,
+        zIndex: desktopPosition.zIndex,
       }}
     >
-      <div className="relative w-max pointer-events-auto">
-        <img
-          src={type === 'bonus' ? "/icons/textBalloon.svg" : "/icons/textBalloon.svg"}
-          alt="Text Balloon"
-          height={55}
-          width={type === 'bonus' ? 'auto' : 140}
-          className="md:hidden"
-          style={{
-            filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.15))'
-          }}
-        />
-        <img
-          src={content.image}
-          alt="Text Balloon"
-          height={55}
-          className="w-auto h-auto hidden md:block"
-          style={{
-            filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.15))'
-          }}
-        />
+      <div className={getContainerClasses(type)}>
+        <TooltipBalloon type={type} />
+        <TooltipText type={type} />
         
-        {/* Text overlay */}
-        <div className="absolute inset-0 flex items-center justify-center px-4 py-1 -translate-y-1 md:px-6 md:py-2">
-          <div className="flex flex-col font-['Pretendard',_sans-serif] font-normal justify-center text-[#000000] text-sm md:text-base">
-            <p className="leading-[18px] md:leading-[22px] whitespace-pre">
-              {type === 'bonus' ? (
-                <>
-                  <span className="block md:hidden">보너스 표는 2개가 모여야</span>
-                  <span className="block md:hidden"> 일반 표 1개와 같습니다.</span>
-                  <span className="hidden md:inline">보너스 표는 2개가 모여야 일반 표 1개와 같습니다.</span>
-                </>
-              ) : (
-                <>
-                  <span className="block md:hidden">더 투표할까요?</span>
-                  <span className="hidden md:inline">더 투표하고 싶으신가요?</span>
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-        
-        {/* Hide notification button */}
-        {content.showHideButton && onHide && (
-          <div className="absolute top-1 right-1">
-            <motion.button
-              className="w-4 h-4 flex items-center justify-center cursor-pointer"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onHide}
-            >
-              <Image
-                src="/icons/voteSection-notify-hide.svg"
-                alt="Hide Notification"
-                width={16}
-                height={16}
-                className="w-full h-full"
-              />
-            </motion.button>
-          </div>
+        {config.showHideButton && onHide && (
+          <HideButton onHide={onHide} />
         )}
       </div>
     </div>,

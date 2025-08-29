@@ -9,11 +9,11 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-export default function SearchBar({ 
+const SearchBar = ({ 
   value, 
   onChange, 
-  placeholder = "애니메이션 이름을 입력하세요" 
-}: SearchBarProps) {
+  placeholder = "애니메이션 제목을 입력하세요" 
+}: SearchBarProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [currentPlaceholder, setCurrentPlaceholder] = useState("");
   const [isClient, setIsClient] = useState(false);
@@ -23,7 +23,7 @@ export default function SearchBar({
     
     const checkIsMobile = () => {
       const mobile = window.innerWidth < 768;
-      const newPlaceholder = mobile ? "애니메이션 이름 검색" : "애니메이션 이름을 입력하세요";
+      const newPlaceholder = mobile ? "제목 검색" : "애니메이션 제목을 입력하세요";
       
       setIsMobile(mobile);
       setCurrentPlaceholder(newPlaceholder);
@@ -62,4 +62,6 @@ export default function SearchBar({
       </div>
     </div>
   );
-}
+};
+
+export default SearchBar; 

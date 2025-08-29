@@ -197,7 +197,7 @@ export default function VoteSection({
         {/* Search Bar Section - Bottom on mobile, right on desktop - Hidden in Gender Selection */}
         {!currentShowGenderSelection && (
           <div className="order-1 lg:order-1 flex-1 w-full lg:w-auto">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <SearchBar
                 value={searchQuery}
                 onChange={handleSearchQueryChange}
