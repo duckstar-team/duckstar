@@ -2,12 +2,19 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
+# Build-time argument
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Install dependencies
 COPY package*.json ./
 RUN npm ci
 
 # Copy source code
 COPY . .
+
+# Inject .env.production
+RUN echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" > .env.production
 
 # Build Next.js app
 RUN npm run build

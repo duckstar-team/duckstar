@@ -18,25 +18,43 @@ jobs:
       KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
       KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
       KAKAO_ADMIN_KEY: ${{ secrets.KAKAO_ADMIN_KEY }}
-      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Get public IP of GitHub Actions runner
+        id: ip
+        run: echo "IP=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_OUTPUT
+
+      - name: Add IP to EC2 Security Group for SSH
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id sg-01655f148522c2cac \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.IP }}/32
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-northeast-2
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Deploy to EC2
+      - name: Deploy to EC2 via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
+            set -e
             cd /home/ubuntu/duckstar
 
+            echo "🔄 Git Pulling..."
             git fetch origin master
             git reset --hard origin/master
 
+            echo "🔐 .env 생성"
             echo "SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE" > .env
             echo "SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL" >> .env
             echo "SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME" >> .env
@@ -45,10 +63,20 @@ jobs:
             echo "KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID" >> .env
             echo "KAKAO_CLIENT_SECRET=$KAKAO_CLIENT_SECRET" >> .env
             echo "KAKAO_ADMIN_KEY=$KAKAO_ADMIN_KEY" >> .env
-            echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" >> .env
 
-            docker compose down
-            docker compose build --no-cache
+            # 일반적인 배포 (무중단)
+            echo "🛠 빌드 시작"
+            docker compose up -d --build
+
+            echo "🚀 컨테이너 실행"
             docker compose up -d
+
+            echo "🧹 안 쓰는 이미지 정리"
             docker image prune -f
+
+            echo "📋 현재 컨테이너 상태"
+            docker ps -a
+
+            echo "📄 최근 로그 출력"
+            docker compose logs --tail=50
           EOF
