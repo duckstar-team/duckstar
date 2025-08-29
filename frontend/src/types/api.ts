@@ -17,9 +17,9 @@ export interface WeekDto {
   endDate: string;
 }
 
-// Anime Ballot DTO
-export interface AnimeBallotDto {
-  animeCandidateId: number;
+// Ballot Request DTO
+export interface BallotRequestDto {
+  candidateId: number;
   ballotType: "NORMAL" | "BONUS";
 }
 
@@ -27,7 +27,7 @@ export interface AnimeBallotDto {
 export interface AnimeVoteRequest {
   weekId: number;
   gender: "MALE" | "FEMALE" | "NONE";
-  ballotDtos: AnimeBallotDto[];
+  ballotRequests: BallotRequestDto[];
 }
 
 // Vote Receipt DTO
@@ -127,7 +127,7 @@ export interface AnimeVoteHistoryDto {
   weekDto: WeekDto;
   category: "ANIME" | "HERO" | "HEROINE";
   submittedAt: string;
-  animeBallotDtos: AnimeBallotDto[];
+  ballotRequests: BallotRequestDto[];
 }
 
 // Vote History Ballot DTO (실제 API 응답에서 사용되는 구조)
@@ -147,20 +147,26 @@ export interface VoteHistoryResponseDto {
   submittedAt: string;
   normalCount: number;
   bonusCount: number;
-  animeBallotDtos: VoteHistoryBallotDto[];
+  ballotRequests: VoteHistoryBallotDto[];
 }
 
 export type ApiResponseVoteHistoryResponseDto = ApiResponse<VoteHistoryResponseDto>;
 
 export type ApiResponseAnimeVoteHistoryDto = ApiResponse<AnimeVoteHistoryDto>;
 
-// Vote Check DTO
-export interface VoteCheckDto {
+// Vote Status DTO (통합된 API 응답)
+export interface AnimeVoteStatusDto {
   hasVoted: boolean;
   submissionId: number;
+  weekDto: WeekDto;
+  category: "ANIME" | "HERO" | "HEROINE";
+  normalCount: number;
+  bonusCount: number;
+  submittedAt: string;
+  animeBallotDtos: VoteHistoryBallotDto[];
 }
 
-export type ApiResponseVoteCheckDto = ApiResponse<VoteCheckDto>;
+export type ApiResponseAnimeVoteStatusDto = ApiResponse<AnimeVoteStatusDto>;
 
 // OTT DTO
 export interface OttDto {

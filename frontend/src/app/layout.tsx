@@ -69,7 +69,7 @@ export default function RootLayout({
         </div>
         
         {/* Main Content */}
-        <main className="ml-[60px] md:ml-[200px] mt-[60px] bg-gray-50 min-h-screen transition-all duration-300 ease-in-out group-hover:ml-[200px]">
+        <main className="ml-[50px] sm:ml-[55px] md:ml-[200px] mt-[60px] bg-gray-50 min-h-screen transition-all duration-300 ease-in-out group-hover:ml-[200px]">
           {children}
         </main>
       </body>
