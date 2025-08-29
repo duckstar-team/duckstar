@@ -44,7 +44,20 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Deploy to EC2 via SSH
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
+          SPRING_DATASOURCE_URL=${{ env.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ env.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ env.SPRING_DATASOURCE_PASSWORD }}
+          JWT_SECRET=${{ env.JWT_SECRET }}
+          KAKAO_CLIENT_ID=${{ env.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ env.KAKAO_CLIENT_SECRET }}
+          KAKAO_ADMIN_KEY=${{ env.KAKAO_ADMIN_KEY }}
+          EOF
+
+      - name: Git pulling
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
             set -e
@@ -53,30 +66,26 @@ jobs:
             echo "🔄 Git Pulling..."
             git fetch origin master
             git reset --hard origin/master
+          EOF
 
-            echo "🔐 .env 생성"
-            echo "SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE" > .env
-            echo "SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL" >> .env
-            echo "SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME" >> .env
-            echo "SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD" >> .env
-            echo "JWT_SECRET=$JWT_SECRET" >> .env
-            echo "KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID" >> .env
-            echo "KAKAO_CLIENT_SECRET=$KAKAO_CLIENT_SECRET" >> .env
-            echo "KAKAO_ADMIN_KEY=$KAKAO_ADMIN_KEY" >> .env
+      - name: Upload .env to EC2
+        run: scp -o StrictHostKeyChecking=no .env ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/duckstar/.env
 
-            # 일반적인 배포 (무중단)
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
+            set -e
+            cd /home/ubuntu/duckstar
+
             echo "🛠 빌드 시작"
             docker compose up -d --build
 
-            echo "🚀 컨테이너 실행"
-            docker compose up -d
-
-            echo "🧹 안 쓰는 이미지 정리"
+            echo "🧹 이미지 정리"
             docker image prune -f
 
-            echo "📋 현재 컨테이너 상태"
+            echo "📋 상태"
             docker ps -a
 
-            echo "📄 최근 로그 출력"
+            echo "📄 최근 로그"
             docker compose logs --tail=50
           EOF
