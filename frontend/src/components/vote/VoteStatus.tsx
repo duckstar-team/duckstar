@@ -152,7 +152,7 @@ export default function VoteStatus({
   return (
     <div className="flex flex-wrap items-center justify-center min-h-16 overflow-visible w-full">
       {/* Vote Stamps and Buttons Container */}
-      <div className={`flex flex-wrap items-center justify-center min-h-16 overflow-visible ${showGenderSelection ? 'gap-6 lg:gap-12' : (isBonusMode ? 'gap-6 lg:gap-12' : 'gap-4 lg:gap-8')}`}>
+      <div className={`flex flex-wrap items-center justify-center min-h-16 overflow-visible ${showGenderSelection ? 'gap-4 sm:gap-6 lg:gap-12' : (isBonusMode ? 'gap-4 sm:gap-6 lg:gap-12' : 'gap-3 sm:gap-4 lg:gap-8')}`}>
         
         {/* Normal Vote Stamp */}
         <motion.div
