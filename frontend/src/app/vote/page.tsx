@@ -8,8 +8,8 @@ import VoteSection from "@/components/vote/VoteSection";
 import VoteStamp from "@/components/vote/VoteStamp";
 import ConfettiEffect from "@/components/vote/ConfettiEffect";
 import ConfirmDialog from "@/components/vote/ConfirmDialog";
-import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, VoteHistoryResponseDto, ApiResponseVoteCheckDto } from '@/types/api';
-import useSWR from 'swr';
+import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVoteStatusDto, AnimeVoteStatusDto, VoteHistoryBallotDto } from '@/types/api';
+import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
 import { fetcher, getVoteHistory, submitVote } from '@/api/client';
 
@@ -30,7 +30,7 @@ export default function VotePage() {
   const [showGenderSelection, setShowGenderSelection] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
   const [showVoteResult, setShowVoteResult] = useState(false);
-  const [voteHistory, setVoteHistory] = useState<VoteHistoryResponseDto | null>(null);
+  const [voteHistory, setVoteHistory] = useState<AnimeVoteStatusDto | null>(null);
   const [showNextError, setShowNextError] = useState(false);
   const [scrollCompleted, setScrollCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -50,14 +50,17 @@ export default function VotePage() {
     });
   };
 
-  // 투표 참여 여부 및 후보 목록 조회
-  const { data: voteCheckData } = useSWR(
-    '/api/v1/vote/anime/check-voted',
-    fetcher<ApiResponseVoteCheckDto>
+  // 투표 상태 조회 (통합 API)
+  const { data: voteStatusData, isLoading: isVoteStatusLoading } = useSWR(
+    '/api/v1/vote/anime/status',
+    fetcher<ApiResponseAnimeVoteStatusDto>
   );
 
+  // 투표하지 않은 경우에만 후보 목록 조회
+  const shouldFetchCandidates = voteStatusData && !voteStatusData.result?.hasVoted;
+  
   const { data, error, isLoading } = useSWR<ApiResponseAnimeCandidateListDto>(
-    '/api/v1/vote/anime',
+    shouldFetchCandidates ? '/api/v1/vote/anime' : null,
     fetcher<ApiResponseAnimeCandidateListDto>
   );
 
@@ -132,6 +135,9 @@ export default function VotePage() {
     // 1단계: 모든 카드들이 투명해짐 (showGenderSelection이 true가 되면서 animate 조건이 활성화됨)
     setShowGenderSelection(true);
     
+    // 검색 쿼리 초기화 (상태 4로 넘어갈 때 검색 필터 해제)
+    setSearchQuery('');
+    
     // 2단계: 투명해지는 애니메이션 완료 후 페이지 최상단으로 이동
     setTimeout(() => {
       window.scrollTo({ 
@@ -162,6 +168,8 @@ export default function VotePage() {
   const handleBackClick = () => {
     setShowGenderSelection(false);
     setScrollCompleted(false);
+    // 뒤로가기 시에도 검색 쿼리 초기화
+    setSearchQuery('');
   };
 
   const handleConfettiComplete = () => {
@@ -177,39 +185,26 @@ export default function VotePage() {
     if (!selectedGender) return;
 
     try {
-      const ballotDtos = [
-        ...selected.map(id => ({ animeCandidateId: id, ballotType: "NORMAL" as const })),
-        ...bonusSelected.map(id => ({ animeCandidateId: id, ballotType: "BONUS" as const }))
+      const ballotRequests = [
+        ...selected.map(id => ({ candidateId: id, ballotType: "NORMAL" as const })),
+        ...bonusSelected.map(id => ({ candidateId: id, ballotType: "BONUS" as const }))
       ];
 
       const requestBody = {
         weekId: data?.result?.weekId,
         gender: selectedGender === 'male' ? 'MALE' : 'FEMALE',
-        ballotDtos
+        ballotRequests
       };
       
       const result = await submitVote(requestBody);
       
-      // 성공 시 투표 내역 조회 API 호출
+      // 성공 시 SWR 캐시 업데이트
       if (result.result) {
-        // 투표 완료 후 투표 체크 데이터 업데이트
-        if (voteCheckData && voteCheckData.result) {
-          voteCheckData.result.hasVoted = true;
-          voteCheckData.result.submissionId = result.result.submissionId;
-        }
+        // 투표 상태 데이터 캐시 업데이트
+        await mutate('/api/v1/vote/anime/status');
         
-        // 투표 내역 조회 API 호출
-        try {
-          const historyResult = await getVoteHistory(result.result.submissionId);
-          if (historyResult.result) {
-            setVoteHistory(historyResult.result);
-            setShowVoteResult(true);
-          } else {
-            alert('투표는 완료되었지만 내역을 불러올 수 없습니다.');
-          }
-        } catch (error) {
-          alert('투표는 완료되었지만 내역을 불러올 수 없습니다.');
-        }
+        // 투표 결과 화면으로 전환
+        setShowVoteResult(true);
       } else {
         alert('투표는 완료되었지만 결과를 불러올 수 없습니다.');
       }
@@ -261,24 +256,13 @@ export default function VotePage() {
     return `${quarter}분기 ${week}주차 덕스타 결과는 일요일 22시에 공개됩니다.`;
   };
 
-  // 투표 참여 여부 확인 및 투표 내역 가져오기
+  // 투표 상태 데이터가 로드되면 상태 업데이트
   useEffect(() => {
-    if (voteCheckData?.result?.hasVoted && voteCheckData?.result?.submissionId) {
-      // 이미 투표한 경우, 투표 내역 가져오기
-      getVoteHistory(voteCheckData.result.submissionId)
-        .then(data => {
-          if (data && data.result) {
-            setVoteHistory(data.result);
-            setShowVoteResult(true);
-          } else {
-            // 투표 내역 데이터 오류 처리
-          }
-        })
-        .catch(err => {
-          // 에러가 발생해도 투표 화면은 계속 표시
-        });
+    if (voteStatusData?.result && voteStatusData.result.hasVoted) {
+      setVoteHistory(voteStatusData.result);
+      setShowVoteResult(true);
     }
-  }, [voteCheckData]);
+  }, [voteStatusData]);
 
   // 투표 결과 화면이 표시될 때 빵빠레 효과 시작
   useEffect(() => {
@@ -287,85 +271,35 @@ export default function VotePage() {
     }
   }, [showVoteResult, voteHistory]);
 
-  // 로딩 상태 처리
+  // 투표 상태 확인 로딩 중
+  if (isVoteStatusLoading) {
+    return <div className="text-center">투표 상태를 확인하는 중...</div>;
+  }
+
+  // 투표하지 않은 사람이지만 후보 목록 로딩 중
   if (isLoading) {
-    return <div className="text-center">로딩 중...</div>;
+    return <div className="text-center">투표 후보를 불러오는 중...</div>;
   }
 
-  // 에러 상태 처리
+  // 투표하지 않은 사람이지만 후보 목록 에러
   if (error) {
-    return <div className="text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</div>;
+    return <div className="text-center text-red-500">투표 후보를 불러오는 중 오류가 발생했습니다.</div>;
   }
 
-  // 전체 애니메이션 리스트 생성 (API 데이터 또는 테스트 데이터)
-  const allAnimeList: Anime[] = data?.result?.animeCandidates?.map((anime: AnimeCandidateDto) => ({
-    id: anime.animeCandidateId,
-    title: anime.titleKor || '제목 없음',
-    thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
-    medium: anime.medium
-  })) || [
-    // 테스트 데이터 (API 데이터가 없을 때)
-    {
-      id: 1,
-      title: "9-nine- Ruler's Crown",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "TVA" as const,
-    },
-    {
-      id: 2,
-      title: "NEW 팬티 & 스타킹 with 가터벨트",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "TVA" as const,
-    },
-    {
-      id: 3,
-      title: "그 비스크 돌은 사랑을 한다 Season 2",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "TVA" as const,
-    },
-    {
-      id: 4,
-      title: "원피스",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "MOVIE" as const,
+  // 투표한 사람인 경우 바로 투표 결과 화면 표시
+  if (voteStatusData?.result?.hasVoted) {
+    // 투표 내역이 아직 로드되지 않은 경우 로딩 표시
+    if (!voteHistory) {
+      return <div className="text-center">투표 기록을 불러오는 중...</div>;
     }
-  ];
-
-  // 검색어에 따라 애니메이션 리스트 필터링
-  const filteredAnimeList: Anime[] = searchQuery.trim() === '' 
-    ? allAnimeList 
-    : allAnimeList.filter(anime => 
-        anime.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-  // 상태 4에서 투표된 아이템만 필터링하고 정렬 (애니메이션 완료 후에만 필터링)
-  const animeList: Anime[] = (showGenderSelection && scrollCompleted)
-    ? filteredAnimeList
-        .filter(anime => selected.includes(anime.id) || bonusSelected.includes(anime.id))
-        .sort((a, b) => {
-          const aIsNormal = selected.includes(a.id);
-          const bIsNormal = selected.includes(b.id);
-          
-          // 일반 투표된 아이템을 먼저, 보너스 투표된 아이템을 나중에
-          if (aIsNormal && !bIsNormal) return -1;
-          if (!aIsNormal && bIsNormal) return 1;
-          return 0;
-        })
-    : filteredAnimeList;
-
-  // 전체 후보자 수
-  const totalCandidates = data?.result?.candidatesCount || animeList.length;
-
-  // 투표 결과 화면 렌더링
-  if (showVoteResult && voteHistory) {
-          return (
-        <main className="w-full bg-gray-50">
-          {/* 빵빠레 효과 */}
-          <ConfettiEffect 
-            isActive={showConfetti} 
-            onComplete={handleConfettiComplete}
-          />
-          {/* 배너 - 전체 너비, 패딩 없음 */}
+    return (
+      <main className="w-full bg-gray-50">
+        {/* 빵빠레 효과 */}
+        <ConfettiEffect 
+          isActive={showConfetti} 
+          onComplete={handleConfettiComplete}
+        />
+        {/* 배너 - 전체 너비, 패딩 없음 */}
         <section>
           <VoteBanner 
             customTitle={`이번 주 ${categoryText} 투표 기록`}
@@ -429,7 +363,7 @@ export default function VotePage() {
             <h2 className="text-xl font-semibold mb-4">투표한 {categoryText}</h2>
             {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                  {voteHistory.animeBallotDtos.map((ballot) => (
+                  {voteHistory.animeBallotDtos.map((ballot: VoteHistoryBallotDto) => (
                     <VoteCard
                       key={ballot.animeId}
                       thumbnailUrl={ballot.mainThumbnailUrl}
@@ -450,16 +384,81 @@ export default function VotePage() {
                   ))}
                 </div>
               ) : (
-                              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">투표한 {categoryText}이 없습니다.</p>
-              </div>
-            )}
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">투표한 {categoryText}이 없습니다.</p>
+                </div>
+              )}
           </div>
         </div>
       </main>
     );
   }
 
+  // 투표 상태 확인 로딩 중
+  if (isVoteStatusLoading) {
+    return <div className="text-center">투표 상태를 확인하는 중...</div>;
+  }
+
+  // 전체 애니메이션 리스트 생성 (API 데이터 또는 테스트 데이터)
+  const allAnimeList: Anime[] = data?.result?.animeCandidates?.map((anime: AnimeCandidateDto) => ({
+    id: anime.animeCandidateId,
+    title: anime.titleKor || '제목 없음',
+    thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
+    medium: anime.medium
+  })) || [
+    // 테스트 데이터 (API 데이터가 없을 때)
+    {
+      id: 1,
+      title: "9-nine- Ruler's Crown",
+      thumbnailUrl: "/imagemainthumbnail@2x.png",
+      medium: "TVA" as const,
+    },
+    {
+      id: 2,
+      title: "NEW 팬티 & 스타킹 with 가터벨트",
+      thumbnailUrl: "/imagemainthumbnail@2x.png",
+      medium: "TVA" as const,
+    },
+    {
+      id: 3,
+      title: "그 비스크 돌은 사랑을 한다 Season 2",
+      thumbnailUrl: "/imagemainthumbnail@2x.png",
+      medium: "TVA" as const,
+    },
+    {
+      id: 4,
+      title: "원피스",
+      thumbnailUrl: "/imagemainthumbnail@2x.png",
+      medium: "MOVIE" as const,
+    }
+  ];
+
+  // 검색어에 따라 애니메이션 리스트 필터링
+  const filteredAnimeList: Anime[] = searchQuery.trim() === '' 
+    ? allAnimeList 
+    : allAnimeList.filter(anime => 
+        anime.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+  // 상태 4에서 투표된 아이템만 필터링하고 정렬 (애니메이션 완료 후에만 필터링)
+  const animeList: Anime[] = (showGenderSelection && scrollCompleted)
+    ? filteredAnimeList
+        .filter(anime => selected.includes(anime.id) || bonusSelected.includes(anime.id))
+        .sort((a, b) => {
+          const aIsNormal = selected.includes(a.id);
+          const bIsNormal = selected.includes(b.id);
+          
+          // 일반 투표된 아이템을 먼저, 보너스 투표된 아이템을 나중에
+          if (aIsNormal && !bIsNormal) return -1;
+          if (!aIsNormal && bIsNormal) return 1;
+          return 0;
+        })
+    : filteredAnimeList;
+
+  // 전체 후보자 수
+  const totalCandidates = data?.result?.candidatesCount || animeList.length;
+
+  // 투표 결과 화면 렌더링
   return (
     <main className="w-full">
       {/* 배너 - 전체 너비, 패딩 없음 */}
