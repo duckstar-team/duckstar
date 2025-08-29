@@ -11,7 +11,7 @@ import ConfirmDialog from "@/components/vote/ConfirmDialog";
 import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVoteStatusDto, AnimeVoteStatusDto, VoteHistoryBallotDto } from '@/types/api';
 import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
-import { fetcher, getVoteHistory, submitVote } from '@/api/client';
+import { fetcher, submitVote } from '@/api/client';
 
 interface Anime {
   id: number;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -11,7 +11,7 @@ interface VoteResult {
   submissionDateTime: string;
 }
 
-export default function VoteResultPage() {
+function VoteResultContent() {
   const searchParams = useSearchParams();
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
 
@@ -175,5 +175,20 @@ export default function VoteResultPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function VoteResultPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#990033] mx-auto mb-4"></div>
+          <p className="text-gray-600">페이지를 불러오는 중...</p>
+        </div>
+      </div>
+    }>
+      <VoteResultContent />
+    </Suspense>
   );
 }
