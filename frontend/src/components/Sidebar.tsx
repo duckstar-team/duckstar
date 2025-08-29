@@ -14,8 +14,8 @@ const NAV_ITEMS = [
     href: "/",
     defaultIcon: "/icons/home-default.svg",
     activeIcon: "/icons/home-active.svg",
-    iconSize: "h-[17.75px] w-[18px]",
-    iconClass: "absolute flex h-[17.75px] items-center justify-center left-0 top-0 w-[18px]",
+    iconSize: "size-5",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true,
     badgeText: "곧 출시"
   },
@@ -24,8 +24,8 @@ const NAV_ITEMS = [
     href: "/chart",
     defaultIcon: "/icons/chart-default.svg",
     activeIcon: "/icons/chart-active.svg",
-    iconSize: "size-[22px]",
-    iconClass: "relative size-full",
+    iconSize: "size-5",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true,
     badgeText: "준비중"
   },
@@ -35,7 +35,7 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/vote-default.svg",
     activeIcon: "/icons/vote-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: false
   },
   { 
@@ -44,7 +44,7 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/search-default.svg",
     activeIcon: "/icons/search-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true,
     badgeText: "곧 출시"
   },
@@ -54,7 +54,7 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/mypage-default.svg",
     activeIcon: "/icons/mypage-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true
   },
 ];
@@ -62,7 +62,7 @@ const NAV_ITEMS = [
 // Vote button variants based on Figma specifications
 const voteButtonVariants = cva(
   // Base classes from Figma
-  "w-[44px] md:w-[167px] h-[40px] py-[10px] pl-[10px] pr-[10px] md:pr-[12px] rounded-lg flex justify-start items-center gap-0 md:gap-[10px] transition-all duration-200 ease-in-out group-hover:w-[167px] group-hover:pr-[12px] group-hover:gap-[10px]",
+  "w-[40px] md:w-[167px] h-[40px] py-[10px] pl-[10px] pr-[10px] md:pr-[12px] rounded-lg flex justify-start items-center gap-0 md:gap-[10px] transition-all duration-200 ease-in-out group-hover:w-[167px] group-hover:pr-[12px] group-hover:gap-[10px]",
   {
     variants: {
       state: {
@@ -131,16 +131,14 @@ function NavButton({
           <div className={cn(iconSize, "relative")}>
             <div className={iconClass}>
               {label === "홈" ? (
-                <div className="flex-none rotate-[90deg]">
-                  <div className="h-[18px] relative w-[17.75px]">
-                    <Image
-                      src={iconSrc}
-                      alt={label}
-                      width={18}
-                      height={17.75}
-                      className="block max-w-none size-full"
-                    />
-                  </div>
+                <div className="flex items-center justify-center size-full rotate-[90deg]">
+                  <Image
+                    src={iconSrc}
+                    alt={label}
+                    width={20}
+                    height={20}
+                    className="size-full object-contain"
+                  />
                 </div>
               ) : (
                 <Image
@@ -148,12 +146,12 @@ function NavButton({
                   alt={label}
                   width={20}
                   height={20}
-                  className="block max-w-none size-full"
+                  className="size-full object-contain"
                 />
               )}
             </div>
           </div>
-          
+        
           {/* Text container */}
           <div className={cn(textVariants({ state }), "hidden md:block group-hover:block")}>
             <span>{label}</span>
@@ -175,16 +173,14 @@ function NavButton({
             <div className={cn(iconSize, "relative")}>
               <div className={iconClass}>
                 {label === "홈" ? (
-                  <div className="flex-none rotate-[90deg]">
-                    <div className="h-[18px] relative w-[17.75px]">
-                      <Image
-                        src={iconSrc}
-                        alt={label}
-                        width={18}
-                        height={17.75}
-                        className="block max-w-none size-full"
-                      />
-                    </div>
+                  <div className="flex items-center justify-center size-full rotate-[90deg]">
+                    <Image
+                      src={iconSrc}
+                      alt={label}
+                      width={20}
+                      height={20}
+                      className="size-full object-contain"
+                    />
                   </div>
                 ) : (
                   <Image
@@ -192,7 +188,7 @@ function NavButton({
                     alt={label}
                     width={20}
                     height={20}
-                    className="block max-w-none size-full"
+                    className="size-full object-contain"
                   />
                 )}
               </div>
@@ -237,15 +233,15 @@ export default function Sidebar() {
 
   return (
     <div className={`${
-      isVeryNarrowDevice ? 'w-[50px]' : 
-      isNarrowDevice ? 'w-[55px]' : 
+      isVeryNarrowDevice ? 'w-[52px]' : 
+      isNarrowDevice ? 'w-[56px]' : 
       'w-[60px] md:w-[200px]'
     } h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]`}>
       {/* Navigation items */}
       <div className={`${
-        isVeryNarrowDevice ? 'w-[34px] left-[8px]' : 
-        isNarrowDevice ? 'w-[39px] left-[8px]' : 
-        'w-[44px] md:w-[167px] left-[8px] md:left-[16px]'
+        isVeryNarrowDevice ? 'w-[32px] left-[8px]' : 
+        isNarrowDevice ? 'w-[36px] left-[8px]' : 
+        'w-[40px] md:w-[167px] left-[8px] md:left-[16px]'
       } pb-[4px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px] transition-all duration-300 ease-in-out group-hover:w-[167px] group-hover:left-[16px]`}>
         {NAV_ITEMS.map((item, index) => (
           <div

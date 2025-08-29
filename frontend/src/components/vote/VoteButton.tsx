@@ -14,7 +14,7 @@ interface VoteButtonProps {
 
 const BUTTON_CONFIG = {
   next: {
-    width: 'w-[80px]',
+    width: 'w-fit',
     gradient: 'bg-gradient-to-r from-[#cb285e] to-[#9c1f49]',
     text: 'NEXT',
   },
@@ -37,7 +37,7 @@ export default function VoteButton({
   showError = false 
 }: VoteButtonProps) {
   const config = BUTTON_CONFIG[type];
-  const baseClasses = "flex items-center justify-center pl-2.5 pr-3 h-10 rounded-lg font-['Pretendard',_sans-serif] font-bold text-base text-white transition-all duration-200 hover:brightness-110";
+  const baseClasses = "flex items-center justify-center pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 h-8 sm:h-10 rounded-lg font-['Pretendard',_sans-serif] font-bold text-sm sm:text-base text-white transition-all duration-200 hover:brightness-110 text-center";
   
   const buttonClasses = `${baseClasses} ${config.gradient} ${config.width}`;
   const disabledClasses = disabled ? 'opacity-50 hover:brightness-100' : 'cursor-pointer';
@@ -50,7 +50,7 @@ export default function VoteButton({
           alt="Block Icon"
           width={20}
           height={20}
-          className="w-5 h-5"
+          className="w-4 h-4 sm:w-5 sm:h-5"
         />
       );
     }
@@ -68,7 +68,7 @@ export default function VoteButton({
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
-        className="flex items-center justify-center"
+        className="flex items-center justify-center w-full text-center"
       >
         {getButtonContent()}
       </motion.span>

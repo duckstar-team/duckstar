@@ -129,7 +129,6 @@ export default function VoteCard({
       <motion.div
         className={`
           w-full bg-white rounded-xl shadow border-2
-          flex items-center gap-4 p-4
           transition-all duration-200 ease-in-out
           ${disabled ? 'cursor-default' : 'cursor-pointer hover:shadow-lg'}
           ${showError 
@@ -150,41 +149,93 @@ export default function VoteCard({
         onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
         onClick={!disabled ? handleCardClick : undefined}
       >
-        {/* 썸네일 */}
-        <div className="relative w-28 h-36 flex-shrink-0">
-          <img
-            src={thumbnailUrl}
-            alt={title}
-            className="w-full h-full object-cover rounded-md"
+        {/* 데스크톱 레이아웃 (lg 이상) */}
+        <div className="hidden lg:flex items-center gap-4 p-4">
+          {/* 썸네일 */}
+          <div className="relative w-28 h-36 flex-shrink-0">
+            <img
+              src={thumbnailUrl}
+              alt={title}
+              className="w-full h-full object-cover rounded-md"
+            />
+          </div>
+
+          {/* 제목 + 시즌 */}
+          <div className="flex flex-col flex-1">
+            <div className="text-lg font-semibold text-gray-900 break-words leading-tight">
+              {title}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">{getSubTitle()}</div>
+          </div>
+
+          {/* 투표 토글 */}
+          <VoteToggle
+            selected={checked}
+            isCardHovered={isHovered}
+            justDeselected={justDeselected}
+            currentVotes={currentVotes}
+            maxVotes={maxVotes}
+            isBonusMode={isBonusMode}
+            bonusVotesUsed={bonusVotesUsed}
+            isBonusVote={isBonusVote}
+            onClick={(isBonusVote) => {
+              if (!onChange) return; // disabled 상태에서는 클릭 무시
+              // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
+              onChange(isBonusVote);
+            }}
+            disabled={disabled}
+            cardHoverSide={hoverSide}
           />
         </div>
 
-        {/* 제목 + 시즌 */}
-        <div className="flex flex-col flex-1">
-          <div className="text-lg font-semibold text-gray-900 break-words leading-tight">
-            {title}
-          </div>
-          <div className="text-sm text-gray-500 mt-1">{getSubTitle()}</div>
-        </div>
+        {/* 모바일/태블릿 레이아웃 (lg 미만) */}
+        <div className="lg:hidden p-4">
+          <div className="flex items-start gap-3">
+            {/* 썸네일 */}
+            <div className="relative w-20 h-24 flex-shrink-0">
+              <img
+                src={thumbnailUrl}
+                alt={title}
+                className="w-full h-full object-cover rounded-md"
+              />
+            </div>
 
-        {/* 투표 토글 */}
-        <VoteToggle
-          selected={checked}
-          isCardHovered={isHovered}
-          justDeselected={justDeselected}
-          currentVotes={currentVotes}
-          maxVotes={maxVotes}
-          isBonusMode={isBonusMode}
-          bonusVotesUsed={bonusVotesUsed}
-          isBonusVote={isBonusVote}
-          onClick={(isBonusVote) => {
-            if (!onChange) return; // disabled 상태에서는 클릭 무시
-            // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
-            onChange(isBonusVote);
-          }}
-          disabled={disabled}
-          cardHoverSide={hoverSide}
-        />
+            {/* 오른쪽 열: 제목 + 시즌 + 기표칸 */}
+            <div className="flex flex-col flex-1 min-w-0">
+              {/* 제목 */}
+              <div className="text-base font-semibold text-gray-900 break-words leading-tight mb-1">
+                {title}
+              </div>
+              
+              {/* 시즌 정보 */}
+              <div className="text-xs text-gray-500 mb-3">
+                {getSubTitle()}
+              </div>
+              
+              {/* 기표칸 (우하단) */}
+              <div className="flex justify-end">
+                <VoteToggle
+                  selected={checked}
+                  isCardHovered={isHovered}
+                  justDeselected={justDeselected}
+                  currentVotes={currentVotes}
+                  maxVotes={maxVotes}
+                  isBonusMode={isBonusMode}
+                  bonusVotesUsed={bonusVotesUsed}
+                  isBonusVote={isBonusVote}
+                  onClick={(isBonusVote) => {
+                    if (!onChange) return; // disabled 상태에서는 클릭 무시
+                    // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
+                    onChange(isBonusVote);
+                  }}
+                  disabled={disabled}
+                  cardHoverSide={hoverSide}
+                  isMobile={true}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* 에러 메시지 - 빨간 테두리 위에 작은 글씨 */}
         {showError && (

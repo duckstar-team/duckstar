@@ -36,7 +36,7 @@ export default function ConfirmDialog({ isOpen, onConfirm, onCancel }: ConfirmDi
                 보너스 투표 사용 조건
               </h3>
               <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                보너스 투표 사용을 위해서는 일반 투표 10개를 다 사용하셔야 합니다. 보너스 표를 회수하고 다음을 넘어갈까요?
+                보너스 투표 사용을 위해서는 일반 투표 10개를 다 사용하셔야 합니다. 보너스 표를 회수하고 다음으로 넘어갈까요?
               </p>
               
               <div className="flex gap-3">
