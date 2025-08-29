@@ -308,13 +308,13 @@ export default function VotePage() {
         </section>
 
         {/* 메인 컨텐츠 */}
-        <div className="w-full max-w-[1240px] mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {/* 투표 결과 섹션 */}
-            <div className="p-6">
-              <div className="bg-[#ffffff] box-border content-stretch flex flex-col lg:flex-row gap-4 lg:gap-[55px] items-center justify-center px-4 lg:px-0 h-16 relative w-full">
+            <div className="p-4 sm:p-6">
+              <div className="bg-[#ffffff] box-border content-stretch flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-[55px] items-center justify-center px-4 lg:px-0 min-h-16 relative w-full">
                 
-                <div className="content-stretch flex flex-col lg:flex-row gap-4 lg:gap-[60px] items-center justify-center lg:justify-end relative shrink-0">
+                <div className="content-stretch flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-[60px] items-center justify-center lg:justify-end relative shrink-0">
                   {/* Normal Vote Result */}
                   <VoteStamp
                     type="normal"
@@ -339,8 +339,8 @@ export default function VotePage() {
                 </div>
 
                 {/* Submission DateTime */}
-                <div className="bg-[#f8f9fa] box-border content-stretch flex gap-2.5 items-center justify-center lg:justify-end px-5 py-[5px] relative rounded-lg shrink-0">
-                  <div className="flex flex-col font-['Pretendard:Regular',_sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-base lg:text-[20px] text-nowrap text-center lg:text-right">
+                <div className="bg-[#f8f9fa] box-border content-stretch flex gap-2.5 items-center justify-center lg:justify-end px-3 sm:px-5 py-[5px] relative rounded-lg shrink-0">
+                  <div className="flex flex-col font-['Pretendard:Regular',_sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-sm sm:text-base lg:text-[20px] text-nowrap text-center lg:text-right">
                     <p className="leading-[normal] whitespace-pre">제출 시각: {new Date(voteHistory.submittedAt).toLocaleString('ko-KR')}</p>
                   </div>
                 </div>
@@ -349,20 +349,20 @@ export default function VotePage() {
           </div>
           
           {/* 감사 메시지 및 결과 공개 안내 */}
-          <div className="w-full bg-[#F1F3F5] rounded-xl p-6 pb-0 mt-6">
-            <div className="flex flex-col items-center gap-3">
-              <div className="text-center text-black text-3xl font-semibold font-['Pretendard']">소중한 참여 감사합니다!</div>
-              <div className="px-6 py-2.5 bg-[#F8F9FA] rounded-[12px] relative -mb-5">
-                <div className="text-center text-black text-base font-medium font-['Pretendard']">{getResultAnnouncementMessage()}</div>
+          <div className="w-full bg-[#F1F3F5] rounded-xl p-4 sm:p-6 pb-0 mt-6">
+            <div className="flex flex-col items-center gap-2 sm:gap-3">
+              <div className="text-center text-black text-xl sm:text-2xl lg:text-3xl font-semibold font-['Pretendard']">소중한 참여 감사합니다!</div>
+              <div className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#F8F9FA] rounded-[12px] relative -mb-5 lg:-mb-11">
+                <div className="text-center text-black text-sm sm:text-base font-medium font-['Pretendard']">{getResultAnnouncementMessage()}</div>
               </div>
             </div>
           </div>
           
           {/* 투표된 아이템 리스트 */}
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4">투표한 {categoryText}</h2>
+          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">투표한 {categoryText}</h2>
             {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
                   {voteHistory.animeBallotDtos.map((ballot: VoteHistoryBallotDto) => (
                     <VoteCard
                       key={ballot.animeId}
@@ -384,8 +384,8 @@ export default function VotePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">투표한 {categoryText}이 없습니다.</p>
+                <div className="text-center py-8 sm:py-12">
+                  <p className="text-gray-500 text-base sm:text-lg">투표한 {categoryText}이 없습니다.</p>
                 </div>
               )}
           </div>
@@ -472,11 +472,11 @@ export default function VotePage() {
       {/* 알림 섹션 - 고정 */}
       <section className="w-full max-w-[1240px] mx-auto px-4 pt-6">
         <div className="bg-white rounded-t-[8px] shadow-sm border border-gray-200 border-b-0">
-          <div className="flex flex-col gap-2.5 pb-[9px] pl-6 pr-6 pt-3">
+          <div className="flex flex-col gap-2.5 pb-[9px] pl-3 pr-3 sm:pl-6 sm:pr-6 pt-3">
             {!showGenderSelection ? (
-              <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-2 pr-5 py-0 rounded-lg w-fit">
-                <div className="flex gap-2.5 items-center justify-start px-2.5 py-0">
-                  <div className="relative size-4 overflow-hidden">
+              <div className="bg-[#f1f2f3] flex h-8 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit max-w-full">
+                <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                  <div className="relative size-3 sm:size-4 overflow-hidden">
                     <img
                       src="/icons/voteSection-notify-icon.svg"
                       alt="Notification Icon"
@@ -484,16 +484,16 @@ export default function VotePage() {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-base">
-                  <p className="leading-normal whitespace-pre">
+                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
+                  <p className="leading-normal break-words">
                     분기 신작 {categoryText}을 투표해주세요!
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-2 pr-5 py-0 rounded-lg w-fit ml-auto">
-                <div className="flex gap-2.5 items-center justify-start px-2.5 py-0">
-                  <div className="relative size-4 overflow-hidden">
+              <div className="bg-[#f1f2f3] flex h-11 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit ml-auto max-w-full">
+                <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                  <div className="relative size-3 sm:size-4 overflow-hidden">
                     <img
                       src="/icons/voteSection-notify-icon.svg"
                       alt="Notification Icon"
@@ -501,8 +501,8 @@ export default function VotePage() {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-base">
-                  <p className="leading-normal whitespace-pre">
+                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
+                  <p className="leading-normal break-words">
                     성별은 투표 성향 통계에 꼭 필요한 정보예요.
                   </p>
                 </div>
@@ -571,7 +571,7 @@ export default function VotePage() {
               </p>
             </div>
           ) : (
-                        <motion.div 
+            <motion.div 
               className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full"
               initial={{ opacity: 1 }}
               animate={{ 
@@ -603,8 +603,7 @@ export default function VotePage() {
                       ? [0, 0.2, 0.4, 0.6, 1] // 단계적 투명화 시간
                       : undefined
                   }}
-
-                                  style={{
+                  style={{
                     pointerEvents: showGenderSelection ? 'none' : 'auto'
                   }}
                 >

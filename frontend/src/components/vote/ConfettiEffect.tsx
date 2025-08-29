@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
+// Types
 interface ConfettiEffectProps {
   isActive: boolean;
   onComplete?: () => void;
@@ -18,26 +19,57 @@ interface ConfettiPiece {
   delay: number;
 }
 
-const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+// Constants
+const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'] as const;
 
+const CONFETTI_CONFIG = {
+  desktop: {
+    count: 50,
+    minSize: 8,
+    maxSize: 20,
+  },
+  mobile: {
+    count: 40,
+    minSize: 7,
+    maxSize: 11,
+  },
+} as const;
+
+const MOBILE_BREAKPOINT = 768;
+
+// Utility functions
+const getConfettiConfig = () => {
+  if (typeof window === 'undefined') return CONFETTI_CONFIG.desktop;
+  return window.innerWidth < MOBILE_BREAKPOINT ? CONFETTI_CONFIG.mobile : CONFETTI_CONFIG.desktop;
+};
+
+const generateConfettiPieces = (): ConfettiPiece[] => {
+  const config = getConfettiConfig();
+  const pieces: ConfettiPiece[] = [];
+  
+  for (let i = 0; i < config.count; i++) {
+    pieces.push({
+      id: i,
+      x: Math.random() * window.innerWidth,
+      y: -20 - Math.random() * 100,
+      rotation: Math.random() * 360,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      size: config.minSize + Math.random() * (config.maxSize - config.minSize),
+      delay: Math.random() * 0.5
+    });
+  }
+  
+  return pieces;
+};
+
+// Main component
 export default function ConfettiEffect({ isActive, onComplete }: ConfettiEffectProps) {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
 
   useEffect(() => {
     if (isActive) {
       // 빵빠레 조각들 생성
-      const pieces: ConfettiPiece[] = [];
-      for (let i = 0; i < 50; i++) {
-        pieces.push({
-          id: i,
-          x: Math.random() * window.innerWidth,
-          y: -20 - Math.random() * 100,
-          rotation: Math.random() * 360,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          size: 8 + Math.random() * 12,
-          delay: Math.random() * 0.5
-        });
-      }
+      const pieces = generateConfettiPieces();
       setConfetti(pieces);
 
       // 애니메이션 완료 후 콜백 호출
