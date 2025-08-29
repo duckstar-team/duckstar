@@ -8,10 +8,10 @@ import VoteSection from "@/components/vote/VoteSection";
 import VoteStamp from "@/components/vote/VoteStamp";
 import ConfettiEffect from "@/components/vote/ConfettiEffect";
 import ConfirmDialog from "@/components/vote/ConfirmDialog";
-import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, VoteHistoryResponseDto, ApiResponseVoteCheckDto } from '@/types/api';
-import useSWR from 'swr';
+import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVoteStatusDto, AnimeVoteStatusDto, VoteHistoryBallotDto } from '@/types/api';
+import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
-import { fetcher, getVoteHistory, submitVote } from '@/api/client';
+import { fetcher, submitVote } from '@/api/client';
 
 interface Anime {
   id: number;
@@ -30,7 +30,7 @@ export default function VotePage() {
   const [showGenderSelection, setShowGenderSelection] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
   const [showVoteResult, setShowVoteResult] = useState(false);
-  const [voteHistory, setVoteHistory] = useState<VoteHistoryResponseDto | null>(null);
+  const [voteHistory, setVoteHistory] = useState<AnimeVoteStatusDto | null>(null);
   const [showNextError, setShowNextError] = useState(false);
   const [scrollCompleted, setScrollCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -50,14 +50,17 @@ export default function VotePage() {
     });
   };
 
-  // 투표 참여 여부 및 후보 목록 조회
-  const { data: voteCheckData } = useSWR(
-    '/api/v1/vote/anime/check-voted',
-    fetcher<ApiResponseVoteCheckDto>
+  // 투표 상태 조회 (통합 API)
+  const { data: voteStatusData, isLoading: isVoteStatusLoading } = useSWR(
+    '/api/v1/vote/anime/status',
+    fetcher<ApiResponseAnimeVoteStatusDto>
   );
 
+  // 투표하지 않은 경우에만 후보 목록 조회
+  const shouldFetchCandidates = voteStatusData && !voteStatusData.result?.hasVoted;
+  
   const { data, error, isLoading } = useSWR<ApiResponseAnimeCandidateListDto>(
-    '/api/v1/vote/anime',
+    shouldFetchCandidates ? '/api/v1/vote/anime' : null,
     fetcher<ApiResponseAnimeCandidateListDto>
   );
 
@@ -132,6 +135,9 @@ export default function VotePage() {
     // 1단계: 모든 카드들이 투명해짐 (showGenderSelection이 true가 되면서 animate 조건이 활성화됨)
     setShowGenderSelection(true);
     
+    // 검색 쿼리 초기화 (상태 4로 넘어갈 때 검색 필터 해제)
+    setSearchQuery('');
+    
     // 2단계: 투명해지는 애니메이션 완료 후 페이지 최상단으로 이동
     setTimeout(() => {
       window.scrollTo({ 
@@ -162,6 +168,8 @@ export default function VotePage() {
   const handleBackClick = () => {
     setShowGenderSelection(false);
     setScrollCompleted(false);
+    // 뒤로가기 시에도 검색 쿼리 초기화
+    setSearchQuery('');
   };
 
   const handleConfettiComplete = () => {
@@ -177,39 +185,26 @@ export default function VotePage() {
     if (!selectedGender) return;
 
     try {
-      const ballotDtos = [
-        ...selected.map(id => ({ animeCandidateId: id, ballotType: "NORMAL" as const })),
-        ...bonusSelected.map(id => ({ animeCandidateId: id, ballotType: "BONUS" as const }))
+      const ballotRequests = [
+        ...selected.map(id => ({ candidateId: id, ballotType: "NORMAL" as const })),
+        ...bonusSelected.map(id => ({ candidateId: id, ballotType: "BONUS" as const }))
       ];
 
       const requestBody = {
         weekId: data?.result?.weekId,
         gender: selectedGender === 'male' ? 'MALE' : 'FEMALE',
-        ballotDtos
+        ballotRequests
       };
       
       const result = await submitVote(requestBody);
       
-      // 성공 시 투표 내역 조회 API 호출
+      // 성공 시 SWR 캐시 업데이트
       if (result.result) {
-        // 투표 완료 후 투표 체크 데이터 업데이트
-        if (voteCheckData && voteCheckData.result) {
-          voteCheckData.result.hasVoted = true;
-          voteCheckData.result.submissionId = result.result.submissionId;
-        }
+        // 투표 상태 데이터 캐시 업데이트
+        await mutate('/api/v1/vote/anime/status');
         
-        // 투표 내역 조회 API 호출
-        try {
-          const historyResult = await getVoteHistory(result.result.submissionId);
-          if (historyResult.result) {
-            setVoteHistory(historyResult.result);
-            setShowVoteResult(true);
-          } else {
-            alert('투표는 완료되었지만 내역을 불러올 수 없습니다.');
-          }
-        } catch (error) {
-          alert('투표는 완료되었지만 내역을 불러올 수 없습니다.');
-        }
+        // 투표 결과 화면으로 전환
+        setShowVoteResult(true);
       } else {
         alert('투표는 완료되었지만 결과를 불러올 수 없습니다.');
       }
@@ -261,24 +256,13 @@ export default function VotePage() {
     return `${quarter}분기 ${week}주차 덕스타 결과는 일요일 22시에 공개됩니다.`;
   };
 
-  // 투표 참여 여부 확인 및 투표 내역 가져오기
+  // 투표 상태 데이터가 로드되면 상태 업데이트
   useEffect(() => {
-    if (voteCheckData?.result?.hasVoted && voteCheckData?.result?.submissionId) {
-      // 이미 투표한 경우, 투표 내역 가져오기
-      getVoteHistory(voteCheckData.result.submissionId)
-        .then(data => {
-          if (data && data.result) {
-            setVoteHistory(data.result);
-            setShowVoteResult(true);
-          } else {
-            // 투표 내역 데이터 오류 처리
-          }
-        })
-        .catch(err => {
-          // 에러가 발생해도 투표 화면은 계속 표시
-        });
+    if (voteStatusData?.result && voteStatusData.result.hasVoted) {
+      setVoteHistory(voteStatusData.result);
+      setShowVoteResult(true);
     }
-  }, [voteCheckData]);
+  }, [voteStatusData]);
 
   // 투표 결과 화면이 표시될 때 빵빠레 효과 시작
   useEffect(() => {
@@ -287,14 +271,132 @@ export default function VotePage() {
     }
   }, [showVoteResult, voteHistory]);
 
-  // 로딩 상태 처리
-  if (isLoading) {
-    return <div className="text-center">로딩 중...</div>;
+  // 투표 상태 확인 로딩 중
+  if (isVoteStatusLoading) {
+    return <div className="text-center">투표 상태를 확인하는 중...</div>;
   }
 
-  // 에러 상태 처리
+  // 투표하지 않은 사람이지만 후보 목록 로딩 중
+  if (isLoading) {
+    return <div className="text-center">투표 후보를 불러오는 중...</div>;
+  }
+
+  // 투표하지 않은 사람이지만 후보 목록 에러
   if (error) {
-    return <div className="text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</div>;
+    return <div className="text-center text-red-500">투표 후보를 불러오는 중 오류가 발생했습니다.</div>;
+  }
+
+  // 투표한 사람인 경우 바로 투표 결과 화면 표시
+  if (voteStatusData?.result?.hasVoted) {
+    // 투표 내역이 아직 로드되지 않은 경우 로딩 표시
+    if (!voteHistory) {
+      return <div className="text-center">투표 기록을 불러오는 중...</div>;
+    }
+    return (
+      <main className="w-full bg-gray-50">
+        {/* 빵빠레 효과 */}
+        <ConfettiEffect 
+          isActive={showConfetti} 
+          onComplete={handleConfettiComplete}
+        />
+        {/* 배너 - 전체 너비, 패딩 없음 */}
+        <section>
+          <VoteBanner 
+            customTitle={`이번 주 ${categoryText} 투표 기록`}
+            weekDto={voteHistory?.weekDto || data?.result?.weekDto} 
+          />
+        </section>
+
+        {/* 메인 컨텐츠 */}
+        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* 투표 결과 섹션 */}
+            <div className="p-4 sm:p-6">
+              <div className="bg-[#ffffff] box-border content-stretch flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-[55px] items-center justify-center px-4 lg:px-0 min-h-16 relative w-full">
+                
+                <div className="content-stretch flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-[60px] items-center justify-center lg:justify-end relative shrink-0">
+                  {/* Normal Vote Result */}
+                  <VoteStamp
+                    type="normal"
+                    isActive={true}
+                    currentVotes={voteHistory.normalCount || 0}
+                    maxVotes={10}
+                    showResult={true}
+                    showGenderSelection={true}
+                  />
+                  
+                  {/* Bonus Vote Result */}
+                  {voteHistory.bonusCount > 0 && (
+                    <VoteStamp
+                      type="bonus"
+                      isActive={true}
+                      currentVotes={voteHistory.bonusCount || 0}
+                      maxVotes={voteHistory.bonusCount || 0}
+                      bonusVotesUsed={voteHistory.bonusCount || 0}
+                      showResult={true}
+                    />
+                  )}
+                </div>
+
+                {/* Submission DateTime */}
+                <div className="bg-[#f8f9fa] box-border content-stretch flex gap-2.5 items-center justify-center lg:justify-end px-3 sm:px-5 py-[5px] relative rounded-lg shrink-0">
+                  <div className="flex flex-col font-['Pretendard:Regular',_sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-sm sm:text-base lg:text-[20px] text-nowrap text-center lg:text-right">
+                    <p className="leading-[normal] whitespace-pre">제출 시각: {new Date(voteHistory.submittedAt).toLocaleString('ko-KR')}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 감사 메시지 및 결과 공개 안내 */}
+          <div className="w-full bg-[#F1F3F5] rounded-xl p-4 sm:p-6 pb-0 mt-6">
+            <div className="flex flex-col items-center gap-2 sm:gap-3">
+              <div className="text-center text-black text-xl sm:text-2xl lg:text-3xl font-semibold font-['Pretendard']">소중한 참여 감사합니다!</div>
+              <div className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#F8F9FA] rounded-[12px] relative -mb-5 lg:-mb-11">
+                <div className="text-center text-black text-sm sm:text-base font-medium font-['Pretendard']">{getResultAnnouncementMessage()}</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 투표된 아이템 리스트 */}
+          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">투표한 {categoryText}</h2>
+            {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
+                  {voteHistory.animeBallotDtos.map((ballot: VoteHistoryBallotDto) => (
+                    <VoteCard
+                      key={ballot.animeId}
+                      thumbnailUrl={ballot.mainThumbnailUrl}
+                      title={ballot.titleKor || '제목 없음'}
+                      checked={true}
+                      onChange={undefined}
+                      showError={false}
+                      currentVotes={voteHistory.normalCount || 0}
+                      maxVotes={10}
+                      isBonusMode={(voteHistory.bonusCount || 0) > 0}
+                      bonusVotesUsed={voteHistory.bonusCount || 0}
+                      isBonusVote={ballot.ballotType === 'BONUS'}
+                      onMouseLeave={() => {}}
+                      weekDto={data?.result?.weekDto}
+                      medium={ballot.medium}
+                      disabled={true}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 sm:py-12">
+                  <p className="text-gray-500 text-base sm:text-lg">투표한 {categoryText}이 없습니다.</p>
+                </div>
+              )}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 투표 상태 확인 로딩 중
+  if (isVoteStatusLoading) {
+    return <div className="text-center">투표 상태를 확인하는 중...</div>;
   }
 
   // 전체 애니메이션 리스트 생성 (API 데이터 또는 테스트 데이터)
@@ -357,109 +459,6 @@ export default function VotePage() {
   const totalCandidates = data?.result?.candidatesCount || animeList.length;
 
   // 투표 결과 화면 렌더링
-  if (showVoteResult && voteHistory) {
-          return (
-        <main className="w-full bg-gray-50">
-          {/* 빵빠레 효과 */}
-          <ConfettiEffect 
-            isActive={showConfetti} 
-            onComplete={handleConfettiComplete}
-          />
-          {/* 배너 - 전체 너비, 패딩 없음 */}
-        <section>
-          <VoteBanner 
-            customTitle={`이번 주 ${categoryText} 투표 기록`}
-            weekDto={voteHistory?.weekDto || data?.result?.weekDto} 
-          />
-        </section>
-
-        {/* 메인 컨텐츠 */}
-        <div className="w-full max-w-[1240px] mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* 투표 결과 섹션 */}
-            <div className="p-6">
-              <div className="bg-[#ffffff] box-border content-stretch flex flex-col lg:flex-row gap-4 lg:gap-[55px] items-center justify-center px-4 lg:px-0 h-16 relative w-full">
-                
-                <div className="content-stretch flex flex-col lg:flex-row gap-4 lg:gap-[60px] items-center justify-center lg:justify-end relative shrink-0">
-                  {/* Normal Vote Result */}
-                  <VoteStamp
-                    type="normal"
-                    isActive={true}
-                    currentVotes={voteHistory.normalCount || 0}
-                    maxVotes={10}
-                    showResult={true}
-                    showGenderSelection={true}
-                  />
-                  
-                  {/* Bonus Vote Result */}
-                  {voteHistory.bonusCount > 0 && (
-                    <VoteStamp
-                      type="bonus"
-                      isActive={true}
-                      currentVotes={voteHistory.bonusCount || 0}
-                      maxVotes={voteHistory.bonusCount || 0}
-                      bonusVotesUsed={voteHistory.bonusCount || 0}
-                      showResult={true}
-                    />
-                  )}
-                </div>
-
-                {/* Submission DateTime */}
-                <div className="bg-[#f8f9fa] box-border content-stretch flex gap-2.5 items-center justify-center lg:justify-end px-5 py-[5px] relative rounded-lg shrink-0">
-                  <div className="flex flex-col font-['Pretendard:Regular',_sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-base lg:text-[20px] text-nowrap text-center lg:text-right">
-                    <p className="leading-[normal] whitespace-pre">제출 시각: {new Date(voteHistory.submittedAt).toLocaleString('ko-KR')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 감사 메시지 및 결과 공개 안내 */}
-          <div className="w-full bg-[#F1F3F5] rounded-xl p-6 pb-0 mt-6">
-            <div className="flex flex-col items-center gap-3">
-              <div className="text-center text-black text-3xl font-semibold font-['Pretendard']">소중한 참여 감사합니다!</div>
-              <div className="px-6 py-2.5 bg-[#F8F9FA] rounded-[12px] relative -mb-5">
-                <div className="text-center text-black text-base font-medium font-['Pretendard']">{getResultAnnouncementMessage()}</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 투표된 아이템 리스트 */}
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4">투표한 {categoryText}</h2>
-            {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                  {voteHistory.animeBallotDtos.map((ballot) => (
-                    <VoteCard
-                      key={ballot.animeId}
-                      thumbnailUrl={ballot.mainThumbnailUrl}
-                      title={ballot.titleKor || '제목 없음'}
-                      checked={true}
-                      onChange={undefined}
-                      showError={false}
-                      currentVotes={voteHistory.normalCount || 0}
-                      maxVotes={10}
-                      isBonusMode={(voteHistory.bonusCount || 0) > 0}
-                      bonusVotesUsed={voteHistory.bonusCount || 0}
-                      isBonusVote={ballot.ballotType === 'BONUS'}
-                      onMouseLeave={() => {}}
-                      weekDto={data?.result?.weekDto}
-                      medium={ballot.medium}
-                      disabled={true}
-                    />
-                  ))}
-                </div>
-              ) : (
-                              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">투표한 {categoryText}이 없습니다.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="w-full">
       {/* 배너 - 전체 너비, 패딩 없음 */}
@@ -473,11 +472,11 @@ export default function VotePage() {
       {/* 알림 섹션 - 고정 */}
       <section className="w-full max-w-[1240px] mx-auto px-4 pt-6">
         <div className="bg-white rounded-t-[8px] shadow-sm border border-gray-200 border-b-0">
-          <div className="flex flex-col gap-2.5 pb-[9px] pl-6 pr-6 pt-3">
+          <div className="flex flex-col gap-2.5 pb-[9px] pl-3 pr-3 sm:pl-6 sm:pr-6 pt-3">
             {!showGenderSelection ? (
-              <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-2 pr-5 py-0 rounded-lg w-fit">
-                <div className="flex gap-2.5 items-center justify-start px-2.5 py-0">
-                  <div className="relative size-4 overflow-hidden">
+              <div className="bg-[#f1f2f3] flex h-8 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit max-w-full">
+                <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                  <div className="relative size-3 sm:size-4 overflow-hidden">
                     <img
                       src="/icons/voteSection-notify-icon.svg"
                       alt="Notification Icon"
@@ -485,16 +484,16 @@ export default function VotePage() {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-base">
-                  <p className="leading-normal whitespace-pre">
+                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
+                  <p className="leading-normal break-words">
                     분기 신작 {categoryText}을 투표해주세요!
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-2 pr-5 py-0 rounded-lg w-fit ml-auto">
-                <div className="flex gap-2.5 items-center justify-start px-2.5 py-0">
-                  <div className="relative size-4 overflow-hidden">
+              <div className="bg-[#f1f2f3] flex h-11 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit ml-auto max-w-full">
+                <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                  <div className="relative size-3 sm:size-4 overflow-hidden">
                     <img
                       src="/icons/voteSection-notify-icon.svg"
                       alt="Notification Icon"
@@ -502,8 +501,8 @@ export default function VotePage() {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-base">
-                  <p className="leading-normal whitespace-pre">
+                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
+                  <p className="leading-normal break-words">
                     성별은 투표 성향 통계에 꼭 필요한 정보예요.
                   </p>
                 </div>
@@ -572,7 +571,7 @@ export default function VotePage() {
               </p>
             </div>
           ) : (
-                        <motion.div 
+            <motion.div 
               className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full"
               initial={{ opacity: 1 }}
               animate={{ 
@@ -604,8 +603,7 @@ export default function VotePage() {
                       ? [0, 0.2, 0.4, 0.6, 1] // 단계적 투명화 시간
                       : undefined
                   }}
-
-                                  style={{
+                  style={{
                     pointerEvents: showGenderSelection ? 'none' : 'auto'
                   }}
                 >

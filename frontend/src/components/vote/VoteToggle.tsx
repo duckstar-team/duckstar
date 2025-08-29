@@ -13,6 +13,7 @@ type VoteToggleProps = {
   onClick: (isBonusVote?: boolean) => void;
   disabled?: boolean;
   cardHoverSide?: 'left' | 'right' | null;
+  isMobile?: boolean;
 };
 
 export default function VoteToggle({ 
@@ -26,7 +27,8 @@ export default function VoteToggle({
   isBonusVote = false,
   onClick,
   disabled = false,
-  cardHoverSide = null
+  cardHoverSide = null,
+  isMobile = false
 }: VoteToggleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hoverSide, setHoverSide] = useState<'left' | 'right' | null>(null);
@@ -97,7 +99,7 @@ export default function VoteToggle({
   };
 
   return (
-    <div className="relative size-24">
+    <div className={`relative ${isMobile ? 'size-12' : 'size-24'}`}>
       {/* 기표칸 배경 */}
       <button
         type="button"
@@ -107,7 +109,7 @@ export default function VoteToggle({
         onMouseLeave={!disabled ? handleMouseLeave : undefined}
         onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
         className={`
-          size-24
+          ${isMobile ? 'size-12' : 'size-24'}
           relative
           rounded-xl
           border border-gray-300
@@ -128,10 +130,14 @@ export default function VoteToggle({
           <Image
             src={isBonusVote ? "/voted-bonus.svg" : "/voted-normal.svg"}
             alt="Selected"
-            width={isBonusVote ? 60 : 96}
-            height={isBonusVote ? 60 : 96}
+            width={isMobile ? (isBonusVote ? 30 : 48) : (isBonusVote ? 60 : 96)}
+            height={isMobile ? (isBonusVote ? 30 : 48) : (isBonusVote ? 60 : 96)}
             priority={true}
-            className={isBonusVote ? "w-[60px] h-[60px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl"}
+            className={
+              isMobile 
+                ? (isBonusVote ? "w-[30px] h-[30px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
+                : (isBonusVote ? "w-[60px] h-[60px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
+            }
           />
         )}
       </button>
@@ -144,8 +150,8 @@ export default function VoteToggle({
               <Image
                 src="/hybrid-hover-left.svg"
                 alt="Normal Hover Effect"
-                width={48}
-                height={96}
+                width={isMobile ? 24 : 48}
+                height={isMobile ? 48 : 96}
                 className="w-full h-full object-cover rounded-l-xl"
               />
             )}
@@ -155,8 +161,8 @@ export default function VoteToggle({
               <Image
                 src="/hybrid-hover-right.svg"
                 alt="Bonus Hover Effect"
-                width={48}
-                height={96}
+                width={isMobile ? 24 : 48}
+                height={isMobile ? 48 : 96}
                 className="w-full h-full object-cover rounded-r-xl"
               />
             )}
@@ -170,8 +176,8 @@ export default function VoteToggle({
           <Image
             src="/normal-hover.svg"
             alt="Normal Hover Effect"
-            width={96}
-            height={96}
+            width={isMobile ? 48 : 96}
+            height={isMobile ? 48 : 96}
             className="w-full h-full object-cover rounded-xl"
           />
         </div>
@@ -183,8 +189,8 @@ export default function VoteToggle({
           <Image
             src="/bonus-hover.svg"
             alt="Bonus Hover Effect"
-            width={96}
-            height={96}
+            width={isMobile ? 48 : 96}
+            height={isMobile ? 48 : 96}
             className="w-full h-full object-cover rounded-xl"
           />
         </div>

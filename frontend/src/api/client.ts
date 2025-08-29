@@ -1,7 +1,6 @@
 import { 
   ApiResponseAnimeCandidateListDto, 
-  ApiResponseVoteCheckDto, 
-  ApiResponseVoteHistoryResponseDto, 
+  ApiResponseAnimeVoteStatusDto, 
   ApiResponseVoteReceiptDto 
 } from '@/types/api';
 
@@ -27,8 +26,7 @@ const ENDPOINTS = {
   },
   vote: {
     candidates: '/api/v1/vote/anime',
-    checkStatus: '/api/v1/vote/anime/check-voted',
-    history: (submissionId: number) => `/api/v1/vote/anime/history/${submissionId}`,
+    status: '/api/v1/vote/anime/status',
   },
 } as const;
 
@@ -88,12 +86,8 @@ export async function getVoteCandidates() {
   return apiCall<ApiResponseAnimeCandidateListDto>(ENDPOINTS.vote.candidates);
 }
 
-export async function checkVoteStatus() {
-  return apiCall<ApiResponseVoteCheckDto>(ENDPOINTS.vote.checkStatus);
-}
-
-export async function getVoteHistory(submissionId: number) {
-  return apiCall<ApiResponseVoteHistoryResponseDto>(ENDPOINTS.vote.history(submissionId));
+export async function getVoteStatus() {
+  return apiCall<ApiResponseAnimeVoteStatusDto>(ENDPOINTS.vote.status);
 }
 
 export async function submitVote(voteData: Record<string, unknown>) {

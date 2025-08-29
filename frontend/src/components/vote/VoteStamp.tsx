@@ -3,18 +3,194 @@
 import Image from 'next/image';
 import { forwardRef } from 'react';
 
+// Types
 interface VoteStampProps {
   type: 'normal' | 'bonus';
   isActive: boolean;
   currentVotes: number;
   maxVotes: number;
   bonusVotesUsed?: number;
-  showResult?: boolean; // 투표 결과 모드 (× 기호 사용, 분모 제거)
-  showTooltip?: boolean; // 보너스 도장 내부 알림 표시 여부
-  onHideTooltip?: () => void; // 알림 숨기기 콜백
-  showGenderSelection?: boolean; // 성별 선택 화면 여부
+  showResult?: boolean;
+  showTooltip?: boolean;
+  onHideTooltip?: () => void;
+  showGenderSelection?: boolean;
 }
 
+// Constants
+const STAMP_SIZES = {
+  normal: {
+    mobile: 'w-[49px] h-[49px]',
+    tablet: 'sm:w-[54px] sm:h-[54px]',
+    desktop: 'lg:w-[54px] lg:h-[54px]'
+  },
+  bonus: {
+    mobile: 'w-[60px] h-[60px]',
+    tablet: 'sm:w-[67px] sm:h-[67px]',
+    desktop: 'lg:w-[67px] lg:h-[67.275px]'
+  }
+} as const;
+
+const ROUNDED_CORNERS = {
+  mobile: 'rounded-[24px]',
+  tablet: 'sm:rounded-[27px]',
+  desktop: 'lg:rounded-[30px]'
+} as const;
+
+const TEXT_SIZES = {
+  small: 'text-sm sm:text-base lg:text-lg xl:text-[24px]',
+  medium: 'text-base sm:text-lg lg:text-xl xl:text-[28px]',
+  large: 'text-lg sm:text-xl lg:text-2xl xl:text-[32px]'
+} as const;
+
+const COLORS = {
+  normal: {
+    active: 'text-[#990033]',
+    inactive: 'text-neutral-600'
+  },
+  bonus: 'text-[#ffb310]'
+} as const;
+
+// Utility functions
+const getTextSizeClass = (votes: number): string => {
+  if (votes >= 100) return TEXT_SIZES.small;
+  if (votes >= 50) return TEXT_SIZES.medium;
+  return TEXT_SIZES.large;
+};
+
+const getNormalStampBackground = (showGenderSelection: boolean, currentVotes: number, maxVotes: number): string => {
+  if (showGenderSelection || currentVotes < maxVotes) {
+    return 'bg-[rgba(153,0,51,0.15)]';
+  }
+  return 'bg-neutral-600/20';
+};
+
+const getNormalStampImage = (showGenderSelection: boolean, currentVotes: number, maxVotes: number): string => {
+  if (showGenderSelection) return "/icons/voteSection-normal-default.svg";
+  if (currentVotes >= maxVotes) return "/icons/voteSection-normal-full.svg";
+  return "/icons/voteSection-normal-default.svg";
+};
+
+const getNormalStampColor = (showGenderSelection: boolean, currentVotes: number, maxVotes: number, isActive: boolean): string => {
+  if (showGenderSelection || currentVotes < maxVotes) return COLORS.normal.active;
+  // Full 상태일 때는 무조건 회색
+  return COLORS.normal.inactive;
+};
+
+// Components
+const VoteCountText = ({ 
+  currentVotes, 
+  maxVotes, 
+  showResult, 
+  showGenderSelection, 
+  isActive 
+}: {
+  currentVotes: number;
+  maxVotes: number;
+  showResult: boolean;
+  showGenderSelection: boolean;
+  isActive: boolean;
+}) => {
+  const textSizeClass = getTextSizeClass(currentVotes);
+  const textColor = getNormalStampColor(showGenderSelection, currentVotes, maxVotes, isActive);
+
+  if (showResult) {
+    return (
+      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-[13px]">
+        <div className="pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px] flex justify-center items-center">
+          <span className={`text-right justify-center ${TEXT_SIZES.large} font-bold font-['Pretendard'] leading-none ${textColor}`}>
+            ×
+          </span>
+        </div>
+        
+        <div className="pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px] flex justify-center items-center">
+          <span className={`text-right justify-center font-bold font-['Pretendard'] leading-none whitespace-nowrap ${textColor} ${textSizeClass}`}>
+            {currentVotes}표
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="w-12 sm:w-16 lg:w-20 pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px] flex justify-center items-center">
+        <span className={`text-right justify-center font-bold font-['Pretendard'] leading-none whitespace-nowrap ${textColor} ${textSizeClass}`}>
+          {currentVotes}표
+        </span>
+      </div>
+      
+      <div className="w-1.5 sm:w-2 self-stretch pt-1.5 sm:pt-2 lg:pt-3 flex flex-col justify-center items-center">
+        <span className="self-stretch h-5 sm:h-7 lg:h-9 text-right justify-center text-black text-sm sm:text-lg lg:text-xl font-bold font-['Pretendard'] leading-none translate-y-0.5 sm:translate-y-1 lg:translate-y-2">
+          /
+        </span>
+      </div>
+      
+      <div className="pt-1.5 sm:pt-2 lg:pt-3 flex flex-col justify-center items-center">
+        <span className="text-right justify-center text-black text-sm sm:text-lg lg:text-xl font-bold font-['Pretendard'] leading-none">
+          {maxVotes}표
+        </span>
+      </div>
+    </>
+  );
+};
+
+const BonusVoteCountText = ({ 
+  bonusVotesUsed, 
+  showResult 
+}: {
+  bonusVotesUsed: number;
+  showResult: boolean;
+}) => {
+  const textSizeClass = getTextSizeClass(bonusVotesUsed);
+
+  if (showResult) {
+    return (
+      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-[13px]">
+        <div className="pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px] flex justify-center items-center">
+          <span className={`font-['Pretendard',_sans-serif] font-bold ${TEXT_SIZES.large} ${COLORS.bonus}`}>
+            ×
+          </span>
+        </div>
+        
+        <div className="pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px] flex justify-center items-center">
+          <span className={`font-['Pretendard',_sans-serif] font-bold ${COLORS.bonus} whitespace-nowrap ${textSizeClass}`}>
+            {bonusVotesUsed}표
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="w-12 sm:w-16 lg:w-20 pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px] flex justify-center items-center">
+        <span className={`font-['Pretendard',_sans-serif] font-bold ${COLORS.bonus} whitespace-nowrap ${textSizeClass}`}>
+          {bonusVotesUsed}표
+        </span>
+      </div>
+      
+      <div className="w-1.5 sm:w-2 self-stretch pt-1.5 sm:pt-2 lg:pt-3 flex flex-col justify-center items-center">
+        <span className={`self-stretch h-5 sm:h-7 lg:h-9 text-right justify-center ${COLORS.bonus} text-sm sm:text-lg lg:text-xl font-bold font-['Pretendard'] leading-none translate-y-0.5 sm:translate-y-1 lg:translate-y-2`}>
+          /
+        </span>
+      </div>
+      
+      <div className="pt-1.5 sm:pt-2 lg:pt-3 flex flex-col justify-center items-center">
+        <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 relative overflow-hidden">
+          <Image
+            src="/icons/voteSection-infinity.svg"
+            alt="Infinity Icon"
+            width={24}
+            height={24}
+            className="w-full h-full"
+          />
+        </div>
+      </div>
+    </>
+  );
+};
+
+// Main component
 const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({ 
   type, 
   isActive, 
@@ -27,85 +203,47 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
   showGenderSelection = false
 }, ref) => {
   if (type === 'normal') {
+    const stampSizes = STAMP_SIZES.normal;
+    const roundedCorners = `${ROUNDED_CORNERS.mobile} ${ROUNDED_CORNERS.tablet} ${ROUNDED_CORNERS.desktop}`;
+    const backgroundClass = getNormalStampBackground(showGenderSelection, currentVotes, maxVotes);
+    const imageSrc = getNormalStampImage(showGenderSelection, currentVotes, maxVotes);
+
     return (
-      <div className="flex items-center gap-[16px]">
+      <div className="flex items-center gap-3 sm:gap-4 lg:gap-[20px]">
         {/* Normal Vote Stamp */}
-        <div className={`flex items-center justify-center w-[54px] h-[54px] rounded-[30px] ${
-          showGenderSelection || currentVotes < maxVotes
-            ? 'bg-[rgba(153,0,51,0.15)]' 
-            : 'bg-neutral-600/20'
-        }`}>
+        <div className={`flex items-center justify-center ${stampSizes.mobile} ${stampSizes.tablet} ${stampSizes.desktop} ${roundedCorners} ${backgroundClass}`}>
           <Image
-            src={showGenderSelection
-              ? "/icons/voteSection-normal-default.svg" 
-              : currentVotes >= maxVotes
-                ? "/icons/voteSection-normal-full.svg"
-                : "/icons/voteSection-normal-default.svg"
-            }
+            src={imageSrc}
             alt="Normal Vote Stamp"
             width={54}
             height={54}
-            className="w-full h-full object-cover rounded-[30px]"
+            className={`w-full h-full object-cover ${roundedCorners}`}
           />
         </div>
         
         {/* Vote Count Text */}
-        <div className="flex items-center gap-[13px]">
-          {showResult ? (
-            // 투표 결과 모드: × 기호와 표 수를 하나의 프레임으로 묶음
-            <div className="flex items-center gap-[13px]">
-              <div className="pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className={`text-right justify-center text-[32px] font-bold font-['Pretendard'] leading-none ${
-                  isActive ? 'text-[#990033]' : 'text-neutral-600'
-                }`}>
-                  ×
-                </span>
-              </div>
-              
-              <div className="pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className={`text-right justify-center font-bold font-['Pretendard'] leading-none whitespace-nowrap ${
-                  isActive ? 'text-[#990033]' : 'text-neutral-600'
-                } ${currentVotes >= 100 ? 'text-[24px]' : currentVotes >= 10 ? 'text-[28px]' : 'text-[32px]'}`}>
-                  {currentVotes}표
-                </span>
-              </div>
-            </div>
-          ) : (
-            // 기존 모드: 분자/분모 사용
-            <>
-              <div className="w-20 pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className={`text-right justify-center font-bold font-['Pretendard'] leading-none whitespace-nowrap ${
-                  showGenderSelection || currentVotes < maxVotes ? 'text-[#990033]' : 'text-neutral-600'
-                } ${currentVotes >= 100 ? 'text-[24px]' : currentVotes >= 10 ? 'text-[28px]' : 'text-[32px]'}`}>
-                  {currentVotes}표
-                </span>
-              </div>
-              
-              <div className="w-2 self-stretch pt-3 flex flex-col justify-center items-center">
-                <span className="self-stretch h-9 text-right justify-center text-black text-xl font-bold font-['Pretendard'] leading-none translate-y-2">
-                  /
-                </span>
-              </div>
-              
-              <div className="pt-3 flex flex-col justify-center items-center">
-                <span className="text-right justify-center text-black text-xl font-bold font-['Pretendard'] leading-none">
-                  {maxVotes}표
-                </span>
-              </div>
-            </>
-          )}
+        <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-[13px]">
+          <VoteCountText
+            currentVotes={currentVotes}
+            maxVotes={maxVotes}
+            showResult={showResult}
+            showGenderSelection={showGenderSelection}
+            isActive={isActive}
+          />
         </div>
       </div>
     );
   }
 
   if (type === 'bonus') {
+    const stampSizes = STAMP_SIZES.bonus;
+
     return (
-      <div className="flex items-center gap-[16px]">
+      <div className="flex items-center gap-2 sm:gap-3 lg:gap-[16px]">
         {/* Bonus Vote Stamp */}
         <div 
           ref={ref}
-          className="flex items-center justify-center w-[67px] h-[67.275px]"
+          className={`flex items-center justify-center ${stampSizes.mobile} ${stampSizes.tablet} ${stampSizes.desktop}`}
         >
           <Image
             src="/icons/voteSection-bonus-stamp.svg"
@@ -117,54 +255,11 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
         </div>
         
         {/* Bonus Vote Count */}
-        <div className="flex items-center gap-[13px]">
-          {showResult ? (
-            // 투표 결과 모드: × 기호와 표 수를 하나의 프레임으로 묶음
-            <div className="flex items-center gap-[13px]">
-              <div className="pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className="font-['Pretendard',_sans-serif] font-bold text-[32px] text-[#ffb310]">
-                  ×
-                </span>
-              </div>
-              
-              <div className="pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className={`font-['Pretendard',_sans-serif] font-bold text-[#ffb310] whitespace-nowrap ${
-                  bonusVotesUsed >= 100 ? 'text-[24px]' : bonusVotesUsed >= 10 ? 'text-[28px]' : 'text-[32px]'
-                }`}>
-                  {bonusVotesUsed}표
-                </span>
-              </div>
-            </div>
-          ) : (
-            // 기존 모드: 분자/분모 사용
-            <>
-              <div className="w-20 pt-2.5 pb-[5px] flex justify-center items-center">
-                <span className={`font-['Pretendard',_sans-serif] font-bold text-[#ffb310] whitespace-nowrap ${
-                  bonusVotesUsed >= 100 ? 'text-[24px]' : bonusVotesUsed >= 10 ? 'text-[28px]' : 'text-[32px]'
-                }`}>
-                  {bonusVotesUsed}표
-                </span>
-              </div>
-              
-              <div className="w-2 self-stretch pt-3 flex flex-col justify-center items-center">
-                <span className="self-stretch h-9 text-right justify-center text-[#ffb310] text-xl font-bold font-['Pretendard'] leading-none translate-y-2">
-                  /
-                </span>
-              </div>
-              
-              <div className="pt-3 flex flex-col justify-center items-center">
-                <div className="w-6 h-6 relative overflow-hidden">
-                  <Image
-                    src="/icons/voteSection-infinity.svg"
-                    alt="Infinity Icon"
-                    width={24}
-                    height={24}
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-            </>
-          )}
+        <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-[13px]">
+          <BonusVoteCountText
+            bonusVotesUsed={bonusVotesUsed}
+            showResult={showResult}
+          />
         </div>
       </div>
     );
