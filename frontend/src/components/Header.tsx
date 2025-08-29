@@ -15,7 +15,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
       
       {/* Logo */}
-      <div className="w-[93px] h-[60px] left-0 md:left-[25px] top-0 absolute z-10 cursor-not-allowed">
+      <div className="w-[80px] sm:w-[93px] h-[60px] left-0 md:left-[25px] top-0 absolute z-10 cursor-not-allowed">
         <Image
           src="/logo.svg"
           alt="Duckstar Logo"
@@ -26,10 +26,10 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       </div>
       
       {/* Login Button */}
-      <div className="w-[42px] h-[22px] right-[16px] md:right-[40px] top-[19px] absolute z-10">
+      <div className="w-[42px] h-[22px] right-[12px] sm:right-[16px] md:right-[40px] top-[19px] absolute z-10">
         <button 
           disabled
-          className="text-center text-[#8E8E93] text-[16px] font-[Pretendard] font-semibold leading-[22px] break-words opacity-30 cursor-not-allowed relative"
+          className="text-center text-[#8E8E93] text-[14px] sm:text-[16px] font-[Pretendard] font-semibold leading-[22px] break-words opacity-30 cursor-not-allowed relative"
         >
           로그인
           <span className="hidden md:block absolute -top-2 -right-8 text-[10px] bg-gray-100 text-gray-600 px-1 py-0.25 rounded">준비중</span>
@@ -42,7 +42,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       </div>
       
       {/* Search Bar */}
-      <div className="w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] right-[80px] md:right-[100px] top-[8px] absolute bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50 hidden md:flex">
+      <div className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] right-[60px] sm:right-[80px] md:right-[100px] top-[8px] absolute bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50 hidden md:flex">
         {/* Search Icon */}
         <div className="w-5 h-5 relative overflow-hidden">
           <Image

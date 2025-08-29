@@ -2,122 +2,256 @@ import Image from "next/image";
 import { WeekDto } from "@/types/api";
 import { getSeasonFromDate, getSeasonInKorean } from "@/lib/utils";
 
-// Local banner asset paths
-const duckstarLogo = "/banners/duckstar-logo.svg";
-const star1 = "/banners/star-1.svg";
-const star2 = "/banners/star-2.svg";
-
+// Types
 interface VoteBannerProps {
   weekDto?: WeekDto;
   customTitle?: string;
   customSubtitle?: string;
 }
 
-export default function VoteBanner({ weekDto, customTitle, customSubtitle }: VoteBannerProps) {
-  // 기본값 설정
+interface BannerData {
+  year: number;
+  startDate: string;
+  endDate: string;
+  quarter: number;
+  week: number;
+  season: string;
+  seasonKorean: string;
+}
+
+// Constants
+const ASSETS = {
+  duckstarLogo: "/banners/duckstar-logo.svg",
+  star1: "/banners/star-1.svg",
+  star2: "/banners/star-2.svg",
+} as const;
+
+const BREAKPOINTS = {
+  mobile: 320,
+  desktop: 1200,
+} as const;
+
+const TYPOGRAPHY = {
+  title: {
+    mobile: 18,
+    desktop: 33.833,
+  },
+} as const;
+
+const STYLES = {
+  container: "relative w-full h-24 bg-gradient-to-r from-[#212529] from-[14.927%] to-[#460e06] to-[85.889%] overflow-hidden",
+  mainContent: "relative w-full h-full flex flex-col items-center justify-center gap-2.5",
+  textContent: "flex flex-col items-center justify-center text-white text-center relative shrink-0",
+  titleContainer: "flex flex-col justify-center mb-[-5px] relative shrink-0",
+  title: "font-[Pretendard] font-bold leading-tight whitespace-pre text-lg sm:text-[33.833px]",
+  dateContainer: "flex flex-col justify-center relative shrink-0",
+  dateText: "font-[Pretendard] font-light text-sm sm:text-[16px] tracking-[0.8px] leading-[22px]",
+  dateTextMobile: "font-[Pretendard] font-light text-sm sm:text-[16px] tracking-[0.8px] leading-[18px] -mt-1",
+  dateTextDesktop: "font-[Pretendard] font-light text-sm sm:text-[16px] tracking-[0.8px] leading-[22px]",
+  duckstarLogoContainer: "absolute top-[9.92px] left-[calc(50%-490px)] w-[88px] h-[79.164px] hidden lg:block",
+  starContainer: "absolute top-[-4px] right-[calc(50%-490px)] w-[121px] h-[99px] hidden lg:block",
+  starWrapper: "relative w-full h-full aspect-[480/298]",
+  starItem: "absolute flex items-center justify-center",
+  starImage: "flex-none rotate-[8.368deg] w-[147.837px] h-[147.837px]",
+  starImageWrapper: "relative w-full h-full",
+  starImageContainer: "absolute bottom-[9.55%] left-[2.45%] right-[2.45%] top-0",
+} as const;
+
+// Utility functions
+const formatDate = (dateString: string): string => {
+  return dateString.replace(/-/g, '/');
+};
+
+const getTitleFontSize = (): string => {
+  const { mobile, desktop } = TYPOGRAPHY.title;
+  const { mobile: mobileBreakpoint, desktop: desktopBreakpoint } = BREAKPOINTS;
+  
+  return `min(calc(${mobile}px + (${desktop} - ${mobile}) * ((100vw - ${mobileBreakpoint}px) / (${desktopBreakpoint} - ${mobileBreakpoint}))), ${desktop}px)`;
+};
+
+const getBannerData = (weekDto?: WeekDto): BannerData => {
   const year = weekDto?.year || 2025;
   const startDate = weekDto?.startDate || "2025-07-13";
   const endDate = weekDto?.endDate || "2025-07-21";
   const quarter = weekDto?.quarter || 3;
   const week = weekDto?.week || 3;
 
-  // 계절 계산
   const season = getSeasonFromDate(startDate);
   const seasonKorean = getSeasonInKorean(season);
 
-  // 날짜 포맷팅 (YYYY/MM/DD)
-  const formatDate = (dateString: string) => {
-    return dateString.replace(/-/g, '/');
+  return {
+    year,
+    startDate,
+    endDate,
+    quarter,
+    week,
+    season,
+    seasonKorean,
   };
+};
 
-  return (
-    <div className="relative w-full h-24 bg-gradient-to-r from-[#212529] from-[14.927%] to-[#460e06] to-[85.889%] overflow-hidden">
-      {/* 메인 컨텐츠 컨테이너 */}
-      <div className="relative w-full h-full flex flex-col items-center justify-center gap-2.5">
-        {/* 텍스트 컨텐츠 */}
-        <div className="flex flex-col items-center justify-center text-white text-center relative shrink-0">
-          {/* 타이틀 */}
-          <div className="flex flex-col justify-center mb-[-5px] relative shrink-0">
-            <p className="font-[Pretendard] font-bold leading-tight whitespace-pre" style={{ fontSize: 'min(calc(24px + (33.833 - 24) * ((100vw - 320px) / (1200 - 320))), 33.833px)' }}>
-              {customTitle || `${year} ${seasonKorean} 애니메이션 투표`}
-            </p>
-          </div>
+const getTitleText = (bannerData: BannerData, customTitle?: string): string => {
+  return customTitle || `${bannerData.year} ${bannerData.seasonKorean} 애니메이션 투표`;
+};
 
-          {/* 날짜 */}
-          <div className="flex flex-col justify-center relative shrink-0">
-            <p className="font-[Pretendard] font-light text-[16px] tracking-[0.8px] leading-[22px]">
-              {customSubtitle || `${formatDate(startDate)} - ${formatDate(endDate)} (${quarter}분기 ${week}주차)`}
-            </p>
-          </div>
-        </div>
-      </div>
+const getDateText = (bannerData: BannerData, customSubtitle?: string): string => {
+  if (customSubtitle) return customSubtitle;
+  return `${formatDate(bannerData.startDate)} - ${formatDate(bannerData.endDate)}`;
+};
 
-      {/* 왼쪽 D 아이콘 */}
-      <div className="absolute top-[9.92px] left-[calc(50%-490px)] w-[88px] h-[79.164px]">
-        <Image
-          src={duckstarLogo}
-          alt="Duckstar Logo"
-          width={88}
-          height={79.164}
-          className="object-contain"
-          priority
+const getQuarterWeekText = (bannerData: BannerData, customSubtitle?: string): string => {
+  if (customSubtitle) return '';
+  return `(${bannerData.quarter}분기 ${bannerData.week}주차)`;
+};
+
+const getFullDateText = (bannerData: BannerData, customSubtitle?: string): string => {
+  if (customSubtitle) return customSubtitle;
+  return `${formatDate(bannerData.startDate)} - ${formatDate(bannerData.endDate)} (${bannerData.quarter}분기 ${bannerData.week}주차)`;
+};
+
+// Components
+const BannerTitle = ({ title }: { title: string }) => (
+  <div className={STYLES.titleContainer}>
+    <p 
+      className={STYLES.title}
+      style={{ fontSize: getTitleFontSize() }}
+    >
+      {title}
+    </p>
+  </div>
+);
+
+const BannerDate = ({ 
+  dateText, 
+  quarterWeekText, 
+  fullDateText 
+}: {
+  dateText: string;
+  quarterWeekText: string;
+  fullDateText: string;
+}) => (
+  <div className={STYLES.dateContainer}>
+    {/* Mobile: Two lines */}
+    <p className={`${STYLES.dateText} sm:hidden`}>
+      {dateText}
+    </p>
+    <p className={`${STYLES.dateTextMobile} sm:hidden`}>
+      {quarterWeekText}
+    </p>
+    
+    {/* Desktop: Single line */}
+    <p className={`${STYLES.dateTextDesktop} hidden sm:block`}>
+      {fullDateText}
+    </p>
+  </div>
+);
+
+const DuckstarLogo = () => (
+  <div className={STYLES.duckstarLogoContainer}>
+    <Image
+      src={ASSETS.duckstarLogo}
+      alt="Duckstar Logo"
+      width={88}
+      height={79.164}
+      className="object-contain"
+      priority
+    />
+  </div>
+);
+
+const StarImage = ({ src, alt }: { src: string; alt: string }) => (
+  <div className={STYLES.starImage}>
+    <div className={STYLES.starImageWrapper}>
+      <div className={STYLES.starImageContainer}>
+        <Image 
+          src={src} 
+          alt={alt} 
+          width={147.837}
+          height={147.837}
+          className="object-contain" 
         />
       </div>
+    </div>
+  </div>
+);
 
-      {/* 오른쪽 별 컨테이너 */}
-      <div className="absolute top-[-4px] right-[calc(50%-490px)] w-[121px] h-[99px]">
-        <div className="relative w-full h-full aspect-[480/298]">
-          {/* 첫 번째 별 */}
-          <div
-            className="absolute flex items-center justify-center"
-            style={{
-              left: "-5.13%",
-              right: "-33.52%",
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
-          >
-            <div className="flex-none rotate-[8.368deg] w-[147.837px] h-[147.837px]">
-              <div className="relative w-full h-full">
-                <div className="absolute bottom-[9.55%] left-[2.45%] right-[2.45%] top-0">
-                  <Image 
-                    src={star1} 
-                    alt="Star" 
-                    width={147.837}
-                    height={147.837}
-                    className="object-contain" 
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 두 번째 별 */}
-          <div
-            className="absolute flex items-center justify-center"
-            style={{
-              left: "-33.82%",
-              right: "-4.84%",
-              top: "calc(50% + 16px)",
-              transform: "translateY(-50%)",
-            }}
-          >
-            <div className="flex-none rotate-[8.368deg] w-[147.837px] h-[147.837px]">
-              <div className="relative w-full h-full">
-                <div className="absolute bottom-[9.55%] left-[2.45%] right-[2.45%] top-0">
-                  <Image 
-                    src={star2} 
-                    alt="Star" 
-                    width={147.837}
-                    height={147.837}
-                    className="object-contain" 
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+const StarContainer = () => (
+  <div className={STYLES.starContainer}>
+    <div className={STYLES.starWrapper}>
+      {/* First star */}
+      <div
+        className={STYLES.starItem}
+        style={{
+          left: "-5.13%",
+          right: "-33.52%",
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
+      >
+        <StarImage src={ASSETS.star1} alt="Star" />
       </div>
+
+      {/* Second star */}
+      <div
+        className={STYLES.starItem}
+        style={{
+          left: "-33.82%",
+          right: "-4.84%",
+          top: "calc(50% + 16px)",
+          transform: "translateY(-50%)",
+        }}
+      >
+        <StarImage src={ASSETS.star2} alt="Star" />
+      </div>
+    </div>
+  </div>
+);
+
+const BannerContent = ({ 
+  title, 
+  dateText, 
+  quarterWeekText, 
+  fullDateText 
+}: {
+  title: string;
+  dateText: string;
+  quarterWeekText: string;
+  fullDateText: string;
+}) => (
+  <div className={STYLES.mainContent}>
+    <div className={STYLES.textContent}>
+      <BannerTitle title={title} />
+      <BannerDate 
+        dateText={dateText}
+        quarterWeekText={quarterWeekText}
+        fullDateText={fullDateText}
+      />
+    </div>
+  </div>
+);
+
+// Main component
+export default function VoteBanner({ 
+  weekDto, 
+  customTitle, 
+  customSubtitle 
+}: VoteBannerProps) {
+  const bannerData = getBannerData(weekDto);
+  const title = getTitleText(bannerData, customTitle);
+  const dateText = getDateText(bannerData, customSubtitle);
+  const quarterWeekText = getQuarterWeekText(bannerData, customSubtitle);
+  const fullDateText = getFullDateText(bannerData, customSubtitle);
+
+  return (
+    <div className={STYLES.container}>
+      <BannerContent
+        title={title}
+        dateText={dateText}
+        quarterWeekText={quarterWeekText}
+        fullDateText={fullDateText}
+      />
+      <DuckstarLogo />
+      <StarContainer />
     </div>
   );
 }

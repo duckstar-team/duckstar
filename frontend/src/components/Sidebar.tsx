@@ -14,8 +14,8 @@ const NAV_ITEMS = [
     href: "/",
     defaultIcon: "/icons/home-default.svg",
     activeIcon: "/icons/home-active.svg",
-    iconSize: "h-[17.75px] w-[18px]",
-    iconClass: "absolute flex h-[17.75px] items-center justify-center left-0 top-0 w-[18px]",
+    iconSize: "size-5",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true,
     badgeText: "곧 출시"
   },
@@ -24,8 +24,8 @@ const NAV_ITEMS = [
     href: "/chart",
     defaultIcon: "/icons/chart-default.svg",
     activeIcon: "/icons/chart-active.svg",
-    iconSize: "size-[22px]",
-    iconClass: "relative size-full",
+    iconSize: "size-5",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true,
     badgeText: "준비중"
   },
@@ -35,7 +35,7 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/vote-default.svg",
     activeIcon: "/icons/vote-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: false
   },
   { 
@@ -44,7 +44,7 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/search-default.svg",
     activeIcon: "/icons/search-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true,
     badgeText: "곧 출시"
   },
@@ -54,7 +54,7 @@ const NAV_ITEMS = [
     defaultIcon: "/icons/mypage-default.svg",
     activeIcon: "/icons/mypage-active.svg",
     iconSize: "size-5",
-    iconClass: "relative size-full",
+    iconClass: "flex items-center justify-center size-full",
     isBeta: true
   },
 ];
@@ -62,7 +62,7 @@ const NAV_ITEMS = [
 // Vote button variants based on Figma specifications
 const voteButtonVariants = cva(
   // Base classes from Figma
-  "w-[44px] md:w-[167px] h-[40px] py-[10px] pl-[10px] pr-[10px] md:pr-[12px] rounded-lg flex justify-start items-center gap-0 md:gap-[10px] transition-all duration-200 ease-in-out group-hover:w-[167px] group-hover:pr-[12px] group-hover:gap-[10px]",
+  "w-[40px] md:w-[167px] h-[40px] py-[10px] pl-[10px] pr-[10px] md:pr-[12px] rounded-lg flex justify-start items-center gap-0 md:gap-[10px] transition-all duration-200 ease-in-out group-hover:w-[167px] group-hover:pr-[12px] group-hover:gap-[10px]",
   {
     variants: {
       state: {
@@ -131,16 +131,14 @@ function NavButton({
           <div className={cn(iconSize, "relative")}>
             <div className={iconClass}>
               {label === "홈" ? (
-                <div className="flex-none rotate-[90deg]">
-                  <div className="h-[18px] relative w-[17.75px]">
-                    <Image
-                      src={iconSrc}
-                      alt={label}
-                      width={18}
-                      height={17.75}
-                      className="block max-w-none size-full"
-                    />
-                  </div>
+                <div className="flex items-center justify-center size-full rotate-[90deg]">
+                  <Image
+                    src={iconSrc}
+                    alt={label}
+                    width={20}
+                    height={20}
+                    className="size-full object-contain"
+                  />
                 </div>
               ) : (
                 <Image
@@ -148,12 +146,12 @@ function NavButton({
                   alt={label}
                   width={20}
                   height={20}
-                  className="block max-w-none size-full"
+                  className="size-full object-contain"
                 />
               )}
             </div>
           </div>
-          
+        
           {/* Text container */}
           <div className={cn(textVariants({ state }), "hidden md:block group-hover:block")}>
             <span>{label}</span>
@@ -175,16 +173,14 @@ function NavButton({
             <div className={cn(iconSize, "relative")}>
               <div className={iconClass}>
                 {label === "홈" ? (
-                  <div className="flex-none rotate-[90deg]">
-                    <div className="h-[18px] relative w-[17.75px]">
-                      <Image
-                        src={iconSrc}
-                        alt={label}
-                        width={18}
-                        height={17.75}
-                        className="block max-w-none size-full"
-                      />
-                    </div>
+                  <div className="flex items-center justify-center size-full rotate-[90deg]">
+                    <Image
+                      src={iconSrc}
+                      alt={label}
+                      width={20}
+                      height={20}
+                      className="size-full object-contain"
+                    />
                   </div>
                 ) : (
                   <Image
@@ -192,7 +188,7 @@ function NavButton({
                     alt={label}
                     width={20}
                     height={20}
-                    className="block max-w-none size-full"
+                    className="size-full object-contain"
                   />
                 )}
               </div>
@@ -213,15 +209,17 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [windowHeight, setWindowHeight] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(0);
 
   useEffect(() => {
-    const updateHeight = () => {
+    const updateDimensions = () => {
       setWindowHeight(window.innerHeight);
+      setWindowWidth(window.innerWidth);
     };
 
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
   // Footer 위치 계산 (화면 높이에서 헤더 높이(56px)와 Footer 높이를 뺀 값)
@@ -229,10 +227,22 @@ export default function Sidebar() {
   const footerHeight = 100; // Footer 대략적 높이
   const footerTop = Math.max(windowHeight - headerHeight - footerHeight - 20, 400); // 최소 400px, 여백 20px
 
+  // 갤럭시 Z 폴드 5와 같은 좁은 기기 감지 (280px-400px)
+  const isNarrowDevice = windowWidth >= 280 && windowWidth < 400;
+  const isVeryNarrowDevice = windowWidth < 280;
+
   return (
-    <div className="w-[60px] md:w-[200px] h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]">
+    <div className={`${
+      isVeryNarrowDevice ? 'w-[52px]' : 
+      isNarrowDevice ? 'w-[56px]' : 
+      'w-[60px] md:w-[200px]'
+    } h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]`}>
       {/* Navigation items */}
-      <div className="w-[44px] md:w-[167px] pb-[4px] left-[8px] md:left-[16px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px] transition-all duration-300 ease-in-out group-hover:w-[167px] group-hover:left-[16px]">
+      <div className={`${
+        isVeryNarrowDevice ? 'w-[32px] left-[8px]' : 
+        isNarrowDevice ? 'w-[36px] left-[8px]' : 
+        'w-[40px] md:w-[167px] left-[8px] md:left-[16px]'
+      } pb-[4px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px] transition-all duration-300 ease-in-out group-hover:w-[167px] group-hover:left-[16px]`}>
         {NAV_ITEMS.map((item, index) => (
           <div
             key={item.href}
@@ -257,7 +267,11 @@ export default function Sidebar() {
       
       {/* Footer - 동적 위치 */}
       <div 
-        className="left-[8px] md:left-[16.5px] absolute flex flex-col justify-start items-start gap-[21px] transition-all duration-300 ease-in-out group-hover:left-[16.5px] opacity-0 md:opacity-100 group-hover:opacity-100"
+        className={`${
+          isVeryNarrowDevice ? 'left-[8px]' : 
+          isNarrowDevice ? 'left-[8px]' : 
+          'left-[8px] md:left-[16.5px]'
+        } absolute flex flex-col justify-start items-start gap-[21px] transition-all duration-300 ease-in-out group-hover:left-[16.5px] opacity-0 md:opacity-100 group-hover:opacity-100`}
         style={{ top: `${footerTop}px` }}
       >
         <div className="w-[161px] h-[42px] relative">
