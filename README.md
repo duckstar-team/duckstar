@@ -1,7 +1,7 @@
 # DUCK⭐️STAR - 애니메이션 투표 플랫폼
 
 <div align="center">
-  <img src="frontend/public/logo.svg" alt="DuckStar Logo" width="200"/>
+  <img src="screenshots/logo.svg" alt="DuckStar Logo" width="200"/>
   
   [![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
   [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-6DB33F?style=for-the-badge&logo=spring-boot)](https://spring.io/projects/spring-boot)
