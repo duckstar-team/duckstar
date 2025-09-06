@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import VoteCard from "@/components/vote/VoteCard";
 import VoteBanner from "@/components/vote/VoteBanner";
 import VoteSection from "@/components/vote/VoteSection";
@@ -21,6 +22,7 @@ interface Anime {
 }
 
 export default function VotePage() {
+  const router = useRouter();
   const [selected, setSelected] = useState<number[]>([]);
   const [bonusSelected, setBonusSelected] = useState<number[]>([]);
   const [errorCards, setErrorCards] = useState<Set<number>>(new Set());
@@ -203,6 +205,9 @@ export default function VotePage() {
         // 투표 상태 데이터 캐시 업데이트
         await mutate('/api/v1/vote/anime/status');
         
+        // 빵빠레 효과 시작 (투표 제출 시에만)
+        setShowConfetti(true);
+        
         // 투표 결과 화면으로 전환
         setShowVoteResult(true);
       } else {
@@ -264,12 +269,6 @@ export default function VotePage() {
     }
   }, [voteStatusData]);
 
-  // 투표 결과 화면이 표시될 때 빵빠레 효과 시작
-  useEffect(() => {
-    if (showVoteResult && voteHistory) {
-      setShowConfetti(true);
-    }
-  }, [showVoteResult, voteHistory]);
 
   // 투표 상태 확인 로딩 중
   if (isVoteStatusLoading) {
@@ -342,12 +341,12 @@ export default function VotePage() {
                 <div className="bg-[#f8f9fa] box-border content-stretch flex gap-2.5 items-center justify-center lg:justify-end px-3 sm:px-5 py-[5px] relative rounded-lg shrink-0">
                   <div className="flex flex-col font-['Pretendard:Regular',_sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-sm sm:text-base lg:text-[20px] text-nowrap text-center lg:text-right">
                     <p className="leading-[normal] whitespace-pre">제출 시각: {new Date(voteHistory.submittedAt).toLocaleString('ko-KR')}</p>
-                  </div>
-                </div>
+        </div>
+      </div>
               </div>
             </div>
           </div>
-          
+
           {/* 감사 메시지 및 결과 공개 안내 */}
           <div className="w-full bg-[#F1F3F5] rounded-xl p-4 sm:p-6 pb-0 mt-6">
             <div className="flex flex-col items-center gap-2 sm:gap-3">
@@ -355,32 +354,40 @@ export default function VotePage() {
               <div className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#F8F9FA] rounded-[12px] relative -mb-5 lg:-mb-11">
                 <div className="text-center text-black text-sm sm:text-base font-medium font-['Pretendard']">{getResultAnnouncementMessage()}</div>
               </div>
-            </div>
+
           </div>
-          
+        </div>
+
           {/* 투표된 아이템 리스트 */}
           <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">투표한 {categoryText}</h2>
             {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
                   {voteHistory.animeBallotDtos.map((ballot: VoteHistoryBallotDto) => (
-                    <VoteCard
+                    <div
                       key={ballot.animeId}
-                      thumbnailUrl={ballot.mainThumbnailUrl}
-                      title={ballot.titleKor || '제목 없음'}
-                      checked={true}
-                      onChange={undefined}
-                      showError={false}
-                      currentVotes={voteHistory.normalCount || 0}
-                      maxVotes={10}
-                      isBonusMode={(voteHistory.bonusCount || 0) > 0}
-                      bonusVotesUsed={voteHistory.bonusCount || 0}
-                      isBonusVote={ballot.ballotType === 'BONUS'}
-                      onMouseLeave={() => {}}
-                      weekDto={data?.result?.weekDto}
-                      medium={ballot.medium}
-                      disabled={true}
-                    />
+                      className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                      onClick={() => router.push(`/animes/${ballot.animeId}`)}
+                    >
+                      <div style={{ pointerEvents: 'none' }}>
+                        <VoteCard
+                          thumbnailUrl={ballot.mainThumbnailUrl}
+                          title={ballot.titleKor || '제목 없음'}
+                          checked={true}
+                          onChange={undefined}
+                          showError={false}
+                          currentVotes={voteHistory.normalCount || 0}
+                          maxVotes={10}
+                          isBonusMode={(voteHistory.bonusCount || 0) > 0}
+                          bonusVotesUsed={voteHistory.bonusCount || 0}
+                          isBonusVote={ballot.ballotType === 'BONUS'}
+                          onMouseLeave={() => {}}
+                          weekDto={data?.result?.weekDto}
+                          medium={ballot.medium}
+                          disabled={true}
+                        />
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -388,8 +395,8 @@ export default function VotePage() {
                   <p className="text-gray-500 text-base sm:text-lg">투표한 {categoryText}이 없습니다.</p>
                 </div>
               )}
-          </div>
-        </div>
+              </div>
+            </div>
       </main>
     );
   }

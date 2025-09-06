@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect } from 'react';
+
 interface PrivacySectionProps {
   title: string;
   children: React.ReactNode;
@@ -19,6 +23,11 @@ const PrivacyList: React.FC<{ items: string[] }> = ({ items }) => (
 );
 
 export default function PrivacyPage() {
+  // 페이지 진입 시 스크롤을 맨 위로 고정
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const collectedInfo = [
     "쿠키 ID: 투표 중복 방지를 위한 식별자",
     "투표 데이터: 성별 정보",

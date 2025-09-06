@@ -20,6 +20,12 @@ const config: Config = {
           DEFAULT: "#FFB310",
           hover: "#EAA000",
         },
+        Sub: "#FFB310", // 주황색/노란색
+        gray0: "#F8F9FA",
+        gray2: "#CED4DA", 
+        gray4: "#ADB5BD",
+        gray5: "#868E96",
+        gray6: "#495057",
       },
       backgroundImage: {
         "banner-gradient": "linear-gradient(to right, #212529, #460E06)",
@@ -33,7 +39,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
 };
 
 export default config;

@@ -2,8 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function Home() {
+  // 페이지 진입 시 스크롤을 맨 위로 고정
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const handleResultClick = (e: React.MouseEvent) => {
     e.preventDefault();
     alert('곧 출시됩니다.');

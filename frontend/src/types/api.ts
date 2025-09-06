@@ -185,7 +185,7 @@ export interface AnimePreviewDto {
   scheduledAt: string;
   isRescheduled: boolean;
   genre: string;
-  medium: "TVA" | "MOVIE";
+  medium: "TVA" | "MOVIE" | "OVA" | "SPECIAL";
   ottDtos: OttDto[];
 }
 
@@ -334,6 +334,7 @@ export interface AnimeInfoDto {
   titleOrigin: string;
   dayOfWeek: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "SPECIAL" | "NONE";
   airTime: string;
+  synopsis: string;
   corp: string;
   director: string;
   genre: string;

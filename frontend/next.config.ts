@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+    // 이미지 최적화 비활성화 (외부 이미지 로딩 문제 해결)
+    unoptimized: true,
+    // 이미지 로딩 실패 시 대체 처리
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // webpack 설정
