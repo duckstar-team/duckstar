@@ -1,12 +1,18 @@
+'use client';
+
 import type { NextPage } from "next";
 import Image from 'next/image';
 import Link from 'next/link';
+import LoginButton from './common/LoginButton';
+import { useAuth } from '../context/AuthContext';
 
 export type HeaderType = {
   className?: string;
 };
 
 const Header: NextPage<HeaderType> = ({ className = "" }) => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <header
       className={`w-full h-[60px] relative border-b border-[#DADCE0] backdrop-blur-[6px] ${className}`}
@@ -25,45 +31,43 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         />
       </div>
       
-      {/* Login Button */}
-      <div className="w-[42px] h-[22px] right-[12px] sm:right-[16px] md:right-[40px] top-[19px] absolute z-10">
-        <button 
-          disabled
-          className="text-center text-[#8E8E93] text-[14px] sm:text-[16px] font-[Pretendard] font-semibold leading-[22px] break-words opacity-30 cursor-not-allowed relative"
-        >
-          로그인
-          <span className="hidden md:block absolute -top-2 -right-8 text-[10px] bg-gray-100 text-gray-600 px-1 py-0.25 rounded">준비중</span>
-        </button>
-      </div>
-      
-      {/* 준비중 배지 - 모바일에서만 우상단에 표시 */}
-      <div className="block md:hidden absolute top-0 right-0 z-20">
-        <span className="text-[10px] bg-gray-100 text-gray-600 px-1 py-0.25 rounded opacity-30">준비중</span>
-      </div>
-      
-      {/* Search Bar */}
-      <div className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] right-[60px] sm:right-[80px] md:right-[100px] top-[8px] absolute bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50 hidden md:flex">
-        {/* Search Icon */}
-        <div className="w-5 h-5 relative overflow-hidden">
-          <Image
-            src="/icons/header-search.svg"
-            alt="Search"
-            width={20}
-            height={20}
-            className="w-full h-full"
-          />
+      {/* Right Section - Search Bar + Login Button */}
+      <div className={`absolute right-0 md:right-[25px] top-0 h-[60px] flex items-center gap-3 z-10 ${
+        isAuthenticated ? 'gap-6' : 'gap-2'
+      }`}>
+        {/* Search Bar */}
+        <div className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50 hidden md:flex">
+          {/* Search Icon */}
+          <div className="w-5 h-5 relative overflow-hidden">
+            <Image
+              src="/icons/header-search.svg"
+              alt="Search"
+              width={20}
+              height={20}
+              className="w-full h-full"
+            />
+          </div>
+          
+          {/* Separator */}
+          <div className="w-px h-4 bg-[#E9ECEF]"></div>
+          
+          {/* Search Input */}
+          <div className="flex-1">
+            <input
+              type="text"
+              disabled
+              placeholder="베타 - 곧 업데이트됩니다."
+              className="w-full bg-transparent outline-none text-sm text-gray-400 placeholder-gray-400 cursor-not-allowed"
+            />
+          </div>
         </div>
         
-        {/* Separator */}
-        <div className="w-px h-4 bg-[#E9ECEF]"></div>
-        
-        {/* Search Input */}
-        <div className="flex-1">
-          <input
-            type="text"
-            disabled
-            placeholder="베타 - 곧 업데이트됩니다."
-            className="w-full bg-transparent outline-none text-sm text-gray-400 placeholder-gray-400 cursor-not-allowed"
+        {/* Login/Logout Button */}
+        <div className="flex items-center">
+          <LoginButton 
+            variant="default" 
+            showProfileImage={true}
+            className="max-w-[200px] sm:max-w-[250px] md:max-w-none"
           />
         </div>
       </div>

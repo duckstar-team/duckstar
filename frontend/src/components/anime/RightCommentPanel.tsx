@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
+import ReplyPostForm from './ReplyPostForm';
 import CommentHeader from './CommentHeader';
 import CommentsBoard from '../CommentsBoard';
 import Comment from '../Comment';
@@ -11,8 +12,10 @@ import Reply from '../Reply';
 import OpenOrFoldReplies from '../OpenOrFoldReplies';
 import SortingMenu from '../SortingMenu';
 import { SortOption } from '../SortingMenu';
-import { CommentDto, ReplyDto } from '../../types/api';
+import { CommentDto, ReplyDto } from '../../api/comments';
 import { getBusinessQuarter, calculateBusinessWeekNumber, getQuarterInKorean } from '../../lib/quarterUtils';
+import { useAuth } from '../../context/AuthContext';
+import { startKakaoLogin } from '../../api/client';
 import { 
   getAnimeComments, 
   createComment, 
@@ -20,14 +23,52 @@ import {
   getReplies, 
   createReply, 
   deleteReply,
+  likeComment,
+  unlikeComment,
+  likeReply,
+  unlikeReply,
+  mapSortOptionToBackend,
   CommentRequestDto,
   ReplyRequestDto,
   AnimeCommentSliceDto,
-  ReplySliceDto
+  ReplySliceDto,
+  PageInfo
 } from '../../api/comments';
+
+// ReplyForm 컴포넌트를 외부로 이동하여 재선언 방지
+const ReplyForm = React.memo(({ commentId, listenerId, onSubmit }: { 
+  commentId: number; 
+  listenerId?: number; 
+  onSubmit: (content: string, commentId: number, listenerId?: number) => void;
+}) => {
+  const handleSubmit = useCallback((content: string) => {
+    onSubmit(content, commentId, listenerId);
+  }, [onSubmit, commentId, listenerId]);
+  
+  return (
+    <div className="w-full h-auto flex flex-col justify-center items-end gap-2.5">
+      <div className="w-full h-auto px-[11px] pt-[10px] pb-[14px] bg-[#F8F9FA] flex flex-col justify-center items-end gap-[10px] overflow-hidden">
+        <ReplyPostForm 
+          onSubmit={handleSubmit}
+          onImageUpload={(file) => {
+            // TODO: 이미지 업로드 처리
+          }}
+          placeholder="답글을 입력하세요..."
+          commentId={commentId}
+          listenerId={listenerId}
+        />
+      </div>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // props가 동일하면 리렌더링 방지
+  return prevProps.commentId === nextProps.commentId && 
+         prevProps.listenerId === nextProps.listenerId;
+});
 
 // API 응답 타입 정의 (백엔드 EpisodeDto와 일치)
 interface EpisodeDto {
+  episodeId: number;
   episodeNumber: number;
   isBreak: boolean;
   scheduledAt: string; // ISO 8601 형식 (LocalDateTime)
@@ -91,6 +132,9 @@ interface RightCommentPanelProps {
 }
 
 export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProps) {
+  // 인증 상태 확인
+  const { isAuthenticated } = useAuth();
+  
   // 상태 관리
   const [animeData, setAnimeData] = useState<AnimeHomeDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,6 +147,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMoreComments, setHasMoreComments] = useState(true);
   const [totalCommentCount, setTotalCommentCount] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [activeFilters, setActiveFilters] = useState<number[]>([]); // 활성화된 에피소드 필터들
   const [currentSort, setCurrentSort] = useState<SortOption>('Recent');
@@ -150,10 +195,14 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     if (!animeId) return;
     
     try {
-      setCommentsLoading(true);
+      if (reset) {
+        setCommentsLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
       setCommentsError(null);
       
-      const sortBy = currentSort === 'Recent' ? 'RECENT' : 'POPULAR';
+      const sortBy = mapSortOptionToBackend(currentSort);
       const data = await getAnimeComments(
         animeId,
         selectedEpisodeIds.length > 0 ? selectedEpisodeIds : undefined,
@@ -165,19 +214,21 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       if (reset) {
         setComments(data.commentDtos);
         setCurrentPage(0);
+        setTotalCommentCount(data.totalCount || 0);
       } else {
         setComments(prev => [...prev, ...data.commentDtos]);
+        setCurrentPage(page);
+        // 추가 페이지에서는 totalCount를 업데이트하지 않음 (첫 페이지에서 받은 값 유지)
       }
       
       setHasMoreComments(data.pageInfo.hasNext);
-      setTotalCommentCount(data.totalCount || 0);
-      setCurrentPage(page);
       
     } catch (err) {
       setCommentsError('댓글을 불러오는 중 오류가 발생했습니다.');
       console.error('Failed to load comments:', err);
     } finally {
       setCommentsLoading(false);
+      setLoadingMore(false);
     }
   }, [animeId, currentSort, selectedEpisodeIds]);
 
@@ -239,6 +290,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           scheduledAt.setDate(scheduledAt.getDate() + (i - 5) * 7);
           
           return {
+            episodeId: i + 1, // episodeId 추가
             episodeNumber: i + 1,
             isBreak: false,
             scheduledAt: scheduledAt.toISOString(),
@@ -264,26 +316,95 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     loadComments(0, true);
   }, [loadComments]);
 
+  // 무한스크롤을 위한 Intersection Observer
+  useEffect(() => {
+    console.log('Setting up Intersection Observer with state:', {
+      hasMoreComments,
+      loadingMore,
+      commentsLoading,
+      currentPage
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        console.log('Intersection Observer callback triggered');
+        entries.forEach(entry => {
+          console.log('Entry:', {
+            isIntersecting: entry.isIntersecting,
+            intersectionRatio: entry.intersectionRatio,
+            target: entry.target
+          });
+          
+          if (entry.isIntersecting && hasMoreComments && !loadingMore && !commentsLoading) {
+            console.log('Loading more comments, page:', currentPage + 1);
+            loadComments(currentPage + 1, false);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '100px'
+      }
+    );
+
+    // 약간의 지연을 두고 observer 설정
+    const timer = setTimeout(() => {
+      if (loadMoreRef.current) {
+        console.log('Observing loadMoreRef element:', loadMoreRef.current);
+        observer.observe(loadMoreRef.current);
+      } else {
+        console.log('loadMoreRef.current is null');
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [hasMoreComments, loadingMore, commentsLoading, currentPage]);
+
+  // 에피소드 필터 변경 시 댓글 재로드
+  useEffect(() => {
+    if (animeId) {
+      loadComments(0, true);
+    }
+  }, [selectedEpisodeIds, animeId, loadComments]);
+
 
   // 필터 핸들러 함수들
   const handleClearFilters = () => {
     setActiveFilters([]);
     setSelectedEpisodeIds([]);
+    setCurrentPage(0); // 필터 클리어 시 페이지 초기화
   };
 
   const handleRemoveFilter = (episodeNumber: number) => {
     setActiveFilters(prev => prev.filter(ep => ep !== episodeNumber));
-    setSelectedEpisodeIds(prev => prev.filter(id => id !== episodeNumber));
+    
+    // episodeNumber에 해당하는 episodeId를 찾아서 selectedEpisodeIds에서 제거
+    const episode = animeData?.episodeDtos.find(ep => ep.episodeNumber === episodeNumber);
+    if (episode) {
+      setSelectedEpisodeIds(prev => prev.filter(id => id !== episode.episodeId));
+    }
+    
+    setCurrentPage(0); // 필터 제거 시 페이지 초기화
   };
 
   // 답글 관련 상태 및 핸들러
   const [activeReplyForm, setActiveReplyForm] = useState<string | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<{ [commentId: number]: boolean }>({});
+  const [replyFormValues, setReplyFormValues] = useState<{ [key: string]: string }>({});
+  const [replyPageInfo, setReplyPageInfo] = useState<{ [commentId: number]: PageInfo }>({});
   
   // 애니 헤더 높이 측정을 위한 ref와 상태
   const commentHeaderRef = useRef<HTMLDivElement>(null);
   const sortingMenuRef = useRef<HTMLDivElement>(null);
   const [commentHeaderHeight, setCommentHeaderHeight] = useState(80); // 기본값을 80px로 설정
+  
+  // 무한스크롤을 위한 ref
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
   // Sticky 상태 관리
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
@@ -297,21 +418,78 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     setActiveReplyForm(activeReplyForm === formKey ? null : formKey);
   };
 
-  const handleReplySubmit = async (content: string, commentId: number) => {
+  const handleReplySubmit = async (content: string, commentId: number, listenerId?: number) => {
+    console.log('답글 작성 시작:', { content, commentId, listenerId });
+    
+    // 인증 상태 확인
+    if (!isAuthenticated) {
+      const shouldLogin = confirm('답글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?');
+      if (shouldLogin) {
+        startKakaoLogin();
+      }
+      return;
+    }
+    
     try {
       const request: ReplyRequestDto = {
+        listenerId: listenerId, // 답글의 답글인 경우 대상 멤버 ID
         commentRequestDto: {
-          body: content,
+          body: content, // 줄바꿈을 포함한 원본 텍스트
         }
       };
       
-      await createReply(commentId, request);
+      console.log('답글 작성 요청:', request);
+      const result = await createReply(commentId, request);
+      console.log('답글 작성 성공:', result);
+      
       setActiveReplyForm(null);
       
-      // 댓글 목록 새로고침
-      loadComments(0, true);
+      // 답글을 자동으로 펼치고 답글 목록 조회
+      setExpandedReplies(prev => ({
+        ...prev,
+        [commentId]: true
+      }));
+      
+      try {
+        console.log('답글 작성 후 답글 조회 시작, commentId:', commentId);
+        const replyData = await getReplies(commentId, 0, 10);
+        console.log('답글 조회 성공, replyData:', replyData);
+        console.log('답글 목록:', replyData.replyDtos);
+        setReplies(prev => ({
+          ...prev,
+          [commentId]: replyData.replyDtos
+        }));
+        
+        // 페이지 정보 저장
+        setReplyPageInfo(prev => ({
+          ...prev,
+          [commentId]: replyData.pageInfo
+        }));
+        
+        // 답글 개수 업데이트 (totalCount가 있는 경우)
+        if (replyData.totalCount !== undefined) {
+          setComments(prev => prev.map(comment => {
+            if (!comment || !comment.commentId) return comment;
+            return comment.commentId === commentId 
+              ? { ...comment, replyCount: replyData.totalCount! }
+              : comment;
+          }));
+        }
+        
+      } catch (error) {
+        console.error('Failed to refresh replies:', error);
+      }
+      
     } catch (error) {
       console.error('Failed to create reply:', error);
+      if (error instanceof Error && error.message.includes('401')) {
+        const shouldReLogin = confirm('로그인이 만료되었습니다. 다시 로그인하시겠습니까?');
+        if (shouldReLogin) {
+          startKakaoLogin();
+        }
+      } else {
+        alert('답글 작성에 실패했습니다. 다시 시도해주세요.');
+      }
     }
   };
 
@@ -319,60 +497,249 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     setActiveReplyForm(null);
   };
 
-  const handleToggleReplies = (commentId: number) => {
+  const handleToggleReplies = async (commentId: number) => {
+    const isCurrentlyExpanded = expandedReplies[commentId];
+    const hasLoadedReplies = replies[commentId] && replies[commentId].length > 0;
+    
+    if (!isCurrentlyExpanded && !hasLoadedReplies) {
+      // 답글을 펼치는 경우 - 답글이 아직 로드되지 않았을 때만 조회
+      try {
+        const replyData = await getReplies(commentId, 0, 10);
+        console.log('답글 토글 시 답글 조회 성공:', replyData);
+        console.log('답글 목록:', replyData.replyDtos);
+        setReplies(prev => ({
+          ...prev,
+          [commentId]: replyData.replyDtos
+        }));
+        
+        // 페이지 정보 저장
+        setReplyPageInfo(prev => ({
+          ...prev,
+          [commentId]: replyData.pageInfo
+        }));
+        
+      } catch (error) {
+        console.error('Failed to load replies:', error);
+        alert('답글을 불러오는데 실패했습니다.');
+        return;
+      }
+    }
+    
     setExpandedReplies(prev => ({
       ...prev,
       [commentId]: !prev[commentId]
     }));
   };
 
+  // 답글 더보기 함수
+  const handleLoadMoreReplies = async (commentId: number) => {
+    try {
+      const currentPageInfo = replyPageInfo[commentId];
+      const nextPage = currentPageInfo ? currentPageInfo.page + 1 : 0;
+      
+      const replyData = await getReplies(commentId, nextPage, 10);
+      
+      // 기존 답글에 새 답글 추가
+      setReplies(prev => ({
+        ...prev,
+        [commentId]: [...(prev[commentId] || []), ...replyData.replyDtos]
+      }));
+      
+      // 페이지 정보 업데이트
+      setReplyPageInfo(prev => ({
+        ...prev,
+        [commentId]: replyData.pageInfo
+      }));
+    } catch (error) {
+      console.error('Failed to load more replies:', error);
+      alert('답글을 불러오는데 실패했습니다.');
+    }
+  };
+
+  // 정렬 변경 핸들러
+  const handleSortChange = (sort: SortOption) => {
+    setCurrentSort(sort);
+    // 정렬 변경 시 댓글 목록 새로고침
+    loadComments(0, true);
+  };
+
   // 댓글/답글 핸들러 함수들
-  const onCommentLike = (commentId: number) => {
-    // TODO: 좋아요 API 호출 (아직 백엔드에 구현되지 않음)
+  const onCommentLike = async (commentId: number) => {
+    try {
+      // 현재 댓글의 좋아요 상태 확인
+      const currentComment = comments.find(c => c && c.commentId === commentId);
+      const isCurrentlyLiked = currentComment?.isLiked;
+      const currentLikeId = currentComment?.commentLikeId;
+      
+      if (isCurrentlyLiked && currentLikeId && currentLikeId > 0) {
+        // 좋아요 취소
+        const result = await unlikeComment(commentId, currentLikeId);
+        
+        // 댓글 목록에서 해당 댓글의 좋아요 상태 업데이트
+        setComments(prevComments => 
+          prevComments.map(comment => 
+            comment && comment.commentId === commentId 
+              ? { 
+                  ...comment, 
+                  isLiked: false,
+                  likeCount: result.likeCount,
+                  commentLikeId: currentLikeId // 좋아요 취소해도 likeId는 유지
+                }
+              : comment
+          )
+        );
+      } else {
+        // 좋아요 (기존 likeId가 있으면 재활용)
+        const result = await likeComment(commentId, currentLikeId);
+        
+        // 댓글 목록에서 해당 댓글의 좋아요 상태 업데이트
+        setComments(prevComments => 
+          prevComments.map(comment => 
+            comment && comment.commentId === commentId 
+              ? { 
+                  ...comment, 
+                  isLiked: true,
+                  likeCount: result.likeCount,
+                  commentLikeId: result.likeId || currentLikeId || 0
+                }
+              : comment
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Failed to toggle comment like:', error);
+      alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   const onCommentDelete = async (commentId: number) => {
+    const shouldDelete = confirm('댓글을 삭제하시겠습니까?');
+    if (!shouldDelete) {
+      return;
+    }
+    
     try {
       await deleteComment(commentId);
       // 댓글 목록 새로고침
       loadComments(0, true);
     } catch (error) {
       console.error('Failed to delete comment:', error);
+      alert('댓글 삭제에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
-  const onReplyLike = (replyId: number) => {
-    // TODO: 좋아요 API 호출 (아직 백엔드에 구현되지 않음)
+  const onReplyLike = async (replyId: number) => {
+    try {
+      // 현재 답글의 좋아요 상태 확인
+      let currentReply: ReplyDto | undefined;
+      let currentLikeId: number | undefined;
+      
+      Object.values(replies).forEach(replyList => {
+        const reply = replyList.find(r => r && r.replyId === replyId);
+        if (reply) {
+          currentReply = reply;
+          currentLikeId = reply.replyLikeId;
+        }
+      });
+      
+      if (currentReply?.isLiked && currentLikeId && currentLikeId > 0) {
+        // 좋아요 취소
+        const result = await unlikeReply(replyId, currentLikeId);
+        
+        // 답글 목록에서 해당 답글의 좋아요 상태 업데이트
+        setReplies(prevReplies => {
+          const updatedReplies = { ...prevReplies };
+          Object.keys(updatedReplies).forEach(commentId => {
+            updatedReplies[parseInt(commentId)] = updatedReplies[parseInt(commentId)].map(reply =>
+              reply && reply.replyId === replyId
+                ? {
+                    ...reply,
+                    isLiked: false,
+                    likeCount: result.likeCount,
+                    replyLikeId: currentLikeId // 좋아요 취소해도 likeId는 유지
+                  }
+                : reply
+            );
+          });
+          return updatedReplies;
+        });
+      } else {
+        // 좋아요 (기존 likeId가 있으면 재활용)
+        const result = await likeReply(replyId, currentLikeId);
+        
+        // 답글 목록에서 해당 답글의 좋아요 상태 업데이트
+        setReplies(prevReplies => {
+          const updatedReplies = { ...prevReplies };
+          Object.keys(updatedReplies).forEach(commentId => {
+            updatedReplies[parseInt(commentId)] = updatedReplies[parseInt(commentId)].map(reply =>
+              reply && reply.replyId === replyId
+                ? {
+                    ...reply,
+                    isLiked: true,
+                    likeCount: result.likeCount,
+                    replyLikeId: result.likeId || currentLikeId || 0
+                  }
+                : reply
+            );
+          });
+          return updatedReplies;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle reply like:', error);
+      alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
-  const onReplyDelete = async (replyId: number) => {
+  const onReplyDelete = async (replyId: number, commentId?: number) => {
+    const shouldDelete = confirm('답글을 삭제하시겠습니까?');
+    if (!shouldDelete) {
+      return;
+    }
+    
     try {
       await deleteReply(replyId);
-      // 댓글 목록 새로고침
-      loadComments(0, true);
+      
+      // 답글 목록 새로고침 (답글이 펼쳐져 있는 경우)
+      if (commentId && expandedReplies[commentId]) {
+        try {
+          const replyData = await getReplies(commentId, 0, 10);
+          setReplies(prev => ({
+            ...prev,
+            [commentId]: replyData.replyDtos
+          }));
+          
+        } catch (error) {
+          console.error('Failed to refresh replies after delete:', error);
+        }
+      }
+      
     } catch (error) {
       console.error('Failed to delete reply:', error);
+      alert('답글 삭제에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
-  // 답글 작성 폼 컴포넌트
-  const ReplyForm = () => (
-    <div className="w-full h-auto flex flex-col justify-center items-end gap-2.5">
-      <div className="w-full h-auto px-[11px] pt-[10px] pb-[14px] bg-[#F8F9FA] flex flex-col justify-center items-end gap-[10px] overflow-hidden">
-        <CommentPostForm 
-          variant="forReply"
-          onSubmit={(content) => {
-            const commentId = parseInt(activeReplyForm?.split('-')[1] || '0');
-            handleReplySubmit(content, commentId);
-          }}
-          onImageUpload={(file) => {
-            // TODO: 이미지 업로드 처리
-          }}
-          placeholder="답글을 입력하세요..."
+  // ReplyForm 인스턴스를 useRef로 캐시하여 재생성 방지
+  const replyFormCache = useRef<Map<string, React.ReactElement>>(new Map());
+  
+  // 캐시된 ReplyForm 인스턴스 가져오기 또는 생성
+  const getCachedReplyForm = useCallback((commentId: number, listenerId?: number) => {
+    const key = `${commentId}-${listenerId || 'main'}`;
+    
+    if (!replyFormCache.current.has(key)) {
+      replyFormCache.current.set(key, 
+        <ReplyForm 
+          key={key}
+          commentId={commentId} 
+          listenerId={listenerId} 
+          onSubmit={handleReplySubmit}
         />
-      </div>
-    </div>
-  );
+      );
+    }
+    
+    return replyFormCache.current.get(key);
+  }, [handleReplySubmit]);
 
   // 애니 헤더 높이 측정
   useEffect(() => {
@@ -709,7 +1076,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     const { quarter, week } = getQuarterAndWeek(scheduledAt);
     
     return {
-      id: episodeDto.episodeNumber, // episodeNumber를 id로 사용
+      id: episodeDto.episodeId, // episodeId를 id로 사용
+      episodeId: episodeDto.episodeId,
       episodeNumber: episodeDto.episodeNumber,
       scheduledAt: episodeDto.scheduledAt,
       quarter,
@@ -722,7 +1090,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
   // 에피소드 클릭 핸들러 (다중 선택 및 필터 추가/제거)
   const handleEpisodeClick = (episodeId: number) => {
-    const episode = animeData?.episodeDtos.find(ep => ep.episodeNumber === episodeId);
+    const episode = animeData?.episodeDtos.find(ep => ep.episodeId === episodeId);
     
     setSelectedEpisodeIds(prev => {
       if (prev.includes(episodeId)) {
@@ -730,6 +1098,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         if (episode) {
           setActiveFilters(current => current.filter(num => num !== episode.episodeNumber));
         }
+        // 필터 변경 시 페이지 초기화
+        setCurrentPage(0);
         return prev.filter(id => id !== episodeId);
       } else {
         // 새로운 에피소드 선택 (기존 선택 유지) 및 필터 추가
@@ -742,6 +1112,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
             return current;
           });
         }
+        // 필터 변경 시 페이지 초기화
+        setCurrentPage(0);
         return [...prev, episodeId];
       }
     });
@@ -832,10 +1204,20 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           </div>
           
           <CommentPostForm 
+            key="main-comment-form" // 안정적인 key로 댓글 폼 고정
             onSubmit={async (comment) => {
+              // 인증 상태 확인
+              if (!isAuthenticated) {
+                const shouldLogin = confirm('댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?');
+                if (shouldLogin) {
+                  startKakaoLogin();
+                }
+                return;
+              }
+              
               try {
                 const request: CommentRequestDto = {
-                  body: comment,
+                  body: comment, // 줄바꿈을 포함한 원본 텍스트
                 };
                 
                 await createComment(animeId, request);
@@ -843,6 +1225,14 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                 loadComments(0, true);
               } catch (error) {
                 console.error('Failed to create comment:', error);
+                if (error instanceof Error && error.message.includes('401')) {
+                  const shouldReLogin = confirm('로그인이 만료되었습니다. 다시 로그인하시겠습니까?');
+                  if (shouldReLogin) {
+                    startKakaoLogin();
+                  }
+                } else {
+                  alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
+                }
               }
             }}
             onImageUpload={(file) => {
@@ -860,11 +1250,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       >
         <SortingMenu 
           currentSort={currentSort}
-          onSortChange={(newSort) => {
-            setCurrentSort(newSort);
-            // 정렬 변경 시 댓글 다시 로드
-            loadComments(0, true);
-          }}
+          onSortChange={handleSortChange}
         />
       </div>
       
@@ -898,18 +1284,35 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                 }> = [];
 
                 comments.forEach(comment => {
-                  // 댓글만 추가 (답글은 별도로 렌더링)
-                  unifiedList.push({
-                    type: 'comment',
-                    data: comment,
-                    commentId: comment.commentId
-                  });
+                  // null 체크 추가
+                  if (comment && comment.commentId) {
+                    // 댓글만 추가 (답글은 별도로 렌더링)
+                    unifiedList.push({
+                      type: 'comment',
+                      data: comment,
+                      commentId: comment.commentId
+                    });
+                  }
                 });
 
                 return unifiedList;
               };
 
               const unifiedList = createUnifiedList();
+
+              // 댓글이 없는 경우
+              if (unifiedList.length === 0) {
+                return (
+                  <div className="w-full flex flex-col items-center justify-center py-16">
+                    <div className="text-gray-400 text-base font-normal font-['Pretendard'] text-center">
+                      아직 댓글이 없습니다.
+                    </div>
+                    <div className="text-gray-300 text-sm font-normal font-['Pretendard'] text-center mt-2">
+                      첫 번째 댓글을 작성해보세요!
+                    </div>
+                  </div>
+                );
+              }
 
               return unifiedList.map((item, index) => {
                 const comment = item.data as CommentDto;
@@ -920,52 +1323,66 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                     <div className={`w-full mb-1.5 ${index === 0 ? 'pt-7' : ''}`}>
                       <Comment
                         comment={comment}
-                        episodeNumber="10화"
                         onLike={onCommentLike}
                         onReply={() => handleReplyClick('comment', comment.commentId)}
                         onDelete={onCommentDelete}
                       />
                     </div>
                     
-                    {/* 답글 폼 */}
-                    {activeReplyForm === `comment-${comment.commentId}` && (
-                      <ReplyForm />
-                    )}
+                       {/* 답글 폼 - 캐시된 인스턴스 사용, CSS로 보이기/숨기기 제어 */}
+                       <div 
+                         className="mb-2" 
+                         style={{ display: activeReplyForm === `comment-${comment.commentId}` ? 'block' : 'none' }}
+                       >
+                         {getCachedReplyForm(comment.commentId)}
+                       </div>
                     
                     {/* 답글들 */}
-                    {commentReplies.length > 0 && expandedReplies[comment.commentId] && (
+                    {comment.replyCount > 0 && expandedReplies[comment.commentId] && commentReplies.length > 0 && (
                       <div className="w-full mb-1.5 flex flex-col gap-1.5">
-                        {commentReplies.map(reply => (
+                        {commentReplies.map(reply => {
+                          console.log('답글 렌더링:', { 
+                            replyId: reply.replyId, 
+                            listenerNickname: reply.listenerNickname,
+                            body: reply.body 
+                          });
+                          return (
                           <div key={reply.replyId} className="w-full flex flex-col gap-2">
                             <Reply
                               reply={reply}
                               onLike={onReplyLike}
                               onReply={() => handleReplyClick('reply', reply.replyId)}
-                              onDelete={onReplyDelete}
+                              onDelete={(replyId) => onReplyDelete(replyId, comment.commentId)}
                             />
                             
-                            {/* 답글의 답글 폼 */}
-                            {activeReplyForm === `reply-${reply.replyId}` && (
-                              <ReplyForm />
-                            )}
+                               {/* 답글의 답글 폼 - 캐시된 인스턴스 사용, CSS로 보이기/숨기기 제어 */}
+                               <div 
+                                 className="mb-5" 
+                                 style={{ display: activeReplyForm === `reply-${reply.replyId}` ? 'block' : 'none' }}
+                               >
+                                 {getCachedReplyForm(comment.commentId, reply.authorId)}
+                               </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                     
                     {/* 답글 토글 버튼 */}
-                    {commentReplies.length > 0 && (
+                    {comment.replyCount > 0 && (
                       <div className="h-auto mb-6">
                         <OpenOrFoldReplies
                           isOpen={expandedReplies[comment.commentId]}
-                          replyCount={commentReplies.length}
+                          replyCount={comment.replyCount}
+                          hasMoreReplies={replyPageInfo[comment.commentId]?.hasNext || false}
                           onToggle={() => handleToggleReplies(comment.commentId)}
+                          onLoadMore={() => handleLoadMoreReplies(comment.commentId)}
                         />
                       </div>
                     )}
                     
                     {/* 답글이 없는 댓글의 경우 추가 간격 */}
-                    {commentReplies.length === 0 && (
+                    {comment.replyCount === 0 && (
                       <div className="mb-6"></div>
                     )}
                   </div>
@@ -973,15 +1390,27 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
               });
             })()}
             
-            {/* 더 보기 버튼 */}
+            {/* 무한스크롤 트리거 */}
             {hasMoreComments && !commentsLoading && (
-              <div className="w-full flex justify-center py-4">
-                <button
-                  onClick={() => loadComments(currentPage + 1, false)}
-                  className="px-4 py-2 text-blue-500 hover:text-blue-700 border border-blue-500 rounded"
-                >
-                  더 보기
-                </button>
+              <div 
+                ref={loadMoreRef} 
+                className="w-full flex justify-center py-4 min-h-[50px] cursor-pointer"
+                onClick={() => {
+                  console.log('Manual click to load more comments');
+                  if (!loadingMore && !commentsLoading) {
+                    loadComments(currentPage + 1, false);
+                  }
+                }}
+              >
+                {loadingMore ? (
+                  <div className="text-gray-500 text-sm">
+                    댓글을 불러오는 중...
+                  </div>
+                ) : (
+                  <div className="text-gray-400 text-sm">
+                    스크롤하거나 클릭하여 더 많은 댓글 보기
+                  </div>
+                )}
               </div>
             )}
             

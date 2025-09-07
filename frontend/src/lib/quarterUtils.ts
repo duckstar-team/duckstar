@@ -104,17 +104,24 @@ export function getCurrentYearAndQuarter(): { year: number; quarter: number } {
  * 백엔드의 calculateBusinessWeekNumber와 동일한 로직
  */
 export function calculateBusinessWeekNumber(date: Date): number {
-  const quarter = getBusinessQuarter(date);
-  
+  // 일요일이고 22시 이전이면 하루 전 토요일로 간주
+  let adjustedDate = new Date(date);
+  if (date.getDay() === 0 && date.getHours() < 22) {
+    adjustedDate = new Date(date);
+    adjustedDate.setDate(date.getDate() - 1);
+  }
+
+  const quarter = getBusinessQuarter(adjustedDate);
+
   // 분기 시작일 및 첫 번째 일요일 계산
-  const quarterStart = new Date(date.getFullYear(), (quarter - 1) * 3, 1);
+  const quarterStart = new Date(adjustedDate.getFullYear(), (quarter - 1) * 3, 1);
   const firstSunday = new Date(quarterStart);
   firstSunday.setDate(quarterStart.getDate() - (quarterStart.getDay() % 7));
-  
-  // 주 시작일 (일요일)
-  const weekStart = new Date(date);
-  weekStart.setDate(date.getDate() - (date.getDay() % 7));
-  
+
+  // 주 시작일
+  const weekStart = new Date(adjustedDate);
+  weekStart.setDate(adjustedDate.getDate() - (adjustedDate.getDay() % 7));
+
   // 주차 계산
   const timeDiff = weekStart.getTime() - firstSunday.getTime();
   const weeks = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7)) + 1;

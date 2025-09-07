@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useImagePreload } from '@/hooks/useImagePreload';
 
 // 커스텀 스크롤바 스타일
 const customScrollbarStyles = `
@@ -238,62 +237,99 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
     ottDtos = []
   } = anime;
 
-  // 이미지 로딩 상태 관리
-  const [currentBackgroundImage, setCurrentBackgroundImage] = useState(mainThumbnailUrl || "/banners/duckstar-logo.svg");
+  // 이미지 로딩 상태 관리 (간소화)
   const [currentPosterImage, setCurrentPosterImage] = useState(mainThumbnailUrl || "/banners/duckstar-logo.svg");
+  const [currentBackgroundImage, setCurrentBackgroundImage] = useState(mainThumbnailUrl || "/banners/duckstar-logo.svg");
   const [backgroundPosition, setBackgroundPosition] = useState("center center");
-  
-  // 이미지 크기 확인 및 위치 계산 함수
+  const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
+
+  // 이미지 캐시 확인 함수
+  const isImageCached = (imageUrl: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = imageUrl;
+    });
+  };
+
+  // 이미지 위치 계산 함수 (썸네일과 메인 이미지의 크기/위치를 동일하게 미리 계산)
   const calculateImagePosition = (imageUrl: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new window.Image();
       img.onload = () => {
-        const containerAspectRatio = 586 / 828; // 컨테이너 비율 (약 0.707)
+        const containerWidth = 586; // 배경 컨테이너 너비
+        const containerHeight = 828; // 배경 컨테이너 높이
+        const containerAspectRatio = containerWidth / containerHeight;
         const imageAspectRatio = img.width / img.height;
         
-        // 이미지 비율에 따라 최적의 위치 계산
+        let position = "center center";
+        
         if (imageAspectRatio > containerAspectRatio) {
-          // 이미지가 더 넓음 - 상하 중앙, 좌우는 잘림
-          resolve("center center");
+          // 이미지가 더 넓음 - 높이에 맞춤, 좌우 중앙
+          position = "center center";
         } else {
-          // 이미지가 더 높음 - 좌우 중앙, 상하는 잘림  
-          resolve("center center");
+          // 이미지가 더 높음 - 너비에 맞춤, 상하 중앙
+          position = "center center";
         }
+        
+        resolve(position);
       };
-      img.onerror = () => resolve("center center"); // 에러 시 기본값
+      img.onerror = () => resolve("center center");
       img.src = imageUrl;
     });
   };
-  
-  // 메인 이미지 프리로딩
-  const { isLoaded: isMainImageLoaded } = useImagePreload(mainImageUrl || mainThumbnailUrl || "/banners/duckstar-logo.svg", {
-    priority: false, // 썸네일을 먼저 보여주고 메인은 백그라운드에서 로드
-    onLoad: async () => {
-      console.log('이미지 로드 완료:', { mainImageUrl, mainThumbnailUrl });
-      // 메인 이미지 로드 완료 시 교체
-      if (mainImageUrl) {
-        console.log('메인 이미지로 교체:', mainImageUrl);
-        const position = await calculateImagePosition(mainImageUrl);
-        setBackgroundPosition(position);
-        setCurrentBackgroundImage(mainImageUrl);
-      } else {
-        console.log('mainImageUrl이 없음, 썸네일 유지');
-      }
-      if (mainThumbnailUrl) {
-        setCurrentPosterImage(mainThumbnailUrl);
-      }
-    }
-  });
 
-  // mainThumbnailUrl이 로드되면 이미지 상태 업데이트
+  // 메인 이미지 프리로딩 및 교체 (배경 이미지)
+  useEffect(() => {
+    if (mainImageUrl && mainThumbnailUrl && mainImageUrl !== mainThumbnailUrl) {
+      const preloadMainImage = async () => {
+        try {
+          // 메인 이미지 캐시 확인
+          const isCached = await isImageCached(mainImageUrl);
+          
+          if (isCached) {
+            // 캐시되어 있으면 바로 메인 이미지 사용
+            const position = await calculateImagePosition(mainImageUrl);
+            setBackgroundPosition(position);
+            setCurrentBackgroundImage(mainImageUrl);
+            setIsMainImageLoaded(true);
+          } else {
+            // 캐시되어 있지 않으면 썸네일 먼저 표시 후 progressive loading
+            const position = await calculateImagePosition(mainImageUrl);
+            setBackgroundPosition(position);
+            
+            // 메인 이미지 프리로드
+            const img = new window.Image();
+            img.onload = () => {
+              setCurrentBackgroundImage(mainImageUrl);
+              setIsMainImageLoaded(true);
+            };
+            img.onerror = () => {
+              console.warn('Failed to load main background image, keeping thumbnail');
+            };
+            img.src = mainImageUrl;
+          }
+        } catch (error) {
+          console.warn('Error preloading main background image:', error);
+        }
+      };
+      
+      preloadMainImage();
+    }
+  }, [mainImageUrl, mainThumbnailUrl]);
+
+
+  // 썸네일 이미지 위치 계산 (초기 로드 시)
   useEffect(() => {
     if (mainThumbnailUrl) {
-      console.log('썸네일 로드:', mainThumbnailUrl);
-      // 썸네일 위치도 미리 계산
-      calculateImagePosition(mainThumbnailUrl).then((position) => {
-        setBackgroundPosition(position);
-      });
-      setCurrentBackgroundImage(mainThumbnailUrl);
+      calculateImagePosition(mainThumbnailUrl).then(setBackgroundPosition);
+    }
+  }, [mainThumbnailUrl]);
+  
+  // mainThumbnailUrl이 로드되면 포스터 이미지 상태 업데이트
+  useEffect(() => {
+    if (mainThumbnailUrl) {
       setCurrentPosterImage(mainThumbnailUrl);
     }
   }, [mainThumbnailUrl]);
@@ -402,10 +438,11 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
         style={{ height: `${mainImageHeight}px` }}
       >
         <div 
-          className="absolute bg-cover bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px]" 
+          className={`absolute bg-cover bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px] ${!isMainImageLoaded ? 'transition-opacity duration-300' : ''}`}
           style={{ 
             backgroundImage: `url('${currentBackgroundImage}')`,
-            backgroundPosition: backgroundPosition
+            backgroundPosition: backgroundPosition,
+            opacity: isMainImageLoaded ? 1 : 0.9
           }} 
         />
       </div>
@@ -502,8 +539,10 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
       
       {/* 우측 작은 이미지 */}
       <div 
-        className="absolute bg-center bg-cover bg-no-repeat h-[206.958px] left-[419.53px] rounded-[8.91px] top-[111.38px] w-[146.423px]" 
-        style={{ backgroundImage: `url('${currentPosterImage}')` }} 
+        className="absolute bg-center bg-cover bg-no-repeat h-[206.958px] left-[419.53px] rounded-[8.91px] top-[111.38px] w-[146.423px]"
+        style={{ 
+          backgroundImage: `url('${currentPosterImage}')`
+        }} 
       />
       
       {/* 하단 정보 패널 */}

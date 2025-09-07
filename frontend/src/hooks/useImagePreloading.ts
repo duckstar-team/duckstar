@@ -30,7 +30,6 @@ export const useImagePreloading = (): PreloadingStrategy => {
       .filter(Boolean);
     
     if (thumbnailUrls.length > 0) {
-      console.log('인기 애니메이션 썸네일 프리로딩:', thumbnailUrls.length);
       preloadImages(thumbnailUrls);
     }
   }, [preloadImages]);
@@ -45,7 +44,6 @@ export const useImagePreloading = (): PreloadingStrategy => {
       .filter(Boolean);
     
     if (thumbnailUrls.length > 0) {
-      console.log('검색 결과 썸네일 프리로딩:', thumbnailUrls.length);
       preloadImages(thumbnailUrls);
     }
   }, [preloadImages]);
@@ -70,7 +68,6 @@ export const useImagePreloading = (): PreloadingStrategy => {
     }
     
     if (urlsToPreload.length > 0) {
-      console.log('애니메이션 상세 이미지 프리로딩:', urlsToPreload.length);
       preloadImages(urlsToPreload);
     }
   }, [preloadImages]);
@@ -96,7 +93,6 @@ export const useImagePreloading = (): PreloadingStrategy => {
       .filter(Boolean);
     
     if (urlsToPreload.length > 0) {
-      console.log('인접 애니메이션 이미지 프리로딩:', urlsToPreload.length);
       preloadImages(urlsToPreload);
     }
   }, [preloadImages]);
@@ -132,7 +128,6 @@ export const usePageImagePreloading = () => {
     }
     
     if (urlsToPreload.length > 0) {
-      console.log('홈페이지 이미지 프리로딩:', urlsToPreload.length);
       preloadImages(urlsToPreload);
     }
   }, [preloadImages]);
@@ -145,7 +140,6 @@ export const usePageImagePreloading = () => {
       .filter(Boolean);
     
     if (urlsToPreload.length > 0) {
-      console.log('검색 페이지 이미지 프리로딩:', urlsToPreload.length);
       preloadImages(urlsToPreload);
     }
   }, [preloadImages]);

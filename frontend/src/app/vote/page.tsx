@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import VoteCard from "@/components/vote/VoteCard";
@@ -47,6 +47,32 @@ export default function VotePage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [bonusVotesRecalled, setBonusVotesRecalled] = useState(false);
+  
+  // 이미지 프리로딩을 위한 ref
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 이미지 프리로딩 함수
+  const preloadImages = useCallback((animes: Anime[]) => {
+    if (!animes || animes.length === 0) return;
+    
+    // 뷰포트 근처의 이미지들을 우선적으로 프리로드
+    const preloadPromises = animes.slice(0, 6).map((anime) => {
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // 에러가 발생해도 계속 진행
+        img.src = anime.thumbnailUrl;
+      });
+    });
+    
+    Promise.all(preloadPromises).then(() => {
+      // 나머지 이미지들을 백그라운드에서 로드
+      animes.slice(6).forEach((anime) => {
+        const img = new Image();
+        img.src = anime.thumbnailUrl;
+      });
+    });
+  }, []);
 
   // 에러 카드 관리 헬퍼 함수
   const updateErrorCards = (animeId: number, shouldAdd: boolean) => {
@@ -74,6 +100,19 @@ export default function VotePage() {
     shouldFetchCandidates ? '/api/v1/vote/anime' : null,
     fetcher<ApiResponseAnimeCandidateListDto>
   );
+
+  // 데이터 로드 시 이미지 프리로딩 실행
+  useEffect(() => {
+    if (data?.result?.animeCandidates) {
+      const animes = data.result.animeCandidates.map(anime => ({
+        id: anime.animeCandidateId,
+        title: anime.titleKor,
+        thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
+        medium: anime.medium as 'TVA' | 'MOVIE'
+      }));
+      preloadImages(animes);
+    }
+  }, [data, preloadImages]);
 
   const handleSelect = (animeId: number, isBonusVote?: boolean) => {
     if (isBonusMode) {
@@ -476,7 +515,7 @@ export default function VotePage() {
 
   // 투표 결과 화면 렌더링
   return (
-    <main className="w-full">
+    <main className="w-full" ref={containerRef}>
       {/* 배너 - 전체 너비, 패딩 없음 */}
       <section>
         <VoteBanner 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommentDto } from '@/types/api';
+import { CommentDto } from '@/api/comments';
 import VoteCount from './VoteCount';
 
 // 시간 포맷팅 유틸리티 함수
@@ -25,7 +25,6 @@ const imgCommentLiked = "/icons/comment-liked.svg";
 
 interface CommentProps {
   comment: CommentDto;
-  episodeNumber?: string;
   onLike?: (commentId: number) => void;
   onReply?: (commentId: number) => void;
   onDelete?: (commentId: number) => void;
@@ -33,13 +32,13 @@ interface CommentProps {
 
 const Comment: React.FC<CommentProps> = ({
   comment,
-  episodeNumber,
   onLike,
   onReply,
   onDelete
 }) => {
   const {
     commentId,
+    status,
     nickname: author,
     body: content,
     createdAt: timestamp,
@@ -47,8 +46,98 @@ const Comment: React.FC<CommentProps> = ({
     likeCount,
     isLiked,
     canDeleteThis,
-    profileImageUrl
+    profileImageUrl,
+    episodeNumber
   } = comment;
+
+  // 삭제된 댓글인지 확인
+  const isDeleted = status !== 'NORMAL';
+  
+  // 삭제된 댓글의 경우 적절한 메시지와 닉네임 설정
+  const getDeletedCommentInfo = () => {
+    switch (status) {
+      case 'DELETED':
+        return {
+          message: '삭제된 내용입니다.',
+          nickname: '삭제된 댓글'
+        };
+      case 'ADMIN_DELETED':
+        return {
+          message: '관리자에 의해 삭제된 내용입니다.',
+          nickname: '관리자 삭제'
+        };
+      default:
+        return {
+          message: '삭제된 내용입니다.',
+          nickname: '삭제된 댓글'
+        };
+    }
+  };
+
+  const deletedInfo = isDeleted ? getDeletedCommentInfo() : null;
+  
+  // 삭제된 댓글의 경우 다른 UI 렌더링
+  if (isDeleted && deletedInfo) {
+    return (
+      <div className="bg-white box-border content-stretch flex gap-5 items-start justify-start pb-2 relative w-full h-full">
+        <div className="content-stretch flex gap-[15px] items-start justify-start relative shrink-0 w-full h-full pl-[31px] pr-[20px]">
+          {/* 프로필 이미지 */}
+          <div className="relative shrink-0 size-10">
+            <img 
+              alt={`${deletedInfo.nickname}의 프로필`} 
+              className="block max-w-none size-full rounded-full opacity-50" 
+              height="40" 
+              src={imgProfileDefault} 
+              width="40" 
+            />
+          </div>
+          
+          {/* 삭제된 댓글 내용 */}
+          <div className="basis-0 box-border content-stretch flex flex-col gap-2.5 grow items-start justify-start min-h-px min-w-px pb-0 pt-[3px] px-0 relative shrink-0">
+            {/* 헤더 (작성자, 에피소드, 시간) */}
+            <div className="content-stretch flex gap-[15px] items-center justify-start relative shrink-0 w-full">
+              <div className="content-stretch flex gap-[5px] items-center justify-start relative shrink-0">
+                {/* 작성자명 */}
+                <div className="justify-start text-gray-400 text-base font-semibold font-['Pretendard'] leading-snug">
+                  {deletedInfo.nickname}
+                </div>
+                
+                {/* 투표 수 */}
+                {voteCount > 0 && (
+                  <div className="h-[22px] relative shrink-0">
+                    <VoteCount voteCount={voteCount} />
+                  </div>
+                )}
+                
+                {/* 에피소드 번호 */}
+                {episodeNumber != null && (
+                  <div className="h-[22px] relative shrink-0 w-[57px]">
+                    <div className="absolute h-3 left-0 top-[5px] w-6">
+                      <img alt="에피소드 아이콘" className="block max-w-none size-full" src={imgIconEpisode} />
+                    </div>
+                    <div className="absolute justify-start text-[#ffb310] text-[16px] font-semibold font-['Pretendard'] leading-snug left-[25px] top-0">
+                      <p className="leading-[22px] whitespace-pre">{episodeNumber}화</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* 시간 */}
+              <div className="flex items-center justify-start text-gray-400 text-xs font-normal font-['Pretendard'] leading-snug">
+                {formatTimeAgo(timestamp)}
+              </div>
+            </div>
+            
+            {/* 삭제된 댓글 메시지 */}
+            <div className="self-stretch justify-start text-gray-400 text-base font-medium font-['Pretendard'] leading-normal italic">
+              {deletedInfo.message}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white box-border content-stretch flex gap-5 items-start justify-start pb-2 relative w-full h-full">
       <div className="content-stretch flex gap-[15px] items-start justify-start relative shrink-0 w-full h-full pl-[31px] pr-[20px]">
@@ -81,13 +170,13 @@ const Comment: React.FC<CommentProps> = ({
               )}
               
               {/* 에피소드 번호 */}
-              {episodeNumber && (
+              {episodeNumber != null && (
                 <div className="h-[22px] relative shrink-0 w-[57px]">
                   <div className="absolute h-3 left-0 top-[5px] w-6">
                     <img alt="에피소드 아이콘" className="block max-w-none size-full" src={imgIconEpisode} />
                   </div>
                   <div className="absolute justify-start text-[#ffb310] text-[16px] font-semibold font-['Pretendard'] leading-snug left-[25px] top-0">
-                    <p className="leading-[22px] whitespace-pre">{episodeNumber}</p>
+                    <p className="leading-[22px] whitespace-pre">{episodeNumber}화</p>
                   </div>
                 </div>
               )}
@@ -117,7 +206,7 @@ const Comment: React.FC<CommentProps> = ({
           </div>
           
           {/* 댓글 내용 */}
-          <div className="self-stretch justify-start text-black text-base font-medium font-['Pretendard'] leading-normal">
+          <div className="self-stretch justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
             {content}
           </div>
           

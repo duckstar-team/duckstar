@@ -5,8 +5,6 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimePreviewDto } from '@/components/search/types';
-import OptimizedImage from '../common/OptimizedImage';
-import ProgressiveImage from '../common/ProgressiveImage';
 
 interface AnimeCardProps {
   anime: AnimePreviewDto;
@@ -39,10 +37,85 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
     const now = new Date();
     const scheduled = new Date(scheduledAt);
     
+    // scheduledAt에서 요일과 시간, 분만 추출
+    const targetDayOfWeek = scheduled.getDay(); // 0=일요일, 1=월요일, ..., 6=토요일
+    const targetHours = scheduled.getHours();
+    const targetMinutes = scheduled.getMinutes();
+    
+    // 이번 주와 다음 주의 방영 시간 계산
+    const getThisWeekScheduledTime = () => {
+      const thisWeekScheduled = new Date(now);
+      thisWeekScheduled.setHours(targetHours, targetMinutes, 0, 0);
+      
+      const currentDayOfWeek = now.getDay();
+      let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
+      
+      // 목표 요일이 지났다면 이번 주에서는 이미 지난 시간
+      if (daysUntilTarget < 0) {
+        daysUntilTarget += 7;
+      }
+      
+      thisWeekScheduled.setDate(now.getDate() + daysUntilTarget);
+      return thisWeekScheduled;
+    };
+    
+    const getNextWeekScheduledTime = () => {
+      const nextWeekScheduled = new Date(now);
+      nextWeekScheduled.setHours(targetHours, targetMinutes, 0, 0);
+      
+      const currentDayOfWeek = now.getDay();
+      let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
+      
+      // 다음 주로 설정
+      if (daysUntilTarget <= 0) {
+        daysUntilTarget += 7;
+      } else {
+        daysUntilTarget += 7;
+      }
+      
+      nextWeekScheduled.setDate(now.getDate() + daysUntilTarget);
+      return nextWeekScheduled;
+    };
+    
+    const thisWeekScheduledTime = getThisWeekScheduledTime();
+    const nextWeekScheduledTime = getNextWeekScheduledTime();
+    
     if (status === 'NOW_SHOWING') {
-      // 방영 시작 전: 방영 시작까지 남은 시간 표시 (12시간 이하만)
-      if (now < scheduled) {
-        const diff = scheduled.getTime() - now.getTime();
+      // 현재 방영중인지 확인 (이번 주 방영 시간 기준으로 23분 59초 동안)
+      const thisWeekEndTime = new Date(thisWeekScheduledTime.getTime() + 23 * 60 * 1000 + 59 * 1000);
+      const isCurrentlyAiring = now >= thisWeekScheduledTime && now <= thisWeekEndTime;
+      
+      // 현재 방영중인 경우: 방영 종료까지 남은 시간 표시
+      if (isCurrentlyAiring) {
+        const endDiff = thisWeekEndTime.getTime() - now.getTime();
+        const endMinutes = Math.floor(endDiff / (1000 * 60));
+        
+        if (endMinutes > 0) {
+          return `라이브 중: ${endMinutes}분 남음`;
+        } else {
+          return `라이브 중: 곧 종료`;
+        }
+      }
+      
+      // 이번 주 방영이 끝난 경우, 다음 주 방영 시간을 기준으로 판단
+      if (now > thisWeekEndTime) {
+        const nextDiff = nextWeekScheduledTime.getTime() - now.getTime();
+        const hours = Math.floor(nextDiff / (1000 * 60 * 60));
+        
+        if (hours > 12) return null; // 12시간 초과인 경우 제외
+        
+        const minutes = Math.floor((nextDiff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (hours > 0) {
+          return `${hours}시간 ${minutes}분 남음`;
+        } else {
+          return `${minutes}분 남음`;
+        }
+      }
+      
+      // 이번 주 방영 시작 전인 경우 12시간 이내만 표시
+      if (thisWeekScheduledTime > now) {
+        const diff = thisWeekScheduledTime.getTime() - now.getTime();
         const hours = Math.floor(diff / (1000 * 60 * 60));
         
         if (hours > 12) return null; // 12시간 초과인 경우 제외
@@ -55,34 +128,36 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
           return `${minutes}분 남음`;
         }
       }
-      
-      // 방영 시작 후: 방영 종료까지 남은 시간 표시 (24분)
-      const endTime = new Date(scheduled.getTime() + 24 * 60 * 1000);
-      if (now > endTime) return null;
-      
-      const diff = endTime.getTime() - now.getTime();
-      const minutes = Math.floor(diff / (1000 * 60));
-      
-      if (minutes > 0) {
-        return `라이브 중: ${minutes}분 남음`;
-      } else {
-        return `라이브 중: 곧 종료`;
-      }
     } else if (status === 'UPCOMING') {
       // 방영 예정인 경우 12시간 이내만 표시
-      if (scheduled <= now) return null; // 이미 방영된 경우 제외
-      
-      const diff = scheduled.getTime() - now.getTime();
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      
-      if (hours > 12) return null; // 12시간 초과인 경우 제외
-      
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      
-      if (hours > 0) {
-        return `${hours}시간 ${minutes}분 남음`;
+      if (thisWeekScheduledTime <= now) {
+        // 이번 주 방영이 지났다면 다음 주 방영 시간을 기준으로 판단
+        const nextDiff = nextWeekScheduledTime.getTime() - now.getTime();
+        const hours = Math.floor(nextDiff / (1000 * 60 * 60));
+        
+        if (hours > 12) return null; // 12시간 초과인 경우 제외
+        
+        const minutes = Math.floor((nextDiff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (hours > 0) {
+          return `${hours}시간 ${minutes}분 남음`;
+        } else {
+          return `${minutes}분 남음`;
+        }
       } else {
-        return `${minutes}분 남음`;
+        // 이번 주 방영 시작 전인 경우
+        const diff = thisWeekScheduledTime.getTime() - now.getTime();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        
+        if (hours > 12) return null; // 12시간 초과인 경우 제외
+        
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (hours > 0) {
+          return `${hours}시간 ${minutes}분 남음`;
+        } else {
+          return `${minutes}분 남음`;
+        }
       }
     }
     
@@ -151,13 +226,12 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
     >
       {/* Thumbnail Image */}
       <div className="relative w-full h-[340px] overflow-hidden">
-        <OptimizedImage
+        <Image
           src={mainThumbnailUrl}
           alt={titleKor}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          fallbackSrc="/banners/duckstar-logo.svg"
           onError={() => setImageError(true)}
         />
         

@@ -75,6 +75,35 @@ export interface DeleteResultDto {
   deletedAt: string;
 }
 
+export interface LikeRequestDto {
+  likeId?: number;
+}
+
+export interface LikeResultDto {
+  likeId?: number;
+  likeCount: number;
+  likedAt?: string;
+}
+
+export interface DiscardLikeResultDto {
+  likeCount: number;
+  discardedAt?: string;
+}
+
+// 정렬 옵션 매핑 함수
+export function mapSortOptionToBackend(sortOption: string): string {
+  switch (sortOption) {
+    case 'Popular':
+      return 'POPULAR';
+    case 'Recent':
+      return 'RECENT';
+    case 'Oldest':
+      return 'OLDEST';
+    default:
+      return 'RECENT';
+  }
+}
+
 // 댓글 조회 API
 export async function getAnimeComments(
   animeId: number,
@@ -125,17 +154,43 @@ export async function createComment(
   request: CommentRequestDto
 ): Promise<CommentDto> {
   try {
+    // FormData 생성
+    const formData = new FormData();
+    
+    
+    // body 필드 추가
+    if (request.body) {
+      formData.append('body', request.body);
+    } else {
+      console.warn('Body is empty or null');
+    }
+    
+    // episodeId 필드 추가 (있는 경우)
+    if (request.episodeId) {
+      formData.append('episodeId', request.episodeId.toString());
+    }
+    
+    // 이미지 파일 추가 (있는 경우)
+    if (request.attachedImageUrl) {
+      // 이미지 URL이 있는 경우, File 객체로 변환하거나 다른 방식으로 처리
+      // 현재는 이미지 업로드가 구현되지 않았으므로 일단 제외
+    }
+    
+
     const response = await fetch(`${BASE_URL}/api/v1/animes/${animeId}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include',
-      body: JSON.stringify(request),
+      body: formData,
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Comment creation failed:');
+      console.error('- Status:', response.status);
+      console.error('- Status Text:', response.statusText);
+      console.error('- Response Text:', errorText);
+      console.error('- Response Headers:', Object.fromEntries(response.headers.entries()));
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
     const apiResponse: ApiResponse<CommentDto> = await response.json();
@@ -154,7 +209,9 @@ export async function createComment(
 // 댓글 삭제 API
 export async function deleteComment(commentId: number): Promise<DeleteResultDto> {
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/comments/${commentId}`, {
+    const url = `${BASE_URL}/api/v1/comments/${commentId}`;
+    
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -162,8 +219,11 @@ export async function deleteComment(commentId: number): Promise<DeleteResultDto>
       credentials: 'include',
     });
 
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Delete comment failed - Status:', response.status, 'Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
     const apiResponse: ApiResponse<DeleteResultDto> = await response.json();
@@ -222,16 +282,48 @@ export async function createReply(
   request: ReplyRequestDto
 ): Promise<ReplyDto> {
   try {
+    // FormData 생성
+    const formData = new FormData();
+    
+    
+    // listenerId 필드 추가 (있는 경우)
+    if (request.listenerId) {
+      formData.append('listenerId', request.listenerId.toString());
+    }
+    
+    // commentRequestDto 필드들 추가
+    if (request.commentRequestDto) {
+      const commentDto = request.commentRequestDto;
+      
+      // body 필드 추가
+      if (commentDto.body) {
+        formData.append('commentRequestDto.body', commentDto.body);
+      } else {
+        console.warn('Comment body is empty or null');
+      }
+      
+      // episodeId 필드 추가 (있는 경우)
+      if (commentDto.episodeId) {
+        formData.append('commentRequestDto.episodeId', commentDto.episodeId.toString());
+      }
+      
+      // 이미지 파일 추가 (있는 경우)
+      if (commentDto.attachedImageUrl) {
+        // 이미지 URL이 있는 경우, File 객체로 변환하거나 다른 방식으로 처리
+        // 현재는 이미지 업로드가 구현되지 않았으므로 일단 제외
+      }
+    }
+    
+
     const response = await fetch(`${BASE_URL}/api/v1/comments/${commentId}/replies`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include',
-      body: JSON.stringify(request),
+      body: formData,
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Reply creation failed:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -251,7 +343,9 @@ export async function createReply(
 // 답글 삭제 API
 export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/comments/0/replies/${replyId}`, {
+    const url = `${BASE_URL}/api/v1/comments/0/replies/${replyId}`;
+    
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -259,8 +353,11 @@ export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
       credentials: 'include',
     });
 
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Delete reply failed - Status:', response.status, 'Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
     const apiResponse: ApiResponse<DeleteResultDto> = await response.json();
@@ -272,6 +369,146 @@ export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
     return apiResponse.result;
   } catch (error) {
     console.error('Failed to delete reply:', error);
+    throw error;
+  }
+}
+
+// 댓글 좋아요 API
+export async function likeComment(commentId: number, likeId?: number): Promise<LikeResultDto> {
+  try {
+    const url = `${BASE_URL}/api/v1/comments/${commentId}/like`;
+    
+    const requestBody: LikeRequestDto = {};
+    if (likeId && likeId > 0) {
+      requestBody.likeId = likeId;
+    }
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Like comment failed - Status:', response.status, 'Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
+    }
+
+    const apiResponse: ApiResponse<LikeResultDto> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    console.error('Failed to like comment:', error);
+    throw error;
+  }
+}
+
+// 댓글 좋아요 취소 API
+export async function unlikeComment(commentId: number, commentLikeId: number): Promise<DiscardLikeResultDto> {
+  try {
+    const url = `${BASE_URL}/api/v1/comments/${commentId}/like/${commentLikeId}`;
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Unlike comment failed - Status:', response.status, 'Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
+    }
+
+    const apiResponse: ApiResponse<DiscardLikeResultDto> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    console.error('Failed to unlike comment:', error);
+    throw error;
+  }
+}
+
+// 답글 좋아요 API
+export async function likeReply(replyId: number, likeId?: number): Promise<LikeResultDto> {
+  try {
+    const url = `${BASE_URL}/api/v1/replies/${replyId}/like`;
+    
+    const requestBody: LikeRequestDto = {};
+    if (likeId && likeId > 0) {
+      requestBody.likeId = likeId;
+    }
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Like reply failed - Status:', response.status, 'Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
+    }
+
+    const apiResponse: ApiResponse<LikeResultDto> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    console.error('Failed to like reply:', error);
+    throw error;
+  }
+}
+
+// 답글 좋아요 취소 API
+export async function unlikeReply(replyId: number, replyLikeId: number): Promise<DiscardLikeResultDto> {
+  try {
+    const url = `${BASE_URL}/api/v1/replies/${replyId}/like/${replyLikeId}`;
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Unlike reply failed - Status:', response.status, 'Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
+    }
+
+    const apiResponse: ApiResponse<DiscardLikeResultDto> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    console.error('Failed to unlike reply:', error);
     throw error;
   }
 }

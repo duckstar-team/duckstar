@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import LeftInfoPanel from '@/components/anime/LeftInfoPanel';
 import RightCommentPanel from '@/components/anime/RightCommentPanel';
 import { getAnimeDetail } from '@/api/search';
-import { useImagePreload } from '@/hooks/useImagePreload';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 
 // 타입 정의
@@ -72,22 +71,14 @@ export default function AnimeDetailPage() {
   const [anime, setAnime] = useState<AnimeDetailDto>(mockAnimeData);
   const [loading, setLoading] = useState(true);
   
-  // 이미지 프리로딩 상태
-  const [imagesToPreload, setImagesToPreload] = useState<string[]>([]);
-  const { isLoaded: isImageLoaded, isLoading: isImageLoading } = useImagePreload(
-    imagesToPreload[0] || '', 
-    { priority: true }
-  );
-  
   // 이미지 프리로딩 훅
   const { preloadAnimeDetails } = useImagePreloading();
   
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 페이지 진입 시 스크롤을 맨 위로 고정
-    window.scrollTo(0, 0);
-    // 전체 페이지 스크롤 활성화
+    // 애니메이션 상세 페이지에서는 스크롤 복원이 필요하지 않음
+    // 스크롤 관련 로직 완전 제거
     document.body.style.overflow = 'auto';
     
     const fetchAnimeData = async () => {
@@ -134,14 +125,6 @@ export default function AnimeDetailPage() {
         const thumbnailImageUrl = animeInfo?.mainThumbnailUrl || "/banners/duckstar-logo.svg";
         const thumbnailPosterUrl = animeInfo?.mainThumbnailUrl || "/banners/duckstar-logo.svg";
         
-        console.log('이미지 URL 매핑:', {
-          originalMainImageUrl: animeInfo?.mainImageUrl,
-          originalMainThumbnailUrl: animeInfo?.mainThumbnailUrl,
-          backgroundImageUrl,
-          posterImageUrl,
-          thumbnailImageUrl,
-          thumbnailPosterUrl
-        });
         
         
         const animeDetail: AnimeDetailDto = {
@@ -176,10 +159,6 @@ export default function AnimeDetailPage() {
         };
         
         setAnime(animeDetail);
-        
-        // 이미지 프리로딩 시작
-        const images = [backgroundImageUrl, posterImageUrl].filter(Boolean);
-        setImagesToPreload(images);
         
         // 애니메이션 상세 이미지 프리로딩
         preloadAnimeDetails(animeDetail);

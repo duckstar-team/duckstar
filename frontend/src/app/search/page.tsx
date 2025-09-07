@@ -300,20 +300,75 @@ export default function SearchPage() {
         // scheduledAt이 유효한 날짜인지 확인
         if (isNaN(scheduled.getTime())) return false;
         
-        // 현재 방영중인지 확인 (방영 시작 시각부터 23분 59초 동안)
-        const endTime = new Date(scheduled.getTime() + 23 * 60 * 1000 + 59 * 1000);
-        const isCurrentlyAiring = now >= scheduled && now <= endTime;
+        // scheduledAt에서 요일과 시간, 분만 추출
+        const targetDayOfWeek = scheduled.getDay();
+        const targetHours = scheduled.getHours();
+        const targetMinutes = scheduled.getMinutes();
         
-        // 12시간 이내 방영 예정이거나 현재 방영중인 경우
+        // 이번 주와 다음 주의 방영 시간 계산
+        const getThisWeekScheduledTime = () => {
+          const thisWeekScheduled = new Date(now);
+          thisWeekScheduled.setHours(targetHours, targetMinutes, 0, 0);
+          
+          const currentDayOfWeek = now.getDay();
+          let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
+          
+          // 목표 요일이 지났다면 이번 주에서는 이미 지난 시간
+          if (daysUntilTarget < 0) {
+            daysUntilTarget += 7;
+          }
+          
+          thisWeekScheduled.setDate(now.getDate() + daysUntilTarget);
+          return thisWeekScheduled;
+        };
+        
+        const getNextWeekScheduledTime = () => {
+          const nextWeekScheduled = new Date(now);
+          nextWeekScheduled.setHours(targetHours, targetMinutes, 0, 0);
+          
+          const currentDayOfWeek = now.getDay();
+          let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
+          
+          // 다음 주로 설정
+          if (daysUntilTarget <= 0) {
+            daysUntilTarget += 7;
+          } else {
+            daysUntilTarget += 7;
+          }
+          
+          nextWeekScheduled.setDate(now.getDate() + daysUntilTarget);
+          return nextWeekScheduled;
+        };
+        
+        const thisWeekScheduledTime = getThisWeekScheduledTime();
+        const nextWeekScheduledTime = getNextWeekScheduledTime();
+        
+        // 현재 방영중인지 확인 (이번 주 방영 시간 기준으로 23분 59초 동안)
+        const thisWeekEndTime = new Date(thisWeekScheduledTime.getTime() + 23 * 60 * 1000 + 59 * 1000);
+        const isCurrentlyAiring = now >= thisWeekScheduledTime && now <= thisWeekEndTime;
+        
+        // 현재 방영중인 경우 항상 포함
         if (isCurrentlyAiring) return true;
         
-        if (scheduled <= now) return false;
+        // 이번 주 방영이 끝난 경우, 다음 주 방영 시간을 기준으로 판단
+        if (now > thisWeekEndTime) {
+          // 다음 주 방영 시간까지 12시간 이내인지 확인
+          const diff = nextWeekScheduledTime.getTime() - now.getTime();
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          
+          return hours <= 12 && hours >= 0;
+        }
         
-        const diff = scheduled.getTime() - now.getTime();
-        const hours = Math.floor(diff / (1000 * 60 * 60));
+        // 이번 주 방영 시작 전인 경우 12시간 이내만 포함
+        if (thisWeekScheduledTime > now) {
+          const diff = thisWeekScheduledTime.getTime() - now.getTime();
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          
+          // 12시간 이내이고, 남은 시간이 유효한 경우만
+          return hours <= 12 && hours >= 0;
+        }
         
-        // 12시간 이내이고, 남은 시간이 유효한 경우만
-        return hours <= 12 && hours >= 0;
+        return false;
       });
       
       if (upcomingAnimes.length > 0) {

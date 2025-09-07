@@ -1,43 +1,46 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { startKakaoLogin } from '../../api/client';
 
 const imgGroup = "/icons/picture-upload.svg";
 
-interface CommentPostFormProps {
+interface ReplyPostFormProps {
   onSubmit?: (comment: string) => void;
   onImageUpload?: (file: File) => void;
   placeholder?: string;
   maxLength?: number;
   disabled?: boolean;
+  commentId?: number;
+  listenerId?: number;
 }
 
-export default function CommentPostForm({ 
+export default function ReplyPostForm({ 
   onSubmit,
   onImageUpload,
-  placeholder = '댓글을 입력하세요...',
+  placeholder = '답글을 입력하세요...',
   maxLength = 1000,
-  disabled = false
-}: CommentPostFormProps) {
-  const { isAuthenticated } = useAuth();
+  disabled = false,
+  commentId,
+  listenerId
+}: ReplyPostFormProps) {
   const [comment, setComment] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMountedRef = useRef(false);
-  const isComposingRef = useRef(false);
   
-  // 고유한 컴포넌트 ID 생성 (완전한 분리를 위해)
-  const componentId = useRef(`comment-form-${Date.now()}-${Math.random()}`).current;
+  // 고유한 컴포넌트 ID 생성 (commentId와 listenerId 기반으로 안정적 생성)
+  const componentId = useRef(`reply-form-${commentId || 'unknown'}-${listenerId || 'main'}`).current;
+  
+  // 전역 상태로 입력 내용 관리 (컴포넌트 리마운트에도 보존)
+  const globalKey = `reply-form-${commentId || 'unknown'}-${listenerId || 'main'}`;
   
   // 컴포넌트 타입을 명시적으로 구분
-  const componentType = 'comment-form';
+  const componentType = 'reply-form';
   
   // 디버깅을 위한 로그
   useEffect(() => {
-    console.log(`CommentPostForm mounted with ID: ${componentId}`);
+    console.log(`ReplyPostForm mounted with ID: ${componentId}`);
     return () => {
-      console.log(`CommentPostForm unmounted with ID: ${componentId}`);
+      console.log(`ReplyPostForm unmounted with ID: ${componentId}`);
     };
   }, [componentId]);
 
@@ -49,20 +52,64 @@ export default function CommentPostForm({
     };
   }, []);
 
-  // 스크롤 복원 로직 제거로 인해 입력 내용 보존 로직도 불필요
+  // 전역 상태로 입력 내용 관리 (컴포넌트 리마운트에도 보존)
+  useEffect(() => {
+    // 컴포넌트 마운트 시 저장된 내용 복원
+    try {
+      const savedComment = sessionStorage.getItem(globalKey);
+      if (savedComment && savedComment.trim()) {
+        setComment(savedComment);
+      }
+    } catch (error) {
+      console.warn('Failed to restore saved comment:', error);
+    }
+  }, [globalKey]);
+
+  // 입력 내용 변경 시 실시간 저장
+  useEffect(() => {
+    try {
+      if (comment.trim()) {
+        sessionStorage.setItem(globalKey, comment);
+      } else {
+        sessionStorage.removeItem(globalKey);
+      }
+    } catch (error) {
+      console.warn('Failed to save comment draft:', error);
+    }
+  }, [comment, globalKey]);
+
+  // 컴포넌트 언마운트 시 저장된 내용 정리
+  useEffect(() => {
+    return () => {
+      try {
+        sessionStorage.removeItem(globalKey);
+      } catch (error) {
+        console.warn('Failed to cleanup comment draft:', error);
+      }
+    };
+  }, [globalKey]);
+
+
+  // 컴포넌트가 마운트될 때 포커스 설정
+  useEffect(() => {
+    if (textareaRef.current && isMountedRef.current) {
+      setTimeout(() => {
+        if (textareaRef.current && isMountedRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 100);
+    }
+  }, []);
 
   const handleSubmit = () => {
     if (comment.trim() && onSubmit) {
       onSubmit(comment); // 줄바꿈을 포함한 원본 텍스트 전송
       setComment(''); // 제출 후 입력창 초기화
-    }
-  };
-
-  const handleTextareaClick = () => {
-    if (!isAuthenticated) {
-      const shouldLogin = confirm('로그인 후에 댓글을 남길 수 있습니다. 로그인하시겠습니까?');
-      if (shouldLogin) {
-        startKakaoLogin();
+      // 제출 후 저장된 내용 삭제
+      try {
+        sessionStorage.removeItem(globalKey);
+      } catch (error) {
+        console.warn('Failed to remove saved comment after submit:', error);
       }
     }
   };
@@ -85,11 +132,11 @@ export default function CommentPostForm({
 
   const isSubmitDisabled = disabled || !comment.trim();
 
-  // 댓글 폼 전용 스타일 설정
-  const containerWidth = 'w-[534px]';
-  const inputAreaWidth = 'w-[534px]';
+  // 답글 폼 전용 스타일 설정 (기존 variant="forReply"와 동일)
+  const containerWidth = 'w-[494px]';
+  const inputAreaWidth = 'w-[494px]';
   const inputAreaHeight = 'h-[83px]';
-  const footerSectionWidth = 'flex-1';
+  const footerSectionWidth = 'w-[414px]';
   const footerSectionHeight = 'h-[35px]';
   const buttonHeight = 'h-[35px]';
 
@@ -101,23 +148,16 @@ export default function CommentPostForm({
           <textarea
             ref={textareaRef}
             id={componentId}
-            name={`comment-form-${componentId}`}
+            name={`reply-form-${componentId}`}
             data-form-type={componentType}
             autoComplete="off"
             spellCheck="false"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            onCompositionStart={() => {
-              isComposingRef.current = true;
-            }}
-            onCompositionEnd={() => {
-              isComposingRef.current = false;
-            }}
-            onClick={handleTextareaClick}
-            placeholder={isAuthenticated ? placeholder : '로그인 후에 댓글을 남길 수 있습니다'}
+            placeholder={placeholder}
             maxLength={maxLength}
             disabled={disabled}
-            className={`w-full h-full px-1 resize-none border-none outline-none bg-transparent text-base font-normal font-['Pretendard'] leading-normal placeholder:text-[#c7c7cc] disabled:opacity-50 disabled:cursor-not-allowed ${!isAuthenticated ? 'cursor-pointer' : ''}`}
+            className="w-full h-full px-1 resize-none border-none outline-none bg-transparent text-base font-normal font-['Pretendard'] leading-normal placeholder:text-[#c7c7cc] disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
         
