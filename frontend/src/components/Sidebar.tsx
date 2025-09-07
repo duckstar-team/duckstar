@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { useScrollRestorationContext } from '@/context/ScrollRestorationContext';
 
 // Navigation items configuration with local icon paths
 const NAV_ITEMS = [
@@ -121,6 +122,17 @@ function NavButton({
   const state = isActive ? 'active' : isHovered ? 'hover' : 'default';
   // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
+  
+  // 스크롤 복원 Context 사용
+  const { clearAllScrollPositions, setNavigationClick } = useScrollRestorationContext();
+
+  // 네비게이션 메뉴 클릭 시 스크롤을 맨 위로 이동하고 모든 스크롤 위치 초기화
+  const handleNavigationClick = () => {
+    // 네비게이션 클릭 상태 설정 (스크롤 복원 비활성화)
+    setNavigationClick(true);
+    // 모든 스크롤 위치 초기화
+    clearAllScrollPositions();
+  };
 
   return (
     <>
@@ -154,7 +166,7 @@ function NavButton({
           </div>
         </div>
       ) : (
-        <Link href={href}>
+        <Link href={href} onClick={handleNavigationClick}>
           <div className={cn(voteButtonVariants({ state }), "relative")}>
             {/* Icon container */}
             <div className={cn(iconSize, "relative")}>

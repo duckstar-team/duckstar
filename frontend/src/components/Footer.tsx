@@ -98,7 +98,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-300 hover:text-white transition-colors text-sm">
+                <Link href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors text-sm">
                   개인정보처리방침
                 </Link>
               </li>

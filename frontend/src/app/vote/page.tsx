@@ -13,6 +13,7 @@ import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVo
 import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
 import { fetcher, submitVote } from '@/api/client';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 
 interface Anime {
   id: number;
@@ -23,6 +24,14 @@ interface Anime {
 
 export default function VotePage() {
   const router = useRouter();
+  
+  // 스크롤 복원 훅 사용 (vote 페이지에서만 활성화)
+  useScrollRestoration({
+    saveInterval: 150,
+    smooth: false,
+    restoreDelay: 100,
+  });
+  
   const [selected, setSelected] = useState<number[]>([]);
   const [bonusSelected, setBonusSelected] = useState<number[]>([]);
   const [errorCards, setErrorCards] = useState<Set<number>>(new Set());

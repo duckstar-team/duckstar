@@ -13,6 +13,18 @@ import SortingMenu from '../SortingMenu';
 import { SortOption } from '../SortingMenu';
 import { CommentDto, ReplyDto } from '../../types/api';
 import { getBusinessQuarter, calculateBusinessWeekNumber, getQuarterInKorean } from '../../lib/quarterUtils';
+import { 
+  getAnimeComments, 
+  createComment, 
+  deleteComment, 
+  getReplies, 
+  createReply, 
+  deleteReply,
+  CommentRequestDto,
+  ReplyRequestDto,
+  AnimeCommentSliceDto,
+  ReplySliceDto
+} from '../../api/comments';
 
 // API 응답 타입 정의 (백엔드 EpisodeDto와 일치)
 interface EpisodeDto {
@@ -83,10 +95,17 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   const [animeData, setAnimeData] = useState<AnimeHomeDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // 댓글 관련 상태
+  const [comments, setComments] = useState<CommentDto[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMoreComments, setHasMoreComments] = useState(true);
+  const [totalCommentCount, setTotalCommentCount] = useState(0);
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [activeFilters, setActiveFilters] = useState<number[]>([]); // 활성화된 에피소드 필터들
   const [currentSort, setCurrentSort] = useState<SortOption>('Recent');
-  const [comments, setComments] = useState<CommentDto[]>([]);
   const [replies, setReplies] = useState<{ [commentId: number]: ReplyDto[] }>({});
 
   // 분기/주차 계산 함수 (올바른 비즈니스 로직 사용)
@@ -126,6 +145,42 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
 
 
+  // 댓글 데이터 로딩
+  const loadComments = useCallback(async (page: number = 0, reset: boolean = false) => {
+    if (!animeId) return;
+    
+    try {
+      setCommentsLoading(true);
+      setCommentsError(null);
+      
+      const sortBy = currentSort === 'Recent' ? 'RECENT' : 'POPULAR';
+      const data = await getAnimeComments(
+        animeId,
+        selectedEpisodeIds.length > 0 ? selectedEpisodeIds : undefined,
+        sortBy,
+        page,
+        10
+      );
+      
+      if (reset) {
+        setComments(data.commentDtos);
+        setCurrentPage(0);
+      } else {
+        setComments(prev => [...prev, ...data.commentDtos]);
+      }
+      
+      setHasMoreComments(data.pageInfo.hasNext);
+      setTotalCommentCount(data.totalCount || 0);
+      setCurrentPage(page);
+      
+    } catch (err) {
+      setCommentsError('댓글을 불러오는 중 오류가 발생했습니다.');
+      console.error('Failed to load comments:', err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [animeId, currentSort, selectedEpisodeIds]);
+
   // API 호출 함수
   const fetchAnimeData = useCallback(async (animeId: number = 1) => {
     try {
@@ -153,18 +208,11 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       const apiResponse: ApiResponse<AnimeHomeDto> = await response.json();
       
       // API 응답 구조 확인 및 디버깅
-      console.log('API Response:', apiResponse);
       
       if (apiResponse.isSuccess && apiResponse.result) {
         setAnimeData(apiResponse.result);
       } else {
         // API 응답이 실패했을 때 더 자세한 정보 로깅
-        console.warn('API Response failed:', {
-          isSuccess: apiResponse.isSuccess,
-          code: apiResponse.code,
-          message: apiResponse.message,
-          result: apiResponse.result
-        });
         throw new Error(apiResponse.message || '데이터를 불러오는데 실패했습니다.');
       }
     } catch (err) {
@@ -211,6 +259,11 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     fetchAnimeData(animeId);
   }, [animeId, fetchAnimeData]);
 
+  // 댓글 데이터 로드
+  useEffect(() => {
+    loadComments(0, true);
+  }, [loadComments]);
+
 
   // 필터 핸들러 함수들
   const handleClearFilters = () => {
@@ -244,10 +297,22 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     setActiveReplyForm(activeReplyForm === formKey ? null : formKey);
   };
 
-  const handleReplySubmit = (content: string) => {
-    console.log('답글 작성:', content);
-    setActiveReplyForm(null);
-    // TODO: API 호출
+  const handleReplySubmit = async (content: string, commentId: number) => {
+    try {
+      const request: ReplyRequestDto = {
+        commentRequestDto: {
+          body: content,
+        }
+      };
+      
+      await createReply(commentId, request);
+      setActiveReplyForm(null);
+      
+      // 댓글 목록 새로고침
+      loadComments(0, true);
+    } catch (error) {
+      console.error('Failed to create reply:', error);
+    }
   };
 
   const handleReplyCancel = () => {
@@ -263,23 +328,31 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
   // 댓글/답글 핸들러 함수들
   const onCommentLike = (commentId: number) => {
-    console.log('댓글 좋아요:', commentId);
-    // TODO: API 호출
+    // TODO: 좋아요 API 호출 (아직 백엔드에 구현되지 않음)
   };
 
-  const onCommentDelete = (commentId: number) => {
-    console.log('댓글 삭제:', commentId);
-    // TODO: API 호출
+  const onCommentDelete = async (commentId: number) => {
+    try {
+      await deleteComment(commentId);
+      // 댓글 목록 새로고침
+      loadComments(0, true);
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+    }
   };
 
   const onReplyLike = (replyId: number) => {
-    console.log('답글 좋아요:', replyId);
-    // TODO: API 호출
+    // TODO: 좋아요 API 호출 (아직 백엔드에 구현되지 않음)
   };
 
-  const onReplyDelete = (replyId: number) => {
-    console.log('답글 삭제:', replyId);
-    // TODO: API 호출
+  const onReplyDelete = async (replyId: number) => {
+    try {
+      await deleteReply(replyId);
+      // 댓글 목록 새로고침
+      loadComments(0, true);
+    } catch (error) {
+      console.error('Failed to delete reply:', error);
+    }
   };
 
   // 답글 작성 폼 컴포넌트
@@ -288,9 +361,11 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       <div className="w-full h-auto px-[11px] pt-[10px] pb-[14px] bg-[#F8F9FA] flex flex-col justify-center items-end gap-[10px] overflow-hidden">
         <CommentPostForm 
           variant="forReply"
-          onSubmit={handleReplySubmit}
+          onSubmit={(content) => {
+            const commentId = parseInt(activeReplyForm?.split('-')[1] || '0');
+            handleReplySubmit(content, commentId);
+          }}
           onImageUpload={(file) => {
-            console.log('답글 이미지 업로드:', file);
             // TODO: 이미지 업로드 처리
           }}
           placeholder="답글을 입력하세요..."
@@ -727,7 +802,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       >
         <div className="size- flex flex-col justify-start items-start gap-5">
           <CommentHeader 
-            totalComments={comments.length + Object.values(replies).flat().length}
+            totalComments={totalCommentCount}
             variant={activeFilters.length > 0 ? 'withFilters' : 'default'}
             activeFilters={activeFilters}
             onClearFilters={handleClearFilters}
@@ -757,12 +832,20 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           </div>
           
           <CommentPostForm 
-            onSubmit={(comment) => {
-              console.log('댓글 작성:', comment);
-              // TODO: API 호출로 댓글 전송
+            onSubmit={async (comment) => {
+              try {
+                const request: CommentRequestDto = {
+                  body: comment,
+                };
+                
+                await createComment(animeId, request);
+                // 댓글 목록 새로고침
+                loadComments(0, true);
+              } catch (error) {
+                console.error('Failed to create comment:', error);
+              }
             }}
             onImageUpload={(file) => {
-              console.log('이미지 업로드:', file);
               // TODO: 이미지 업로드 처리
             }}
           />
@@ -777,7 +860,11 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       >
         <SortingMenu 
           currentSort={currentSort}
-          onSortChange={setCurrentSort}
+          onSortChange={(newSort) => {
+            setCurrentSort(newSort);
+            // 정렬 변경 시 댓글 다시 로드
+            loadComments(0, true);
+          }}
         />
       </div>
       
@@ -789,7 +876,19 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           
           {/* 댓글 목록 */}
           <div className="w-full flex flex-col justify-start items-start pb-7">
-            {(() => {
+            {commentsLoading && comments.length === 0 ? (
+              <div className="w-full flex justify-center items-center py-8">
+                <div className="text-gray-500">댓글을 불러오는 중...</div>
+              </div>
+            ) : commentsError ? (
+              <div className="w-full flex justify-center items-center py-8">
+                <div className="text-red-500">{commentsError}</div>
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="w-full flex justify-center items-center py-8">
+                <div className="text-gray-500">아직 댓글이 없습니다.</div>
+              </div>
+            ) : (() => {
               // CommentsBoard의 로직을 여기로 이동
               const createUnifiedList = () => {
                 const unifiedList: Array<{
@@ -873,6 +972,24 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                 );
               });
             })()}
+            
+            {/* 더 보기 버튼 */}
+            {hasMoreComments && !commentsLoading && (
+              <div className="w-full flex justify-center py-4">
+                <button
+                  onClick={() => loadComments(currentPage + 1, false)}
+                  className="px-4 py-2 text-blue-500 hover:text-blue-700 border border-blue-500 rounded"
+                >
+                  더 보기
+                </button>
+              </div>
+            )}
+            
+            {commentsLoading && comments.length > 0 && (
+              <div className="w-full flex justify-center py-4">
+                <div className="text-gray-500">더 많은 댓글을 불러오는 중...</div>
+              </div>
+            )}
           </div>
         </div>
     </div>

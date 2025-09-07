@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useImagePreload } from '@/hooks/useImagePreload';
 
 // 커스텀 스크롤바 스타일
 const customScrollbarStyles = `
@@ -38,6 +39,8 @@ interface LeftInfoPanelProps {
     animeId: number;
     mainThumbnailUrl: string;
     mainImageUrl?: string; // 배경 이미지용 (optional로 변경)
+    thumbnailImageUrl?: string; // 배경용 썸네일
+    thumbnailPosterUrl?: string; // 포스터용 썸네일
     titleKor: string;
     titleJpn?: string;
     status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
@@ -211,14 +214,11 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
     setHoveredBarStyle(prev => ({ ...prev, opacity: 0 }));
   };
 
-  // 초기 네비게이션 바 위치 설정
-  useEffect(() => {
-    updateNavigationBar(currentTab, true);
-  }, [currentTab]);
-
   const {
     mainThumbnailUrl,
     mainImageUrl,
+    thumbnailImageUrl,
+    thumbnailPosterUrl,
     titleKor,
     titleJpn,
     status,
@@ -237,6 +237,71 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
     officialSite,
     ottDtos = []
   } = anime;
+
+  // 이미지 로딩 상태 관리
+  const [currentBackgroundImage, setCurrentBackgroundImage] = useState(mainThumbnailUrl || "/banners/duckstar-logo.svg");
+  const [currentPosterImage, setCurrentPosterImage] = useState(mainThumbnailUrl || "/banners/duckstar-logo.svg");
+  const [backgroundPosition, setBackgroundPosition] = useState("center center");
+  
+  // 이미지 크기 확인 및 위치 계산 함수
+  const calculateImagePosition = (imageUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const containerAspectRatio = 586 / 828; // 컨테이너 비율 (약 0.707)
+        const imageAspectRatio = img.width / img.height;
+        
+        // 이미지 비율에 따라 최적의 위치 계산
+        if (imageAspectRatio > containerAspectRatio) {
+          // 이미지가 더 넓음 - 상하 중앙, 좌우는 잘림
+          resolve("center center");
+        } else {
+          // 이미지가 더 높음 - 좌우 중앙, 상하는 잘림  
+          resolve("center center");
+        }
+      };
+      img.onerror = () => resolve("center center"); // 에러 시 기본값
+      img.src = imageUrl;
+    });
+  };
+  
+  // 메인 이미지 프리로딩
+  const { isLoaded: isMainImageLoaded } = useImagePreload(mainImageUrl || mainThumbnailUrl || "/banners/duckstar-logo.svg", {
+    priority: false, // 썸네일을 먼저 보여주고 메인은 백그라운드에서 로드
+    onLoad: async () => {
+      console.log('이미지 로드 완료:', { mainImageUrl, mainThumbnailUrl });
+      // 메인 이미지 로드 완료 시 교체
+      if (mainImageUrl) {
+        console.log('메인 이미지로 교체:', mainImageUrl);
+        const position = await calculateImagePosition(mainImageUrl);
+        setBackgroundPosition(position);
+        setCurrentBackgroundImage(mainImageUrl);
+      } else {
+        console.log('mainImageUrl이 없음, 썸네일 유지');
+      }
+      if (mainThumbnailUrl) {
+        setCurrentPosterImage(mainThumbnailUrl);
+      }
+    }
+  });
+
+  // mainThumbnailUrl이 로드되면 이미지 상태 업데이트
+  useEffect(() => {
+    if (mainThumbnailUrl) {
+      console.log('썸네일 로드:', mainThumbnailUrl);
+      // 썸네일 위치도 미리 계산
+      calculateImagePosition(mainThumbnailUrl).then((position) => {
+        setBackgroundPosition(position);
+      });
+      setCurrentBackgroundImage(mainThumbnailUrl);
+      setCurrentPosterImage(mainThumbnailUrl);
+    }
+  }, [mainThumbnailUrl]);
+
+  // 초기 네비게이션 바 위치 설정
+  useEffect(() => {
+    updateNavigationBar(currentTab, true);
+  }, [currentTab]);
 
   // Synopsis 텍스트가 2줄을 넘는지 확인
   useEffect(() => {
@@ -337,8 +402,11 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
         style={{ height: `${mainImageHeight}px` }}
       >
         <div 
-          className="absolute bg-center bg-cover bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px]" 
-          style={{ backgroundImage: `url('${mainImageUrl}')` }} 
+          className="absolute bg-cover bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px]" 
+          style={{ 
+            backgroundImage: `url('${currentBackgroundImage}')`,
+            backgroundPosition: backgroundPosition
+          }} 
         />
       </div>
       
@@ -435,7 +503,7 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
       {/* 우측 작은 이미지 */}
       <div 
         className="absolute bg-center bg-cover bg-no-repeat h-[206.958px] left-[419.53px] rounded-[8.91px] top-[111.38px] w-[146.423px]" 
-        style={{ backgroundImage: `url('${mainThumbnailUrl}')` }} 
+        style={{ backgroundImage: `url('${currentPosterImage}')` }} 
       />
       
       {/* 하단 정보 패널 */}

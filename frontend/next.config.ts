@@ -11,6 +11,30 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // HTTP 헤더 설정 (브라우저 캐시 TTL)
+  async headers() {
+    return [
+      {
+        source: "/_next/image(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400", // 7일 캐시
+          },
+        ],
+      },
+      {
+        source: "/banners/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable", // 1년 캐시 (정적 리소스)
+          },
+        ],
+      },
+    ];
+  },
+
   // 외부 이미지 설정
   images: {
     remotePatterns: [
@@ -20,9 +44,17 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "img.duckstar.kr",
+        port: "",
+        pathname: "/**",
+      },
     ],
-    // 이미지 최적화 비활성화 (외부 이미지 로딩 문제 해결)
-    unoptimized: true,
+    // 이미지 최적화 활성화 (캐시 TTL 개선)
+    unoptimized: false,
+    // 이미지 캐시 TTL 설정 (7일)
+    minimumCacheTTL: 604800, // 7일 = 7 * 24 * 60 * 60
     // 이미지 로딩 실패 시 대체 처리
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
