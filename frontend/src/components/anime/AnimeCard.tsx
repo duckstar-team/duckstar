@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimePreviewDto } from '@/components/search/types';
+import OptimizedImage from '../common/OptimizedImage';
+import ProgressiveImage from '../common/ProgressiveImage';
 
 interface AnimeCardProps {
   anime: AnimePreviewDto;
@@ -149,24 +151,15 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
     >
       {/* Thumbnail Image */}
       <div className="relative w-full h-[340px] overflow-hidden">
-        {!imageError ? (
-          <Image
-            src={mainThumbnailUrl}
-            alt={titleKor}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            onError={() => setImageError(true)}
-            unoptimized={true}
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-gray-400 text-4xl mb-2">🎬</div>
-              <div className="text-gray-500 text-sm font-['Pretendard']">이미지 로드 실패</div>
-            </div>
-          </div>
-        )}
+        <OptimizedImage
+          src={mainThumbnailUrl}
+          alt={titleKor}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          fallbackSrc="/banners/duckstar-logo.svg"
+          onError={() => setImageError(true)}
+        />
         
         {/* OTT Services Overlay */}
         <div className="absolute bottom-3 left-3 flex gap-[10px] items-center justify-start">

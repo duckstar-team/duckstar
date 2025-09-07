@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import LeftInfoPanel from '@/components/anime/LeftInfoPanel';
 import RightCommentPanel from '@/components/anime/RightCommentPanel';
 import { getAnimeDetail } from '@/api/search';
+import { useImagePreload } from '@/hooks/useImagePreload';
+import { useImagePreloading } from '@/hooks/useImagePreloading';
 
 // 타입 정의
 interface OttDto {
@@ -16,6 +18,8 @@ interface AnimeDetailDto {
   animeId: number;
   mainThumbnailUrl: string;
   mainImageUrl?: string; // 배경용 이미지 추가
+  thumbnailImageUrl?: string; // 배경용 썸네일
+  thumbnailPosterUrl?: string; // 포스터용 썸네일
   titleKor: string;
   titleJpn?: string;
   status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
@@ -67,6 +71,17 @@ export default function AnimeDetailPage() {
   const animeId = params.animeId as string;
   const [anime, setAnime] = useState<AnimeDetailDto>(mockAnimeData);
   const [loading, setLoading] = useState(true);
+  
+  // 이미지 프리로딩 상태
+  const [imagesToPreload, setImagesToPreload] = useState<string[]>([]);
+  const { isLoaded: isImageLoaded, isLoading: isImageLoading } = useImagePreload(
+    imagesToPreload[0] || '', 
+    { priority: true }
+  );
+  
+  // 이미지 프리로딩 훅
+  const { preloadAnimeDetails } = useImagePreloading();
+  
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,25 +123,33 @@ export default function AnimeDetailPage() {
         const animeInfo = dataTyped.animeInfoDto;
         
         // 디버깅: API 응답 구조 확인
-        console.log('API Response:', data);
-        console.log('animeInfo:', dataTyped.animeInfoDto);
         
         // 이미지 매핑 - 각각 다른 용도로 사용
-        // mainImageUrl: 전체 큰 배경 이미지용
-        // mainThumbnailUrl: 오른쪽 포스터 이미지용 (없으면 mainImageUrl 사용)
+        // mainImageUrl: 전체 큰 배경 이미지용 (고화질)
+        // mainThumbnailUrl: 오른쪽 포스터 이미지용 (중간 화질)
         const backgroundImageUrl = animeInfo?.mainImageUrl || "/banners/duckstar-logo.svg";
         const posterImageUrl = animeInfo?.mainThumbnailUrl || animeInfo?.mainImageUrl || "/banners/duckstar-logo.svg";
         
-        console.log('Background Image URL:', backgroundImageUrl);
-        console.log('Poster Image URL:', posterImageUrl);
-        console.log('animeInfo.mainThumbnailUrl:', animeInfo?.mainThumbnailUrl);
-        console.log('animeInfo.mainImageUrl:', animeInfo?.mainImageUrl);
-        console.log('Full animeInfo object:', animeInfo);
+        // 썸네일 URL 생성 (저화질 버전) - 실제로는 mainThumbnailUrl을 썸네일로 사용
+        const thumbnailImageUrl = animeInfo?.mainThumbnailUrl || "/banners/duckstar-logo.svg";
+        const thumbnailPosterUrl = animeInfo?.mainThumbnailUrl || "/banners/duckstar-logo.svg";
+        
+        console.log('이미지 URL 매핑:', {
+          originalMainImageUrl: animeInfo?.mainImageUrl,
+          originalMainThumbnailUrl: animeInfo?.mainThumbnailUrl,
+          backgroundImageUrl,
+          posterImageUrl,
+          thumbnailImageUrl,
+          thumbnailPosterUrl
+        });
+        
         
         const animeDetail: AnimeDetailDto = {
           animeId: parseInt(animeId),
           mainThumbnailUrl: posterImageUrl, // 포스터용 이미지
           mainImageUrl: backgroundImageUrl, // 배경용 이미지
+          thumbnailImageUrl: thumbnailImageUrl, // 배경용 썸네일
+          thumbnailPosterUrl: thumbnailPosterUrl, // 포스터용 썸네일
           titleKor: animeInfo?.titleKor || "제목 없음",
           titleJpn: animeInfo?.titleOrigin || "제목 없음",
           status: (animeInfo?.status as "UPCOMING" | "NOW_SHOWING" | "COOLING" | "ENDED") || "UPCOMING",
@@ -153,6 +176,13 @@ export default function AnimeDetailPage() {
         };
         
         setAnime(animeDetail);
+        
+        // 이미지 프리로딩 시작
+        const images = [backgroundImageUrl, posterImageUrl].filter(Boolean);
+        setImagesToPreload(images);
+        
+        // 애니메이션 상세 이미지 프리로딩
+        preloadAnimeDetails(animeDetail);
       } catch (error) {
         console.error('Failed to fetch anime data:', error);
         setError('애니메이션 정보를 불러오는데 실패했습니다.');

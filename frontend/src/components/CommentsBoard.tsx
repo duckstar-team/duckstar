@@ -84,7 +84,6 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
           variant="forReply"
           onSubmit={handleReplySubmit}
           onImageUpload={(file) => {
-            console.log('답글 이미지 업로드:', file);
             // TODO: 이미지 업로드 처리
           }}
           placeholder="답글을 입력하세요..."

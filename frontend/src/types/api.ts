@@ -342,6 +342,7 @@ export interface AnimeInfoDto {
   minAge: number;
   officalSite: { [key: string]: string };
   mainImageUrl: string;
+  mainThumbnailUrl: string;
   seasonDtos: SeasonDto[];
   ottDtos: OttDto[];
 }

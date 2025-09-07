@@ -49,7 +49,6 @@ export default function CommentPostForm({
   const isSubmitDisabled = disabled || !comment.trim();
 
   // variant에 따른 스타일 설정
-  console.log('CommentPostForm variant:', variant); // 디버깅용
   const containerWidth = variant === 'forReply' ? 'w-[494px]' : 'w-[534px]';
   const inputAreaWidth = variant === 'forReply' ? 'w-[494px]' : 'w-[534px]';
   const inputAreaHeight = 'h-[83px]';

@@ -70,7 +70,6 @@ export default function SearchFilters({
       <div className="flex gap-[9px] items-center justify-start ml-5">
         {ottServices.map((ott) => {
           const isSelected = selectedOttServices.includes(ott.name.toLowerCase());
-          console.log(`OTT ${ott.name}: 선택됨=${isSelected}, selectedOttServices=${JSON.stringify(selectedOttServices)}`);
           
           return (
             <button
