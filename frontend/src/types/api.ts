@@ -67,7 +67,7 @@ export interface ReplyDto {
   profileImageUrl: string;
   voteCount: number;
   createdAt: string;
-  listenerId: number;
+  listenerNickname?: string;
   attachedImageUrl?: string;
   body: string;
 }
@@ -86,6 +86,7 @@ export interface CommentDto {
   nickname: string;
   profileImageUrl: string;
   voteCount: number;
+  episodeNumber?: number | null;
   createdAt: string;
   attachedImageUrl?: string;
   body: string;
@@ -253,6 +254,7 @@ export interface PageInfo {
 
 // Reply Slice DTO
 export interface ReplySliceDto {
+  totalCount?: number; // 첫 슬라이스에서만 답글 개수 보내기
   replyDtos: ReplyDto[];
   pageInfo: PageInfo;
 }
@@ -356,6 +358,7 @@ export interface CastPreviewDto {
 
 // Episode DTO
 export interface EpisodeDto {
+  episodeId: number;
   episodeNumber: number;
   isBreak: boolean;
   quarter: number;

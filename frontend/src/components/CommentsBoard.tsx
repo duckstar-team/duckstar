@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CommentDto, ReplyDto } from '@/types/api';
+import { CommentDto, ReplyDto } from '@/api/comments';
 import SortingMenu, { SortOption } from './SortingMenu';
 import Comment from './Comment';
 import Reply from './Reply';
@@ -152,7 +152,6 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
                   <div className="w-full">
                     <Comment
                       comment={comment}
-                      episodeNumber="10화" // 실제로는 comment에서 가져와야 함
                       onLike={onCommentLike}
                       onReply={() => handleReplyClick('comment', comment.commentId)}
                       onDelete={onCommentDelete}

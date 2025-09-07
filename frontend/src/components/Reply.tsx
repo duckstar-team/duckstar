@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReplyDto } from '@/types/api';
+import { ReplyDto } from '@/api/comments';
 import VoteCount from './VoteCount';
 
 // 시간 포맷팅 유틸리티 함수
@@ -44,7 +44,8 @@ const Reply: React.FC<ReplyProps> = ({
     likeCount,
     isLiked,
     canDeleteThis,
-    profileImageUrl
+    profileImageUrl,
+    listenerNickname
   } = reply;
 
   return (
@@ -103,7 +104,12 @@ const Reply: React.FC<ReplyProps> = ({
           </div>
           
           {/* 댓글 내용 */}
-          <div className="self-stretch justify-start text-black text-base font-medium font-['Pretendard'] leading-normal">
+          <div className="self-stretch justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
+            {listenerNickname && (
+              <span className="inline-flex items-center px-2 py-1 mr-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-md">
+                @{listenerNickname}
+              </span>
+            )}
             {content}
           </div>
           

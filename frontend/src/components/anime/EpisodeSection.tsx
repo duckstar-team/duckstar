@@ -7,6 +7,7 @@ import { getBusinessQuarter, calculateBusinessWeekNumber } from '../../lib/quart
 // 타입 정의
 interface Episode {
   id: number;
+  episodeId: number;
   episodeNumber: number;
   quarter: string;
   week: string;

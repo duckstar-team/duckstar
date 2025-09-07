@@ -1,12 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 환경 변수 기본값 설정
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  },
+  
   // API 프록시 설정
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
+        destination: `${apiUrl}/api/:path*`,
       },
     ];
   },
@@ -47,6 +53,30 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "img.duckstar.kr",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "img1.kakaocdn.net",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "img1.kakaocdn.net",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "t1.kakaocdn.net",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "t1.kakaocdn.net",
         port: "",
         pathname: "/**",
       },
