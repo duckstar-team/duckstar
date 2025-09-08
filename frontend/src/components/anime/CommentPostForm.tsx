@@ -35,10 +35,6 @@ export default function CommentPostForm({
   
   // 디버깅을 위한 로그
   useEffect(() => {
-    console.log(`CommentPostForm mounted with ID: ${componentId}`);
-    return () => {
-      console.log(`CommentPostForm unmounted with ID: ${componentId}`);
-    };
   }, [componentId]);
 
   // 컴포넌트 마운트 상태 추적

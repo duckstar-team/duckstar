@@ -41,7 +41,6 @@ export async function getScheduleByQuarter(
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to fetch schedule:', error);
     throw error;
   }
 }
@@ -95,7 +94,6 @@ export async function getAnimeDetail(animeId: number): Promise<unknown> {
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to fetch anime detail:', error);
     throw error;
   }
 }

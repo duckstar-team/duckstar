@@ -163,7 +163,6 @@ export default function AnimeDetailPage() {
         // 애니메이션 상세 이미지 프리로딩
         preloadAnimeDetails(animeDetail);
       } catch (error) {
-        console.error('Failed to fetch anime data:', error);
         setError('애니메이션 정보를 불러오는데 실패했습니다.');
         // 에러 시 mock 데이터 사용
         setAnime(mockAnimeData);

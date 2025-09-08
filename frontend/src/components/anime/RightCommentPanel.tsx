@@ -318,25 +318,12 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
   // 무한스크롤을 위한 Intersection Observer
   useEffect(() => {
-    console.log('Setting up Intersection Observer with state:', {
-      hasMoreComments,
-      loadingMore,
-      commentsLoading,
-      currentPage
-    });
 
     const observer = new IntersectionObserver(
       (entries) => {
-        console.log('Intersection Observer callback triggered');
         entries.forEach(entry => {
-          console.log('Entry:', {
-            isIntersecting: entry.isIntersecting,
-            intersectionRatio: entry.intersectionRatio,
-            target: entry.target
-          });
           
           if (entry.isIntersecting && hasMoreComments && !loadingMore && !commentsLoading) {
-            console.log('Loading more comments, page:', currentPage + 1);
             loadComments(currentPage + 1, false);
           }
         });
@@ -350,10 +337,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     // 약간의 지연을 두고 observer 설정
     const timer = setTimeout(() => {
       if (loadMoreRef.current) {
-        console.log('Observing loadMoreRef element:', loadMoreRef.current);
         observer.observe(loadMoreRef.current);
-      } else {
-        console.log('loadMoreRef.current is null');
       }
     }, 100);
 
@@ -406,11 +390,11 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   // 무한스크롤을 위한 ref
   const loadMoreRef = useRef<HTMLDivElement>(null);
   
-  // Sticky 상태 관리
+  // Sticky 상태 관리 (초기값을 null로 설정하여 초기화 상태를 명확히 함)
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
   const [isSortingSticky, setIsSortingSticky] = useState(false);
-  const [headerOriginalTop, setHeaderOriginalTop] = useState(0);
-  const [sortingOriginalTop, setSortingOriginalTop] = useState(0);
+  const [headerOriginalTop, setHeaderOriginalTop] = useState<number | null>(null);
+  const [sortingOriginalTop, setSortingOriginalTop] = useState<number | null>(null);
   const [rightPanelLeft, setRightPanelLeft] = useState(0);
 
   const handleReplyClick = (type: 'comment' | 'reply', id: number) => {
@@ -419,7 +403,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   };
 
   const handleReplySubmit = async (content: string, commentId: number, listenerId?: number) => {
-    console.log('답글 작성 시작:', { content, commentId, listenerId });
     
     // 인증 상태 확인
     if (!isAuthenticated) {
@@ -438,9 +421,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         }
       };
       
-      console.log('답글 작성 요청:', request);
       const result = await createReply(commentId, request);
-      console.log('답글 작성 성공:', result);
       
       setActiveReplyForm(null);
       
@@ -451,10 +432,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       }));
       
       try {
-        console.log('답글 작성 후 답글 조회 시작, commentId:', commentId);
         const replyData = await getReplies(commentId, 0, 10);
-        console.log('답글 조회 성공, replyData:', replyData);
-        console.log('답글 목록:', replyData.replyDtos);
         setReplies(prev => ({
           ...prev,
           [commentId]: replyData.replyDtos
@@ -505,8 +483,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       // 답글을 펼치는 경우 - 답글이 아직 로드되지 않았을 때만 조회
       try {
         const replyData = await getReplies(commentId, 0, 10);
-        console.log('답글 토글 시 답글 조회 성공:', replyData);
-        console.log('답글 목록:', replyData.replyDtos);
         setReplies(prev => ({
           ...prev,
           [commentId]: replyData.replyDtos
@@ -790,70 +766,111 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     };
   }, []);
 
-  // 스크롤 이벤트로 sticky 효과 구현
+  // 실제 스크롤 컨테이너 찾기
+  const getScrollContainer = () => {
+    // 가능한 스크롤 컨테이너들을 확인
+    const candidates = [
+      document.documentElement, // html
+      document.body, // body
+      document.querySelector('main'), // main
+      document.querySelector('.overflow-y-auto'), // overflow-y-auto 클래스가 있는 요소
+    ];
+    
+    for (const container of candidates) {
+      if (container && container.scrollHeight > container.clientHeight) {
+        return container;
+      }
+    }
+    
+    return window;
+  };
+
+  // 스크롤 이벤트로 sticky 효과 구현 (개선된 로직)
   useEffect(() => {
     const handleScroll = () => {
-      if (!commentHeaderRef.current || !sortingMenuRef.current) return;
+      // 위치가 초기화되지 않았으면 스크롤 이벤트 처리하지 않음
+      if (!commentHeaderRef.current || !sortingMenuRef.current || 
+          headerOriginalTop === null || sortingOriginalTop === null) {
+        return;
+      }
 
-      const scrollY = window.scrollY;
+      // 실제 스크롤 컨테이너에서 스크롤 위치 가져오기
+      const container = getScrollContainer();
+      const scrollY = container === window ? window.scrollY : container.scrollTop;
+      
       
       // Header sticky 처리
-      if (scrollY >= headerOriginalTop - 60) {
-        if (!isHeaderSticky) {
-          setIsHeaderSticky(true);
-        }
-      } else {
-        if (isHeaderSticky) {
-          setIsHeaderSticky(false);
-        }
+      const shouldHeaderBeSticky = scrollY >= headerOriginalTop - 60;
+      if (shouldHeaderBeSticky !== isHeaderSticky) {
+        setIsHeaderSticky(shouldHeaderBeSticky);
       }
 
       // Sorting sticky 처리
-      if (scrollY >= sortingOriginalTop - 60 - commentHeaderHeight) {
-        if (!isSortingSticky) {
-          setIsSortingSticky(true);
-        }
-      } else {
-        if (isSortingSticky) {
-          setIsSortingSticky(false);
-        }
+      const shouldSortingBeSticky = scrollY >= sortingOriginalTop - 60 - commentHeaderHeight;
+      if (shouldSortingBeSticky !== isSortingSticky) {
+        setIsSortingSticky(shouldSortingBeSticky);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // 위치가 초기화된 후에만 스크롤 이벤트 처리
+    if (headerOriginalTop !== null && sortingOriginalTop !== null) {
+      handleScroll();
+    }
+
+    // 실제 스크롤 컨테이너에 이벤트 리스너 등록
+    const container = getScrollContainer();
+    if (container === window) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => window.removeEventListener('scroll', handleScroll);
+    } else {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
   }, [isHeaderSticky, isSortingSticky, commentHeaderHeight, headerOriginalTop, sortingOriginalTop]);
 
-  // 원래 위치 설정
+  // 원래 위치 설정 (개선된 로직)
   useEffect(() => {
     const setOriginalPositions = () => {
       if (commentHeaderRef.current && sortingMenuRef.current) {
+        // 실제 스크롤 컨테이너에서 스크롤 위치 가져오기
+        const container = getScrollContainer();
+        const scrollY = container === window ? window.scrollY : container.scrollTop;
+        
         const headerRect = commentHeaderRef.current.getBoundingClientRect();
         const sortingRect = sortingMenuRef.current.getBoundingClientRect();
-        
-        setHeaderOriginalTop(headerRect.top + window.scrollY);
-        setSortingOriginalTop(sortingRect.top + window.scrollY);
-        
+
+        const newHeaderTop = headerRect.top + scrollY;
+        const newSortingTop = sortingRect.top + scrollY;
+
+        // 위치가 변경된 경우에만 업데이트
+        if (headerOriginalTop !== newHeaderTop) {
+          setHeaderOriginalTop(newHeaderTop);
+        }
+        if (sortingOriginalTop !== newSortingTop) {
+          setSortingOriginalTop(newSortingTop);
+        }
+
         // Right panel의 left 위치 계산
         const rightPanelElement = commentHeaderRef.current.closest('.w-\\[610px\\]');
         if (rightPanelElement) {
           const rightPanelRect = rightPanelElement.getBoundingClientRect();
           setRightPanelLeft(rightPanelRect.left);
         }
+
       }
     };
 
-    // 컴포넌트 마운트 후 위치 설정
-    const timeout = setTimeout(setOriginalPositions, 100);
-    
+    // 컴포넌트 마운트 후 위치 설정 (더 긴 지연시간으로 DOM 완전 로딩 대기)
+    const timeout = setTimeout(setOriginalPositions, 300);
+
     // 윈도우 리사이즈 시에도 위치 재설정
     window.addEventListener('resize', setOriginalPositions);
-    
+
     return () => {
       clearTimeout(timeout);
       window.removeEventListener('resize', setOriginalPositions);
     };
-  }, [comments, activeFilters, commentHeaderHeight]);
+  }, [comments, activeFilters, commentHeaderHeight, headerOriginalTop, sortingOriginalTop]);
 
   // 댓글 데이터 로드 (테스트용)
   useEffect(() => {
@@ -1169,8 +1186,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       {/* Sticky 애니 헤더 */}
       <div 
         ref={commentHeaderRef} 
-        className={`z-20 bg-white w-full ${isHeaderSticky ? 'fixed' : ''}`}
-        style={isHeaderSticky ? { top: '60px', left: `${rightPanelLeft + 1}px`, width: '608px' } : {}}
+        className={`z-20 bg-white w-full ${isHeaderSticky && headerOriginalTop !== null ? 'fixed' : ''}`}
+        style={isHeaderSticky && headerOriginalTop !== null ? { top: '60px', left: `${rightPanelLeft + 1}px`, width: '608px' } : {}}
       >
         <div className="size- flex flex-col justify-start items-start gap-5">
           <CommentHeader 
@@ -1184,7 +1201,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       </div>
       
       {/* 헤더 placeholder */}
-      {isHeaderSticky && <div style={{ height: `${commentHeaderHeight}px` }}></div>}
+      {isHeaderSticky && headerOriginalTop !== null && <div style={{ height: `${commentHeaderHeight}px` }}></div>}
       
       {/* 댓글 작성 폼 */}
       <div className="w-full flex flex-col justify-center items-center gap-2.5 px-0 pt-5">
@@ -1245,8 +1262,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       {/* Sticky 정렬 메뉴 */}
       <div 
         ref={sortingMenuRef} 
-        className={`z-10 bg-white pl-3.5 pt-5 ${isSortingSticky ? 'fixed' : ''}`}
-        style={isSortingSticky ? { top: `${60 + commentHeaderHeight}px`, left: `${rightPanelLeft + 1}px`, width: '608px' } : {}}
+        className={`z-10 bg-white pl-3.5 pt-5 ${isSortingSticky && sortingOriginalTop !== null ? 'fixed' : ''}`}
+        style={isSortingSticky && sortingOriginalTop !== null ? { top: `${60 + commentHeaderHeight}px`, left: `${rightPanelLeft + 1}px`, width: '608px' } : {}}
       >
         <SortingMenu 
           currentSort={currentSort}
@@ -1255,7 +1272,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       </div>
       
       {/* 정렬 메뉴 placeholder */}
-      {isSortingSticky && <div className="pl-3.5 pt-5" style={{ height: '44px' }}></div>}
+      {isSortingSticky && sortingOriginalTop !== null && <div className="pl-3.5 pt-5" style={{ height: '44px' }}></div>}
         
         {/* 댓글 목록 */}
         <div className="w-full bg-white flex flex-col">
@@ -1341,11 +1358,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                     {comment.replyCount > 0 && expandedReplies[comment.commentId] && commentReplies.length > 0 && (
                       <div className="w-full mb-1.5 flex flex-col gap-1.5">
                         {commentReplies.map(reply => {
-                          console.log('답글 렌더링:', { 
-                            replyId: reply.replyId, 
-                            listenerNickname: reply.listenerNickname,
-                            body: reply.body 
-                          });
                           return (
                           <div key={reply.replyId} className="w-full flex flex-col gap-2">
                             <Reply
@@ -1396,7 +1408,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                 ref={loadMoreRef} 
                 className="w-full flex justify-center py-4 min-h-[50px] cursor-pointer"
                 onClick={() => {
-                  console.log('Manual click to load more comments');
                   if (!loadingMore && !commentsLoading) {
                     loadComments(currentPage + 1, false);
                   }

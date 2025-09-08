@@ -38,15 +38,12 @@ export default function OAuthCallbackPage() {
             // 로그인 성공 후 홈페이지로 리다이렉트
             router.push('/');
           } else {
-            console.error('Failed to get user info - Status:', response.status);
             router.push('/');
           }
         } else {
-          console.error('No access token received');
           router.push('/');
         }
       } catch (error) {
-        console.error('OAuth callback error:', error);
         router.push('/');
       }
     };

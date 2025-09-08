@@ -1,18 +1,24 @@
 'use client';
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  // 페이지 진입 시 스크롤을 맨 위로 고정
+  const router = useRouter();
+
+  // 홈이 개발되기 전까지 애니/캐릭터 찾기 페이지로 리다이렉트
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    router.replace('/search');
+  }, [router]);
 
   return (
     <div className="font-sans min-h-screen bg-white flex pt-[40px] md:pt-[80px]">
       <div className="container mx-auto px-4">
         <main className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)]">
-          {/* 빈 메인 영역 - 새로운 홈 화면 구현을 위해 준비됨 */}
+          {/* 리다이렉트 중... */}
+          <div className="text-center">
+            <p className="text-gray-500">리다이렉트 중...</p>
+          </div>
         </main>
       </div>
     </div>

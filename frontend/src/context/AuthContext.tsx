@@ -114,7 +114,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login(user as User);
       } catch (error) {
         // 사용자 인증 실패 처리 - 로그인되지 않은 상태
-        console.log('User not authenticated');
       }
     };
 

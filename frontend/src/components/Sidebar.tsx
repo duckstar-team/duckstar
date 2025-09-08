@@ -17,7 +17,8 @@ const NAV_ITEMS = [
     activeIcon: "/icons/home-active.svg",
     iconSize: "size-5",
     iconClass: "flex items-center justify-center size-full",
-    isBeta: false
+    isBeta: true,
+    badgeText: "준비중"
   },
   { 
     label: "주간 차트", 

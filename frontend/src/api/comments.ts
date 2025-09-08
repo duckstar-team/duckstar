@@ -143,7 +143,6 @@ export async function getAnimeComments(
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to fetch anime comments:', error);
     throw error;
   }
 }
@@ -162,7 +161,6 @@ export async function createComment(
     if (request.body) {
       formData.append('body', request.body);
     } else {
-      console.warn('Body is empty or null');
     }
     
     // episodeId 필드 추가 (있는 경우)
@@ -185,11 +183,6 @@ export async function createComment(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Comment creation failed:');
-      console.error('- Status:', response.status);
-      console.error('- Status Text:', response.statusText);
-      console.error('- Response Text:', errorText);
-      console.error('- Response Headers:', Object.fromEntries(response.headers.entries()));
       throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
@@ -201,7 +194,6 @@ export async function createComment(
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to create comment:', error);
     throw error;
   }
 }
@@ -222,7 +214,6 @@ export async function deleteComment(commentId: number): Promise<DeleteResultDto>
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Delete comment failed - Status:', response.status, 'Response:', errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
@@ -234,7 +225,6 @@ export async function deleteComment(commentId: number): Promise<DeleteResultDto>
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to delete comment:', error);
     throw error;
   }
 }
@@ -271,7 +261,6 @@ export async function getReplies(
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to fetch replies:', error);
     throw error;
   }
 }
@@ -299,7 +288,6 @@ export async function createReply(
       if (commentDto.body) {
         formData.append('commentRequestDto.body', commentDto.body);
       } else {
-        console.warn('Comment body is empty or null');
       }
       
       // episodeId 필드 추가 (있는 경우)
@@ -323,7 +311,6 @@ export async function createReply(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Reply creation failed:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -335,7 +322,6 @@ export async function createReply(
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to create reply:', error);
     throw error;
   }
 }
@@ -356,7 +342,6 @@ export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Delete reply failed - Status:', response.status, 'Response:', errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
@@ -368,7 +353,6 @@ export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to delete reply:', error);
     throw error;
   }
 }
@@ -394,7 +378,6 @@ export async function likeComment(commentId: number, likeId?: number): Promise<L
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Like comment failed - Status:', response.status, 'Response:', errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
@@ -406,7 +389,6 @@ export async function likeComment(commentId: number, likeId?: number): Promise<L
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to like comment:', error);
     throw error;
   }
 }
@@ -426,7 +408,6 @@ export async function unlikeComment(commentId: number, commentLikeId: number): P
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Unlike comment failed - Status:', response.status, 'Response:', errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
@@ -438,7 +419,6 @@ export async function unlikeComment(commentId: number, commentLikeId: number): P
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to unlike comment:', error);
     throw error;
   }
 }
@@ -464,7 +444,6 @@ export async function likeReply(replyId: number, likeId?: number): Promise<LikeR
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Like reply failed - Status:', response.status, 'Response:', errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
@@ -476,7 +455,6 @@ export async function likeReply(replyId: number, likeId?: number): Promise<LikeR
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to like reply:', error);
     throw error;
   }
 }
@@ -496,7 +474,6 @@ export async function unlikeReply(replyId: number, replyLikeId: number): Promise
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Unlike reply failed - Status:', response.status, 'Response:', errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
     }
 
@@ -508,7 +485,6 @@ export async function unlikeReply(replyId: number, replyLikeId: number): Promise
 
     return apiResponse.result;
   } catch (error) {
-    console.error('Failed to unlike reply:', error);
     throw error;
   }
 }

@@ -66,7 +66,6 @@ export function saveVoteProgress(state: Omit<VoteProgressState, 'timestamp'>) {
     setCookie(VOTE_PROGRESS_COOKIE_NAME, serialized, COOKIE_EXPIRY_DAYS);
     lastSavedState = serialized;
   } catch (error) {
-    console.error('투표 진행 상황 저장 실패:', error);
   }
 }
 
@@ -93,7 +92,6 @@ export function loadVoteProgress(): VoteProgressState | null {
     
     return voteProgress;
   } catch (error) {
-    console.error('투표 진행 상황 복원 실패:', error);
     deleteVoteProgress();
     return null;
   }

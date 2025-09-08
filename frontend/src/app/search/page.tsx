@@ -91,6 +91,155 @@ export default function SearchPage() {
   // Ref들
   const daySelectionRef = useRef<HTMLDivElement>(null);
 
+  // 스크롤 컨테이너 찾기 함수
+  const findScrollContainer = () => {
+    const candidates = [
+      document.documentElement, // html
+      document.body, // body
+      document.querySelector('main'), // main
+    ];
+    
+    for (const container of candidates) {
+      if (container && container.scrollHeight > container.clientHeight) {
+        return container;
+      }
+    }
+    
+    return window;
+  };
+
+  // 1. DaySelection 스티키 처리
+  useEffect(() => {
+    const container = findScrollContainer();
+    
+    const handleStickyScroll = () => {
+      const scrollY = container === window ? window.scrollY : container.scrollTop;
+      const daySelectionTop = daySelectionRef.current?.offsetTop || 0;
+      
+      if (daySelectionTop > 0) {
+        const shouldBeSticky = scrollY >= daySelectionTop - 60;
+        if (shouldBeSticky !== isDaySelectionSticky) {
+          setIsDaySelectionSticky(shouldBeSticky);
+        }
+      }
+    };
+
+    handleStickyScroll();
+    container.addEventListener('scroll', handleStickyScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleStickyScroll);
+  }, [isDaySelectionSticky]);
+
+  // 2. 스크롤 섹션 이동 함수
+  const scrollToSection = (sectionId: string) => {
+    if (sectionId === 'top') {
+      const container = findScrollContainer();
+      if (container === window) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const container = findScrollContainer();
+      const headerHeight = 60;
+      const daySelectionHeight = 44;
+      const margin = 40;
+      
+      const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+      
+      if (container === window) {
+        window.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: 'smooth'
+        });
+      } else {
+        container.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
+  // 3. 스크롤 네비게이션 연동 - 간단하고 정확한 방법
+  useEffect(() => {
+    const container = findScrollContainer();
+    
+    const handleNavigationScroll = () => {
+      const scrollY = container === window ? window.scrollY : container.scrollTop;
+      
+      // 섹션 정의
+      const sections = [
+        { id: 'upcoming', day: '곧 시작' },
+        { id: 'sun', day: '일' },
+        { id: 'mon', day: '월' },
+        { id: 'tue', day: '화' },
+        { id: 'wed', day: '수' },
+        { id: 'thu', day: '목' },
+        { id: 'fri', day: '금' },
+        { id: 'sat', day: '토' },
+        { id: 'special', day: '특별편성 및 극장판' }
+      ];
+
+      // 각 섹션의 실제 위치 계산
+      const sectionPositions = sections.map(({ id, day }) => {
+        const element = document.getElementById(id);
+        if (!element) return null;
+        
+        // 헤더(60px) + DaySelection(44px) + 카드 1행 높이(약 196px) = 300px
+        // 이 값은 섹션 제목과 카드 1행이 모두 보이는 정확한 시점을 나타냄
+        const offset = 350;
+        
+        return {
+          id,
+          day,
+          top: element.offsetTop - offset
+        };
+      }).filter(Boolean);
+
+      // 현재 스크롤 위치보다 위에 있는 섹션 중 가장 아래쪽 섹션 찾기
+      let activeSection = sections[0];
+      
+      for (let i = sectionPositions.length - 1; i >= 0; i--) {
+        const section = sectionPositions[i];
+        if (section && scrollY >= section.top) {
+          activeSection = { id: section.id, day: section.day };
+          break;
+        }
+      }
+      
+      // 마지막 섹션("특별편성 및 극장판")에 대한 특별 처리
+      // 마지막 섹션에 도달했을 때만 활성화 (다른 섹션보다 우선순위 높게)
+      const lastSection = sectionPositions[sectionPositions.length - 1];
+      if (lastSection && scrollY >= lastSection.top) {
+        // 마지막 섹션에 도달했으면 다른 섹션보다 우선적으로 활성화
+        activeSection = { id: lastSection.id, day: lastSection.day };
+      }
+
+      // selectedDay 업데이트
+      setSelectedDay(prevSelectedDay => {
+        if (activeSection.day !== prevSelectedDay) {
+          return activeSection.day;
+        }
+        return prevSelectedDay;
+      });
+    };
+
+    // 초기 실행
+    const timeout = setTimeout(handleNavigationScroll, 100);
+    
+    // 스크롤 이벤트 리스너 등록
+    container.addEventListener('scroll', handleNavigationScroll, { passive: true });
+    
+    return () => {
+      clearTimeout(timeout);
+      container.removeEventListener('scroll', handleNavigationScroll);
+    };
+  }, []);
+
   // 이미지 프리로딩 훅
   const { preloadSearchResults } = useImagePreloading();
 
@@ -183,103 +332,7 @@ export default function SearchPage() {
     }
   }, [scheduleData]);
   
-  // DaySelection sticky 처리 및 스크롤 위치에 따른 자동 네비게이션 업데이트
-  useEffect(() => {
-    // OTT 필터링이 활성화된 경우 또는 검색 중일 때 sticky 처리하지 않음
-    if (selectedOttServices.length > 0 || searchQuery.trim()) {
-      setIsDaySelectionSticky(false);
-      return;
-    }
-    
-    const headerHeight = 60; // 헤더 높이
-    const daySelectionHeight = 44; // DaySelection 높이 (h-11 = 44px)
-    const daySelectionMargin = 40; // DaySelection 하단 마진 (mb-[40px])
-    
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const daySelectionTop = daySelectionRef.current?.offsetTop || 0;
-      
-      // DaySelection이 헤더 아래로 스크롤될 때 sticky 활성화
-      if (scrollY >= daySelectionTop - headerHeight) {
-        setIsDaySelectionSticky(true);
-      } else {
-        setIsDaySelectionSticky(false);
-      }
-      
-             // 스크롤 위치에 따라 현재 보이는 섹션 감지 및 네비게이션 자동 업데이트
-       const sections = [
-         { id: 'upcoming', day: '곧 시작' as DayOfWeek },
-         { id: 'sun', day: '일' as DayOfWeek },
-         { id: 'mon', day: '월' as DayOfWeek },
-         { id: 'tue', day: '화' as DayOfWeek },
-         { id: 'wed', day: '수' as DayOfWeek },
-         { id: 'thu', day: '목' as DayOfWeek },
-         { id: 'fri', day: '금' as DayOfWeek },
-         { id: 'sat', day: '토' as DayOfWeek },
-         { id: 'special', day: '특별편성 및 극장판' as DayOfWeek }
-       ];
-      
-      // 현재 스크롤 위치에서 가장 가까운 섹션 찾기
-      let currentSection = sections[0];
-      let minDistance = Infinity;
-      
-      sections.forEach(({ id, day }) => {
-        const element = document.getElementById(id);
-        if (element) {
-          const elementTop = element.offsetTop - headerHeight - daySelectionHeight - daySelectionMargin;
-          const distance = Math.abs(scrollY - elementTop);
-          
-          if (distance < minDistance) {
-            minDistance = distance;
-            currentSection = { id, day };
-          }
-        }
-      });
-      
-      // 현재 섹션과 다른 경우에만 selectedDay 업데이트 (무한 루프 방지)
-      if (currentSection.day !== selectedDay) {
-        setSelectedDay(currentSection.day);
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [selectedOttServices.length, selectedDay, searchQuery]);
   
-  // 섹션으로 스크롤하는 함수
-  const scrollToSection = (sectionId: string) => {
-    // OTT 필터링이 활성화된 경우 DaySelection을 표시하지 않음
-    if (selectedOttServices.length > 0) {
-      return;
-    }
-    
-    if (sectionId === 'top') {
-      // 페이지 상단으로 스크롤
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      return;
-    }
-    
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const headerHeight = 60; // 헤더 높이
-      const daySelectionHeight = 44; // DaySelection 높이 (h-11 = 44px)
-      const daySelectionMargin = 40; // DaySelection 하단 마진 (mb-[40px])
-      
-      // 요일 제목 위의 세퍼레이터에 정확히 위치하도록 계산
-      // 세퍼레이터가 헤더 아래 60px + DaySelection 높이 + 여백에 위치
-      const elementTop = element.offsetTop - headerHeight - daySelectionHeight - daySelectionMargin;
-      
-      window.scrollTo({
-        top: elementTop,
-        behavior: 'smooth'
-      });
-    }
-  };
-  
-
 
   // 전체 보기를 위한 요일별 그룹화된 데이터
   const groupedAnimes = scheduleData ? (() => {

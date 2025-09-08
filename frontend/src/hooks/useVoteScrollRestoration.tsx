@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { useScrollRestorationContext } from '@/context/ScrollRestorationContext';
 
-interface UseScrollRestorationOptions {
+interface UseVoteScrollRestorationOptions {
   /** 스크롤 위치를 저장할 간격 (ms). 기본값: 150 */
   saveInterval?: number;
   /** 스크롤 복원 시 애니메이션 사용 여부. 기본값: false */
@@ -13,7 +13,7 @@ interface UseScrollRestorationOptions {
   restoreDelay?: number;
 }
 
-export function useScrollRestoration(options: UseScrollRestorationOptions = {}) {
+export function useVoteScrollRestoration(options: UseVoteScrollRestorationOptions = {}) {
   const {
     saveInterval = 150,
     smooth = false,
@@ -65,7 +65,7 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
     };
   }, [pathname, handleScroll, registerPage, unregisterPage]);
 
-  // 스크롤 복원
+  // 스크롤 복원 (투표 페이지 전용 스티키 요소 재계산 포함)
   useEffect(() => {
     const savedScrollY = getScrollPosition(pathname);
     
@@ -78,14 +78,14 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
           behavior: smooth ? 'smooth' : 'auto'
         });
         
-        // 스크롤 복원 후 스티키 요소 재계산 (기존 로직 복원)
+        // 투표 페이지 전용 스티키 요소 재계산
         setTimeout(() => {
-          // 스티키 요소들의 위치를 강제로 재계산
-          const stickyElements = document.querySelectorAll('[style*="position: sticky"], .sticky');
-          stickyElements.forEach(element => {
+          // 투표 페이지의 스티키 섹션만 재계산
+          const voteStickySection = document.querySelector('[data-sticky-section]');
+          if (voteStickySection) {
             // 강제 리플로우 트리거
-            element.offsetHeight;
-          });
+            voteStickySection.offsetHeight;
+          }
           
           isRestoringRef.current = false;
         }, restoreDelay);
