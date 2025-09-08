@@ -38,10 +38,6 @@ export default function ReplyPostForm({
   
   // 디버깅을 위한 로그
   useEffect(() => {
-    console.log(`ReplyPostForm mounted with ID: ${componentId}`);
-    return () => {
-      console.log(`ReplyPostForm unmounted with ID: ${componentId}`);
-    };
   }, [componentId]);
 
   // 컴포넌트 마운트 상태 추적
@@ -61,7 +57,6 @@ export default function ReplyPostForm({
         setComment(savedComment);
       }
     } catch (error) {
-      console.warn('Failed to restore saved comment:', error);
     }
   }, [globalKey]);
 
@@ -74,7 +69,6 @@ export default function ReplyPostForm({
         sessionStorage.removeItem(globalKey);
       }
     } catch (error) {
-      console.warn('Failed to save comment draft:', error);
     }
   }, [comment, globalKey]);
 
@@ -84,7 +78,6 @@ export default function ReplyPostForm({
       try {
         sessionStorage.removeItem(globalKey);
       } catch (error) {
-        console.warn('Failed to cleanup comment draft:', error);
       }
     };
   }, [globalKey]);
@@ -109,7 +102,6 @@ export default function ReplyPostForm({
       try {
         sessionStorage.removeItem(globalKey);
       } catch (error) {
-        console.warn('Failed to remove saved comment after submit:', error);
       }
     }
   };

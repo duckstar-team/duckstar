@@ -306,12 +306,10 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
               setIsMainImageLoaded(true);
             };
             img.onerror = () => {
-              console.warn('Failed to load main background image, keeping thumbnail');
             };
             img.src = mainImageUrl;
           }
         } catch (error) {
-          console.warn('Error preloading main background image:', error);
         }
       };
       
@@ -398,7 +396,6 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
       const minutes = date.getMinutes().toString().padStart(2, '0');
       return `${hours}:${minutes}`;
     } catch (error) {
-      console.error('시간 파싱 오류:', error);
       return '';
     }
   };

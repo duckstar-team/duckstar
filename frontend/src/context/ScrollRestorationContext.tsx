@@ -47,7 +47,6 @@ export function ScrollRestorationProvider({ children }: ScrollRestorationProvide
     try {
       sessionStorage.setItem('scrollPositions', JSON.stringify(Array.from(scrollPositions.current.entries())));
     } catch (error) {
-      console.warn('Failed to save scroll positions to sessionStorage:', error);
     }
   };
 
@@ -63,7 +62,6 @@ export function ScrollRestorationProvider({ children }: ScrollRestorationProvide
     try {
       sessionStorage.setItem('scrollPositions', JSON.stringify(Array.from(scrollPositions.current.entries())));
     } catch (error) {
-      console.warn('Failed to update scroll positions in sessionStorage:', error);
     }
   };
 
@@ -73,7 +71,6 @@ export function ScrollRestorationProvider({ children }: ScrollRestorationProvide
     try {
       sessionStorage.removeItem('scrollPositions');
     } catch (error) {
-      console.warn('Failed to clear scroll positions from sessionStorage:', error);
     }
   };
 
@@ -101,7 +98,6 @@ export function ScrollRestorationProvider({ children }: ScrollRestorationProvide
         scrollPositions.current = new Map(entries);
       }
     } catch (error) {
-      console.warn('Failed to restore scroll positions from sessionStorage:', error);
     }
   }, []);
 

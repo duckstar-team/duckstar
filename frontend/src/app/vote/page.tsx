@@ -13,7 +13,8 @@ import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVo
 import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
 import { fetcher, submitVote } from '@/api/client';
-import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { useVoteScrollRestoration } from '@/hooks/useVoteScrollRestoration';
+import { searchMatch } from '@/lib/searchUtils';
 
 interface Anime {
   id: number;
@@ -25,12 +26,26 @@ interface Anime {
 export default function VotePage() {
   const router = useRouter();
   
-  // 스크롤 복원 훅 사용 (vote 페이지에서만 활성화)
-  useScrollRestoration({
+  // 투표 페이지 전용 스크롤 복원 훅 사용
+  useVoteScrollRestoration({
     saveInterval: 150,
     smooth: false,
     restoreDelay: 100,
   });
+
+  // 스티키 요소 초기화를 위한 useEffect
+  useEffect(() => {
+    // 컴포넌트 마운트 후 스티키 요소 강제 재계산
+    const timer = setTimeout(() => {
+      const stickySection = document.querySelector('[data-sticky-section]');
+      if (stickySection) {
+        // 강제 리플로우로 스티키 위치 재계산
+        stickySection.offsetHeight;
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
   
   const [selected, setSelected] = useState<number[]>([]);
   const [bonusSelected, setBonusSelected] = useState<number[]>([]);
@@ -488,11 +503,11 @@ export default function VotePage() {
     }
   ];
 
-  // 검색어에 따라 애니메이션 리스트 필터링
+  // 검색어에 따라 애니메이션 리스트 필터링 (검색 페이지와 동일한 로직 적용)
   const filteredAnimeList: Anime[] = searchQuery.trim() === '' 
     ? allAnimeList 
     : allAnimeList.filter(anime => 
-        anime.title.toLowerCase().includes(searchQuery.toLowerCase())
+        searchMatch(searchQuery, anime.title)
       );
 
   // 상태 4에서 투표된 아이템만 필터링하고 정렬 (애니메이션 완료 후에만 필터링)
@@ -568,7 +583,16 @@ export default function VotePage() {
       </section>
 
       {/* 투표 섹션 - Sticky */}
-      <section className="sticky top-[60px] z-40 w-full">
+      <section 
+        className="sticky top-[60px] z-50 w-full" 
+        data-sticky-section
+        style={{ 
+          willChange: 'transform',
+          position: 'sticky',
+          top: '60px',
+          zIndex: 50
+        }}
+      >
         <div className="w-full max-w-[1240px] mx-auto px-4">
           <div className="bg-white rounded-b-[8px] shadow-sm border border-gray-200 border-t-0 relative">
             {/* 투표 섹션 */}
@@ -611,7 +635,7 @@ export default function VotePage() {
           {searchQuery.trim() !== '' && (
             <div className="mb-4">
               <p className="text-gray-600 text-sm">
-                &quot;{searchQuery}&quot; 검색 결과: <span className="font-semibold">{animeList.length}</span>개
+                "{searchQuery}" 검색 결과: <span className="font-semibold">{animeList.length}</span>개
               </p>
             </div>
           )}
@@ -620,7 +644,7 @@ export default function VotePage() {
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">
                 {searchQuery.trim() !== '' 
-                  ? `&quot;${searchQuery}&quot;에 대한 검색 결과가 없습니다.`
+                  ? `"${searchQuery}"에 대한 검색 결과가 없습니다.`
                   : "표시할 애니메이션이 없습니다."
                 }
               </p>
