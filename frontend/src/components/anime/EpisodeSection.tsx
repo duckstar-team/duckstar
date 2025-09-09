@@ -255,11 +255,9 @@ export default function EpisodeSection({
           }`}
           onClick={handlePreviousPage}
         >
-          <Image 
+          <img 
             src="/icons/episodes-before.svg?v=2" 
             alt="이전 보기" 
-            width={12} 
-            height={22} 
             className="w-3 h-5.5"
           />
         </div>
@@ -359,11 +357,9 @@ export default function EpisodeSection({
           }`}
           onClick={handleNextPage}
         >
-          <Image 
+          <img 
             src="/icons/episodes-after.svg?v=2" 
             alt="다음 보기" 
-            width={12} 
-            height={22} 
             className="w-3 h-5.5"
           />
         </div>

@@ -1142,11 +1142,9 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
               className="inline-flex items-center gap-2.5 text-right text-[#ADB5BD] text-xs font-medium font-['Pretendard'] leading-snug hover:underline cursor-pointer"
             >
               <span>에피소드 댓글 남기기</span>
-              <Image 
+              <img 
                 src="/icons/post-episodeComment.svg" 
                 alt="에피소드 댓글" 
-                width={6} 
-                height={8} 
                 className="w-1.5 h-2"
               />
             </button>

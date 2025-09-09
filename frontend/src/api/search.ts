@@ -8,7 +8,7 @@ export interface ApiResponse<T> {
   result: T;
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
 
 /**
  * 분류된 편성표 조회 API
