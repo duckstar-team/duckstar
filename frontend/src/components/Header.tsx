@@ -31,11 +31,9 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       
       {/* Logo */}
       <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-0 md:left-[25px] top-0 absolute z-10 cursor-pointer">
-        <Image
+        <img
           src="/logo.svg"
           alt="Duckstar Logo"
-          width={93}
-          height={60}
           className="w-full h-full object-contain"
         />
       </Link>
@@ -48,11 +46,9 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         <div className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50 hidden md:flex">
           {/* Search Icon */}
           <div className="w-5 h-5 relative overflow-hidden">
-            <Image
+            <img
               src="/icons/header-search.svg"
               alt="Search"
-              width={20}
-              height={20}
               className="w-full h-full"
             />
           </div>
