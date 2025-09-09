@@ -19,6 +19,7 @@ interface EpisodeSectionProps {
   totalEpisodes: number;
   selectedEpisodeIds: number[];
   onEpisodeClick: (episodeId: number) => void;
+  disableFutureEpisodes?: boolean; // 미래 에피소드 비활성화 옵션
 }
 
 // 툴팁 관련 타입
@@ -83,7 +84,8 @@ export default function EpisodeSection({
   episodes,
   totalEpisodes,
   selectedEpisodeIds,
-  onEpisodeClick
+  onEpisodeClick,
+  disableFutureEpisodes = false
 }: EpisodeSectionProps) {
   // 페이징 상태
   const [currentPage, setCurrentPage] = useState(0);
@@ -300,6 +302,7 @@ export default function EpisodeSection({
                         onMouseMove={(e) => handleMouseMove(e, episode.id)}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleEpisodeClick(episode.id, status)}
+                        disableCursor={disableFutureEpisodes && (status === 'current' || status === 'future')}
                       />
                     </div>
                   );
@@ -339,6 +342,7 @@ export default function EpisodeSection({
                         onMouseMove={(e) => handleMouseMove(e, episode.id)}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleEpisodeClick(episode.id, status)}
+                        disableCursor={disableFutureEpisodes && (status === 'current' || status === 'future')}
                       />
                     </div>
                   );

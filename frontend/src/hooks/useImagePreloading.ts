@@ -35,12 +35,12 @@ export const useImagePreloading = (): PreloadingStrategy => {
   }, [preloadImages]);
 
   // 검색 결과 프리로딩
-  const preloadSearchResults = useCallback((searchResults: any[]) => {
+  const preloadSearchResults = useCallback((searchResults: Record<string, unknown>[]) => {
     if (!searchResults || searchResults.length === 0) return;
     
     // 검색 결과의 모든 썸네일 프리로딩
     const thumbnailUrls = searchResults
-      .map(anime => anime.mainThumbnailUrl)
+      .map(anime => anime.mainThumbnailUrl as string)
       .filter(Boolean);
     
     if (thumbnailUrls.length > 0) {
@@ -49,20 +49,21 @@ export const useImagePreloading = (): PreloadingStrategy => {
   }, [preloadImages]);
 
   // 애니메이션 상세 정보 프리로딩
-  const preloadAnimeDetails = useCallback((anime: any) => {
+  const preloadAnimeDetails = useCallback((anime: Record<string, unknown>) => {
     if (!anime) return;
     
     const urlsToPreload: string[] = [];
     
     // 메인 이미지와 썸네일
-    if (anime.mainImageUrl) urlsToPreload.push(anime.mainImageUrl);
-    if (anime.mainThumbnailUrl) urlsToPreload.push(anime.mainThumbnailUrl);
+    if (anime.mainImageUrl) urlsToPreload.push(anime.mainImageUrl as string);
+    if (anime.mainThumbnailUrl) urlsToPreload.push(anime.mainThumbnailUrl as string);
     
     // 캐릭터 이미지들
     if (anime.castPreviews) {
-      anime.castPreviews.forEach((cast: any) => {
-        if (cast.mainThumbnailUrl) {
-          urlsToPreload.push(cast.mainThumbnailUrl);
+      (anime.castPreviews as unknown[]).forEach((cast: unknown) => {
+        const castData = cast as Record<string, unknown>;
+        if (castData.mainThumbnailUrl) {
+          urlsToPreload.push(castData.mainThumbnailUrl as string);
         }
       });
     }

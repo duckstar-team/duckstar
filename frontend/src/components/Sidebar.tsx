@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { useScrollRestorationContext } from '@/context/ScrollRestorationContext';
 
 // Navigation items configuration with local icon paths
 const NAV_ITEMS = [
@@ -124,21 +123,28 @@ function NavButton({
   // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
   
-  // 스크롤 복원 Context 사용
-  const { clearAllScrollPositions, setNavigationClick } = useScrollRestorationContext();
-
-  // 네비게이션 메뉴 클릭 시 스크롤을 맨 위로 이동하고 모든 스크롤 위치 초기화
+  // 네비게이션 메뉴 클릭 시 스크롤을 맨 위로 이동
   const handleNavigationClick = () => {
-    // 네비게이션 클릭 상태 설정 (스크롤 복원 비활성화)
-    setNavigationClick(true);
-    // 모든 스크롤 위치 초기화
-    clearAllScrollPositions();
+    // search 화면으로 이동할 때는 사이드바 네비게이션임을 표시
+    if (href === '/search') {
+      // 사이드바 네비게이션임을 표시하는 플래그 설정
+      sessionStorage.setItem('sidebar-navigation', 'true');
+      console.log('🔝 search 화면 사이드바 네비게이션 - 스크롤 맨 위로 이동');
+    }
+    // vote 화면으로 이동할 때도 사이드바 네비게이션임을 표시
+    if (href === '/vote') {
+      sessionStorage.setItem('sidebar-navigation', 'true');
+      console.log('🔝 vote 화면 사이드바 네비게이션 - 스크롤 맨 위로 이동');
+    }
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
   };
 
   return (
     <>
       {isBeta ? (
-        <div className={cn(voteButtonVariants({ state }), "opacity-50", "relative", "cursor-not-allowed")}>
+        <div className={cn(voteButtonVariants({ state }), "opacity-50", "relative")}>
           {/* Icon container */}
           <div className={cn(iconSize, "relative")}>
             <div className={iconClass}>

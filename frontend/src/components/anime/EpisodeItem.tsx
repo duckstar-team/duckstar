@@ -12,6 +12,7 @@ interface EpisodeItemProps {
   onMouseMove?: (e: React.MouseEvent) => void;
   onMouseLeave?: () => void;
   onClick?: () => void;
+  disableCursor?: boolean; // 커서 비활성화 옵션
 }
 
 export default function EpisodeItem({ 
@@ -25,16 +26,17 @@ export default function EpisodeItem({
   onMouseEnter,
   onMouseMove,
   onMouseLeave,
-  onClick
+  onClick,
+  disableCursor = false
 }: EpisodeItemProps) {
   // 1. past variant
   if (property1 === "past") {
     return (
       <div className="w-20 flex flex-col justify-start items-start gap-3 overflow-visible">
         <div className="w-20 h-6" />
-        <div className="w-20 inline-flex justify-start items-center overflow-visible cursor-pointer" onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+        <div className={`w-20 inline-flex justify-start items-center overflow-visible ${disableCursor ? '' : 'cursor-pointer'}`} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
           <div 
-            className={`w-8 h-8 rounded-2xl inline-flex flex-col justify-center items-center cursor-pointer transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`} 
+            className={`w-8 h-8 rounded-2xl inline-flex flex-col justify-center items-center ${disableCursor ? '' : 'cursor-pointer'} transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`} 
             style={{ backgroundColor: '#FFB310' }}
             onMouseMove={onMouseMove}
             onClick={(e) => { e.stopPropagation(); onClick?.(); }}
@@ -52,9 +54,9 @@ export default function EpisodeItem({
     return (
       <div className="w-20 flex flex-col justify-start items-start gap-3 overflow-visible">
         <div className="w-20 h-6" />
-        <div className="w-20 inline-flex justify-start items-center overflow-visible cursor-pointer" onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+        <div className={`w-20 inline-flex justify-start items-center overflow-visible ${disableCursor ? '' : 'cursor-pointer'}`} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
           <div 
-            className={`w-8 h-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] inline-flex flex-col justify-center items-center cursor-pointer transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`} 
+            className={`w-8 h-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] inline-flex flex-col justify-center items-center ${disableCursor ? '' : 'cursor-pointer'} transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`} 
             style={{ outlineColor: '#FFB310' }}
             onMouseMove={onMouseMove}
             onClick={(e) => { e.stopPropagation(); onClick?.(); }}
@@ -72,7 +74,7 @@ export default function EpisodeItem({
     return (
       <div className="w-20 flex flex-col justify-start items-start gap-3 overflow-visible">
         <div className={isLast ? "w-20 h-6 pl-2.5" : "w-20 h-6 pl-2.5"} />
-        <div className="w-20 inline-flex justify-start items-center overflow-visible cursor-pointer" onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+        <div className={`w-20 inline-flex justify-start items-center overflow-visible ${disableCursor ? '' : 'cursor-pointer'}`} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
           <div 
             className={`w-8 h-8 rounded-2xl outline outline-1 outline-offset-[-1px] inline-flex flex-col justify-center items-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`} 
             style={{ backgroundColor: '#F8F9FA', outlineColor: '#CED4DA' }}

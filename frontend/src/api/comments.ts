@@ -329,7 +329,7 @@ export async function createReply(
 // 답글 삭제 API
 export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
   try {
-    const url = `${BASE_URL}/api/v1/comments/0/replies/${replyId}`;
+    const url = `${BASE_URL}/api/v1/replies/${replyId}`;
     
     const response = await fetch(url, {
       method: 'PATCH',

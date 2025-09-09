@@ -29,8 +29,18 @@ const customScrollbarStyles = `
 `;
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import CharacterList from './CharacterList';
+import { CharacterData } from './CharacterCard';
 
 export type TabOption = 'info' | 'performance' | 'characters';
+
+interface TabOptionConfig {
+  key: TabOption;
+  label: string;
+  width: string;
+  isBeta?: boolean;
+  badgeText?: string;
+}
 
 interface LeftInfoPanelProps {
   onBack: () => void;
@@ -59,9 +69,10 @@ interface LeftInfoPanelProps {
     officialSite?: string | Record<string, string>; // 문자열 또는 객체
     ottDtos?: { ottType: string; watchUrl?: string }[];
   };
+  characters?: CharacterData[];
 }
 
-export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
+export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPanelProps) {
   // 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<TabOption>('info');
   const [hoveredTab, setHoveredTab] = useState<TabOption | null>(null);
@@ -145,11 +156,14 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
   // 스크롤 컨테이너 높이 계산 (회색 블록 내부 패딩 제외)
   const grayBlockPadding = 20; // 회색 블록 내부 상하 패딩 (10px + 10px)
   const scrollContainerHeight = Math.max(infoContentHeight - grayBlockPadding, 90);
+  
+  // 등장인물 탭용 스크롤 컨테이너 높이 계산
+  const characterScrollContainerHeight = Math.max(infoContentHeight, 90);
 
-  const tabOptions = [
-    { key: 'info' as const, label: '애니 정보', width: 'w-[175px]' },
-    { key: 'performance' as const, label: '분기 성적', width: 'w-[175px]' },
-    { key: 'characters' as const, label: '등장인물', width: 'w-[175px]' }
+  const tabOptions: TabOptionConfig[] = [
+    { key: 'info' as const, label: '애니 정보', width: 'w-[175px]', isBeta: false },
+    { key: 'performance' as const, label: '분기 성적', width: 'w-[175px]', isBeta: true, badgeText: '준비중' },
+    { key: 'characters' as const, label: '등장인물', width: 'w-[175px]', isBeta: false }
   ];
 
   // 네비게이션 바 위치 업데이트
@@ -407,6 +421,128 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
     }
   };
 
+  // API 응답에서 캐릭터 데이터를 매핑하는 함수
+  const mapCastPreviewsToCharacters = (castPreviews: unknown[]): CharacterData[] => {
+    if (!castPreviews || !Array.isArray(castPreviews)) {
+      return [];
+    }
+
+    return castPreviews.map((cast, index) => {
+      const castData = cast as Record<string, unknown>;
+      return {
+        characterId: (castData.characterId as number) || index + 1,
+        nameKor: (castData.nameKor as string) || (castData.name as string) || '이름 없음',
+        nameJpn: (castData.nameJpn as string) || (castData.nameOrigin as string),
+        nameEng: (castData.nameEng as string) || (castData.nameEnglish as string),
+        imageUrl: (castData.imageUrl as string) || (castData.characterImageUrl as string),
+        description: (castData.description as string) || (castData.characterDescription as string),
+        voiceActor: (castData.voiceActor as string) || (castData.cvName as string) || (castData.cv as string),
+        role: (castData.role as 'MAIN' | 'SUPPORTING' | 'MINOR') || (index < 2 ? 'MAIN' : index < 4 ? 'SUPPORTING' : 'MINOR'),
+        gender: (castData.gender as string) || (index % 2 === 0 ? 'FEMALE' : 'MALE'),
+        age: castData.age as number,
+        height: castData.height as number,
+        weight: castData.weight as number,
+        birthday: castData.birthday as string,
+        bloodType: castData.bloodType as string,
+        occupation: castData.occupation as string,
+        personality: castData.personality ? (Array.isArray(castData.personality) ? castData.personality as string[] : [castData.personality as string]) : [],
+        abilities: castData.abilities ? (Array.isArray(castData.abilities) ? castData.abilities as string[] : [castData.abilities as string]) : [],
+        relationships: (castData.relationships as Array<{ characterName: string; relationship: string }>) || []
+      };
+    });
+  };
+
+  // 캐릭터 이미지 프리로딩
+  const preloadCharacterImages = (characters: CharacterData[]) => {
+    characters.forEach(character => {
+      if (character.imageUrl) {
+        const img = new window.Image();
+        img.src = character.imageUrl;
+      }
+    });
+  };
+
+  // 캐릭터 데이터 (임시 데이터 - 실제로는 API에서 가져와야 함)
+  const mockCharacters: CharacterData[] = [
+    {
+      characterId: 1,
+      nameKor: "노아",
+      nameJpn: "ノア",
+      nameEng: "Noah",
+      imageUrl: "/banners/duckstar-logo.svg",
+      description: "주인공. 밝고 긍정적인 성격으로 항상 주변 사람들을 웃게 만든다.",
+      voiceActor: "김아영",
+      role: "MAIN",
+      gender: "FEMALE",
+      age: 17,
+      personality: ["밝음", "긍정적", "활발함"],
+      abilities: ["노래", "춤"]
+    },
+    {
+      characterId: 2,
+      nameKor: "미나",
+      nameJpn: "ミナ",
+      nameEng: "Mina",
+      imageUrl: "/banners/duckstar-logo.svg",
+      description: "노아의 친구. 조용하지만 마음이 따뜻한 성격이다.",
+      voiceActor: "박지은",
+      role: "MAIN",
+      gender: "FEMALE",
+      age: 17,
+      personality: ["조용함", "따뜻함", "신중함"],
+      abilities: ["피아노", "독서"]
+    },
+    {
+      characterId: 3,
+      nameKor: "타쿠야",
+      nameJpn: "タクヤ",
+      nameEng: "Takuya",
+      imageUrl: "/banners/duckstar-logo.svg",
+      description: "반 친구. 운동을 좋아하고 리더십이 있다.",
+      voiceActor: "이민호",
+      role: "SUPPORTING",
+      gender: "MALE",
+      age: 17,
+      personality: ["리더십", "운동적", "의리"],
+      abilities: ["축구", "기타"]
+    },
+    {
+      characterId: 4,
+      nameKor: "사쿠라",
+      nameJpn: "サクラ",
+      nameEng: "Sakura",
+      imageUrl: "/banners/duckstar-logo.svg",
+      description: "선배. 예술에 대한 열정이 강하다.",
+      voiceActor: "최유진",
+      role: "SUPPORTING",
+      gender: "FEMALE",
+      age: 18,
+      personality: ["예술적", "열정적", "독립적"],
+      abilities: ["그림", "조각"]
+    },
+    {
+      characterId: 5,
+      nameKor: "히로시",
+      nameJpn: "ヒロシ",
+      nameEng: "Hiroshi",
+      imageUrl: "/banners/duckstar-logo.svg",
+      description: "교사. 학생들을 진심으로 아끼는 선생님이다.",
+      voiceActor: "정우성",
+      role: "MINOR",
+      gender: "MALE",
+      age: 35,
+      personality: ["따뜻함", "책임감", "인내심"],
+      abilities: ["교육", "상담"]
+    }
+  ];
+
+  // 캐릭터 이미지 프리로딩 실행
+  useEffect(() => {
+    if (characters && characters.length > 0) {
+      preloadCharacterImages(characters);
+    }
+  }, [characters]);
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: customScrollbarStyles }} />
@@ -570,7 +706,12 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
 
           {/* 호버된 탭의 네비게이션 바 */}
           <div
-            className="absolute bottom-0 h-[1.856px] bg-[#990033] pointer-events-none"
+            className={cn(
+              "absolute bottom-0 h-[1.856px] pointer-events-none",
+              hoveredTab && tabOptions.find(opt => opt.key === hoveredTab)?.isBeta 
+                ? "bg-gray-400" 
+                : "bg-[#990033]"
+            )}
             style={{
               width: hoveredBarStyle.width,
               left: hoveredBarStyle.left,
@@ -582,61 +723,97 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
           {tabOptions.map((option) => {
             const isSelected = currentTab === option.key;
             const isHovered = hoveredTab === option.key;
+            const isBeta = option.isBeta || false;
             
             return (
               <button
                 key={option.key}
                 ref={(el) => { tabRefs.current[option.key] = el; }}
                 onClick={() => {
-                  setCurrentTab(option.key);
-                  updateNavigationBar(option.key, true); // 클릭 시 즉시 이동
+                  if (!isBeta) {
+                    setCurrentTab(option.key);
+                    updateNavigationBar(option.key, true); // 클릭 시 즉시 이동
+                  }
                 }}
                 onMouseEnter={() => handleMouseEnter(option.key)}
                 className={cn(
-                  "h-11 relative shrink-0 flex items-center justify-center transition-all duration-200 cursor-pointer",
+                  "h-11 relative shrink-0 flex items-center justify-center transition-all duration-200",
+                  isBeta ? "opacity-50" : "cursor-pointer",
                   option.width
                 )}
               >
                 <div className={cn(
                   "justify-start text-[18px] font-normal font-['Pretendard'] leading-snug text-center transition-colors duration-200",
-                  isSelected || isHovered
-                    ? "font-semibold text-[#990033]"
-                    : "font-normal text-[#adb5bd]"
+                  isBeta 
+                    ? "font-normal text-[#adb5bd]"
+                    : isSelected || isHovered
+                      ? "font-semibold text-[#990033]"
+                      : "font-normal text-[#adb5bd]"
                 )}>
                   <p className="leading-[16.336px] whitespace-pre">{option.label}</p>
                 </div>
+                
+                {/* 준비중 배지 */}
+                {isBeta && option.badgeText && (
+                  <div className="absolute right-4 bottom-1 z-10">
+                    <span className="text-[10px] px-1 py-0.5 rounded bg-gray-100 text-gray-600 font-['Pretendard']">
+                      {option.badgeText}
+                    </span>
+                  </div>
+                )}
               </button>
             );
           })}
         </div>
         
-        {/* 정보 내용 */}
-        <div 
-          className="bg-[#f8f9fa] box-border pl-[25px] relative rounded-[12px] shrink-0 w-[554px]"
-          style={{ 
-            height: `${infoContentHeight}px`,
-            paddingTop: '10px',
-            paddingBottom: '10px'
-          }}
-        >
-          {/* 스크롤 컨테이너 - Grid를 감쌈 */}
+        {/* 등장인물 탭 - 회색 배경 없이 */}
+        {currentTab === 'characters' && (
           <div 
-            className="overflow-y-auto custom-scrollbar"
+            className="w-full custom-scrollbar overflow-y-auto"
             style={{ 
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0px',
-              width: 'calc(100% + 12.5px)',
-              marginRight: '10px',
-              height: `${scrollContainerHeight}px`
+              height: `${characterScrollContainerHeight}px`,
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#CBD5E0 #F7FAFC'
             }}
           >
-          
-          
-          {/* 왼쪽 정보 */}
+            <CharacterList
+              characters={characters || mockCharacters}
+              className="w-full"
+            />
+          </div>
+        )}
+
+        {/* 정보 내용 - 애니 정보와 분기 성적 탭용 */}
+        {currentTab !== 'characters' && (
           <div 
-            className="box-border flex flex-col items-start justify-start p-[11.138px] pr-[0px] relative shrink-0"
+            className="bg-[#f8f9fa] box-border pl-[25px] relative rounded-[12px] shrink-0 w-[554px]"
+            style={{ 
+              height: `${infoContentHeight}px`,
+              paddingTop: '10px',
+              paddingBottom: '10px'
+            }}
           >
+            {/* 스크롤 컨테이너 */}
+            <div 
+              className="overflow-y-auto custom-scrollbar"
+              style={{ 
+                width: 'calc(100% + 12.5px)',
+                marginRight: '10px',
+                height: `${scrollContainerHeight}px`
+              }}
+            >
+            
+            {/* 탭별 내용 렌더링 */}
+            {currentTab === 'info' && (
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0px'
+            }}>
+              {/* 왼쪽 정보 */}
+              <div 
+                className="box-border flex flex-col items-start justify-start p-[11.138px] pr-[0px] relative shrink-0"
+              >
             <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-center leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full" style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
               <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
                 <p className="leading-[16.336px] whitespace-pre">제작사</p>
@@ -846,9 +1023,28 @@ export default function LeftInfoPanel({ anime, onBack }: LeftInfoPanelProps) {
               )}
             </div>
           )}
+            </div>
+          )}
+
+
+            {/* 분기 성적 탭 (준비중) */}
+            {currentTab === 'performance' && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-gray-400 text-lg font-medium mb-2">
+                    분기 성적
+                  </div>
+                  <div className="text-gray-300 text-sm">
+                    준비 중입니다
+                  </div>
+                </div>
+              </div>
+            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
     </div>
     </>
   );

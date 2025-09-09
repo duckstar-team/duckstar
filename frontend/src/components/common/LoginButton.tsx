@@ -46,7 +46,7 @@ export default function LoginButton({
         </span>
         <button 
           onClick={handleLogoutClick}
-          className={`font-[Pretendard] font-semibold text-[#8E8E93] hover:text-gray-600 transition-colors flex-shrink-0 ${
+          className={`font-[Pretendard] font-semibold text-[#8E8E93] hover:text-gray-600 transition-colors flex-shrink-0 cursor-pointer ${
             variant === 'compact' ? 'text-sm' : 'text-sm sm:text-base'
           }`}
         >
@@ -59,7 +59,7 @@ export default function LoginButton({
   return (
     <button 
       onClick={handleLoginClick}
-      className={`font-[Pretendard] font-semibold text-[#8E8E93] hover:text-gray-600 transition-colors ${
+      className={`font-[Pretendard] font-semibold text-[#8E8E93] hover:text-gray-600 transition-colors cursor-pointer ${
         variant === 'compact' ? 'text-sm' : 'text-sm sm:text-base'
       } ${className}`}
     >

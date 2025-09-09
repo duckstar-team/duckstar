@@ -16,6 +16,7 @@ import { CommentDto, ReplyDto } from '../../api/comments';
 import { getBusinessQuarter, calculateBusinessWeekNumber, getQuarterInKorean } from '../../lib/quarterUtils';
 import { useAuth } from '../../context/AuthContext';
 import { startKakaoLogin } from '../../api/client';
+import EpisodeCommentModal from './EpisodeCommentModal';
 import { 
   getAnimeComments, 
   createComment, 
@@ -115,8 +116,8 @@ interface AnimeHomeDto {
   animeInfoDto: AnimeInfoDto;
   animeStatDto: AnimeStatDto;
   episodeDtos: EpisodeDto[];
-  rackUnitDtos?: any[];
-  castPreviews?: any[];
+  rackUnitDtos?: unknown[];
+  castPreviews?: unknown[];
 }
 
 // API 응답 래퍼 (실제 백엔드 응답 구조)
@@ -382,20 +383,20 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   const [replyFormValues, setReplyFormValues] = useState<{ [key: string]: string }>({});
   const [replyPageInfo, setReplyPageInfo] = useState<{ [commentId: number]: PageInfo }>({});
   
-  // 애니 헤더 높이 측정을 위한 ref와 상태
+  // Intersection Observer를 위한 ref
   const commentHeaderRef = useRef<HTMLDivElement>(null);
   const sortingMenuRef = useRef<HTMLDivElement>(null);
-  const [commentHeaderHeight, setCommentHeaderHeight] = useState(80); // 기본값을 80px로 설정
   
   // 무한스크롤을 위한 ref
   const loadMoreRef = useRef<HTMLDivElement>(null);
   
-  // Sticky 상태 관리 (초기값을 null로 설정하여 초기화 상태를 명확히 함)
+  // Sticky 상태 관리 (간소화)
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
   const [isSortingSticky, setIsSortingSticky] = useState(false);
-  const [headerOriginalTop, setHeaderOriginalTop] = useState<number | null>(null);
-  const [sortingOriginalTop, setSortingOriginalTop] = useState<number | null>(null);
-  const [rightPanelLeft, setRightPanelLeft] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(80); // 기본 헤더 높이
+  
+  // 에피소드 댓글 모달 상태
+  const [isEpisodeCommentModalOpen, setIsEpisodeCommentModalOpen] = useState(false);
 
   const handleReplyClick = (type: 'comment' | 'reply', id: number) => {
     const formKey = `${type}-${id}`;
@@ -444,12 +445,12 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           [commentId]: replyData.pageInfo
         }));
         
-        // 답글 개수 업데이트 (totalCount가 있는 경우)
-        if (replyData.totalCount !== undefined) {
+        // 답글 개수 업데이트 (replyDtos 길이로 계산)
+        if (replyData.replyDtos.length > 0) {
           setComments(prev => prev.map(comment => {
             if (!comment || !comment.commentId) return comment;
             return comment.commentId === commentId 
-              ? { ...comment, replyCount: replyData.totalCount! }
+              ? { ...comment, replyCount: replyData.replyDtos.length }
               : comment;
           }));
         }
@@ -537,6 +538,24 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     setCurrentSort(sort);
     // 정렬 변경 시 댓글 목록 새로고침
     loadComments(0, true);
+  };
+
+  // 에피소드 댓글 제출 핸들러
+  const handleEpisodeCommentSubmit = async (episodeIds: number[], content: string) => {
+    try {
+      // 에피소드별 댓글 생성 API 호출
+      const request: CommentRequestDto = {
+        episodeId: episodeIds[0], // 선택된 에피소드 ID (하나만 선택 가능)
+        body: content,
+      };
+      
+      await createComment(animeId, request);
+      // 댓글 목록 새로고침
+      loadComments(0, true);
+    } catch (error) {
+      console.error('Failed to create episode comment:', error);
+      throw error;
+    }
   };
 
   // 댓글/답글 핸들러 함수들
@@ -717,19 +736,62 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     return replyFormCache.current.get(key);
   }, [handleReplySubmit]);
 
-  // 애니 헤더 높이 측정
+
+  // Intersection Observer를 사용한 스티키 상태 감지 (스타일링용)
+  useEffect(() => {
+    const headerObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // header가 sticky 상태인지 감지 (스타일링용)
+          setIsHeaderSticky(!entry.isIntersecting);
+        });
+      },
+      { 
+        threshold: 0,
+        rootMargin: '-60px 0px 0px 0px' // 상단 60px 여백
+      }
+    );
+
+    const sortingObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // sorting menu가 sticky 상태인지 감지 (스타일링용)
+          setIsSortingSticky(!entry.isIntersecting);
+        });
+      },
+      { 
+        threshold: 0,
+        rootMargin: `-${60 + headerHeight}px 0px 0px 0px` // 동적 여백 (상단 메뉴 + 헤더 높이)
+      }
+    );
+
+    // 헤더와 소팅 메뉴 관찰 시작
+    if (commentHeaderRef.current) {
+      headerObserver.observe(commentHeaderRef.current);
+    }
+    if (sortingMenuRef.current) {
+      sortingObserver.observe(sortingMenuRef.current);
+    }
+
+    return () => {
+      headerObserver.disconnect();
+      sortingObserver.disconnect();
+    };
+  }, [headerHeight]); // 헤더 높이 변경 시 Observer 재생성
+
+  // 헤더 높이 동적 측정
   useEffect(() => {
     const updateHeaderHeight = () => {
       if (commentHeaderRef.current) {
         const height = commentHeaderRef.current.offsetHeight;
-        setCommentHeaderHeight(height);
+        if (height > 0) {
+          setHeaderHeight(height);
+        }
       }
     };
 
-    // 초기 높이 측정을 위해 약간의 지연 추가
-    const timeoutId = setTimeout(() => {
-      updateHeaderHeight();
-    }, 0);
+    // 초기 높이 측정
+    const timeoutId = setTimeout(updateHeaderHeight, 100);
 
     // ResizeObserver로 높이 변화 감지
     const resizeObserver = new ResizeObserver(updateHeaderHeight);
@@ -741,136 +803,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       clearTimeout(timeoutId);
       resizeObserver.disconnect();
     };
-  }, [activeFilters]); // activeFilters가 변경될 때마다 높이 재측정
-
-  // 컴포넌트 마운트 후 추가로 높이 측정
-  useEffect(() => {
-    const updateHeight = () => {
-      if (commentHeaderRef.current) {
-        const height = commentHeaderRef.current.offsetHeight;
-        if (height > 0) {
-          setCommentHeaderHeight(height);
-        }
-      }
-    };
-
-    // 여러 시점에서 높이 측정
-    const timeouts = [
-      setTimeout(updateHeight, 100),
-      setTimeout(updateHeight, 300),
-      setTimeout(updateHeight, 500)
-    ];
-
-    return () => {
-      timeouts.forEach(clearTimeout);
-    };
-  }, []);
-
-  // 실제 스크롤 컨테이너 찾기
-  const getScrollContainer = () => {
-    // 가능한 스크롤 컨테이너들을 확인
-    const candidates = [
-      document.documentElement, // html
-      document.body, // body
-      document.querySelector('main'), // main
-      document.querySelector('.overflow-y-auto'), // overflow-y-auto 클래스가 있는 요소
-    ];
-    
-    for (const container of candidates) {
-      if (container && container.scrollHeight > container.clientHeight) {
-        return container;
-      }
-    }
-    
-    return window;
-  };
-
-  // 스크롤 이벤트로 sticky 효과 구현 (개선된 로직)
-  useEffect(() => {
-    const handleScroll = () => {
-      // 위치가 초기화되지 않았으면 스크롤 이벤트 처리하지 않음
-      if (!commentHeaderRef.current || !sortingMenuRef.current || 
-          headerOriginalTop === null || sortingOriginalTop === null) {
-        return;
-      }
-
-      // 실제 스크롤 컨테이너에서 스크롤 위치 가져오기
-      const container = getScrollContainer();
-      const scrollY = container === window ? window.scrollY : container.scrollTop;
-      
-      
-      // Header sticky 처리
-      const shouldHeaderBeSticky = scrollY >= headerOriginalTop - 60;
-      if (shouldHeaderBeSticky !== isHeaderSticky) {
-        setIsHeaderSticky(shouldHeaderBeSticky);
-      }
-
-      // Sorting sticky 처리
-      const shouldSortingBeSticky = scrollY >= sortingOriginalTop - 60 - commentHeaderHeight;
-      if (shouldSortingBeSticky !== isSortingSticky) {
-        setIsSortingSticky(shouldSortingBeSticky);
-      }
-    };
-
-    // 위치가 초기화된 후에만 스크롤 이벤트 처리
-    if (headerOriginalTop !== null && sortingOriginalTop !== null) {
-      handleScroll();
-    }
-
-    // 실제 스크롤 컨테이너에 이벤트 리스너 등록
-    const container = getScrollContainer();
-    if (container === window) {
-      window.addEventListener('scroll', handleScroll, { passive: true });
-      return () => window.removeEventListener('scroll', handleScroll);
-    } else {
-      container.addEventListener('scroll', handleScroll, { passive: true });
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [isHeaderSticky, isSortingSticky, commentHeaderHeight, headerOriginalTop, sortingOriginalTop]);
-
-  // 원래 위치 설정 (개선된 로직)
-  useEffect(() => {
-    const setOriginalPositions = () => {
-      if (commentHeaderRef.current && sortingMenuRef.current) {
-        // 실제 스크롤 컨테이너에서 스크롤 위치 가져오기
-        const container = getScrollContainer();
-        const scrollY = container === window ? window.scrollY : container.scrollTop;
-        
-        const headerRect = commentHeaderRef.current.getBoundingClientRect();
-        const sortingRect = sortingMenuRef.current.getBoundingClientRect();
-
-        const newHeaderTop = headerRect.top + scrollY;
-        const newSortingTop = sortingRect.top + scrollY;
-
-        // 위치가 변경된 경우에만 업데이트
-        if (headerOriginalTop !== newHeaderTop) {
-          setHeaderOriginalTop(newHeaderTop);
-        }
-        if (sortingOriginalTop !== newSortingTop) {
-          setSortingOriginalTop(newSortingTop);
-        }
-
-        // Right panel의 left 위치 계산
-        const rightPanelElement = commentHeaderRef.current.closest('.w-\\[610px\\]');
-        if (rightPanelElement) {
-          const rightPanelRect = rightPanelElement.getBoundingClientRect();
-          setRightPanelLeft(rightPanelRect.left);
-        }
-
-      }
-    };
-
-    // 컴포넌트 마운트 후 위치 설정 (더 긴 지연시간으로 DOM 완전 로딩 대기)
-    const timeout = setTimeout(setOriginalPositions, 300);
-
-    // 윈도우 리사이즈 시에도 위치 재설정
-    window.addEventListener('resize', setOriginalPositions);
-
-    return () => {
-      clearTimeout(timeout);
-      window.removeEventListener('resize', setOriginalPositions);
-    };
-  }, [comments, activeFilters, commentHeaderHeight, headerOriginalTop, sortingOriginalTop]);
+  }, [activeFilters]); // 필터 변경 시 높이 재측정
 
   // 댓글 데이터 로드 (테스트용)
   useEffect(() => {
@@ -1186,8 +1119,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       {/* Sticky 애니 헤더 */}
       <div 
         ref={commentHeaderRef} 
-        className={`z-20 bg-white w-full ${isHeaderSticky && headerOriginalTop !== null ? 'fixed' : ''}`}
-        style={isHeaderSticky && headerOriginalTop !== null ? { top: '60px', left: `${rightPanelLeft + 1}px`, width: '608px' } : {}}
+        className="sticky top-[60px] z-20 bg-white w-full"
       >
         <div className="size- flex flex-col justify-start items-start gap-5">
           <CommentHeader 
@@ -1200,15 +1132,15 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         </div>
       </div>
       
-      {/* 헤더 placeholder */}
-      {isHeaderSticky && headerOriginalTop !== null && <div style={{ height: `${commentHeaderHeight}px` }}></div>}
-      
       {/* 댓글 작성 폼 */}
       <div className="w-full flex flex-col justify-center items-center gap-2.5 px-0 pt-5">
         <div className="self-stretch px-[11px] pt-[10px] pb-[16px] bg-[#F8F9FA] flex flex-col justify-center items-center gap-[10px] overflow-hidden">
           {/* First Row - Episode Comment Header */}
           <div className="w-[534px] inline-flex justify-end items-center">
-            <button className="inline-flex items-center gap-2.5 text-right text-[#ADB5BD] text-xs font-medium font-['Pretendard'] leading-snug hover:underline cursor-pointer">
+            <button 
+              onClick={() => setIsEpisodeCommentModalOpen(true)}
+              className="inline-flex items-center gap-2.5 text-right text-[#ADB5BD] text-xs font-medium font-['Pretendard'] leading-snug hover:underline cursor-pointer"
+            >
               <span>에피소드 댓글 남기기</span>
               <Image 
                 src="/icons/post-episodeComment.svg" 
@@ -1262,8 +1194,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       {/* Sticky 정렬 메뉴 */}
       <div 
         ref={sortingMenuRef} 
-        className={`z-10 bg-white pl-3.5 pt-5 ${isSortingSticky && sortingOriginalTop !== null ? 'fixed' : ''}`}
-        style={isSortingSticky && sortingOriginalTop !== null ? { top: `${60 + commentHeaderHeight}px`, left: `${rightPanelLeft + 1}px`, width: '608px' } : {}}
+        className="sticky z-10 bg-white pl-3.5 pt-5"
+        style={{ top: `${60 + headerHeight}px` }}
       >
         <SortingMenu 
           currentSort={currentSort}
@@ -1271,8 +1203,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         />
       </div>
       
-      {/* 정렬 메뉴 placeholder */}
-      {isSortingSticky && sortingOriginalTop !== null && <div className="pl-3.5 pt-5" style={{ height: '44px' }}></div>}
         
         {/* 댓글 목록 */}
         <div className="w-full bg-white flex flex-col">
@@ -1432,6 +1362,15 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
             )}
           </div>
         </div>
+        
+        {/* 에피소드 댓글 모달 */}
+        <EpisodeCommentModal
+          isOpen={isEpisodeCommentModalOpen}
+          onClose={() => setIsEpisodeCommentModalOpen(false)}
+          animeId={animeId}
+          animeData={animeData || undefined}
+          onCommentSubmit={handleEpisodeCommentSubmit}
+        />
     </div>
   );
 }
