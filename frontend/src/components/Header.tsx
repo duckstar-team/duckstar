@@ -13,6 +13,15 @@ export type HeaderType = {
 const Header: NextPage<HeaderType> = ({ className = "" }) => {
   const { isAuthenticated } = useAuth();
   
+  // 덕스타 로고 클릭 시 스크롤 탑으로 이동
+  const handleLogoClick = () => {
+    sessionStorage.setItem('logo-navigation', 'true');
+    console.log('🔝 덕스타 로고 클릭 - 스크롤 맨 위로 이동');
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  };
+  
   return (
     <header
       className={`w-full h-[60px] relative border-b border-[#DADCE0] backdrop-blur-[6px] ${className}`}
@@ -21,7 +30,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
       
       {/* Logo */}
-      <div className="w-[80px] sm:w-[93px] h-[60px] left-0 md:left-[25px] top-0 absolute z-10 cursor-not-allowed">
+      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-0 md:left-[25px] top-0 absolute z-10 cursor-pointer">
         <Image
           src="/logo.svg"
           alt="Duckstar Logo"
@@ -29,7 +38,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
           height={60}
           className="w-full h-full object-contain"
         />
-      </div>
+      </Link>
       
       {/* Right Section - Search Bar + Login Button */}
       <div className={`absolute right-0 md:right-[25px] top-0 h-[60px] flex items-center gap-3 z-10 ${

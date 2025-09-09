@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+// import { useNavigateWithScroll } from '@/hooks/useScrollRestoration'; // 제거: search 화면에서만 스크롤 저장
 import { AnimePreviewDto } from '@/components/search/types';
 
 interface AnimeCardProps {
@@ -15,9 +16,27 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
   const { animeId, mainThumbnailUrl, status, isBreak, titleKor, dayOfWeek, scheduledAt, isRescheduled, genre, medium, ottDtos } = anime;
   const [imageError, setImageError] = useState(false);
   const router = useRouter();
-  
-  // 애니메이션 카드 클릭 핸들러
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // 애니메이션 카드 클릭 핸들러 (search 화면에서만 스크롤 저장)
   const handleCardClick = () => {
+    // search 화면에서만 스크롤 위치 저장
+    if (pathname === '/search') {
+      // 여러 방법으로 스크롤 위치 확인
+      const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      
+      console.log('🎯 search 화면에서 애니메이션 카드 클릭 - 스크롤 저장:', {
+        scrollY,
+        windowScrollY: window.scrollY,
+        pageYOffset: window.pageYOffset,
+        documentElementScrollTop: document.documentElement.scrollTop,
+        bodyScrollTop: document.body.scrollTop
+      });
+      
+      sessionStorage.setItem('search-scroll', scrollY.toString());
+      // 애니메이션 상세화면으로 이동하는 것임을 표시
+      sessionStorage.setItem('to-anime-detail', 'true');
+    }
     router.push(`/animes/${animeId}`);
   };
   

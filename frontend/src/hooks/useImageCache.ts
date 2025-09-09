@@ -10,8 +10,8 @@ interface ImageCacheState {
 }
 
 // 글로벌 이미지 캐시 (모든 컴포넌트에서 공유)
-let globalImageCache: ImageCacheState = {};
-let cacheListeners: Set<() => void> = new Set();
+const globalImageCache: ImageCacheState = {};
+const cacheListeners: Set<() => void> = new Set();
 
 // 캐시 상태 변경 알림
 const notifyCacheUpdate = () => {

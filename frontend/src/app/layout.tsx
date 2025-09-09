@@ -5,8 +5,8 @@ import "./globals.css";
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import Footer from '@/components/Footer';
-import { ScrollRestorationProvider } from '@/context/ScrollRestorationContext';
 import { AuthProvider } from '@/context/AuthContext';
+import QueryProvider from '@/components/providers/QueryProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,8 +41,13 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "DuckStar - 애니메이션 투표 플랫폼",
+  title: "덕스타 - 애니메이션 투표 플랫폼",
   description: "애니메이션 투표 및 차트 서비스",
+  icons: {
+    icon: '/icons/favicon.svg',
+    shortcut: '/icons/favicon.svg',
+    apple: '/icons/favicon.svg',
+  },
 };
 
 export default function RootLayout({
@@ -60,8 +65,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${pretendard.variable} antialiased`}
       >
-        <AuthProvider>
-          <ScrollRestorationProvider>
+        <QueryProvider>
+          <AuthProvider>
             {/* Fixed Header */}
             <div className="fixed top-0 left-0 right-0 z-[9999]">
               <Header />
@@ -76,8 +81,8 @@ export default function RootLayout({
             <main className="ml-[50px] sm:ml-[55px] md:ml-[200px] mt-[60px] bg-gray-50 transition-all duration-300 ease-in-out group-hover:ml-[200px]">
               {children}
             </main>
-          </ScrollRestorationProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

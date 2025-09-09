@@ -9,6 +9,7 @@ interface QuarterWeekLabelProps {
   onMouseMove?: (e: React.MouseEvent) => void;
   onMouseLeave?: () => void;
   onClick?: () => void;
+  disableCursor?: boolean; // 커서 비활성화 옵션
 }
 
 export default function QuarterWeekLabel({ 
@@ -21,13 +22,14 @@ export default function QuarterWeekLabel({
   onMouseEnter,
   onMouseMove,
   onMouseLeave,
-  onClick
+  onClick,
+  disableCursor = false
 }: QuarterWeekLabelProps) {
   // past variant
   if (variant === "past") {
     return (
       <div 
-        className="w-20 h-auto inline-flex justify-center items-center pt-[12px] cursor-pointer"
+        className={`w-20 h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
@@ -56,7 +58,7 @@ export default function QuarterWeekLabel({
   if (variant === "current") {
     return (
       <div 
-        className="w-20 h-auto inline-flex justify-center items-center pt-[12px] cursor-pointer"
+        className={`w-20 h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}

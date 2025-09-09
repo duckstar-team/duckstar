@@ -81,7 +81,6 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
     <div className="w-full h-auto flex flex-col justify-center items-end gap-2.5">
       <div className="w-full h-auto px-[11px] pt-[10px] pb-[14px] bg-[#F8F9FA] flex flex-col justify-center items-end gap-[10px] overflow-hidden">
         <CommentPostForm 
-          variant="forReply"
           onSubmit={handleReplySubmit}
           onImageUpload={(file) => {
             // TODO: 이미지 업로드 처리

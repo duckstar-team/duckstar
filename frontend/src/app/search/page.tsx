@@ -10,10 +10,9 @@ import { getCurrentSchedule, getScheduleByYearAndQuarter } from '@/api/search';
 import type { AnimePreviewDto, AnimePreviewListDto } from '@/types/api';
 import { getCurrentYearAndQuarter } from '@/lib/quarterUtils';
 import { searchMatch, extractChosung } from '@/lib/searchUtils';
-import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+// import { useScrollRestoration } from '@/hooks/useScrollRestoration'; // 제거: 직접 구현
 import { useImagePreloading } from '@/hooks/useImagePreloading';
-import useSWR from 'swr';
-import { fetcher } from '@/api/client';
+import { useQuery } from '@tanstack/react-query';
 
 // 테스트용 애니메이션 데이터
 const testAnimes = [
@@ -84,6 +83,83 @@ export default function SearchPage() {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('일'); // 기본값을 "일"로 설정
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
+
+  // 페이지 로드 시 스크롤 복원 또는 맨 위로 이동
+  useEffect(() => {
+    // 디버깅: 모든 sessionStorage 값 확인
+    const sidebarNav = sessionStorage.getItem('sidebar-navigation');
+    const logoNav = sessionStorage.getItem('logo-navigation');
+    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+    const searchScroll = sessionStorage.getItem('search-scroll');
+    
+    console.log('🔍 SearchPage 로드 시 sessionStorage 상태:', {
+      'sidebar-navigation': sidebarNav,
+      'logo-navigation': logoNav,
+      'from-anime-detail': fromAnimeDetail,
+      'search-scroll': searchScroll
+    });
+    
+    // 사이드바 네비게이션인지 확인
+    const isSidebarNavigation = sidebarNav === 'true';
+    // 로고 네비게이션인지 확인
+    const isLogoNavigation = logoNav === 'true';
+    // 애니메이션 상세화면에서 돌아온 것인지 확인
+    const isFromAnimeDetail = fromAnimeDetail === 'true';
+    
+    if (isSidebarNavigation) {
+      // 사이드바 네비게이션인 경우 스크롤을 맨 위로 이동
+      console.log('🔝 search 화면 사이드바 네비게이션 감지 - 스크롤을 맨 위로 이동');
+      // 모든 관련 플래그 정리
+      sessionStorage.removeItem('sidebar-navigation');
+      sessionStorage.removeItem('search-scroll');
+      sessionStorage.removeItem('shouldRestoreScroll');
+      sessionStorage.removeItem('from-anime-detail');
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    } else if (isLogoNavigation) {
+      // 로고 네비게이션인 경우 스크롤을 맨 위로 이동
+      console.log('🔝 search 화면 로고 네비게이션 감지 - 스크롤을 맨 위로 이동');
+      // 모든 관련 플래그 정리
+      sessionStorage.removeItem('logo-navigation');
+      sessionStorage.removeItem('search-scroll');
+      sessionStorage.removeItem('shouldRestoreScroll');
+      sessionStorage.removeItem('from-anime-detail');
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    } else if (isFromAnimeDetail) {
+      // 애니메이션 상세화면에서 돌아온 경우 스크롤 복원 시도
+      if (searchScroll) {
+        const y = parseInt(searchScroll);
+        console.log('⚡ 애니메이션 상세화면에서 돌아옴 - 스크롤 복원:', y);
+        
+        // 즉시 복원
+        window.scrollTo(0, y);
+        document.body.scrollTop = y;
+        document.documentElement.scrollTop = y;
+        
+        // 플래그는 두 번째 useEffect에서 정리하도록 유지
+        console.log('🔍 스크롤 복원 완료 - from-anime-detail 플래그는 데이터 로드 후 정리');
+      } else {
+        console.log('⚡ 애니메이션 상세화면에서 돌아옴 - 저장된 스크롤 위치 없음');
+        // 스크롤 위치가 없으면 즉시 플래그 제거
+        sessionStorage.removeItem('from-anime-detail');
+      }
+    } else {
+      // 리프레시 또는 직접 URL 접근인 경우 스크롤을 맨 위로 이동
+      console.log('🔄 search 화면 리프레시 또는 직접 URL 접근 감지 - 스크롤을 맨 위로 이동');
+      // 모든 관련 플래그 정리
+      sessionStorage.removeItem('search-scroll');
+      sessionStorage.removeItem('shouldRestoreScroll');
+      sessionStorage.removeItem('sidebar-navigation');
+      sessionStorage.removeItem('logo-navigation');
+      sessionStorage.removeItem('from-anime-detail');
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+  }, []);
   
   // DaySelection sticky 관련 상태
   const [isDaySelectionSticky, setIsDaySelectionSticky] = useState(false);
@@ -113,7 +189,7 @@ export default function SearchPage() {
     const container = findScrollContainer();
     
     const handleStickyScroll = () => {
-      const scrollY = container === window ? window.scrollY : container.scrollTop;
+      const scrollY = container === window ? window.scrollY : (container as HTMLElement).scrollTop;
       const daySelectionTop = daySelectionRef.current?.offsetTop || 0;
       
       if (daySelectionTop > 0) {
@@ -169,7 +245,7 @@ export default function SearchPage() {
     const container = findScrollContainer();
     
     const handleNavigationScroll = () => {
-      const scrollY = container === window ? window.scrollY : container.scrollTop;
+      const scrollY = container === window ? window.scrollY : (container as HTMLElement).scrollTop;
       
       // 섹션 정의
       const sections = [
@@ -222,7 +298,7 @@ export default function SearchPage() {
       // selectedDay 업데이트
       setSelectedDay(prevSelectedDay => {
         if (activeSection.day !== prevSelectedDay) {
-          return activeSection.day;
+          return activeSection.day as DayOfWeek;
         }
         return prevSelectedDay;
       });
@@ -245,34 +321,77 @@ export default function SearchPage() {
 
   // 현재 연도와 분기
   const { year, quarter } = getCurrentYearAndQuarter();
-  const swrKey = `/api/v1/search/${year}/${quarter}`;
 
-  // SWR을 사용한 데이터 페칭 (개선된 캐싱 설정)
-  const { data: scheduleData, error, isLoading } = useSWR<AnimePreviewListDto>(
-    swrKey,
-    () => getCurrentSchedule(),
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-      dedupingInterval: 60000, // 1분간 중복 요청 방지
-      revalidateIfStale: false, // 캐시된 데이터가 있으면 재검증하지 않음
-      revalidateOnMount: true, // 컴포넌트 마운트 시에만 재검증
-      refreshInterval: 0, // 자동 새로고침 비활성화
-      errorRetryCount: 3, // 에러 시 3번 재시도
-      errorRetryInterval: 5000, // 재시도 간격 5초
-      shouldRetryOnError: (error) => {
-        // 4xx 에러는 재시도하지 않음
-        return !error?.status || error.status >= 500;
-      },
-    }
-  );
-
-  // 스크롤 복원 훅 사용 (search 페이지에서만 활성화)
-  useScrollRestoration({
-    saveInterval: 150,
-    smooth: false,
-    restoreDelay: 100,
+  // React Query를 사용한 데이터 페칭 (개선된 캐싱 설정)
+  const { data: scheduleData, error, isLoading } = useQuery<AnimePreviewListDto>({
+    queryKey: ['schedule', year, quarter],
+    queryFn: getCurrentSchedule,
+    staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
+    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
+    refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
+    refetchOnReconnect: true, // 네트워크 재연결 시 재요청
+    refetchOnMount: true, // 컴포넌트 마운트 시 재요청
+    retry: 3, // 에러 시 3번 재시도
+    retryDelay: 5000, // 재시도 간격 5초
+    retryOnMount: true, // 마운트 시 재시도
   });
+
+  // 스크롤 복원 직접 구현 (search 화면에서만) - 깜빡임 방지
+  useEffect(() => {
+    if (scheduleData) {
+      const savedY = sessionStorage.getItem('search-scroll');
+      const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
+      
+      // 애니메이션 상세화면에서 돌아온 경우에만 스크롤 복원
+      if (savedY && isFromAnimeDetail) {
+        const y = parseInt(savedY);
+        console.log('🔄 search 화면 스크롤 복원 (데이터 로드 후):', y);
+        
+        // 즉시 복원 (깜빡임 방지)
+        // 1. window.scrollTo 시도
+        window.scrollTo(0, y);
+        
+        // 2. body 스크롤도 시도 (body가 스크롤 컨테이너인 경우)
+        document.body.scrollTop = y;
+        
+        // 3. documentElement 스크롤도 시도
+        document.documentElement.scrollTop = y;
+        
+        // 추가로 지연 복원도 시도 (확실하게)
+        setTimeout(() => {
+          window.scrollTo(0, y);
+          document.body.scrollTop = y;
+          document.documentElement.scrollTop = y;
+        }, 0);
+        
+        setTimeout(() => {
+          window.scrollTo(0, y);
+          document.body.scrollTop = y;
+          document.documentElement.scrollTop = y;
+          
+          console.log('🔍 스크롤 복원 후 확인:', {
+            targetY: y,
+            windowScrollY: window.scrollY,
+            bodyScrollTop: document.body.scrollTop,
+            documentElementScrollTop: document.documentElement.scrollTop
+          });
+          
+          // 스크롤 복원 완료 후 플래그 정리
+          sessionStorage.removeItem('from-anime-detail');
+          console.log('🔍 데이터 로드 후 스크롤 복원 완료 - from-anime-detail 플래그 제거');
+        }, 50);
+      }
+    }
+  }, [scheduleData]);
+
+  // 디버깅: 스크롤 복원 상태 확인
+  useEffect(() => {
+    console.log('SearchPage - 스크롤 복원 활성화:', {
+      scheduleData: !!scheduleData,
+      isLoading,
+      error: !!error
+    });
+  }, [scheduleData, isLoading, error]);
 
   // 분기를 시즌으로 변환 (기존 형식 유지)
   const getSeasonInKorean = (quarter: number): string => {
@@ -683,7 +802,7 @@ export default function SearchPage() {
         <div className="max-w-7xl mx-auto px-6 pt-8 pb-8">
           {/* Anime Grid - OTT 필터링 시 요일 구분 없이 표시 */}
           {groupedAnimes ? (
-            <div className="space-y-0">
+            <div className="space-y-0" data-content-loaded>
               {selectedOttServices.length > 0 || searchQuery.trim() ? (
                 // OTT 필터링 시 또는 검색 중일 때: 모든 애니메이션을 하나의 그리드로 표시
                 <div>
