@@ -45,11 +45,9 @@ export default function VoteButton({
   const getButtonContent = () => {
     if (type === 'next' && showError) {
       return (
-        <Image
+        <img
           src="/icons/button-block.svg"
           alt="Block Icon"
-          width={20}
-          height={20}
           className="w-4 h-4 sm:w-5 sm:h-5"
         />
       );

@@ -70,6 +70,7 @@ export default function AnimeDetailClient() {
   const router = useRouter();
   const animeId = params.animeId as string;
   const [anime, setAnime] = useState<AnimeDetailDto>(mockAnimeData);
+  const [characters, setCharacters] = useState<CharacterData[]>([]);
   const [loading, setLoading] = useState(true);
   
   // 이미지 프리로딩 훅
@@ -161,27 +162,31 @@ export default function AnimeDetailClient() {
         
         // API 응답을 AnimeDetailDto 형식으로 변환
         // data는 AnimeHomeDto 구조: { animeInfoDto, animeStatDto, episodeDtos, rackUnitDtos, castPreviews }
-        const dataTyped = data as { animeInfoDto?: {
-          mainImageUrl?: string;
-          mainThumbnailUrl?: string;
-          titleKor?: string;
-          titleOrigin?: string;
-          status?: string;
-          dayOfWeek?: string;
-          airTime?: string;
-          synopsis?: string;
-          genre?: string;
-          medium?: string;
-          seasonDtos?: Array<{ year?: number; seasonType?: string }>;
-          corp?: string;
-          director?: string;
-          author?: string;
-          premiereDateTime?: string;
-          minAge?: number;
-          officalSite?: string;
-          ottDtos?: Array<{ ottType: string; watchUrl?: string }>;
-        } };
+        const dataTyped = data as { 
+          animeInfoDto?: {
+            mainImageUrl?: string;
+            mainThumbnailUrl?: string;
+            titleKor?: string;
+            titleOrigin?: string;
+            status?: string;
+            dayOfWeek?: string;
+            airTime?: string;
+            synopsis?: string;
+            genre?: string;
+            medium?: string;
+            seasonDtos?: Array<{ year?: number; seasonType?: string }>;
+            corp?: string;
+            director?: string;
+            author?: string;
+            premiereDateTime?: string;
+            minAge?: number;
+            officalSite?: string;
+            ottDtos?: Array<{ ottType: string; watchUrl?: string }>;
+          };
+          castPreviews?: unknown[];
+        };
         const animeInfo = dataTyped.animeInfoDto;
+        const castPreviews = dataTyped.castPreviews || [];
         
         // 디버깅: API 응답 구조 확인
         
@@ -230,6 +235,40 @@ export default function AnimeDetailClient() {
         
         setAnime(animeDetail);
         
+        // 캐릭터 데이터 변환
+        const mapCastPreviewsToCharacters = (castPreviews: unknown[]): CharacterData[] => {
+          if (!castPreviews || !Array.isArray(castPreviews)) {
+            return [];
+          }
+
+          return castPreviews.map((cast, index) => {
+            const castData = cast as Record<string, unknown>;
+            return {
+              characterId: (castData.characterId as number) || index + 1,
+              nameKor: (castData.nameKor as string) || '이름 없음',
+              nameJpn: (castData.nameJpn as string),
+              nameEng: (castData.nameEng as string),
+              imageUrl: (castData.mainThumbnailUrl as string), // API에서 mainThumbnailUrl 사용
+              description: (castData.description as string),
+              voiceActor: (castData.cv as string) || '미정', // API에서 cv 사용
+              role: (castData.role as 'MAIN' | 'SUPPORTING' | 'MINOR') || (index < 2 ? 'MAIN' : index < 4 ? 'SUPPORTING' : 'MINOR'),
+              gender: (castData.gender as string) || (index % 2 === 0 ? 'FEMALE' : 'MALE'),
+              age: castData.age as number,
+              height: castData.height as number,
+              weight: castData.weight as number,
+              birthday: castData.birthday as string,
+              bloodType: castData.bloodType as string,
+              occupation: castData.occupation as string,
+              personality: castData.personality ? (Array.isArray(castData.personality) ? castData.personality as string[] : [castData.personality as string]) : [],
+              abilities: castData.abilities ? (Array.isArray(castData.abilities) ? castData.abilities as string[] : [castData.abilities as string]) : [],
+              relationships: (castData.relationships as Array<{ characterName: string; relationship: string }>) || []
+            };
+          });
+        };
+        
+        const characterData = mapCastPreviewsToCharacters(castPreviews);
+        setCharacters(characterData);
+        
         // 애니메이션 상세 이미지 프리로딩
         preloadAnimeDetails(animeDetail);
       } catch (error) {
@@ -272,7 +311,7 @@ export default function AnimeDetailClient() {
           {/* 왼쪽 영역: fixed 고정 */}
           <div className="fixed top-[90px] z-10" style={{ width: '584px' }}>
             {/* LeftInfoPanel */}
-            <LeftInfoPanel anime={anime} onBack={handleBack} />
+            <LeftInfoPanel anime={anime} onBack={handleBack} characters={characters} />
           </div>
           
           {/* 오른쪽 영역 */}

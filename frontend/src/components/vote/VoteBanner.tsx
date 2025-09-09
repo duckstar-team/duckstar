@@ -163,12 +163,10 @@ const StarImage = ({ src, alt }: { src: string; alt: string }) => (
   <div className={STYLES.starImage}>
     <div className={STYLES.starImageWrapper}>
       <div className={STYLES.starImageContainer}>
-        <Image 
+        <img 
           src={src} 
           alt={alt} 
-          width={147.837}
-          height={147.837}
-          className="object-contain" 
+          className="object-contain w-full h-full" 
         />
       </div>
     </div>

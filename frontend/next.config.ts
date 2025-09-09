@@ -96,8 +96,8 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
-    // 이미지 최적화 비활성화 (SVG 문제 해결)
-    unoptimized: true,
+    // 이미지 최적화 활성화 (WebP 최적화를 위해)
+    unoptimized: false,
     // 이미지 캐시 TTL 설정 (7일)
     minimumCacheTTL: 604800, // 7일 = 7 * 24 * 60 * 60
     // 이미지 로딩 실패 시 대체 처리
