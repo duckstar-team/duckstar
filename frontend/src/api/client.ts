@@ -22,7 +22,7 @@ const ENDPOINTS = {
     refreshToken: '/api/v1/auth/token/refresh',
     logout: '/api/v1/auth/logout',
     withdraw: '/api/v1/auth/withdraw/kakao',
-    userInfo: '/api/v1/auth/me',
+    userInfo: '/api/v1/members/me',
   },
   vote: {
     candidates: '/api/v1/vote/anime',
@@ -31,10 +31,22 @@ const ENDPOINTS = {
 } as const;
 
 // Default fetch options
-const getDefaultOptions = (): RequestInit => ({
-  credentials: API_CONFIG.credentials,
-  headers: API_CONFIG.defaultHeaders,
-});
+const getDefaultOptions = (): RequestInit => {
+  const headers: Record<string, string> = { ...API_CONFIG.defaultHeaders };
+  
+  // localStorage에서 accessToken 가져오기
+  if (typeof window !== 'undefined') {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+  }
+  
+  return {
+    credentials: API_CONFIG.credentials,
+    headers,
+  };
+};
 
 // API call helper function
 async function apiCall<T>(
@@ -62,6 +74,12 @@ async function apiCall<T>(
 
 // Auth API functions
 export function startKakaoLogin() {
+  // 현재 페이지 URL을 sessionStorage에 저장
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('returnUrl', window.location.href);
+  }
+  
+  // 카카오 로그인 페이지로 이동
   window.location.href = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.kakaoLogin}`;
 }
 

@@ -67,7 +67,7 @@ export interface ReplyDto {
   profileImageUrl: string;
   voteCount: number;
   createdAt: string;
-  listenerId: number;
+  listenerNickname?: string;
   attachedImageUrl?: string;
   body: string;
 }
@@ -86,6 +86,7 @@ export interface CommentDto {
   nickname: string;
   profileImageUrl: string;
   voteCount: number;
+  episodeNumber?: number | null;
   createdAt: string;
   attachedImageUrl?: string;
   body: string;
@@ -185,7 +186,7 @@ export interface AnimePreviewDto {
   scheduledAt: string;
   isRescheduled: boolean;
   genre: string;
-  medium: "TVA" | "MOVIE";
+  medium: "TVA" | "MOVIE" | "OVA" | "SPECIAL";
   ottDtos: OttDto[];
 }
 
@@ -253,6 +254,7 @@ export interface PageInfo {
 
 // Reply Slice DTO
 export interface ReplySliceDto {
+  totalCount?: number; // 첫 슬라이스에서만 답글 개수 보내기
   replyDtos: ReplyDto[];
   pageInfo: PageInfo;
 }
@@ -334,6 +336,7 @@ export interface AnimeInfoDto {
   titleOrigin: string;
   dayOfWeek: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "SPECIAL" | "NONE";
   airTime: string;
+  synopsis: string;
   corp: string;
   director: string;
   genre: string;
@@ -341,6 +344,7 @@ export interface AnimeInfoDto {
   minAge: number;
   officalSite: { [key: string]: string };
   mainImageUrl: string;
+  mainThumbnailUrl: string;
   seasonDtos: SeasonDto[];
   ottDtos: OttDto[];
 }
@@ -354,6 +358,7 @@ export interface CastPreviewDto {
 
 // Episode DTO
 export interface EpisodeDto {
+  episodeId: number;
   episodeNumber: number;
   isBreak: boolean;
   quarter: number;

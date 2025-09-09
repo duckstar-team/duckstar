@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getUserInfo, logout, withdraw } from '../api/client';
 
@@ -54,6 +56,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       // 에러 처리 로직 추가 가능
     } finally {
+      // localStorage에서 토큰 제거
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+      }
       resetAuthState();
     }
   };
@@ -64,6 +70,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       // 에러 처리 로직 추가 가능
     } finally {
+      // localStorage에서 토큰 제거
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+      }
       resetAuthState();
     }
   };
@@ -75,10 +85,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const checkUserAuth = async () => {
       try {
+        // URL에서 accessToken 파라미터 확인 (로그인 후 리다이렉트)
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessTokenFromUrl = urlParams.get('accessToken');
+        
+        if (accessTokenFromUrl) {
+          // accessToken을 localStorage에 저장
+          localStorage.setItem('accessToken', accessTokenFromUrl);
+          setAccessToken(accessTokenFromUrl);
+          
+          // URL에서 accessToken 파라미터 제거 (보안상 이유)
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('accessToken');
+          window.history.replaceState({}, '', newUrl.toString());
+          
+          // 저장된 returnUrl이 있으면 해당 페이지로 리다이렉트
+          const returnUrl = sessionStorage.getItem('returnUrl');
+          if (returnUrl && returnUrl !== window.location.href) {
+            sessionStorage.removeItem('returnUrl');
+            window.location.href = returnUrl;
+            return; // 리다이렉트하므로 아래 코드 실행하지 않음
+          }
+        }
+
         const userData = await getUserInfo();
-        login(userData as unknown as User);
+        // API 응답에서 실제 사용자 데이터 추출
+        const user = userData.data || userData;
+        login(user as User);
       } catch (error) {
-        // 사용자 인증 실패 처리
+        // 사용자 인증 실패 처리 - 로그인되지 않은 상태
       }
     };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import VoteToggle from "./VoteToggle";
 import { WeekDto } from "@/types/api";
 import { getSeasonFromDate, getSeasonInKorean } from "@/lib/utils";
@@ -153,10 +154,18 @@ export default function VoteCard({
         <div className="hidden lg:flex items-center gap-4 p-4">
           {/* 썸네일 */}
           <div className="relative w-28 h-36 flex-shrink-0">
-            <img
+            <Image
               src={thumbnailUrl}
               alt={title}
-              className="w-full h-full object-cover rounded-md"
+              fill
+              className="object-cover rounded-md"
+              sizes="112px"
+              loading="lazy"
+              placeholder="empty"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/banners/duckstar-logo.svg';
+              }}
             />
           </div>
 
@@ -193,10 +202,18 @@ export default function VoteCard({
           <div className="flex items-start gap-3">
             {/* 썸네일 */}
             <div className="relative w-20 h-24 flex-shrink-0">
-              <img
+              <Image
                 src={thumbnailUrl}
                 alt={title}
-                className="w-full h-full object-cover rounded-md"
+                fill
+                className="object-cover rounded-md"
+                sizes="80px"
+                loading="lazy"
+                placeholder="empty"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/banners/duckstar-logo.svg';
+                }}
               />
             </div>
 

@@ -17,7 +17,7 @@ const NAV_ITEMS = [
     iconSize: "size-5",
     iconClass: "flex items-center justify-center size-full",
     isBeta: true,
-    badgeText: "곧 출시"
+    badgeText: "준비중"
   },
   { 
     label: "주간 차트", 
@@ -39,14 +39,13 @@ const NAV_ITEMS = [
     isBeta: false
   },
   { 
-    label: "애니 찾기", 
+    label: "애니/캐릭터 찾기", 
     href: "/search",
     defaultIcon: "/icons/search-default.svg",
     activeIcon: "/icons/search-active.svg",
     iconSize: "size-5",
     iconClass: "flex items-center justify-center size-full",
-    isBeta: true,
-    badgeText: "곧 출시"
+    isBeta: false
   },
   { 
     label: "마이페이지", 
@@ -55,7 +54,8 @@ const NAV_ITEMS = [
     activeIcon: "/icons/mypage-active.svg",
     iconSize: "size-5",
     iconClass: "flex items-center justify-center size-full",
-    isBeta: true
+    isBeta: true,
+    badgeText: "준비중"
   },
 ];
 
@@ -122,33 +122,39 @@ function NavButton({
   const state = isActive ? 'active' : isHovered ? 'hover' : 'default';
   // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
+  
+  // 네비게이션 메뉴 클릭 시 스크롤을 맨 위로 이동
+  const handleNavigationClick = () => {
+    // search 화면으로 이동할 때는 사이드바 네비게이션임을 표시
+    if (href === '/search') {
+      // 사이드바 네비게이션임을 표시하는 플래그 설정
+      sessionStorage.setItem('sidebar-navigation', 'true');
+      console.log('🔝 search 화면 사이드바 네비게이션 - 스크롤 맨 위로 이동');
+    }
+    // vote 화면으로 이동할 때도 사이드바 네비게이션임을 표시
+    if (href === '/vote') {
+      sessionStorage.setItem('sidebar-navigation', 'true');
+      console.log('🔝 vote 화면 사이드바 네비게이션 - 스크롤 맨 위로 이동');
+    }
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  };
 
   return (
     <>
       {isBeta ? (
-        <div className={cn(voteButtonVariants({ state }), "opacity-50", "relative", "cursor-not-allowed")}>
+        <div className={cn(voteButtonVariants({ state }), "opacity-50", "relative")}>
           {/* Icon container */}
           <div className={cn(iconSize, "relative")}>
             <div className={iconClass}>
-              {label === "홈" ? (
-                <div className="flex items-center justify-center size-full rotate-[90deg]">
-                  <Image
-                    src={iconSrc}
-                    alt={label}
-                    width={20}
-                    height={20}
-                    className="size-full object-contain"
-                  />
-                </div>
-              ) : (
-                <Image
-                  src={iconSrc}
-                  alt={label}
-                  width={20}
-                  height={20}
-                  className="size-full object-contain"
-                />
-              )}
+              <Image
+                src={iconSrc}
+                alt={label}
+                width={20}
+                height={20}
+                className="size-full object-contain"
+              />
             </div>
           </div>
         
@@ -167,30 +173,18 @@ function NavButton({
           </div>
         </div>
       ) : (
-        <Link href={href}>
+        <Link href={href} onClick={handleNavigationClick}>
           <div className={cn(voteButtonVariants({ state }), "relative")}>
             {/* Icon container */}
             <div className={cn(iconSize, "relative")}>
               <div className={iconClass}>
-                {label === "홈" ? (
-                  <div className="flex items-center justify-center size-full rotate-[90deg]">
-                    <Image
-                      src={iconSrc}
-                      alt={label}
-                      width={20}
-                      height={20}
-                      className="size-full object-contain"
-                    />
-                  </div>
-                ) : (
-                  <Image
-                    src={iconSrc}
-                    alt={label}
-                    width={20}
-                    height={20}
-                    className="size-full object-contain"
-                  />
-                )}
+                <Image
+                  src={iconSrc}
+                  alt={label}
+                  width={20}
+                  height={20}
+                  className="size-full object-contain"
+                />
               </div>
             </div>
             

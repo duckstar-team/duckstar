@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect } from 'react';
+
 interface SectionProps {
   title: string;
   children: React.ReactNode;
@@ -19,6 +23,11 @@ const FeatureList: React.FC<{ items: string[] }> = ({ items }) => (
 );
 
 export default function AboutPage() {
+  // 페이지 진입 시 스크롤을 맨 위로 고정
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const mainFeatures = [
     "주간 투표: 매주 새로운 애니메이션 후보에 투표",
     "투표 결과: 일요일 22시에 주간 투표 결과 공개",

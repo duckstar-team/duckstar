@@ -30,26 +30,23 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
         // 분기, 주차 util 계산으로 복잡도 낮추기 가능
 
         List<Tuple> tuples = queryFactory.select(
+                        episode.id,
                         episode.episodeNumber,
                         episode.isBreak,
-                        week.quarter.quarterValue,
-                        week.weekValue,
                         episode.scheduledAt,
                         episode.isRescheduled,
                         episode.nextEpScheduledAt
                 )
                 .from(episode)
-                .join(week).on(episode.scheduledAt.between(week.startDateTime, week.endDateTime))
                 .where(episode.anime.id.eq(animeId))
                 .orderBy(episode.scheduledAt.asc())
                 .fetch();
 
         return tuples.stream().map(t ->
                         EpisodeDto.builder()
+                                .episodeId(t.get(episode.id))
                                 .episodeNumber(t.get(episode.episodeNumber))
                                 .isBreak(t.get(episode.isBreak))
-                                .quarter(t.get(week.quarter.quarterValue))
-                                .week(t.get(week.weekValue))
                                 .scheduledAt(t.get(episode.scheduledAt))
                                 .isRescheduled(t.get(episode.isRescheduled))
                                 .nextEpScheduledAt(t.get(episode.nextEpScheduledAt))

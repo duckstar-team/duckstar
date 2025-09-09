@@ -6,14 +6,21 @@ import com.duckstar.domain.mapping.QCommentLike;
 import com.duckstar.domain.mapping.QEpisode;
 import com.duckstar.domain.mapping.QReply;
 import com.duckstar.domain.mapping.comment.QAnimeComment;
+import com.duckstar.domain.mapping.comment.QComment;
 import com.duckstar.security.MemberPrincipal;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +34,7 @@ import static com.duckstar.web.dto.CommentResponseDto.*;
 public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-    private final QAnimeComment comment = QAnimeComment.animeComment;
+    private final QComment comment = QComment.comment;
     private final QCommentLike commentLike = QCommentLike.commentLike;
     private final QReply reply = QReply.reply;
     private final QEpisode episode = QEpisode.episode;
@@ -40,36 +47,75 @@ public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryC
             Pageable pageable,
             MemberPrincipal principal
     ) {
-        QCommentLike likeCountAlias = new QCommentLike("likeCountAlias");
+        Long principalId;
+        boolean isAdmin;
 
+        Expression<Long> likeIdSubquery;
+        Expression<Boolean> isLikedExpression;
+
+        if (principal != null) {
+            principalId = principal.getId();
+            isAdmin = principal.isAdmin();
+
+            likeIdSubquery = JPAExpressions
+                    .select(commentLike.id)
+                    .from(commentLike)
+                    .where(
+                            commentLike.comment.id.eq(comment.id),
+                            commentLike.member.id.eq(principalId)
+                    )
+                    .limit(1);
+
+            isLikedExpression = JPAExpressions
+                    .select(commentLike.isLiked)
+                    .from(commentLike)
+                    .where(
+                            commentLike.comment.id.eq(comment.id),
+                            commentLike.member.id.eq(principalId)
+                    )
+                    .limit(1);
+        } else {
+            principalId = null;
+            isAdmin = false;
+
+            likeIdSubquery = Expressions.nullExpression(Long.class);
+            isLikedExpression = Expressions.constant(false);
+        }
+
+        BooleanExpression animeCondition = comment.dtype.eq("A").and(
+                comment.contentIdForIdx.eq(animeId));
+
+        BooleanExpression episodeCondition = episodeIds.isEmpty() ? null : episode.id.in(episodeIds);
+
+        int pageSize = pageable.getPageSize();
         List<Tuple> tuples = queryFactory.select(
+                        likeIdSubquery,
+                        isLikedExpression,
                         comment.status,
                         comment.id,
-                        commentLike.isLiked,
-                        commentLike.id,
-                        likeCountAlias.count(),
+                        comment.likeCount,
                         comment.author.id,
                         comment.author.nickname,
                         comment.author.profileImageUrl,
+                        comment.isUserTaggedEp,
                         comment.voteCount,
+                        comment.episode.episodeNumber,
                         comment.createdAt,
                         comment.attachedImageUrl,
-                        comment.body
+                        comment.body,
+                        comment.replyCount
                 )
                 .from(comment)
-                .join(episode).on(
-                        comment.createdAt.between(episode.scheduledAt, episode.nextEpScheduledAt)
+                .leftJoin(comment.episode, episode)
+                .where(
+                        animeCondition,
+                        episodeCondition,
+                        comment.status.eq(CommentStatus.NORMAL)
+                                .or(comment.replyCount.gt(0))
                 )
-                .leftJoin(likeCountAlias).on(likeCountAlias.comment.id.eq(comment.id))
-                .leftJoin(commentLike).on(
-                        commentLike.comment.id.eq(comment.id)
-                                .and(commentLike.member.id.eq(principal.getId())))
-                .where(comment.contentIdForIdx.eq(animeId)
-                        .and(episode.id.in(episodeIds)))
-                .groupBy(comment.id)  // 안전용 명시
-                .orderBy(getOrder(likeCountAlias, sortBy))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .orderBy(getOrder(sortBy))  // 정렬
+                .offset((long) pageable.getPageNumber() * (pageSize - 1))
+                .limit(pageSize)
                 .fetch();
 
         List<Long> commentIds = tuples.stream()
@@ -79,53 +125,53 @@ public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryC
             return List.of();
         }
 
-        Map<Long, Integer> replyCountMap = queryFactory
-                .select(reply.parent.id, reply.count())
-                .from(reply)
-                .where(reply.parent.id.in(commentIds))
-                .groupBy(reply.parent.id)
-                .fetch()
-                .stream()
-                .collect(Collectors.toMap(
-                        tuple -> tuple.get(reply.parent.id),
-                        tuple -> Optional.ofNullable(tuple.get(reply.count()))
-                                .map(Long::intValue).orElse(0)
-                ));
-
         return tuples.stream()
                 .map(t -> {
                     Long commentId = t.get(comment.id);
 
                     CommentStatus status = t.get(comment.status);
-                    Integer replyCount = replyCountMap.getOrDefault(commentId, 0);
-                    if (status != CommentStatus.NORMAL && replyCount == 0) {
-                        return null;
+                    LocalDateTime createdAt = t.get(comment.createdAt);
+
+                    Boolean isUserTaggedEp = t.get(comment.isUserTaggedEp);
+                    Integer episodeNumber = Boolean.TRUE.equals(isUserTaggedEp) ?
+                            t.get(comment.episode.episodeNumber) :
+                            null;
+
+                    Integer replyCount = t.get(comment.replyCount);
+
+                    if (status != CommentStatus.NORMAL) {
+                        return CommentDto.ofDeleted(
+                                status,
+                                commentId,
+                                createdAt,
+                                episodeNumber,
+                                replyCount
+                        );
                     }
 
                     Long authorId = t.get(comment.author.id);
-                    boolean isAuthor = Objects.equals(authorId, principal.getId());
-                    boolean isAdmin = principal.isAdmin();
+                    boolean canDelete = Objects.equals(authorId, principalId) || isAdmin;
+
                     return CommentDto.builder()
                             .status(status)
                             .commentId(commentId)
 
-                            .canDeleteThis(isAuthor || isAdmin)
+                            .canDeleteThis(canDelete)
 
-                            .isLiked(t.get(commentLike.isLiked))
-                            .commentLikeId(t.get(commentLike.id))
-                            .likeCount(
-                                    Optional.ofNullable(t.get(likeCountAlias.count()))
-                                            .map(Long::intValue).orElse(0)
-                            )
+                            .isLiked(t.get(isLikedExpression))
+                            .commentLikeId(t.get(likeIdSubquery))
+                            .likeCount(t.get(comment.likeCount))
 
                             .authorId(authorId)
                             .nickname(t.get(comment.author.nickname))
                             .profileImageUrl(t.get(comment.author.profileImageUrl))
                             .voteCount(t.get(comment.voteCount))
-
-                            .createdAt(t.get(comment.createdAt))
+                            .episodeNumber(
+                                    episodeNumber
+                            )
+                            .createdAt(createdAt)
                             .attachedImageUrl(t.get(comment.attachedImageUrl))
-                            .body(t.get(comment.body))
+                            .body(t.get(comment. body))
 
                             .replyCount(replyCount)
                             .build();
@@ -133,10 +179,43 @@ public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryC
                 .toList();
     }
 
-    private OrderSpecifier<?>[] getOrder(QCommentLike likeCountAlias, CommentSortType sortBy) {
+    @Override
+    public Integer countTotalElements(Long animeId, List<Long> episodeIds) {
+        BooleanExpression animeCondition = comment.dtype.eq("A")
+                .and(comment.contentIdForIdx.eq(animeId));
+
+        BooleanExpression episodeCondition = episodeIds.isEmpty() ? null : episode.id.in(episodeIds);
+
+        Long commentsCount = queryFactory.select(comment.count())
+                .from(comment)
+                .leftJoin(comment.episode, episode)
+                .where(
+                        animeCondition,
+                        comment.status.eq(CommentStatus.NORMAL),
+                        episodeCondition
+                )
+                .fetchOne();
+
+        Long repliesCount = queryFactory.select(reply.count())
+                .from(reply)
+                .join(reply.parent, comment)
+                .leftJoin(comment.episode, episode)
+                .where(
+                        animeCondition,
+                        reply.status.eq(CommentStatus.NORMAL),
+                        episodeCondition
+                )
+                .fetchOne();
+
+        return Optional.ofNullable(commentsCount).orElse(0L).intValue() +
+                Optional.ofNullable(repliesCount).orElse(0L).intValue();
+    }
+
+    private OrderSpecifier<?>[] getOrder(CommentSortType sortBy) {
         return switch (sortBy) {
             case POPULAR -> new OrderSpecifier<?>[]{
-                    likeCountAlias.count().desc(),
+                    comment.likeCount.desc(),
+                    comment.replyCount.desc(),
                     comment.createdAt.desc()
             };
             case RECENT -> new OrderSpecifier<?>[]{comment.createdAt.desc()};
