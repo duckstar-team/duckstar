@@ -177,11 +177,9 @@ const BonusVoteCountText = ({
       
       <div className="pt-1.5 sm:pt-2 lg:pt-3 flex flex-col justify-center items-center">
         <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 relative overflow-hidden">
-          <Image
+          <img
             src="/icons/voteSection-infinity.svg"
             alt="Infinity Icon"
-            width={24}
-            height={24}
             className="w-full h-full"
           />
         </div>
@@ -212,11 +210,9 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
       <div className="flex items-center gap-3 sm:gap-4 lg:gap-[20px]">
         {/* Normal Vote Stamp */}
         <div className={`flex items-center justify-center ${stampSizes.mobile} ${stampSizes.tablet} ${stampSizes.desktop} ${roundedCorners} ${backgroundClass}`}>
-          <Image
+          <img
             src={imageSrc}
             alt="Normal Vote Stamp"
-            width={54}
-            height={54}
             className={`w-full h-full object-cover ${roundedCorners}`}
           />
         </div>
@@ -245,11 +241,9 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
           ref={ref}
           className={`flex items-center justify-center ${stampSizes.mobile} ${stampSizes.tablet} ${stampSizes.desktop}`}
         >
-          <Image
+          <img
             src="/icons/voteSection-bonus-stamp.svg"
             alt="Bonus Stamp"
-            width={67}
-            height={67}
             className="w-full h-full object-cover"
           />
         </div>

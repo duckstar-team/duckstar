@@ -32,11 +32,9 @@ export default function AnimeSearchBar({
               <div className="bg-[#f1f2f3] flex h-9 items-center justify-center pl-2 pr-5 py-0 rounded-[8px]" data-name="Background">
                 <div className="flex gap-2.5 items-center justify-start px-2.5 py-0 w-[34px]">
                   <div className="h-3 w-3.5 relative" data-name="mail-chat-bubble-typing-square">
-                    <Image
+                    <img
                       src="/icons/mail-chat-bubble.svg"
                       alt="Notification"
-                      width={14}
-                      height={12}
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -52,20 +50,16 @@ export default function AnimeSearchBar({
             {/* OTT 플랫폼 아이콘들 */}
             <div className="flex gap-[8.979px] items-center" data-name="ottListForFilters">
               <div className="size-[36.001px]">
-                <Image
+                <img
                   src="/icons/laftel-logo.svg"
                   alt="LAFTEL"
-                  width={36}
-                  height={36}
                   className="w-full h-full object-contain"
                 />
               </div>
               <div className="size-[36.001px]">
-                <Image
+                <img
                   src="/icons/netflix-logo.svg"
                   alt="Netflix"
-                  width={36}
-                  height={36}
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -80,11 +74,9 @@ export default function AnimeSearchBar({
           {/* 검색 버튼 */}
           <div className="bg-[#fff8e9] flex items-center justify-center p-1 rounded-[8px] shrink-0 size-9 mr-3 border border-[#ffb310]" data-name="Button">
             <div className="size-[17.59px]" data-name="SVG">
-              <Image
+              <img
                 src="/icons/search-icon.svg"
                 alt="Search"
-                width={18}
-                height={18}
                 className="w-full h-full object-contain"
               />
             </div>
