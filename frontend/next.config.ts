@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // 환경 변수 기본값 설정
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr',
   },
   
   // ESLint 비활성화 (배포용)
@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
   
   // API 프록시 설정
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
     return [
       {
         source: "/api/:path*",
@@ -96,8 +96,8 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
-    // 이미지 최적화 활성화 (캐시 TTL 개선)
-    unoptimized: false,
+    // 이미지 최적화 비활성화 (SVG 문제 해결)
+    unoptimized: true,
     // 이미지 캐시 TTL 설정 (7일)
     minimumCacheTTL: 604800, // 7일 = 7 * 24 * 60 * 60
     // 이미지 로딩 실패 시 대체 처리

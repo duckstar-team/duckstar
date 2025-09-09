@@ -148,11 +148,9 @@ function NavButton({
           {/* Icon container */}
           <div className={cn(iconSize, "relative")}>
             <div className={iconClass}>
-              <Image
+              <img
                 src={iconSrc}
                 alt={label}
-                width={20}
-                height={20}
                 className="size-full object-contain"
               />
             </div>
@@ -178,11 +176,9 @@ function NavButton({
             {/* Icon container */}
             <div className={cn(iconSize, "relative")}>
               <div className={iconClass}>
-                <Image
+                <img
                   src={iconSrc}
                   alt={label}
-                  width={20}
-                  height={20}
                   className="size-full object-contain"
                 />
               </div>
