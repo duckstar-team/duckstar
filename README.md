@@ -121,23 +121,43 @@ duckstar/
 <div align="center">
   <img src="screenshots/1.png" alt="홈페이지-애니" width="300"/>
   <img src="screenshots/2.png" alt="홈페이지-캐릭터" width="300"/>
+<br/>
   <img src="screenshots/4.png" alt="차트 페이지" width="300"/>
-  <img src="screenshots/3.png" alt="애니메이션 홈" width="300"/>
-  <img src="screenshots/6.png" alt="캐릭터 홈" width="300"/>
-  <img src="screenshots/5.png" alt="검색 페이지" width="300"/>
+  <img src="screenshots/3.png" alt="애니 홈 - 분기성적 탭" width="300"/>
 </div>
 
 <div align="center">
 <br/>
 
-**투표 페이지 준비 완료 ✅**: [Duckstar](https://duckstar.kr/vote) (투표 화면 외 기능들은 순차 배포 예정)
+[Duckstar](https://duckstar.kr) (기능들 순차 배포 예정)
 
-</div>
+**투표 페이지 준비 완료 ✅**: 
 
 <div align="center">
   <img src="screenshots/7.png" alt="투표 페이지" width="900"/>
+</div>
+
+<br/>
+
+**검색 페이지 준비 완료 ✅**
+
 <div align="center">
+  <img src="screenshots/8.png" alt="검색 페이지" width="900"/>
+</div>
+
+<br/>
+
+**애니메이션 홈 준비 완료 ✅**
+
+<div align="center">
+  <img src="screenshots/9.png" alt="애니메이션 홈" width="900"/>
+</div>
+
+<br/>
+
 ---
+
+<br/>
 
 <div align="center">
   <p>Made by Godot-B</p>

@@ -47,11 +47,9 @@ export default function SearchFilters({
           {/* 메시지 아이콘 */}
           <div className="flex items-center justify-center w-[34px] h-12">
             <div className="w-3.5 h-3 relative">
-              <Image
+              <img
                 src="/icons/searchSection-notify-icon.svg"
                 alt="Message"
-                width={14}
-                height={12}
                 className="w-full h-full object-contain"
               />
             </div>
@@ -87,11 +85,9 @@ export default function SearchFilters({
                 transition: 'all 0.2s ease-in-out'
               }}
             >
-              <Image
+              <img
                 src={ott.icon}
                 alt={ott.name}
-                width={36}
-                height={36}
                 className="w-full h-full object-contain rounded-lg"
               />
             </button>
