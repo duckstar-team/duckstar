@@ -197,13 +197,15 @@ export default function VoteSection({
         {/* Search Bar Section - Bottom on mobile, right on desktop - Hidden in Gender Selection */}
         {!currentShowGenderSelection && (
           <div className="order-1 lg:order-1 flex-1 w-full lg:w-auto">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <SearchBar
-                value={searchQuery}
-                onChange={handleSearchQueryChange}
-              />
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <div className="flex-1 min-w-0">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={handleSearchQueryChange}
+                />
+              </div>
               {/* 모바일용 NEXT 버튼 */}
-              <div className="block lg:hidden">
+              <div className="block lg:hidden flex-shrink-0">
                 <VoteButton
                   type="next"
                   onClick={handleNextClick}

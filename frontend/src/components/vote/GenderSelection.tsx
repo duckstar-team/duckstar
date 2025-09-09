@@ -40,9 +40,9 @@ const STYLES = {
   genderTogglesContainer: "flex gap-3.5 sm:gap-8 items-center justify-center relative shrink-0 mr-0 lg:mr-4 order-1 sm:order-none self-end sm:self-auto",
   actionButtonsContainer: "flex gap-2 sm:gap-4 order-2 sm:order-none self-end",
   genderToggle: "flex gap-1 items-center justify-start overflow-clip relative shrink-0",
-  genderLabel: "flex flex-col font-['Pretendard:SemiBold',_sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-lg sm:text-[24px] text-nowrap",
+  genderLabel: "flex flex-col font-['Pretendard'] font-semibold justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-lg sm:text-[24px] text-nowrap",
   genderButton: "block cursor-pointer overflow-visible relative shrink-0 size-5 sm:size-[22px]",
-  actionButton: "box-border flex gap-2 items-start justify-start pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 py-2 sm:py-2.5 relative rounded-lg shrink-0 font-['Pretendard',_sans-serif] font-bold text-[#ffffff] text-sm sm:text-[16px] text-nowrap",
+  actionButton: "box-border flex gap-2 items-start justify-start pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 py-2 sm:py-2.5 relative rounded-lg shrink-0 font-['Pretendard'] font-bold text-[#ffffff] text-sm sm:text-[16px] text-nowrap",
   actionButtonText: "flex flex-col justify-center leading-[0] not-italic relative shrink-0",
 } as const;
 

@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect } from 'react';
+
 interface TermsSectionProps {
   title: string;
   children: React.ReactNode;
@@ -19,6 +23,11 @@ const TermsList: React.FC<{ items: string[] }> = ({ items }) => (
 );
 
 export default function TermsPage() {
+  // 페이지 진입 시 스크롤을 맨 위로 고정
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const votingRules = [
     "한 주차당 한 번만 투표할 수 있습니다.",
     "중복 투표 방지를 위해 쿠키를 사용합니다.",

@@ -6,7 +6,7 @@ import com.duckstar.security.MemberPrincipal;
 import com.duckstar.service.AnimeService;
 import com.duckstar.service.CommentService;
 import com.duckstar.web.dto.AnimeResponseDto.AnimeHomeDto;
-import com.duckstar.web.dto.WriteRequestDto.CommentRequestDto;
+import com.duckstar.web.dto.BoardRequestDto.CommentRequestDto;
 import com.duckstar.web.dto.CommentResponseDto.AnimeCommentSliceDto;
 import com.duckstar.web.dto.CommentResponseDto.CommentDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,16 +27,6 @@ public class AnimeController {
 
     private final AnimeService animeService;
     private final CommentService commentService;
-
-    @Operation(summary = "애니메이션 홈 조회 API")
-    @GetMapping("/{animeId}")
-    public ApiResponse<AnimeHomeDto> getAnimeHomeById(@PathVariable Long animeId) {
-        return ApiResponse.onSuccess(
-                animeService.getAnimeHomeDtoById(animeId));
-    }
-
-//    @Operation(summary = "애니메이션 등장인물 전체 조회 API")
-//    @GetMapping("/{animeId}/characters")
 
     @Operation(summary = "애니메이션 댓글 조회 API")
     @GetMapping("/{animeId}/comments")
@@ -61,15 +51,29 @@ public class AnimeController {
     @PostMapping("/{animeId}")
     public ApiResponse<CommentDto> leaveComment(
             @PathVariable Long animeId,
-            @Valid @RequestBody CommentRequestDto request,
-            @AuthenticationPrincipal(expression = "id") Long memberId
+            @Valid @ModelAttribute CommentRequestDto request,
+            @AuthenticationPrincipal MemberPrincipal principal
     ) {
         return ApiResponse.onSuccess(
                 commentService.leaveAnimeComment(
                         animeId,
                         request,
-                        memberId
+                        principal
                 )
         );
     }
+
+    @Operation(summary = "애니메이션 홈 조회 API")
+    @GetMapping("/{animeId}")
+    public ApiResponse<AnimeHomeDto> getAnimeHomeById(@PathVariable Long animeId) {
+        return ApiResponse.onSuccess(
+                animeService.getAnimeHomeDtoById(animeId));
+    }
+
+//    @Operation(summary = "애니메이션 등장인물 전체 조회 API")
+//    @GetMapping("/{animeId}/characters")
+
+//    public ResponseEntity<Void> updateAnimeOtt() {
+//
+//    }
 }

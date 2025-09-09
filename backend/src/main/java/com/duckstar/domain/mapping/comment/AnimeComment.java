@@ -2,6 +2,7 @@ package com.duckstar.domain.mapping.comment;
 
 import com.duckstar.domain.Anime;
 import com.duckstar.domain.Member;
+import com.duckstar.domain.mapping.Episode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,25 +20,39 @@ public class AnimeComment extends Comment {
 
     protected AnimeComment(
             Anime anime,
+            Episode episode,
             Member member,
+            Boolean isUserTaggedEp,
             Integer voteCount,
             String attachedImageUrl,
             String body
     ) {
-        super(anime.getId(), member, voteCount, attachedImageUrl, body);
+        super(
+                anime.getId(),
+                episode,
+                member,
+                isUserTaggedEp,
+                voteCount,
+                attachedImageUrl,
+                body
+        );
         this.anime = anime;
     }
 
     public static AnimeComment create(
             Anime anime,
+            Episode episode,
             Member member,
+            Boolean isUserTaggedEp,
             Integer voteCount,
             String attachedImageUrl,
             String body
     ) {
         return new AnimeComment(
                 anime,
+                episode,
                 member,
+                isUserTaggedEp,
                 voteCount,
                 attachedImageUrl,
                 body
