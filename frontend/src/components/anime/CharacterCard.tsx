@@ -58,7 +58,7 @@ export default function CharacterCard({
 
 
   // 기본 이미지 URL
-  const defaultImageUrl = "/icons/default-character.svg";
+  const defaultImageUrl = "/icons/profile-default.svg";
   const imageUrl = character.imageUrl && !imageError ? character.imageUrl : defaultImageUrl;
 
   // index에 따른 배경색 결정 (odd/even 교차)

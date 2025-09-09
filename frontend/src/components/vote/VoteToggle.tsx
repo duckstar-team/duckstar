@@ -127,12 +127,9 @@ export default function VoteToggle({
       >
         {/* 선택 상태일 때 이미지 표시 */}
         {selected && (
-          <Image
+          <img
             src={isBonusVote ? "/voted-bonus.svg" : "/voted-normal.svg"}
             alt="Selected"
-            width={isMobile ? (isBonusVote ? 30 : 48) : (isBonusVote ? 60 : 96)}
-            height={isMobile ? (isBonusVote ? 30 : 48) : (isBonusVote ? 60 : 96)}
-            priority={true}
             className={
               isMobile 
                 ? (isBonusVote ? "w-[30px] h-[30px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
@@ -147,22 +144,18 @@ export default function VoteToggle({
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute left-0 top-0 w-1/2 h-full">
             {shouldShowLeftHover && (
-              <Image
+              <img
                 src="/hybrid-hover-left.svg"
                 alt="Normal Hover Effect"
-                width={isMobile ? 24 : 48}
-                height={isMobile ? 48 : 96}
                 className="w-full h-full object-cover rounded-l-xl"
               />
             )}
           </div>
           <div className="absolute right-0 top-0 w-1/2 h-full">
             {shouldShowRightHover && (
-              <Image
+              <img
                 src="/hybrid-hover-right.svg"
                 alt="Bonus Hover Effect"
-                width={isMobile ? 24 : 48}
-                height={isMobile ? 48 : 96}
                 className="w-full h-full object-cover rounded-r-xl"
               />
             )}
@@ -173,11 +166,9 @@ export default function VoteToggle({
       {/* 호버 레이어 - 일반 모드 (상태 1, 2) */}
       {shouldShowNormalHover && (
         <div className="absolute inset-0 pointer-events-none">
-          <Image
+          <img
             src="/normal-hover.svg"
             alt="Normal Hover Effect"
-            width={isMobile ? 48 : 96}
-            height={isMobile ? 48 : 96}
             className="w-full h-full object-cover rounded-xl"
           />
         </div>
@@ -186,11 +177,9 @@ export default function VoteToggle({
       {/* 호버 레이어 - 풀 보너스 모드 */}
       {!selected && shouldShowHover && isFullBonusMode && (
         <div className="absolute inset-0 pointer-events-none">
-          <Image
+          <img
             src="/bonus-hover.svg"
             alt="Bonus Hover Effect"
-            width={isMobile ? 48 : 96}
-            height={isMobile ? 48 : 96}
             className="w-full h-full object-cover rounded-xl"
           />
         </div>
