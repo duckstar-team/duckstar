@@ -55,7 +55,7 @@ interface EpisodeCommentModalProps {
   onClose: () => void;
   animeId: number;
   animeData?: AnimeHomeDto;
-  onCommentSubmit?: (episodeIds: number[], content: string) => void;
+  onCommentSubmit?: (episodeIds: number[], content: string, images?: File[]) => void;
 }
 
 export default function EpisodeCommentModal({
@@ -122,7 +122,7 @@ export default function EpisodeCommentModal({
   };
 
   // 댓글 제출 핸들러
-  const handleCommentSubmit = async (content: string) => {
+  const handleCommentSubmit = async (content: string, images?: File[]) => {
     if (!isAuthenticated) {
       const shouldLogin = confirm('댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?');
       if (shouldLogin) {
@@ -136,18 +136,17 @@ export default function EpisodeCommentModal({
       return;
     }
 
-    if (!content.trim()) {
-      alert('댓글 내용을 입력해주세요.');
+    if (!content.trim() && (!images || images.length === 0)) {
+      alert('댓글 내용을 입력하거나 이미지를 업로드해주세요.');
       return;
     }
 
     try {
-      await onCommentSubmit?.(selectedEpisodeIds, content);
+      await onCommentSubmit?.(selectedEpisodeIds, content, images);
       setCommentContent('');
       setSelectedEpisodeIds([]);
       onClose();
     } catch (error) {
-      console.error('Failed to submit comment:', error);
       alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
     }
   };
@@ -185,15 +184,16 @@ export default function EpisodeCommentModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50">
       {/* 배경 오버레이 */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       
-      {/* 모달 컨텐츠 */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      {/* 모달 컨테이너 - 사이드바와 헤더를 제외한 메인 프레임 중앙 정렬 */}
+      <div className="absolute inset-0 flex items-center justify-center lg:left-[240px] top-[60px]">
+        <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[calc(100vh-120px)] overflow-hidden">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -247,7 +247,7 @@ export default function EpisodeCommentModal({
                 <CommentPostForm
                   onSubmit={handleCommentSubmit}
                   onImageUpload={(file) => {
-                    // TODO: 이미지 업로드 처리
+                    // 이미지 업로드 기능은 현재 구현되지 않음
                   }}
                   placeholder="선택한 에피소드에 대한 댓글을 작성해주세요..."
                 />
@@ -264,6 +264,7 @@ export default function EpisodeCommentModal({
           >
             취소
           </button>
+        </div>
         </div>
       </div>
     </div>

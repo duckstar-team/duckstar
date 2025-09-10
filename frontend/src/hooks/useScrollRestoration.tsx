@@ -11,7 +11,6 @@ interface UseScrollRestorationOptions {
 
 export function useScrollRestoration(options: UseScrollRestorationOptions = {}) {
   // 완전히 비활성화 - search 화면에서 직접 구현
-  console.log('🚫 useScrollRestoration 비활성화됨 - search 화면에서 직접 구현');
   return {
     saveScrollPosition: () => {},
     restoreScrollPosition: () => {},
@@ -25,12 +24,10 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
     
     // search 화면이 아닌 경우 저장하지 않음
     if (pathname !== '/search') {
-      console.log('🚫 search 화면이 아니므로 스크롤 저장 건너뛰기:', pathname);
       return;
     }
     
     const scrollY = window.scrollY || 0;
-    console.log('💾 search 화면 스크롤 위치 저장:', { pathname, scrollY });
     sessionStorage.setItem('scroll-/search', scrollY.toString());
   };
 
@@ -40,25 +37,19 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
     
     // search 화면이 아닌 경우 복원하지 않음
     if (pathname !== '/search') {
-      console.log('🚫 search 화면이 아니므로 스크롤 복원 건너뛰기:', pathname);
       return;
     }
     
     const savedY = sessionStorage.getItem('scroll-/search');
     if (savedY) {
       const y = parseInt(savedY);
-      console.log('🔄 search 화면 스크롤 복원:', { pathname, y });
       window.scrollTo(0, y);
     }
   };
 
   // 스크롤 이벤트 핸들러 (디바운싱)
   const handleScroll = () => {
-    console.log('스크롤 이벤트 발생:', {
-      scrollY: window.scrollY,
-      pathname,
-      enabled
-    });
+    // 스크롤 이벤트 처리
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);

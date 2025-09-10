@@ -53,7 +53,7 @@ const VoteSection = memo(function VoteSection({
 }: VoteSectionProps) {
   const router = useRouter();
   
-  // Internal state for testing
+  // Internal state
   const [internalCurrentVotes, _setInternalCurrentVotes] = useState(0);
   const [internalBonusVotesUsed, _setInternalBonusVotesUsed] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
