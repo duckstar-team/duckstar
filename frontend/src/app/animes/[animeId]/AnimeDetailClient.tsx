@@ -73,6 +73,9 @@ export default function AnimeDetailClient() {
   const [characters, setCharacters] = useState<CharacterData[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // 캐시된 데이터 확인
+  const [cachedData, setCachedData] = useState<{ anime: AnimeDetailDto; characters: CharacterData[] } | null>(null);
+  
   // 이미지 프리로딩 훅
   const { preloadAnimeDetails } = useImagePreloading();
   
@@ -109,6 +112,17 @@ export default function AnimeDetailClient() {
   };
   
   const [error, setError] = useState<string | null>(null);
+  
+  // 백그라운드에서 최신 데이터 가져오기
+  const fetchLatestData = async () => {
+    try {
+      const data = await getAnimeDetail(parseInt(animeId));
+      // 최신 데이터로 업데이트 (사용자에게는 보이지 않음)
+      // 필요시 여기서 상태 업데이트
+    } catch (error) {
+      // 백그라운드 업데이트 실패는 무시
+    }
+  };
 
   // 컴포넌트 마운트 시 스크롤을 맨 위로 강제 이동
   useEffect(() => {
@@ -157,8 +171,30 @@ export default function AnimeDetailClient() {
         setLoading(true);
         setError(null);
         
-        // 실제 API 호출
-        const data = await getAnimeDetail(parseInt(animeId));
+        // 캐시된 데이터가 있으면 먼저 사용
+        const cacheKey = `anime-${animeId}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const parsedCache = JSON.parse(cached);
+            setAnime(parsedCache.anime);
+            setCharacters(parsedCache.characters);
+            setLoading(false);
+            // 백그라운드에서 최신 데이터 가져오기
+            setTimeout(() => fetchLatestData(), 0);
+            return;
+          } catch (e) {
+            // 캐시 파싱 실패 시 무시하고 새로 가져오기
+          }
+        }
+        
+        // 실제 API 호출 (병렬 처리로 성능 최적화)
+        const data = await Promise.race([
+          getAnimeDetail(parseInt(animeId)),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), 10000)
+          )
+        ]) as unknown;
         
         // API 응답을 AnimeDetailDto 형식으로 변환
         // data는 AnimeHomeDto 구조: { animeInfoDto, animeStatDto, episodeDtos, rackUnitDtos, castPreviews }
@@ -269,8 +305,14 @@ export default function AnimeDetailClient() {
         const characterData = mapCastPreviewsToCharacters(castPreviews);
         setCharacters(characterData);
         
-        // 애니메이션 상세 이미지 프리로딩
-        preloadAnimeDetails(animeDetail);
+        // 캐시에 저장
+        const cacheData = { anime: animeDetail, characters: characterData };
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        
+        // 애니메이션 상세 이미지 프리로딩 (비동기로 처리하여 로딩 속도 향상)
+        setTimeout(() => {
+          preloadAnimeDetails(animeDetail);
+        }, 0);
       } catch (error) {
         setError('애니메이션 정보를 불러오는데 실패했습니다.');
         // 에러 시 mock 데이터 사용
@@ -292,10 +334,35 @@ export default function AnimeDetailClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">애니메이션 정보를 불러오는 중...</p>
+      <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
+        <div className="w-full flex justify-center">
+          <div className="max-w-7xl w-auto flex">
+            {/* 왼쪽 영역: 스켈레톤 로딩 */}
+            <div className="fixed top-[90px] z-10" style={{ width: '584px', left: 'calc(50% - 292px)' }}>
+              <div className="bg-white rounded-2xl shadow-lg h-[600px] animate-pulse">
+                <div className="h-[300px] bg-gray-200 rounded-t-2xl"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </div>
+            </div>
+            
+            {/* 오른쪽 영역: 스켈레톤 로딩 */}
+            <div className="flex-1 ml-[612px]">
+              <div className="bg-white border-l border-r border-gray-300 h-[600px] animate-pulse">
+                <div className="p-6 space-y-4">
+                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -307,9 +374,9 @@ export default function AnimeDetailClient() {
   return (
     <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
       <div className="w-full flex justify-center">
-        <div className="max-w-7xl w-auto flex gap-[28px]">
+        <div className="max-w-7xl w-auto flex">
           {/* 왼쪽 영역: fixed 고정 */}
-          <div className="fixed top-[90px] z-10" style={{ width: '584px' }}>
+          <div className="fixed top-[90px] z-10" style={{ width: '584px', left: 'calc(50% - 511px)' }}>
             {/* LeftInfoPanel */}
             <LeftInfoPanel anime={anime} onBack={handleBack} characters={characters} />
           </div>

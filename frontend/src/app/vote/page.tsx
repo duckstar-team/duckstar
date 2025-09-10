@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import VoteCard from "@/components/vote/VoteCard";
@@ -33,7 +33,7 @@ export default function VotePage() {
       const stickySection = document.querySelector('[data-sticky-section]');
       if (stickySection) {
         // 강제 리플로우로 스티키 위치 재계산
-        (stickySection as HTMLElement).offsetHeight;
+        void (stickySection as HTMLElement).offsetHeight;
       }
     }, 100);
 
@@ -124,29 +124,27 @@ export default function VotePage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [bonusVotesRecalled, setBonusVotesRecalled] = useState(false);
   
+  
   // 이미지 프리로딩을 위한 ref
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 이미지 프리로딩 함수
+  // 이미지 프리로딩 함수 - 성능 최적화
   const preloadImages = useCallback((animes: Anime[]) => {
     if (!animes || animes.length === 0) return;
     
-    // 뷰포트 근처의 이미지들을 우선적으로 프리로드
-    const preloadPromises = animes.slice(0, 6).map((anime) => {
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve();
-        img.onerror = () => resolve(); // 에러가 발생해도 계속 진행
-        img.src = anime.thumbnailUrl;
-      });
-    });
+    // 우선순위 기반 이미지 로딩
+    const priorityImages = animes.slice(0, 6); // 첫 6개만 우선 로드
     
-    Promise.all(preloadPromises).then(() => {
-      // 나머지 이미지들을 백그라운드에서 로드
-      animes.slice(6).forEach((anime) => {
-        const img = new Image();
-        img.src = anime.thumbnailUrl;
-      });
+    // 우선순위 이미지들을 병렬로 로드
+    priorityImages.forEach((anime) => {
+      const img = new Image();
+      img.onload = () => {
+        // 이미지 로드 완료
+      };
+      img.onerror = () => {
+        // 에러 발생해도 계속 진행
+      };
+      img.src = anime.thumbnailUrl;
     });
   }, []);
 
@@ -163,21 +161,31 @@ export default function VotePage() {
     });
   };
 
-  // 투표 상태 조회 (통합 API)
+  // 투표 상태 조회 (통합 API) - 캐시 시간 연장
   const { data: voteStatusData, isLoading: isVoteStatusLoading } = useSWR(
     '/api/v1/vote/anime/status',
-    fetcher<ApiResponseAnimeVoteStatusDto>
+    fetcher<ApiResponseAnimeVoteStatusDto>,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 30000, // 30초 동안 중복 요청 방지
+    }
   );
 
-  // 투표하지 않은 경우에만 후보 목록 조회
+  // 투표하지 않은 경우에만 후보 목록 조회 - 캐시 시간 연장
   const shouldFetchCandidates = voteStatusData && !voteStatusData.result?.hasVoted;
   
   const { data, error, isLoading } = useSWR<ApiResponseAnimeCandidateListDto>(
     shouldFetchCandidates ? '/api/v1/vote/anime' : null,
-    fetcher<ApiResponseAnimeCandidateListDto>
+    fetcher<ApiResponseAnimeCandidateListDto>,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000, // 1분 동안 중복 요청 방지
+    }
   );
 
-  // 데이터 로드 시 이미지 프리로딩 실행
+  // 데이터 로드 시 이미지 프리로딩 실행 - 성능 최적화
   useEffect(() => {
     if (data?.result?.animeCandidates) {
       const animes = data.result.animeCandidates.map(anime => ({
@@ -186,9 +194,12 @@ export default function VotePage() {
         thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
         medium: anime.medium as 'TVA' | 'MOVIE'
       }));
+      
+      // 우선순위 기반 프리로딩으로 초기 로딩 시간 단축
       preloadImages(animes);
     }
   }, [data, preloadImages]);
+
 
   const handleSelect = (animeId: number, isBonusVote?: boolean) => {
     if (isBonusMode) {
@@ -428,15 +439,113 @@ export default function VotePage() {
     }
   }, [voteHistory]);
 
+  // 전체 애니메이션 리스트 생성 (API 데이터 또는 테스트 데이터) - 메모이제이션
+  const allAnimeList: Anime[] = useMemo(() => {
+    return data?.result?.animeCandidates?.map((anime: AnimeCandidateDto) => ({
+      id: anime.animeCandidateId,
+      title: anime.titleKor || '제목 없음',
+      thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
+      medium: anime.medium
+    })) || [
+      // 테스트 데이터 (API 데이터가 없을 때)
+      {
+        id: 1,
+        title: "9-nine- Ruler's Crown",
+        thumbnailUrl: "/imagemainthumbnail@2x.png",
+        medium: "TVA" as const,
+      },
+      {
+        id: 2,
+        title: "NEW 팬티 & 스타킹 with 가터벨트",
+        thumbnailUrl: "/imagemainthumbnail@2x.png",
+        medium: "TVA" as const,
+      },
+      {
+        id: 3,
+        title: "그 비스크 돌은 사랑을 한다 Season 2",
+        thumbnailUrl: "/imagemainthumbnail@2x.png",
+        medium: "TVA" as const,
+      },
+      {
+        id: 4,
+        title: "원피스",
+        thumbnailUrl: "/imagemainthumbnail@2x.png",
+        medium: "MOVIE" as const,
+      }
+    ];
+  }, [data?.result?.animeCandidates]);
 
-  // 투표 상태 확인 로딩 중
+  // 검색어에 따라 애니메이션 리스트 필터링 (검색 페이지와 동일한 로직 적용) - 메모이제이션
+  const filteredAnimeList: Anime[] = useMemo(() => {
+    return searchQuery.trim() === '' 
+      ? allAnimeList 
+      : allAnimeList.filter(anime => 
+          searchMatch(searchQuery, anime.title)
+        );
+  }, [allAnimeList, searchQuery]);
+
+  // 상태 4에서 투표된 아이템만 필터링하고 정렬 (애니메이션 완료 후에만 필터링) - 메모이제이션
+  const animeList: Anime[] = useMemo(() => {
+    if (showGenderSelection && scrollCompleted) {
+      return filteredAnimeList
+        .filter(anime => selected.includes(anime.id) || bonusSelected.includes(anime.id))
+        .sort((a, b) => {
+          const aIsNormal = selected.includes(a.id);
+          const bIsNormal = selected.includes(b.id);
+          
+          // 일반 투표된 아이템을 먼저, 보너스 투표된 아이템을 나중에
+          if (aIsNormal && !bIsNormal) return -1;
+          if (!aIsNormal && bIsNormal) return 1;
+          return 0;
+        });
+    }
+    return filteredAnimeList;
+  }, [filteredAnimeList, showGenderSelection, scrollCompleted, selected, bonusSelected]);
+
+  // 전체 후보자 수
+  const totalCandidates = data?.result?.candidatesCount || animeList.length;
+
+  // 투표 상태 확인 로딩 중 - 스켈레톤 UI
   if (isVoteStatusLoading) {
-    return <div className="text-center">투표 상태를 확인하는 중...</div>;
+    return (
+      <main className="w-full">
+        <section>
+          <div className="w-full h-24 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
+        </section>
+        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="h-8 bg-gray-200 rounded animate-pulse mb-4" />
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
+          </div>
+        </div>
+      </main>
+    );
   }
 
-  // 투표하지 않은 사람이지만 후보 목록 로딩 중
+  // 투표하지 않은 사람이지만 후보 목록 로딩 중 - 스켈레톤 UI
   if (isLoading) {
-    return <div className="text-center">투표 후보를 불러오는 중...</div>;
+    return (
+      <main className="w-full">
+        <section>
+          <div className="w-full h-24 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
+        </section>
+        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-xl shadow border border-gray-200 p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-28 h-36 bg-gray-200 rounded-md animate-pulse" />
+                  <div className="flex-1">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse mb-2" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    );
   }
 
   // 투표하지 않은 사람이지만 후보 목록 에러
@@ -573,69 +682,6 @@ export default function VotePage() {
     );
   }
 
-  // 투표 상태 확인 로딩 중
-  if (isVoteStatusLoading) {
-    return <div className="text-center">투표 상태를 확인하는 중...</div>;
-  }
-
-  // 전체 애니메이션 리스트 생성 (API 데이터 또는 테스트 데이터)
-  const allAnimeList: Anime[] = data?.result?.animeCandidates?.map((anime: AnimeCandidateDto) => ({
-    id: anime.animeCandidateId,
-    title: anime.titleKor || '제목 없음',
-    thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
-    medium: anime.medium
-  })) || [
-    // 테스트 데이터 (API 데이터가 없을 때)
-    {
-      id: 1,
-      title: "9-nine- Ruler's Crown",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "TVA" as const,
-    },
-    {
-      id: 2,
-      title: "NEW 팬티 & 스타킹 with 가터벨트",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "TVA" as const,
-    },
-    {
-      id: 3,
-      title: "그 비스크 돌은 사랑을 한다 Season 2",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "TVA" as const,
-    },
-    {
-      id: 4,
-      title: "원피스",
-      thumbnailUrl: "/imagemainthumbnail@2x.png",
-      medium: "MOVIE" as const,
-    }
-  ];
-
-  // 검색어에 따라 애니메이션 리스트 필터링 (검색 페이지와 동일한 로직 적용)
-  const filteredAnimeList: Anime[] = searchQuery.trim() === '' 
-    ? allAnimeList 
-    : allAnimeList.filter(anime => 
-        searchMatch(searchQuery, anime.title)
-      );
-
-  // 상태 4에서 투표된 아이템만 필터링하고 정렬 (애니메이션 완료 후에만 필터링)
-  const animeList: Anime[] = (showGenderSelection && scrollCompleted)
-    ? filteredAnimeList
-        .filter(anime => selected.includes(anime.id) || bonusSelected.includes(anime.id))
-        .sort((a, b) => {
-          const aIsNormal = selected.includes(a.id);
-          const bIsNormal = selected.includes(b.id);
-          
-          // 일반 투표된 아이템을 먼저, 보너스 투표된 아이템을 나중에
-          if (aIsNormal && !bIsNormal) return -1;
-          if (!aIsNormal && bIsNormal) return 1;
-          return 0;
-        })
-    : filteredAnimeList;
-
-  // 전체 후보자 수
-  const totalCandidates = data?.result?.candidatesCount || animeList.length;
 
   // 투표 결과 화면 렌더링
   return (
@@ -704,6 +750,7 @@ export default function VotePage() {
       >
         <div className="w-full max-w-[1240px] mx-auto px-4">
           <div className="bg-white rounded-b-[8px] shadow-sm border border-gray-200 border-t-0 relative">
+            
             {/* 투표 섹션 */}
             <div className="p-6">
               <VoteSection
@@ -769,6 +816,7 @@ export default function VotePage() {
                 duration: 0.3,
                 ease: "easeInOut"
               }}
+              style={{ willChange: 'auto' }} // 성능 최적화
             >
               {animeList.map((anime, index) => (
                 <motion.div
@@ -792,7 +840,8 @@ export default function VotePage() {
                       : undefined
                   }}
                   style={{
-                    pointerEvents: showGenderSelection ? 'none' : 'auto'
+                    pointerEvents: showGenderSelection ? 'none' : 'auto',
+                    willChange: showGenderSelection ? 'opacity' : 'auto' // 성능 최적화
                   }}
                 >
                   <VoteCard

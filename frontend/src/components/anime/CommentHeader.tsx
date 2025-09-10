@@ -31,11 +31,9 @@ export default function CommentHeader({
         </div>
       </div>
       <div className="size-2 relative overflow-hidden flex items-center justify-center">
-        <Image
+        <img
           src="/icons/delete-filter.svg"
           alt="필터 제거"
-          width={8}
-          height={8}
           className="w-full h-full object-contain"
         />
       </div>
@@ -49,11 +47,9 @@ export default function CommentHeader({
       {variant === 'default' ? (
         <div className="w-[580px] h-12 pr-6 pt-5 inline-flex justify-start items-end gap-3.5">
           <div className="size-7 relative overflow-hidden">
-            <Image
+            <img
               src="/icons/comment-header-icon.svg"
               alt="댓글 아이콘"
-              width={28}
-              height={28}
               className="w-full h-full object-contain"
             />
           </div>
@@ -70,11 +66,9 @@ export default function CommentHeader({
           {/* 첫 번째 줄: 헤더 + 초기화 버튼 */}
           <div className="self-stretch h-12 pr-6 pt-5 inline-flex justify-start items-end">
             <div className="size-7 relative overflow-hidden">
-              <Image
+              <img
                 src="/icons/comment-header-icon.svg"
                 alt="댓글 아이콘"
-                width={28}
-                height={28}
                 className="w-full h-full object-contain"
               />
             </div>

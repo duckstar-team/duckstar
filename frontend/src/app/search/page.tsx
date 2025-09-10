@@ -524,20 +524,20 @@ export default function SearchPage() {
         
         // 이번 주 방영이 끝난 경우, 다음 주 방영 시간을 기준으로 판단
         if (now > thisWeekEndTime) {
-          // 다음 주 방영 시간까지 12시간 이내인지 확인
+          // 다음 주 방영 시간까지 12시간 이내인지 확인 (밀리초 단위로 정확히 계산)
           const diff = nextWeekScheduledTime.getTime() - now.getTime();
-          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const twelveHoursInMs = 12 * 60 * 60 * 1000; // 12시간을 밀리초로 변환
           
-          return hours <= 12 && hours >= 0;
+          return diff <= twelveHoursInMs && diff >= 0;
         }
         
         // 이번 주 방영 시작 전인 경우 12시간 이내만 포함
         if (thisWeekScheduledTime > now) {
           const diff = thisWeekScheduledTime.getTime() - now.getTime();
-          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const twelveHoursInMs = 12 * 60 * 60 * 1000; // 12시간을 밀리초로 변환
           
           // 12시간 이내이고, 남은 시간이 유효한 경우만
-          return hours <= 12 && hours >= 0;
+          return diff <= twelveHoursInMs && diff >= 0;
         }
         
         return false;
