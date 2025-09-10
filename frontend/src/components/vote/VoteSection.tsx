@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import SearchBar from './SearchBar';
 import VoteStatus from './VoteStatus';
@@ -30,7 +30,7 @@ interface VoteSectionProps {
   external?: boolean;
 }
 
-export default function VoteSection({
+const VoteSection = memo(function VoteSection({
   currentVotes: externalCurrentVotes = 0,
   maxVotes: externalMaxVotes = 10,
   bonusVotesUsed: externalBonusVotesUsed = 0,
@@ -91,42 +91,40 @@ export default function VoteSection({
   // Derived states
   const isBonusMode = hasClickedBonus;
 
-  // Event handlers
-  const handleSearchQueryChange = (query: string) => {
+  // Event handlers - 메모이제이션
+  const handleSearchQueryChange = useCallback((query: string) => {
     if (external && onSearchQueryChange) {
       onSearchQueryChange(query);
     } else {
       setInternalSearchQuery(query);
     }
-  };
+  }, [external, onSearchQueryChange]);
 
-  const handleNextClick = () => {
+  const handleNextClick = useCallback(() => {
     if (external && onNextClick) {
       onNextClick();
     } else {
       setShowGenderSelection(true);
     }
-  };
+  }, [external, onNextClick]);
 
-  const handleBackClick = () => {
+  const handleBackClick = useCallback(() => {
     if (external && onBackClick) {
       onBackClick();
     } else {
       setShowGenderSelection(false);
     }
-  };
+  }, [external, onBackClick]);
 
-
-
-  const handleBonusClick = () => {
+  const handleBonusClick = useCallback(() => {
     if (external && onBonusClick) {
       onBonusClick();
     } else {
       setInternalHasClickedBonus(true);
     }
-  };
+  }, [external, onBonusClick]);
 
-  const handleSubmitClick = () => {
+  const handleSubmitClick = useCallback(() => {
     if (external && onSubmitClick) {
       onSubmitClick();
     } else {
@@ -146,19 +144,19 @@ export default function VoteSection({
       
       router.push(`/vote-result?${params.toString()}`);
     }
-  };
+  }, [external, onSubmitClick, currentVotes, bonusVotesUsed, router]);
 
-  const handleGenderSelect = (gender: 'male' | 'female') => {
+  const handleGenderSelect = useCallback((gender: 'male' | 'female') => {
     if (external && onGenderSelect) {
       onGenderSelect(gender);
     } else {
       setInternalGender(gender);
     }
-  };
+  }, [external, onGenderSelect]);
 
   return (
     <>
-      {/* Tooltip Portals */}
+      {/* Tooltip Portals - 높은 z-index로 헤더 위에 표시 */}
       <TooltipPortal
         type="bonus"
         position={bonusStampPosition}
@@ -236,4 +234,6 @@ export default function VoteSection({
       </div>
     </>
   );
-}
+});
+
+export default VoteSection;

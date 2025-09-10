@@ -1,4 +1,3 @@
-import Image from 'next/image';
 
 interface EpisodeItemProps {
   property1?: "past" | "current" | "future" | "filterSelectForPast" | "filterSelectForCurrent";
@@ -94,11 +93,9 @@ export default function EpisodeItem({
       <div className="w-20 flex flex-col justify-start items-start gap-3 overflow-visible">
         <div className="self-stretch pl-2.5 inline-flex justify-start items-center gap-2.5">
           <div className="size- flex justify-center items-center gap-2.5">
-            <Image 
+            <img 
               src="/icons/diamond-filter.svg" 
               alt="diamond filter" 
-              width={14} 
-              height={24} 
               className="w-3.5 h-6"
             />
           </div>
@@ -123,11 +120,9 @@ export default function EpisodeItem({
       <div className="w-20 flex flex-col justify-start items-start gap-3 overflow-visible">
         <div className="self-stretch pl-2.5 inline-flex justify-start items-center gap-2.5">
           <div className="size- flex justify-center items-center gap-2.5">
-            <Image 
+            <img 
               src="/icons/diamond-filter.svg" 
               alt="diamond filter" 
-              width={14} 
-              height={24} 
               className="w-3.5 h-6"
             />
           </div>

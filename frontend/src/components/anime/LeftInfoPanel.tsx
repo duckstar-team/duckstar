@@ -27,7 +27,6 @@ const customScrollbarStyles = `
     background: #718096;
   }
 `;
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import CharacterList from './CharacterList';
 import { CharacterData } from './CharacterCard';

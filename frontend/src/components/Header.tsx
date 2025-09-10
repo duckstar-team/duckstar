@@ -1,7 +1,6 @@
 'use client';
 
 import type { NextPage } from "next";
-import Image from 'next/image';
 import Link from 'next/link';
 import LoginButton from './common/LoginButton';
 import { useAuth } from '../context/AuthContext';
@@ -62,7 +61,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
               type="text"
               disabled
               placeholder="베타 - 곧 업데이트됩니다."
-              className="w-full bg-transparent outline-none text-sm text-gray-400 placeholder-gray-400 cursor-not-allowed"
+              className="w-full bg-transparent outline-none text-sm text-gray-400 placeholder-gray-400"
             />
           </div>
         </div>

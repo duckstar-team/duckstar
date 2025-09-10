@@ -18,7 +18,7 @@ const notifyCacheUpdate = () => {
   cacheListeners.forEach(listener => listener());
 };
 
-// 이미지 프리로딩 함수
+// 이미지 프리로딩 함수 - 성능 최적화
 const preloadImage = (url: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     // 이미 캐시에 있으면 즉시 반환
@@ -28,6 +28,10 @@ const preloadImage = (url: string): Promise<HTMLImageElement> => {
     }
 
     const img = new window.Image();
+    
+    // 성능 최적화 옵션
+    img.decoding = 'async';
+    img.loading = 'lazy';
     
     img.onload = () => {
       globalImageCache[url] = {

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 
 // Types
 interface GenderSelectionProps {
@@ -79,11 +78,9 @@ const GenderToggle: React.FC<GenderToggleProps> = ({
       className={STYLES.genderButton}
       onClick={onSelect}
     >
-      <Image
+      <img
         src={getGenderToggleImage(isSelected)}
         alt={`${label} ${isSelected ? 'Selected' : 'Default'}`}
-        width={22}
-        height={22}
         className="w-full h-full"
       />
     </button>
