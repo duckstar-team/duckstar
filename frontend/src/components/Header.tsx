@@ -4,6 +4,7 @@ import type { NextPage } from "next";
 import Link from 'next/link';
 import LoginButton from './common/LoginButton';
 import { useAuth } from '../context/AuthContext';
+import { scrollToTop } from '../utils/scrollUtils';
 
 export type HeaderType = {
   className?: string;
@@ -15,10 +16,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
   // 덕스타 로고 클릭 시 스크롤 탑으로 이동
   const handleLogoClick = () => {
     sessionStorage.setItem('logo-navigation', 'true');
-    console.log('🔝 덕스타 로고 클릭 - 스크롤 맨 위로 이동');
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
+    scrollToTop();
   };
   
   return (

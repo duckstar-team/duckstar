@@ -47,7 +47,8 @@ const Comment: React.FC<CommentProps> = ({
     isLiked,
     canDeleteThis,
     profileImageUrl,
-    episodeNumber
+    episodeNumber,
+    attachedImageUrl
   } = comment;
 
   // 삭제된 댓글인지 확인
@@ -206,8 +207,24 @@ const Comment: React.FC<CommentProps> = ({
           </div>
           
           {/* 댓글 내용 */}
-          <div className="self-stretch justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
-            {content}
+          <div className="self-stretch flex flex-col gap-2">
+            {content && (
+              <div className="justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
+                {content}
+              </div>
+            )}
+            
+            {/* 첨부 이미지 */}
+            {attachedImageUrl && (
+              <div className="flex justify-start">
+                <img 
+                  src={attachedImageUrl} 
+                  alt="댓글 첨부 이미지"
+                  className="max-w-[300px] max-h-[300px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(attachedImageUrl, '_blank')}
+                />
+              </div>
+            )}
           </div>
           
           {/* 푸터 (좋아요, 답글) */}
