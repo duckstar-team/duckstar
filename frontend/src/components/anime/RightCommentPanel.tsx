@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Image from 'next/image';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
 import ReplyPostForm from './ReplyPostForm';

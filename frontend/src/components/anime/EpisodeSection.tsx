@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import EpisodeItem from './EpisodeItem';
 import QuarterWeekLabel from './QuarterWeekLabel';
 import { getBusinessQuarter, calculateBusinessWeekNumber } from '../../lib/quarterUtils';

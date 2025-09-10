@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 // 캐릭터 데이터 타입 정의

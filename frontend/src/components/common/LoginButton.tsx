@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { startKakaoLogin } from '@/api/client';
-import Image from 'next/image';
 
 interface LoginButtonProps {
   variant?: 'default' | 'compact';
@@ -30,11 +29,9 @@ export default function LoginButton({
       <div className={`flex items-center gap-2 ${className}`}>
         {showProfileImage && user.profileImageUrl && (
           <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-            <Image
+            <img
               src={user.profileImageUrl}
               alt="프로필 이미지"
-              width={24}
-              height={24}
               className="w-full h-full object-cover"
             />
           </div>

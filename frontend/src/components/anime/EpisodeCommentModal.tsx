@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { X } from 'lucide-react';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';

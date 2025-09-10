@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 // Types
@@ -85,11 +84,9 @@ const useResponsivePlaceholder = () => {
 // Components
 const SearchIcon = () => (
   <div className={STYLES.iconContainer}>
-    <Image
+    <img
       src="/icons/voteSection-search.svg"
       alt="Search Icon"
-      width={20}
-      height={20}
       className="w-full h-full"
     />
   </div>
