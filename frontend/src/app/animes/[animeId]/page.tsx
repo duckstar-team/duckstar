@@ -3,9 +3,10 @@ import AnimeDetailClient from './AnimeDetailClient';
 import { getAnimeDetail } from '@/api/search';
 
 // SEO를 위한 동적 메타데이터 생성 (서버 사이드에서만 실행)
-export async function generateMetadata({ params }: { params: { animeId: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ animeId: string }> }): Promise<Metadata> {
   try {
-    const data = await getAnimeDetail(parseInt(params.animeId));
+    const { animeId } = await params;
+    const data = await getAnimeDetail(parseInt(animeId));
     const animeInfo = data?.animeInfoDto;
     const titleKor = animeInfo?.titleKor || '애니메이션';
     const synopsis = animeInfo?.synopsis || '';
@@ -49,10 +50,10 @@ export async function generateMetadata({ params }: { params: { animeId: string }
         description: description,
         images: [animeInfo?.mainThumbnailUrl || '/icons/favicon.svg'],
       },
-      // 추가 SEO 메타데이터
-      alternates: {
-        canonical: `https://duckstar.kr/animes/${params.animeId}`,
-      },
+       // 추가 SEO 메타데이터
+       alternates: {
+         canonical: `https://duckstar.kr/animes/${animeId}`,
+       },
     };
   } catch (error) {
     return {

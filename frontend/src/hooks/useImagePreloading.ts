@@ -4,30 +4,30 @@ import { useImageCache } from './useImageCache';
 // 이미지 프리로딩 전략
 interface PreloadingStrategy {
   // 홈페이지에서 인기 애니메이션들의 썸네일 미리 로드
-  preloadPopularAnimeThumbnails: (animeList: any[]) => void;
+  preloadPopularAnimeThumbnails: (animeList: unknown[]) => void;
   
   // 검색 결과의 썸네일 미리 로드
-  preloadSearchResults: (searchResults: any[]) => void;
+  preloadSearchResults: (searchResults: unknown[]) => void;
   
   // 현재 애니메이션의 관련 이미지들 미리 로드
-  preloadAnimeDetails: (anime: any) => void;
+  preloadAnimeDetails: (anime: unknown) => void;
   
   // 다음/이전 애니메이션 이미지 미리 로드
-  preloadAdjacentAnime: (currentAnimeId: number, animeList: any[]) => void;
+  preloadAdjacentAnime: (currentAnimeId: number, animeList: unknown[]) => void;
 }
 
 export const useImagePreloading = (): PreloadingStrategy => {
   const { preloadImages } = useImageCache();
 
   // 인기 애니메이션 썸네일 프리로딩
-  const preloadPopularAnimeThumbnails = useCallback((animeList: any[]) => {
+  const preloadPopularAnimeThumbnails = useCallback((animeList: unknown[]) => {
     if (!animeList || animeList.length === 0) return;
     
     // 상위 10개 애니메이션의 썸네일만 우선 로드
     const topAnimes = animeList.slice(0, 10);
     const thumbnailUrls = topAnimes
-      .map(anime => anime.mainThumbnailUrl)
-      .filter(Boolean);
+      .map((anime: unknown) => (anime as { mainThumbnailUrl?: string })?.mainThumbnailUrl)
+      .filter((url: unknown): url is string => typeof url === 'string' && url.length > 0);
     
     if (thumbnailUrls.length > 0) {
       preloadImages(thumbnailUrls);
@@ -74,7 +74,7 @@ export const useImagePreloading = (): PreloadingStrategy => {
   }, [preloadImages]);
 
   // 인접 애니메이션 프리로딩
-  const preloadAdjacentAnime = useCallback((currentAnimeId: number, animeList: any[]) => {
+  const preloadAdjacentAnime = useCallback((currentAnimeId: number, animeList: unknown[]) => {
     if (!animeList || animeList.length === 0) return;
     
     const currentIndex = animeList.findIndex(anime => anime.animeId === currentAnimeId);
@@ -111,19 +111,19 @@ export const usePageImagePreloading = () => {
   const { preloadImages } = useImageCache();
 
   // 홈페이지용 프리로딩
-  const preloadHomePage = useCallback((data: any) => {
+  const preloadHomePage = useCallback((data: unknown) => {
     const urlsToPreload: string[] = [];
     
     // 인기 애니메이션 썸네일
     if (data.popularAnimes) {
-      data.popularAnimes.slice(0, 10).forEach((anime: any) => {
+      (data as { popularAnimes: unknown[] }).popularAnimes.slice(0, 10).forEach((anime: unknown) => {
         if (anime.mainThumbnailUrl) urlsToPreload.push(anime.mainThumbnailUrl);
       });
     }
     
     // 최신 애니메이션 썸네일
     if (data.latestAnimes) {
-      data.latestAnimes.slice(0, 10).forEach((anime: any) => {
+      (data as { latestAnimes: unknown[] }).latestAnimes.slice(0, 10).forEach((anime: unknown) => {
         if (anime.mainThumbnailUrl) urlsToPreload.push(anime.mainThumbnailUrl);
       });
     }
@@ -134,7 +134,7 @@ export const usePageImagePreloading = () => {
   }, [preloadImages]);
 
   // 검색 페이지용 프리로딩
-  const preloadSearchPage = useCallback((searchResults: any[]) => {
+  const preloadSearchPage = useCallback((searchResults: unknown[]) => {
     const urlsToPreload = searchResults
       .slice(0, 20) // 상위 20개만
       .map(anime => anime.mainThumbnailUrl)

@@ -53,45 +53,73 @@ export default function VoteStatus({
         const rect = bonusButtonRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + rect.width / 2,
-          y: rect.top
+          y: rect.top + window.scrollY // 문서 기준 절대 좌표로 변환
         };
         setBonusButtonPosition(position);
         onBonusButtonPositionChange?.(position);
       }
     };
 
-    // Initial position update
+    // 즉시 위치 업데이트 (렌더링 직후)
     updateBonusButtonPosition();
     
-    // Continuous position tracking during animation
-    let frameCount = 0;
-    const maxFrames = 30; // Increased frames for better tracking
-    
-    const updatePosition = () => {
-      updateBonusButtonPosition();
-      frameCount++;
-      
-      if (frameCount < maxFrames) {
-        requestAnimationFrame(updatePosition);
+    // 추가 위치 업데이트 (애니메이션 진행에 따라)
+    const timeouts = [
+      setTimeout(() => updateBonusButtonPosition(), 16), // 1프레임 후
+      setTimeout(() => updateBonusButtonPosition(), 50), // 애니메이션 중간
+      setTimeout(() => updateBonusButtonPosition(), 100), // 애니메이션 거의 완료
+      setTimeout(() => updateBonusButtonPosition(), 200), // 애니메이션 완료 후
+    ];
+
+    // 근본적인 해결책 1: Intersection Observer로 위치 추적
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            updateBonusButtonPosition();
+          }
+        });
+      },
+      { 
+        threshold: 0,
+        rootMargin: '0px'
       }
+    );
+
+    // 보너스 버튼이 렌더링되면 관찰 시작
+    if (bonusButtonRef.current) {
+      observer.observe(bonusButtonRef.current);
+    }
+
+    // 근본적인 해결책 2: 여러 요소에 스크롤 이벤트 등록
+    const handleScroll = () => {
+      updateBonusButtonPosition();
     };
     
-    requestAnimationFrame(updatePosition);
-
-    // Add a delay to ensure animation is complete
-    const timeoutId = setTimeout(() => {
-      updateBonusButtonPosition();
-    }, 600); // Match animation duration
-
-    window.addEventListener('scroll', updateBonusButtonPosition);
+    // 1. window에 등록
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', updateBonusButtonPosition);
+    
+    // 2. document에 등록
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 3. document.body에 등록
+    document.body.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 4. document.documentElement에 등록
+    document.documentElement.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', updateBonusButtonPosition);
+      // 모든 timeout 정리
+      timeouts.forEach(timeout => clearTimeout(timeout));
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateBonusButtonPosition);
-      clearTimeout(timeoutId);
+      document.removeEventListener('scroll', handleScroll);
+      document.body.removeEventListener('scroll', handleScroll);
+      document.documentElement.removeEventListener('scroll', handleScroll);
     };
-  }, [hasReachedMaxVotes, hasClickedBonus, showGenderSelection, onBonusButtonPositionChange]);
+  }, [hasReachedMaxVotes, hasClickedBonus, showGenderSelection, onBonusButtonPositionChange]); // 보너스 버튼 렌더링 상태를 의존성에 추가
 
   // Track bonus stamp position
   useEffect(() => {
@@ -100,25 +128,73 @@ export default function VoteStatus({
         const rect = bonusStampRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + 33.5,
-          y: rect.top
+          y: rect.top + window.scrollY // 문서 기준 절대 좌표로 변환
         };
         setBonusStampPosition(position);
         onBonusStampPositionChange?.(position);
       }
     };
 
-    if (bonusAnimationComplete) {
-      updateBonusStampPosition();
+    // 즉시 위치 업데이트 (렌더링 직후)
+    updateBonusStampPosition();
+    
+    // 추가 위치 업데이트 (애니메이션 진행에 따라)
+    const timeouts = [
+      setTimeout(() => updateBonusStampPosition(), 16), // 1프레임 후
+      setTimeout(() => updateBonusStampPosition(), 50), // 애니메이션 중간
+      setTimeout(() => updateBonusStampPosition(), 100), // 애니메이션 거의 완료
+      setTimeout(() => updateBonusStampPosition(), 200), // 애니메이션 완료 후
+    ];
+
+    // 근본적인 해결책 1: Intersection Observer로 위치 추적
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            updateBonusStampPosition();
+          }
+        });
+      },
+      { 
+        threshold: 0,
+        rootMargin: '0px'
+      }
+    );
+
+    // 보너스 스탬프가 렌더링되면 관찰 시작
+    if (bonusStampRef.current) {
+      observer.observe(bonusStampRef.current);
     }
 
-    window.addEventListener('scroll', updateBonusStampPosition);
+    // 근본적인 해결책 2: 여러 요소에 스크롤 이벤트 등록
+    const handleScroll = () => {
+      updateBonusStampPosition();
+    };
+    
+    // 1. window에 등록
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', updateBonusStampPosition);
+    
+    // 2. document에 등록
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 3. document.body에 등록
+    document.body.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 4. document.documentElement에 등록
+    document.documentElement.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', updateBonusStampPosition);
+      // 모든 timeout 정리
+      timeouts.forEach(timeout => clearTimeout(timeout));
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateBonusStampPosition);
+      document.removeEventListener('scroll', handleScroll);
+      document.body.removeEventListener('scroll', handleScroll);
+      document.documentElement.removeEventListener('scroll', handleScroll);
     };
-  }, [isBonusMode, bonusAnimationComplete, showGenderSelection, onBonusStampPositionChange]);
+  }, [isBonusMode, bonusAnimationComplete, showGenderSelection, onBonusStampPositionChange]); // 보너스 스탬프 렌더링 상태를 의존성에 추가
 
   // Reset animation complete state when bonus mode is disabled
   useEffect(() => {
@@ -140,7 +216,7 @@ export default function VoteStatus({
       const rect = bonusButtonRef.current.getBoundingClientRect();
       const position = {
         x: rect.left + rect.width / 2,
-        y: rect.top
+        y: rect.top + window.scrollY // 문서 기준 절대 좌표로 변환
       };
       setBonusButtonPosition(position);
       onBonusButtonPositionChange?.(position);

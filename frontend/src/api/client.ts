@@ -48,7 +48,7 @@ const getDefaultOptions = (): RequestInit => {
   };
 };
 
-// API call helper function
+// API call helper function - 성능 최적화
 async function apiCall<T>(
   endpoint: string, 
   options: RequestInit = {}
@@ -61,6 +61,9 @@ async function apiCall<T>(
       ...getDefaultOptions().headers,
       ...options.headers,
     },
+    // 성능 최적화 옵션 추가
+    cache: 'default' as RequestCache,
+    keepalive: true,
   };
 
   const response = await fetch(url, config);

@@ -148,13 +148,10 @@ const BannerDate = ({
 
 const DuckstarLogo = () => (
   <div className={STYLES.duckstarLogoContainer}>
-    <Image
+    <img
       src={ASSETS.duckstarLogo}
       alt="Duckstar Logo"
-      width={88}
-      height={79.164}
-      className="object-contain"
-      priority
+      className="w-full h-full object-contain"
     />
   </div>
 );

@@ -67,6 +67,8 @@ const ReplyForm = React.memo(({ commentId, listenerId, onSubmit }: {
          prevProps.listenerId === nextProps.listenerId;
 });
 
+ReplyForm.displayName = 'ReplyForm';
+
 // API 응답 타입 정의 (백엔드 EpisodeDto와 일치)
 interface EpisodeDto {
   episodeId: number;
