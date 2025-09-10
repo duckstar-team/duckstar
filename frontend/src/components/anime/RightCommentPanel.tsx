@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Image from 'next/image';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
 import ReplyPostForm from './ReplyPostForm';
@@ -66,6 +65,8 @@ const ReplyForm = React.memo(({ commentId, listenerId, onSubmit }: {
   return prevProps.commentId === nextProps.commentId && 
          prevProps.listenerId === nextProps.listenerId;
 });
+
+ReplyForm.displayName = 'ReplyForm';
 
 // API 응답 타입 정의 (백엔드 EpisodeDto와 일치)
 interface EpisodeDto {

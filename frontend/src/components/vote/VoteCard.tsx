@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useCallback } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import VoteToggle from "./VoteToggle";
 import { WeekDto } from "@/types/api";
 import { getSeasonFromDate, getSeasonInKorean } from "@/lib/utils";
@@ -23,7 +22,7 @@ interface VoteCardProps {
   showGenderSelection?: boolean;
 }
 
-export default function VoteCard({
+const VoteCard = memo(function VoteCard({
   thumbnailUrl,
   title,
   checked,
@@ -60,18 +59,18 @@ export default function VoteCard({
     setPrevChecked(checked);
   }, [checked, prevChecked]);
 
-  // 카드 호버 해제 시 justDeselected 상태 초기화 및 에러 메시지 숨기기
-  const handleMouseLeave = () => {
+  // 카드 호버 해제 시 justDeselected 상태 초기화 및 에러 메시지 숨기기 - 메모이제이션
+  const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
     setJustDeselected(false);
     setHoverSide(null);
     if (onMouseLeave) {
       onMouseLeave();
     }
-  };
+  }, [onMouseLeave]);
 
-  // 카드 몸체에서 마우스 이동 시 좌우 구분
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  // 카드 몸체에서 마우스 이동 시 좌우 구분 - 메모이제이션
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!isHybridMode || disabled) return;
     
     const rect = e.currentTarget.getBoundingClientRect();
@@ -84,10 +83,10 @@ export default function VoteCard({
     const isLeftSide = x < stampCenterX;
     
     setHoverSide(isLeftSide ? 'left' : 'right');
-  };
+  }, [isHybridMode, disabled]);
 
-  // 카드 클릭 처리
-  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // 카드 클릭 처리 - 메모이제이션
+  const handleCardClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!onChange) return; // disabled 상태에서는 클릭 무시
     
     if (isHybridMode) {
@@ -111,10 +110,10 @@ export default function VoteCard({
       const isFullBonusMode = isBonusMode && currentVotes >= maxVotes;
       onChange(isFullBonusMode);
     }
-  };
+  }, [onChange, isHybridMode, isBonusMode, currentVotes, maxVotes]);
 
-  // subTitle 생성
-  const getSubTitle = () => {
+  // subTitle 생성 - 메모이제이션
+  const getSubTitle = useCallback(() => {
     if (weekDto) {
       const year = weekDto.year;
       const season = getSeasonFromDate(weekDto.startDate);
@@ -123,7 +122,7 @@ export default function VoteCard({
       return `${year} ${seasonKorean} ${mediumText}`;
     }
     return ""; // 폴백으로 빈 문자열 반환
-  };
+  }, [weekDto, medium]);
 
   return (
     <div className="relative">
@@ -154,14 +153,11 @@ export default function VoteCard({
         <div className="hidden lg:flex items-center gap-4 p-4">
           {/* 썸네일 */}
           <div className="relative w-28 h-36 flex-shrink-0">
-            <Image
+            <img
               src={thumbnailUrl}
               alt={title}
-              fill
-              className="object-cover rounded-md"
-              sizes="112px"
+              className="w-full h-full object-cover rounded-md"
               loading="lazy"
-              placeholder="empty"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = '/banners/duckstar-logo.svg';
@@ -202,14 +198,11 @@ export default function VoteCard({
           <div className="flex items-start gap-3">
             {/* 썸네일 */}
             <div className="relative w-20 h-24 flex-shrink-0">
-              <Image
+              <img
                 src={thumbnailUrl}
                 alt={title}
-                fill
-                className="object-cover rounded-md"
-                sizes="80px"
+                className="w-full h-full object-cover rounded-md"
                 loading="lazy"
-                placeholder="empty"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = '/banners/duckstar-logo.svg';
@@ -263,4 +256,6 @@ export default function VoteCard({
       </motion.div>
     </div>
   );
-}
+});
+
+export default VoteCard;

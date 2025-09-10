@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -245,12 +244,10 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
     >
       {/* Thumbnail Image */}
       <div className="relative w-full h-[340px] overflow-hidden">
-        <Image
+        <img
           src={mainThumbnailUrl}
           alt={titleKor}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="w-full h-full object-cover"
           onError={() => setImageError(true)}
         />
         

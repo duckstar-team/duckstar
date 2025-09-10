@@ -2,7 +2,6 @@
 
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 
 // Types
 interface TooltipPortalProps {
@@ -184,11 +183,9 @@ const HideButton = ({ onHide }: { onHide: () => void }) => (
       whileTap={{ scale: 0.9 }}
       onClick={onHide}
     >
-      <Image
+      <img
         src="/icons/voteSection-notify-hide.svg"
         alt="Hide Notification"
-        width={16}
-        height={16}
         className="w-full h-full"
       />
     </motion.button>
@@ -209,14 +206,18 @@ export default function TooltipPortal({
   const config = TOOLTIP_CONFIG[type];
   const desktopPosition = getDesktopPosition(type);
 
+  // 문서 기준 절대 좌표로 받은 position을 그대로 사용
+  // absolute 포지션으로 문서에 고정
+  const topPosition = position.y + desktopPosition.top;
+
   return createPortal(
     <div 
-      className="fixed pointer-events-none"
+      className="absolute pointer-events-none"
       style={{
         left: `${position.x}px`,
-        top: `${position.y + desktopPosition.top}px`,
+        top: `${topPosition}px`,
         transform: desktopPosition.transform,
-        zIndex: desktopPosition.zIndex,
+        zIndex: 9999999, // 헤더보다 확실히 높게 설정
       }}
     >
       <div className={getContainerClasses(type)}>
@@ -231,4 +232,3 @@ export default function TooltipPortal({
     document.body
   );
 }
-
