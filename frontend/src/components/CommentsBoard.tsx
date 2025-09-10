@@ -83,7 +83,7 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
         <CommentPostForm 
           onSubmit={handleReplySubmit}
           onImageUpload={(file) => {
-            // TODO: 이미지 업로드 처리
+            // 이미지 업로드 기능은 현재 구현되지 않음
           }}
           placeholder="답글을 입력하세요..."
         />

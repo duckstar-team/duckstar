@@ -23,6 +23,7 @@ const ENDPOINTS = {
     logout: '/api/v1/auth/logout',
     withdraw: '/api/v1/auth/withdraw/kakao',
     userInfo: '/api/v1/members/me',
+    updateProfile: '/api/v1/members/me/profile',
   },
   vote: {
     candidates: '/api/v1/vote/anime',
@@ -100,6 +101,31 @@ export async function withdraw(): Promise<void> {
 
 export async function getUserInfo(): Promise<Record<string, unknown>> {
   return apiCall(ENDPOINTS.auth.userInfo);
+}
+
+export async function updateProfile(formData: FormData): Promise<Record<string, unknown>> {
+  const headers: Record<string, string> = {};
+  
+  // localStorage에서 accessToken 가져오기
+  if (typeof window !== 'undefined') {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+  }
+  
+  const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.auth.updateProfile}`, {
+    method: 'PATCH',
+    headers,
+    credentials: API_CONFIG.credentials,
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    throw new Error(`프로필 업데이트 실패: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
 }
 
 // Vote API functions

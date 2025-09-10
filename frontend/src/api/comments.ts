@@ -5,7 +5,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 // 댓글 관련 타입 정의
 export interface CommentRequestDto {
   episodeId?: number;
-  attachedImageUrl?: string;
+  attachedImage?: File;
   body: string;
 }
 
@@ -153,27 +153,37 @@ export async function createComment(
   request: CommentRequestDto
 ): Promise<CommentDto> {
   try {
+    console.log('createComment API 호출 시작:', { animeId, request });
+    
     // FormData 생성
     const formData = new FormData();
-    
     
     // body 필드 추가
     if (request.body) {
       formData.append('body', request.body);
+      console.log('FormData에 body 추가:', request.body);
     } else {
+      console.log('body가 비어있음 - 이미지만 업로드');
     }
     
     // episodeId 필드 추가 (있는 경우)
     if (request.episodeId) {
       formData.append('episodeId', request.episodeId.toString());
+      console.log('FormData에 episodeId 추가:', request.episodeId);
     }
     
     // 이미지 파일 추가 (있는 경우)
-    if (request.attachedImageUrl) {
-      // 이미지 URL이 있는 경우, File 객체로 변환하거나 다른 방식으로 처리
-      // 현재는 이미지 업로드가 구현되지 않았으므로 일단 제외
+    if (request.attachedImage) {
+      console.log('FormData에 이미지 추가:', {
+        name: request.attachedImage.name,
+        size: request.attachedImage.size,
+        type: request.attachedImage.type,
+        lastModified: request.attachedImage.lastModified
+      });
+      formData.append('attachedImage', request.attachedImage);
+    } else {
+      console.log('attachedImage가 없음');
     }
-    
 
     const response = await fetch(`${BASE_URL}/api/v1/animes/${animeId}`, {
       method: 'POST',
@@ -296,9 +306,8 @@ export async function createReply(
       }
       
       // 이미지 파일 추가 (있는 경우)
-      if (commentDto.attachedImageUrl) {
-        // 이미지 URL이 있는 경우, File 객체로 변환하거나 다른 방식으로 처리
-        // 현재는 이미지 업로드가 구현되지 않았으므로 일단 제외
+      if (commentDto.attachedImage) {
+        formData.append('commentRequestDto.attachedImage', commentDto.attachedImage);
       }
     }
     

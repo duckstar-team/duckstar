@@ -14,6 +14,7 @@ import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
 import { fetcher, submitVote } from '@/api/client';
 import { searchMatch } from '@/lib/searchUtils';
+import { scrollToTop, scrollToPosition, clearStorageFlags } from '@/utils/scrollUtils';
 
 interface Anime {
   id: number;
@@ -48,63 +49,32 @@ export default function VotePage() {
     const toVoteResult = sessionStorage.getItem('to-vote-result');
     const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
 
-    console.log('🔍 VotePage 로드 시 sessionStorage 상태:', {
-      'sidebar-navigation': sidebarNav,
-      'logo-navigation': logoNav,
-      'from-anime-detail': fromAnimeDetail,
-      'to-vote-result': toVoteResult,
-      'vote-result-scroll': voteResultScroll
-    });
+    // 스크롤 복원 상태 확인
 
     const isSidebarNavigation = sidebarNav === 'true';
     const isLogoNavigation = logoNav === 'true';
     const isFromAnimeDetail = fromAnimeDetail === 'true' && toVoteResult === 'true';
 
     if (isSidebarNavigation) {
-      console.log('🔝 vote 화면 사이드바 네비게이션 감지 - 스크롤을 맨 위로 이동');
       // 모든 관련 플래그 정리
-      sessionStorage.removeItem('sidebar-navigation');
-      sessionStorage.removeItem('vote-result-scroll');
-      sessionStorage.removeItem('from-anime-detail');
-      sessionStorage.removeItem('to-vote-result');
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      clearStorageFlags('sidebar-navigation', 'vote-result-scroll', 'from-anime-detail', 'to-vote-result');
+      scrollToTop();
     } else if (isLogoNavigation) {
-      console.log('🔝 vote 화면 로고 네비게이션 감지 - 스크롤을 맨 위로 이동');
       // 모든 관련 플래그 정리
-      sessionStorage.removeItem('logo-navigation');
-      sessionStorage.removeItem('vote-result-scroll');
-      sessionStorage.removeItem('from-anime-detail');
-      sessionStorage.removeItem('to-vote-result');
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      clearStorageFlags('logo-navigation', 'vote-result-scroll', 'from-anime-detail', 'to-vote-result');
+      scrollToTop();
     } else if (isFromAnimeDetail) {
       if (voteResultScroll) {
         const y = parseInt(voteResultScroll);
-        console.log('⚡ 애니메이션 상세화면에서 돌아옴 - 스크롤 복원:', y);
-        window.scrollTo(0, y);
-        document.body.scrollTop = y;
-        document.documentElement.scrollTop = y;
+        scrollToPosition(y);
         // 플래그는 두 번째 useEffect에서 정리하도록 유지
-        console.log('🔍 스크롤 복원 완료 - 플래그는 데이터 로드 후 정리');
       } else {
-        console.log('⚡ 애니메이션 상세화면에서 돌아옴 - 저장된 스크롤 위치 없음');
-        sessionStorage.removeItem('from-anime-detail');
-        sessionStorage.removeItem('to-vote-result');
+        clearStorageFlags('from-anime-detail', 'to-vote-result');
       }
     } else {
-      console.log('🔄 vote 화면 리프레시 또는 직접 URL 접근 감지 - 스크롤을 맨 위로 이동');
       // 모든 관련 플래그 정리
-      sessionStorage.removeItem('vote-result-scroll');
-      sessionStorage.removeItem('sidebar-navigation');
-      sessionStorage.removeItem('logo-navigation');
-      sessionStorage.removeItem('from-anime-detail');
-      sessionStorage.removeItem('to-vote-result');
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      clearStorageFlags('vote-result-scroll', 'sidebar-navigation', 'logo-navigation', 'from-anime-detail', 'to-vote-result');
+      scrollToTop();
     }
   }, []);
   
@@ -278,11 +248,9 @@ export default function VotePage() {
     // 2단계: 투명해지는 애니메이션 완료 후 페이지 최상단으로 이동
     setTimeout(() => {
       // 여러 방법으로 스크롤을 맨 위로 강제 이동
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      scrollToTop();
       
-      console.log('🔝 상태 4로 이동 - 스크롤을 맨 위로 이동');
+      // 상태 4로 이동 - 스크롤을 맨 위로 이동
     }, 500); // 투명해지는 시간 (0.5초)
     
     // 3단계: 선택한 후보들이 나타남 (0.8초 동안 선명해짐)
@@ -415,31 +383,18 @@ export default function VotePage() {
 
       if (savedY && isFromAnimeDetail && isToVoteResult) {
         const y = parseInt(savedY);
-        console.log('🔄 vote 화면 스크롤 복원 (데이터 로드 후):', y);
-        window.scrollTo(0, y);
-        document.body.scrollTop = y;
-        document.documentElement.scrollTop = y;
+        // 스크롤 복원
+        scrollToPosition(y);
         setTimeout(() => {
-          window.scrollTo(0, y);
-          document.body.scrollTop = y;
-          document.documentElement.scrollTop = y;
-          console.log('🔍 스크롤 복원 후 확인:', {
-            targetY: y,
-            windowScrollY: window.scrollY,
-            bodyScrollTop: document.body.scrollTop,
-            documentElementScrollTop: document.documentElement.scrollTop
-          });
-          
+          scrollToPosition(y);
           // 스크롤 복원 완료 후 플래그 정리
-          sessionStorage.removeItem('from-anime-detail');
-          sessionStorage.removeItem('to-vote-result');
-          console.log('🔍 데이터 로드 후 스크롤 복원 완료 - 플래그 제거');
+          clearStorageFlags('from-anime-detail', 'to-vote-result');
         }, 50);
       }
     }
   }, [voteHistory]);
 
-  // 전체 애니메이션 리스트 생성 (API 데이터 또는 테스트 데이터) - 메모이제이션
+  // 전체 애니메이션 리스트 생성 (API 데이터 또는 기본 데이터) - 메모이제이션
   const allAnimeList: Anime[] = useMemo(() => {
     return data?.result?.animeCandidates?.map((anime: AnimeCandidateDto) => ({
       id: anime.animeCandidateId,
@@ -447,7 +402,7 @@ export default function VotePage() {
       thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
       medium: anime.medium
     })) || [
-      // 테스트 데이터 (API 데이터가 없을 때)
+      // 기본 데이터 (API 데이터가 없을 때)
       {
         id: 1,
         title: "9-nine- Ruler's Crown",
@@ -638,13 +593,6 @@ export default function VotePage() {
                       onClick={() => {
                         // 투표 결과 화면에서 애니메이션 상세 화면으로 갈 때 스크롤 위치 저장
                         const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-                        console.log('🎯 vote 결과 화면에서 애니메이션 카드 클릭 - 스크롤 저장:', {
-                          scrollY,
-                          windowScrollY: window.scrollY,
-                          pageYOffset: window.pageYOffset,
-                          documentElementScrollTop: document.documentElement.scrollTop,
-                          bodyScrollTop: document.body.scrollTop
-                        });
                         sessionStorage.setItem('vote-result-scroll', scrollY.toString());
                         sessionStorage.setItem('to-anime-detail', 'true');
                         router.push(`/animes/${ballot.animeId}`);

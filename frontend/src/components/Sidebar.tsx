@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { scrollToTop } from '../utils/scrollUtils';
 
 // Navigation items configuration with local icon paths
 const NAV_ITEMS = [
@@ -128,16 +129,12 @@ function NavButton({
     if (href === '/search') {
       // 사이드바 네비게이션임을 표시하는 플래그 설정
       sessionStorage.setItem('sidebar-navigation', 'true');
-      console.log('🔝 search 화면 사이드바 네비게이션 - 스크롤 맨 위로 이동');
     }
     // vote 화면으로 이동할 때도 사이드바 네비게이션임을 표시
     if (href === '/vote') {
       sessionStorage.setItem('sidebar-navigation', 'true');
-      console.log('🔝 vote 화면 사이드바 네비게이션 - 스크롤 맨 위로 이동');
     }
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
+    scrollToTop();
   };
 
   return (
