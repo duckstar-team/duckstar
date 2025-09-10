@@ -13,70 +13,10 @@ import { searchMatch, extractChosung } from '@/lib/searchUtils';
 // import { useScrollRestoration } from '@/hooks/useScrollRestoration'; // 제거: 직접 구현
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useQuery } from '@tanstack/react-query';
+import { testAnimes } from '@/data/testAnimes';
+import { scrollToTop, scrollToPosition, restoreScrollFromStorage, clearStorageFlags } from '@/utils/scrollUtils';
 
-// 테스트용 애니메이션 데이터
-const testAnimes = [
-  {
-    id: 1,
-    title: "노랫소리는 밀푀유",
-    thumbnailUrl: "/banners/duckstar-logo.svg", // 임시 이미지
-    airTime: "목 21:25",
-    timeRemaining: "15시간 9분 남음",
-    genres: ["음악", "아카펠라"],
-    ottServices: ["LAFTEL", "Netflix"],
-    medium: "TVA" as const
-  },
-  {
-    id: 2,
-    title: "귀멸의 칼날",
-    thumbnailUrl: "/banners/duckstar-logo.svg",
-    airTime: "일 23:00",
-    timeRemaining: "3일 17시간 남음",
-    genres: ["액션", "판타지"],
-    ottServices: ["Crunchyroll"],
-    medium: "TVA" as const
-  },
-  {
-    id: 3,
-    title: "원피스",
-    thumbnailUrl: "/banners/duckstar-logo.svg",
-    airTime: "일 09:30",
-    timeRemaining: "3일 8시간 남음",
-    genres: ["액션", "모험"],
-    ottServices: ["Crunchyroll", "Funimation"],
-    medium: "TVA" as const
-  },
-  {
-    id: 4,
-    title: "나루토",
-    thumbnailUrl: "/banners/duckstar-logo.svg",
-    airTime: "토 18:00",
-    timeRemaining: "2일 16시간 남음",
-    genres: ["액션", "닌자"],
-    ottServices: ["Crunchyroll"],
-    medium: "TVA" as const
-  },
-  {
-    id: 5,
-    title: "드래곤볼",
-    thumbnailUrl: "/banners/duckstar-logo.svg",
-    airTime: "토 10:00",
-    timeRemaining: "2일 8시간 남음",
-    genres: ["액션", "SF"],
-    ottServices: ["Crunchyroll", "Funimation"],
-    medium: "TVA" as const
-  },
-  {
-    id: 6,
-    title: "블리치",
-    thumbnailUrl: "/banners/duckstar-logo.svg",
-    airTime: "금 22:00",
-    timeRemaining: "1일 20시간 남음",
-    genres: ["액션", "초자연"],
-    ottServices: ["Crunchyroll"],
-    medium: "TVA" as const
-  }
-];
+// 애니메이션 데이터 (이제 별도 파일에서 import)
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,12 +32,7 @@ export default function SearchPage() {
     const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
     const searchScroll = sessionStorage.getItem('search-scroll');
     
-    console.log('🔍 SearchPage 로드 시 sessionStorage 상태:', {
-      'sidebar-navigation': sidebarNav,
-      'logo-navigation': logoNav,
-      'from-anime-detail': fromAnimeDetail,
-      'search-scroll': searchScroll
-    });
+    // 스크롤 복원 상태 확인
     
     // 사이드바 네비게이션인지 확인
     const isSidebarNavigation = sidebarNav === 'true';
@@ -108,56 +43,29 @@ export default function SearchPage() {
     
     if (isSidebarNavigation) {
       // 사이드바 네비게이션인 경우 스크롤을 맨 위로 이동
-      console.log('🔝 search 화면 사이드바 네비게이션 감지 - 스크롤을 맨 위로 이동');
       // 모든 관련 플래그 정리
-      sessionStorage.removeItem('sidebar-navigation');
-      sessionStorage.removeItem('search-scroll');
-      sessionStorage.removeItem('shouldRestoreScroll');
-      sessionStorage.removeItem('from-anime-detail');
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      clearStorageFlags('sidebar-navigation', 'search-scroll', 'shouldRestoreScroll', 'from-anime-detail');
+      scrollToTop();
     } else if (isLogoNavigation) {
       // 로고 네비게이션인 경우 스크롤을 맨 위로 이동
-      console.log('🔝 search 화면 로고 네비게이션 감지 - 스크롤을 맨 위로 이동');
       // 모든 관련 플래그 정리
-      sessionStorage.removeItem('logo-navigation');
-      sessionStorage.removeItem('search-scroll');
-      sessionStorage.removeItem('shouldRestoreScroll');
-      sessionStorage.removeItem('from-anime-detail');
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      clearStorageFlags('logo-navigation', 'search-scroll', 'shouldRestoreScroll', 'from-anime-detail');
+      scrollToTop();
     } else if (isFromAnimeDetail) {
       // 애니메이션 상세화면에서 돌아온 경우 스크롤 복원 시도
       if (searchScroll) {
         const y = parseInt(searchScroll);
-        console.log('⚡ 애니메이션 상세화면에서 돌아옴 - 스크롤 복원:', y);
-        
-        // 즉시 복원
-        window.scrollTo(0, y);
-        document.body.scrollTop = y;
-        document.documentElement.scrollTop = y;
-        
+        scrollToPosition(y);
         // 플래그는 두 번째 useEffect에서 정리하도록 유지
-        console.log('🔍 스크롤 복원 완료 - from-anime-detail 플래그는 데이터 로드 후 정리');
       } else {
-        console.log('⚡ 애니메이션 상세화면에서 돌아옴 - 저장된 스크롤 위치 없음');
         // 스크롤 위치가 없으면 즉시 플래그 제거
         sessionStorage.removeItem('from-anime-detail');
       }
     } else {
       // 리프레시 또는 직접 URL 접근인 경우 스크롤을 맨 위로 이동
-      console.log('🔄 search 화면 리프레시 또는 직접 URL 접근 감지 - 스크롤을 맨 위로 이동');
       // 모든 관련 플래그 정리
-      sessionStorage.removeItem('search-scroll');
-      sessionStorage.removeItem('shouldRestoreScroll');
-      sessionStorage.removeItem('sidebar-navigation');
-      sessionStorage.removeItem('logo-navigation');
-      sessionStorage.removeItem('from-anime-detail');
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      clearStorageFlags('search-scroll', 'shouldRestoreScroll', 'sidebar-navigation', 'logo-navigation', 'from-anime-detail');
+      scrollToTop();
     }
   }, []);
   
@@ -369,28 +277,16 @@ export default function SearchPage() {
           document.body.scrollTop = y;
           document.documentElement.scrollTop = y;
           
-          console.log('🔍 스크롤 복원 후 확인:', {
-            targetY: y,
-            windowScrollY: window.scrollY,
-            bodyScrollTop: document.body.scrollTop,
-            documentElementScrollTop: document.documentElement.scrollTop
-          });
-          
           // 스크롤 복원 완료 후 플래그 정리
           sessionStorage.removeItem('from-anime-detail');
-          console.log('🔍 데이터 로드 후 스크롤 복원 완료 - from-anime-detail 플래그 제거');
         }, 50);
       }
     }
   }, [scheduleData]);
 
-  // 디버깅: 스크롤 복원 상태 확인
+  // 스크롤 복원 상태 확인
   useEffect(() => {
-    console.log('SearchPage - 스크롤 복원 활성화:', {
-      scheduleData: !!scheduleData,
-      isLoading,
-      error: !!error
-    });
+    // 스크롤 복원 활성화 상태 확인
   }, [scheduleData, isLoading, error]);
 
   // 분기를 시즌으로 변환 (기존 형식 유지)

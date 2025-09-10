@@ -1,11 +1,15 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { startKakaoLogin } from '../../api/client';
+import { useImageUpload, UploadedImage } from '../../hooks/useImageUpload';
+import ImageUploadPreview from '../common/ImageUploadPreview';
 
 const imgGroup = "/icons/picture-upload.svg";
 
 interface ReplyPostFormProps {
-  onSubmit?: (comment: string) => void;
+  onSubmit?: (comment: string, images?: File[]) => void;
   onImageUpload?: (file: File) => void;
   placeholder?: string;
   maxLength?: number;
@@ -23,9 +27,16 @@ export default function ReplyPostForm({
   commentId,
   listenerId
 }: ReplyPostFormProps) {
+  const { isAuthenticated } = useAuth();
   const [comment, setComment] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMountedRef = useRef(false);
+  const isSubmittingRef = useRef(false);
+  const commentRef = useRef('');
+  const uploadedImagesRef = useRef<UploadedImage[]>([]);
+  
+  // 이미지 업로드 훅 사용
+  const { uploadedImages, uploadImage, removeImage, formatFileSize, setUploadedImages, finishUpload, canUpload, startUpload } = useImageUpload();
   
   // 고유한 컴포넌트 ID 생성 (commentId와 listenerId 기반으로 안정적 생성)
   const componentId = useRef(`reply-form-${commentId || 'unknown'}-${listenerId || 'main'}`).current;
@@ -93,36 +104,106 @@ export default function ReplyPostForm({
       }, 100);
     }
   }, []);
+  
+  // ref 동기화
+  useEffect(() => {
+    commentRef.current = comment;
+  }, [comment]);
+  
+  useEffect(() => {
+    uploadedImagesRef.current = uploadedImages;
+  }, [uploadedImages]);
 
-  const handleSubmit = () => {
-    if (comment.trim() && onSubmit) {
-      onSubmit(comment); // 줄바꿈을 포함한 원본 텍스트 전송
-      setComment(''); // 제출 후 입력창 초기화
-      // 제출 후 저장된 내용 삭제
-      try {
-        sessionStorage.removeItem(globalKey);
-      } catch (error) {
-      }
+  const handleSubmit = useCallback(() => {
+    // 이미 제출 중이면 중복 호출 방지
+    if (isSubmittingRef.current) {
+      return;
     }
-  };
+    
+    const currentComment = commentRef.current;
+    const currentImages = uploadedImagesRef.current;
+    
+    if ((currentComment.trim() || currentImages.length > 0) && onSubmit) {
+      // 댓글당 이미지 1개 제한 체크
+      if (currentImages.length > 1) {
+        alert('댓글당 이미지는 1개까지만 업로드할 수 있습니다.');
+        return;
+      }
+      
+      // 이미지가 있는 경우 업로드 제한 체크
+      if (currentImages.length > 0) {
+        const uploadCheck = canUpload();
+        if (!uploadCheck.canUpload) {
+          alert(uploadCheck.message);
+          return;
+        }
+      }
+      
+      // 제출 중 플래그 설정
+      isSubmittingRef.current = true;
+      
+      const imageFiles = currentImages.map(img => img.file);
+      const commentText = currentComment;
+      
+      // 이미지가 있는 경우 업로드 시작 처리
+      if (currentImages.length > 0) {
+        const uploadStart = startUpload();
+        if (!uploadStart.canUpload) {
+          alert(uploadStart.message);
+          isSubmittingRef.current = false;
+          return;
+        }
+      }
+      
+      // onSubmit 호출 (Promise 기반으로 완료 감지)
+      Promise.resolve(onSubmit(commentText, imageFiles))
+        .then(() => {
+          // 성공 시 업로드 완료 처리
+          finishUpload(true);
+        })
+        .catch(() => {
+          // 실패 시 업로드 실패 처리
+          finishUpload(false);
+        })
+        .finally(() => {
+          // 상태 초기화 (텍스트와 이미지 모두)
+          setComment('');
+          setUploadedImages([]);
+          
+          // 제출 후 저장된 내용 삭제
+          try {
+            sessionStorage.removeItem(globalKey);
+          } catch (error) {
+          }
+          
+          // 제출 완료 후 플래그 리셋
+          isSubmittingRef.current = false;
+        });
+    }
+  }, [onSubmit, globalKey]);
 
   const handleImageUpload = () => {
-    if (onImageUpload) {
-      // 파일 입력 엘리먼트 생성
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file && onImageUpload) {
-          onImageUpload(file);
-        }
-      };
-      input.click();
-    }
+    // 파일 입력 엘리먼트 생성
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true; // 여러 파일 선택 허용
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        Array.from(files).forEach(file => {
+          uploadImage(file);
+          // 기존 onImageUpload 콜백도 호출 (하위 호환성)
+          if (onImageUpload) {
+            onImageUpload(file);
+          }
+        });
+      }
+    };
+    input.click();
   };
 
-  const isSubmitDisabled = disabled || !comment.trim();
+  const isSubmitDisabled = disabled || (!comment.trim() && uploadedImages.length === 0);
 
   // 답글 폼 전용 스타일 설정 (기존 variant="forReply"와 동일)
   const containerWidth = 'w-[494px]';
@@ -146,12 +227,31 @@ export default function ReplyPostForm({
             spellCheck="false"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder={placeholder}
+            onClick={() => {
+              if (!isAuthenticated) {
+                const shouldLogin = confirm('로그인 후에 답글을 남길 수 있습니다. 로그인하시겠습니까?');
+                if (shouldLogin) {
+                  startKakaoLogin();
+                }
+              }
+            }}
+            placeholder={isAuthenticated ? placeholder : '로그인 후에 답글을 남길 수 있습니다'}
             maxLength={maxLength}
             disabled={disabled}
             className="w-full h-full px-1 resize-none border-none outline-none bg-transparent text-base font-normal font-['Pretendard'] leading-normal placeholder:text-[#c7c7cc] disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
+        
+        {/* 이미지 미리보기 */}
+        {uploadedImages.length > 0 && (
+          <div className="w-full px-2.5 pb-2">
+            <ImageUploadPreview 
+              images={uploadedImages}
+              onRemove={removeImage}
+              formatFileSize={formatFileSize}
+            />
+          </div>
+        )}
         
         {/* Action Bar */}
         <div className="content-stretch flex items-center justify-between relative shrink-0 w-full">
@@ -160,6 +260,7 @@ export default function ReplyPostForm({
             <div className={`box-border content-stretch flex justify-between ${footerSectionHeight} items-center overflow-clip px-3 relative w-full`}>
               {/* Upload Image Button */}
               <button
+                type="button"
                 onClick={handleImageUpload}
                 disabled={disabled}
                 className="h-[22px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:opacity-70 transition-opacity duration-200 flex items-center gap-1"

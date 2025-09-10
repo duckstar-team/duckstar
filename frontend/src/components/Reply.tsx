@@ -45,7 +45,8 @@ const Reply: React.FC<ReplyProps> = ({
     isLiked,
     canDeleteThis,
     profileImageUrl,
-    listenerNickname
+    listenerNickname,
+    attachedImageUrl
   } = reply;
 
   return (
@@ -104,13 +105,34 @@ const Reply: React.FC<ReplyProps> = ({
           </div>
           
           {/* 댓글 내용 */}
-          <div className="self-stretch justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
-            {listenerNickname && (
-              <span className="inline-flex items-center px-2 py-1 mr-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-md">
-                @{listenerNickname}
-              </span>
+          <div className="self-stretch flex flex-col gap-2">
+            {/* @이름 표시 (텍스트가 있거나 이미지만 있는 경우 모두) */}
+            {(content || attachedImageUrl) && listenerNickname && (
+              <div className="flex justify-start">
+                <span className="inline-flex items-center px-2 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md">
+                  @{listenerNickname}
+                </span>
+              </div>
             )}
-            {content}
+            
+            {/* 텍스트 내용 */}
+            {content && (
+              <div className="justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
+                {content}
+              </div>
+            )}
+            
+            {/* 첨부 이미지 */}
+            {attachedImageUrl && (
+              <div className="flex justify-start">
+                <img 
+                  src={attachedImageUrl} 
+                  alt="답글 첨부 이미지"
+                  className="max-w-[250px] max-h-[250px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(attachedImageUrl, '_blank')}
+                />
+              </div>
+            )}
           </div>
           
           {/* 푸터 (좋아요, 답글) */}

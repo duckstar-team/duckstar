@@ -88,16 +88,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // URL에서 accessToken 파라미터 확인 (로그인 후 리다이렉트)
         const urlParams = new URLSearchParams(window.location.search);
         const accessTokenFromUrl = urlParams.get('accessToken');
+        const isNewUser = urlParams.get('isNewUser') === 'true';
         
         if (accessTokenFromUrl) {
           // accessToken을 localStorage에 저장
           localStorage.setItem('accessToken', accessTokenFromUrl);
           setAccessToken(accessTokenFromUrl);
           
-          // URL에서 accessToken 파라미터 제거 (보안상 이유)
+          // URL에서 파라미터 제거 (보안상 이유)
           const newUrl = new URL(window.location.href);
           newUrl.searchParams.delete('accessToken');
+          newUrl.searchParams.delete('isNewUser');
           window.history.replaceState({}, '', newUrl.toString());
+          
+          // 새로 가입한 사용자라면 프로필 설정 페이지로 리다이렉트
+          if (isNewUser) {
+            window.location.href = '/profile-setup';
+            return;
+          }
           
           // 저장된 returnUrl이 있으면 해당 페이지로 리다이렉트
           const returnUrl = sessionStorage.getItem('returnUrl');

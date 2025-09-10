@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
-import ReplyPostForm from './ReplyPostForm';
+import ReplyForm from './ReplyForm';
 import CommentHeader from './CommentHeader';
 import CommentsBoard from '../CommentsBoard';
 import Comment from '../Comment';
@@ -16,118 +16,20 @@ import { getBusinessQuarter, calculateBusinessWeekNumber, getQuarterInKorean } f
 import { useAuth } from '../../context/AuthContext';
 import { startKakaoLogin } from '../../api/client';
 import EpisodeCommentModal from './EpisodeCommentModal';
+import { EpisodeDto, AnimeInfoDto, AnimeStatDto, AnimeHomeDto, ApiResponse } from './types';
+import { useComments } from '../../hooks/useComments';
 import { 
-  getAnimeComments, 
-  createComment, 
-  deleteComment, 
   getReplies, 
   createReply, 
   deleteReply,
-  likeComment,
-  unlikeComment,
   likeReply,
   unlikeReply,
-  mapSortOptionToBackend,
-  CommentRequestDto,
   ReplyRequestDto,
-  AnimeCommentSliceDto,
-  ReplySliceDto,
+  CommentRequestDto,
   PageInfo
 } from '../../api/comments';
 
-// ReplyForm 컴포넌트를 외부로 이동하여 재선언 방지
-const ReplyForm = React.memo(({ commentId, listenerId, onSubmit }: { 
-  commentId: number; 
-  listenerId?: number; 
-  onSubmit: (content: string, commentId: number, listenerId?: number) => void;
-}) => {
-  const handleSubmit = useCallback((content: string) => {
-    onSubmit(content, commentId, listenerId);
-  }, [onSubmit, commentId, listenerId]);
-  
-  return (
-    <div className="w-full h-auto flex flex-col justify-center items-end gap-2.5">
-      <div className="w-full h-auto px-[11px] pt-[10px] pb-[14px] bg-[#F8F9FA] flex flex-col justify-center items-end gap-[10px] overflow-hidden">
-        <ReplyPostForm 
-          onSubmit={handleSubmit}
-          onImageUpload={(file) => {
-            // TODO: 이미지 업로드 처리
-          }}
-          placeholder="답글을 입력하세요..."
-          commentId={commentId}
-          listenerId={listenerId}
-        />
-      </div>
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  // props가 동일하면 리렌더링 방지
-  return prevProps.commentId === nextProps.commentId && 
-         prevProps.listenerId === nextProps.listenerId;
-});
 
-ReplyForm.displayName = 'ReplyForm';
-
-// API 응답 타입 정의 (백엔드 EpisodeDto와 일치)
-interface EpisodeDto {
-  episodeId: number;
-  episodeNumber: number;
-  isBreak: boolean;
-  scheduledAt: string; // ISO 8601 형식 (LocalDateTime)
-  isRescheduled: boolean;
-  nextEpScheduledAt?: string; // ISO 8601 형식 (LocalDateTime)
-}
-
-interface AnimeInfoDto {
-  medium: string;
-  status: string;
-  totalEpisodes: number;
-  premiereDateTime: string;
-  titleKor: string;
-  titleOrigin?: string;
-  dayOfWeek?: string;
-  airTime?: string;
-  corp?: string;
-  director?: string;
-  genre?: string;
-  author?: string;
-  minAge?: number;
-  officalSite?: Record<string, string>;
-  mainImageUrl?: string;
-  mainThumbnailUrl?: string;
-  seasonDtos?: Array<{
-    year: number;
-    seasonType: string;
-  }>;
-  ottDtos?: Array<{
-    ottType: string;
-    watchUrl: string;
-  }>;
-}
-
-interface AnimeStatDto {
-  debutRank?: number;
-  debutDate?: string;
-  peakRank?: number;
-  peakDate?: string;
-  weeksOnTop10?: number;
-}
-
-interface AnimeHomeDto {
-  animeInfoDto: AnimeInfoDto;
-  animeStatDto: AnimeStatDto;
-  episodeDtos: EpisodeDto[];
-  rackUnitDtos?: unknown[];
-  castPreviews?: unknown[];
-}
-
-// API 응답 래퍼 (실제 백엔드 응답 구조)
-interface ApiResponse<T> {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: T;
-}
 
 interface RightCommentPanelProps {
   animeId?: number;
@@ -142,18 +44,30 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // 댓글 관련 상태
-  const [comments, setComments] = useState<CommentDto[]>([]);
-  const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentsError, setCommentsError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [hasMoreComments, setHasMoreComments] = useState(true);
-  const [totalCommentCount, setTotalCommentCount] = useState(0);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
+  // 댓글 관련 상태 (useComments 훅 사용)
+  const {
+    comments,
+    setComments,
+    commentsLoading,
+    commentsError,
+    currentPage,
+    setCurrentPage,
+    hasMoreComments,
+    totalCommentCount,
+    loadingMore,
+    selectedEpisodeIds,
+    setSelectedEpisodeIds,
+    currentSort,
+    setCurrentSort,
+    replies,
+    setReplies,
+    loadComments,
+    createComment: createCommentHandler,
+    deleteComment: deleteCommentHandler,
+    likeComment: likeCommentHandler
+  } = useComments(animeId);
+  
   const [activeFilters, setActiveFilters] = useState<number[]>([]); // 활성화된 에피소드 필터들
-  const [currentSort, setCurrentSort] = useState<SortOption>('Recent');
-  const [replies, setReplies] = useState<{ [commentId: number]: ReplyDto[] }>({});
 
   // 분기/주차 계산 함수 (올바른 비즈니스 로직 사용)
   const getQuarterAndWeek = (date: Date) => {
@@ -192,47 +106,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
 
 
-  // 댓글 데이터 로딩
-  const loadComments = useCallback(async (page: number = 0, reset: boolean = false) => {
-    if (!animeId) return;
-    
-    try {
-      if (reset) {
-        setCommentsLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-      setCommentsError(null);
-      
-      const sortBy = mapSortOptionToBackend(currentSort);
-      const data = await getAnimeComments(
-        animeId,
-        selectedEpisodeIds.length > 0 ? selectedEpisodeIds : undefined,
-        sortBy,
-        page,
-        10
-      );
-      
-      if (reset) {
-        setComments(data.commentDtos);
-        setCurrentPage(0);
-        setTotalCommentCount(data.totalCount || 0);
-      } else {
-        setComments(prev => [...prev, ...data.commentDtos]);
-        setCurrentPage(page);
-        // 추가 페이지에서는 totalCount를 업데이트하지 않음 (첫 페이지에서 받은 값 유지)
-      }
-      
-      setHasMoreComments(data.pageInfo.hasNext);
-      
-    } catch (err) {
-      setCommentsError('댓글을 불러오는 중 오류가 발생했습니다.');
-      console.error('Failed to load comments:', err);
-    } finally {
-      setCommentsLoading(false);
-      setLoadingMore(false);
-    }
-  }, [animeId, currentSort, selectedEpisodeIds]);
 
   // API 호출 함수
   const fetchAnimeData = useCallback(async (animeId: number = 1) => {
@@ -270,12 +143,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       }
     } catch (err) {
       setError('데이터를 불러오는 중 오류가 발생했습니다.');
-      // 콘솔 에러를 안전하게 처리
-      try {
-        console.error('API Error:', err);
-      } catch (consoleErr) {
-        // 콘솔 에러가 발생해도 앱이 중단되지 않도록 처리
-      }
+      // 에러 처리
       
       // 에러 발생 시 임시 데이터로 폴백
       const fallbackData: AnimeHomeDto = {
@@ -404,7 +272,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     setActiveReplyForm(activeReplyForm === formKey ? null : formKey);
   };
 
-  const handleReplySubmit = async (content: string, commentId: number, listenerId?: number) => {
+  const handleReplySubmit = async (content: string, commentId: number, listenerId?: number, images?: File[]) => {
     
     // 인증 상태 확인
     if (!isAuthenticated) {
@@ -420,6 +288,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         listenerId: listenerId, // 답글의 답글인 경우 대상 멤버 ID
         commentRequestDto: {
           body: content, // 줄바꿈을 포함한 원본 텍스트
+          attachedImage: images && images.length > 0 ? images[0] : undefined, // 첫 번째 이미지만 전송
         }
       };
       
@@ -457,11 +326,10 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         }
         
       } catch (error) {
-        console.error('Failed to refresh replies:', error);
+        // 답글 새로고침 실패 시 무시
       }
       
     } catch (error) {
-      console.error('Failed to create reply:', error);
       if (error instanceof Error && error.message.includes('401')) {
         const shouldReLogin = confirm('로그인이 만료되었습니다. 다시 로그인하시겠습니까?');
         if (shouldReLogin) {
@@ -497,7 +365,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         }));
         
       } catch (error) {
-        console.error('Failed to load replies:', error);
         alert('답글을 불러오는데 실패했습니다.');
         return;
       }
@@ -529,7 +396,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         [commentId]: replyData.pageInfo
       }));
     } catch (error) {
-      console.error('Failed to load more replies:', error);
       alert('답글을 불러오는데 실패했습니다.');
     }
   };
@@ -542,87 +408,23 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   };
 
   // 에피소드 댓글 제출 핸들러
-  const handleEpisodeCommentSubmit = async (episodeIds: number[], content: string) => {
+  const handleEpisodeCommentSubmit = async (episodeIds: number[], content: string, images?: File[]) => {
     try {
       // 에피소드별 댓글 생성 API 호출
       const request: CommentRequestDto = {
         episodeId: episodeIds[0], // 선택된 에피소드 ID (하나만 선택 가능)
         body: content,
+        attachedImage: images && images.length > 0 ? images[0] : undefined, // 첫 번째 이미지만 전송
       };
       
-      await createComment(animeId, request);
-      // 댓글 목록 새로고침
-      loadComments(0, true);
+      await createCommentHandler(request);
     } catch (error) {
-      console.error('Failed to create episode comment:', error);
       throw error;
     }
   };
 
-  // 댓글/답글 핸들러 함수들
-  const onCommentLike = async (commentId: number) => {
-    try {
-      // 현재 댓글의 좋아요 상태 확인
-      const currentComment = comments.find(c => c && c.commentId === commentId);
-      const isCurrentlyLiked = currentComment?.isLiked;
-      const currentLikeId = currentComment?.commentLikeId;
-      
-      if (isCurrentlyLiked && currentLikeId && currentLikeId > 0) {
-        // 좋아요 취소
-        const result = await unlikeComment(commentId, currentLikeId);
-        
-        // 댓글 목록에서 해당 댓글의 좋아요 상태 업데이트
-        setComments(prevComments => 
-          prevComments.map(comment => 
-            comment && comment.commentId === commentId 
-              ? { 
-                  ...comment, 
-                  isLiked: false,
-                  likeCount: result.likeCount,
-                  commentLikeId: currentLikeId // 좋아요 취소해도 likeId는 유지
-                }
-              : comment
-          )
-        );
-      } else {
-        // 좋아요 (기존 likeId가 있으면 재활용)
-        const result = await likeComment(commentId, currentLikeId);
-        
-        // 댓글 목록에서 해당 댓글의 좋아요 상태 업데이트
-        setComments(prevComments => 
-          prevComments.map(comment => 
-            comment && comment.commentId === commentId 
-              ? { 
-                  ...comment, 
-                  isLiked: true,
-                  likeCount: result.likeCount,
-                  commentLikeId: result.likeId || currentLikeId || 0
-                }
-              : comment
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Failed to toggle comment like:', error);
-      alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
-    }
-  };
+  // 댓글/답글 핸들러 함수들 (useComments 훅의 함수들 사용)
 
-  const onCommentDelete = async (commentId: number) => {
-    const shouldDelete = confirm('댓글을 삭제하시겠습니까?');
-    if (!shouldDelete) {
-      return;
-    }
-    
-    try {
-      await deleteComment(commentId);
-      // 댓글 목록 새로고침
-      loadComments(0, true);
-    } catch (error) {
-      console.error('Failed to delete comment:', error);
-      alert('댓글 삭제에 실패했습니다. 다시 시도해주세요.');
-    }
-  };
 
   const onReplyLike = async (replyId: number) => {
     try {
@@ -682,7 +484,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         });
       }
     } catch (error) {
-      console.error('Failed to toggle reply like:', error);
       alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
     }
   };
@@ -706,12 +507,11 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           }));
           
         } catch (error) {
-          console.error('Failed to refresh replies after delete:', error);
+          // 답글 새로고침 실패 시 무시
         }
       }
       
     } catch (error) {
-      console.error('Failed to delete reply:', error);
       alert('답글 삭제에 실패했습니다. 다시 시도해주세요.');
     }
   };
@@ -806,9 +606,9 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
     };
   }, [activeFilters]); // 필터 변경 시 높이 재측정
 
-  // 댓글 데이터 로드 (테스트용)
+  // 댓글 데이터 로드
   useEffect(() => {
-    // 테스트용 댓글 데이터
+    // 댓글 데이터
     const testComments: CommentDto[] = [
       {
         status: "NORMAL",
@@ -1071,34 +871,48 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   };
 
 
-  // 로딩 상태
+  // 로딩 상태 - 실제 컨텐츠와 동일한 구조로 스켈레톤 표시
   if (loading) {
     return (
-      <div className="h-[2426px] pt-7 bg-white border-l border-r border-gray-300 inline-flex flex-col justify-start items-center gap-6">
-        <div className="size- flex flex-col justify-start items-center gap-2.5">
-          <div className="w-full h-5 px-6 inline-flex justify-start items-center gap-3.5">
-            <div className="text-center justify-start text-black text-xl font-semibold font-['Pretendard'] leading-snug">에피소드 공개</div>
-            <div className="text-center justify-start"><span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span><span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">0</span><span className="text-black text-base font-semibold font-['Pretendard'] leading-snug"> 화</span></div>
-          </div>
-          <div className="size- py-3 inline-flex justify-center items-center">
-            <div className="text-gray-500">로딩 중...</div>
+      <div className="w-[610px] bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)' }}>
+        {/* 에피소드 섹션 스켈레톤 */}
+        <div className="flex justify-center pt-7 pb-1">
+          <div className="w-[534px] h-[200px] bg-gray-100 rounded-lg animate-pulse"></div>
+        </div>
+        
+        {/* 댓글 섹션 스켈레톤 */}
+        <div className="w-full bg-white flex flex-col">
+          <div className="w-full flex flex-col justify-start items-start pb-7">
+            <div className="w-full flex justify-center items-center py-8">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              <span className="ml-2 text-gray-500">로딩 중...</span>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // 에러 상태
+  // 에러 상태 - 실제 컨텐츠와 동일한 구조로 에러 표시
   if (error) {
     return (
-      <div className="h-[2426px] pt-7 bg-white border-l border-r border-gray-300 inline-flex flex-col justify-start items-center gap-6">
-        <div className="size- flex flex-col justify-start items-center gap-2.5">
-          <div className="w-full h-5 px-6 inline-flex justify-start items-center gap-3.5">
-            <div className="text-center justify-start text-black text-xl font-semibold font-['Pretendard'] leading-snug">에피소드 공개</div>
-            <div className="text-center justify-start"><span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span><span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">{totalEpisodes}</span><span className="text-black text-base font-semibold font-['Pretendard'] leading-snug"> 화</span></div>
-          </div>
-          <div className="size- py-3 inline-flex justify-center items-center">
-            <div className="text-red-500">{error}</div>
+      <div className="w-[610px] bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)' }}>
+        {/* 에피소드 섹션 */}
+        <div className="flex justify-center pt-7 pb-1">
+          <EpisodeSection 
+            episodes={processedEpisodes}
+            totalEpisodes={totalEpisodes}
+            selectedEpisodeIds={selectedEpisodeIds}
+            onEpisodeClick={handleEpisodeClick}
+          />
+        </div>
+        
+        {/* 에러 메시지 */}
+        <div className="w-full bg-white flex flex-col">
+          <div className="w-full flex flex-col justify-start items-start pb-7">
+            <div className="w-full flex justify-center items-center py-8">
+              <div className="text-red-500">{error}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1153,7 +967,13 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           
           <CommentPostForm 
             key="main-comment-form" // 안정적인 key로 댓글 폼 고정
-            onSubmit={async (comment) => {
+            onSubmit={async (comment, images) => {
+              console.log('RightCommentPanel onSubmit 호출됨:', { 
+                comment, 
+                images: images?.length,
+                timestamp: Date.now()
+              });
+              
               // 인증 상태 확인
               if (!isAuthenticated) {
                 const shouldLogin = confirm('댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?');
@@ -1166,13 +986,14 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
               try {
                 const request: CommentRequestDto = {
                   body: comment, // 줄바꿈을 포함한 원본 텍스트
+                  attachedImage: images && images.length > 0 ? images[0] : undefined, // 첫 번째 이미지만 전송
                 };
                 
-                await createComment(animeId, request);
-                // 댓글 목록 새로고침
-                loadComments(0, true);
+                console.log('API 호출 시작:', request);
+                await createCommentHandler(request);
+                console.log('API 호출 완료');
               } catch (error) {
-                console.error('Failed to create comment:', error);
+                console.error('API 호출 실패:', error);
                 if (error instanceof Error && error.message.includes('401')) {
                   const shouldReLogin = confirm('로그인이 만료되었습니다. 다시 로그인하시겠습니까?');
                   if (shouldReLogin) {
@@ -1184,7 +1005,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
               }
             }}
             onImageUpload={(file) => {
-              // TODO: 이미지 업로드 처리
+              // 이미지 업로드 기능은 현재 구현되지 않음
             }}
           />
         </div>
@@ -1209,7 +1030,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           {/* 댓글 목록 */}
           <div className="w-full flex flex-col justify-start items-start pb-7">
             {commentsLoading && comments.length === 0 ? (
-              <div className="w-full flex justify-center items-center py-8">
+              <div className="w-full flex flex-col items-center py-8">
+                <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-2"></div>
                 <div className="text-gray-500">댓글을 불러오는 중...</div>
               </div>
             ) : commentsError ? (
@@ -1269,9 +1091,9 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                     <div className={`w-full mb-1.5 ${index === 0 ? 'pt-7' : ''}`}>
                       <Comment
                         comment={comment}
-                        onLike={onCommentLike}
+                        onLike={likeCommentHandler}
                         onReply={() => handleReplyClick('comment', comment.commentId)}
-                        onDelete={onCommentDelete}
+                        onDelete={deleteCommentHandler}
                       />
                     </div>
                     

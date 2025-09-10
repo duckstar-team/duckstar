@@ -39,7 +39,7 @@ import type {
 // API 타입들을 재export
 export type { AnimePreviewDto, OttDto };
 
-// AnimeDetailDto는 아직 정의되지 않았으므로 임시로 정의
+// AnimeDetailDto 정의
 export interface AnimeDetailDto extends AnimePreviewDto {
   titleJpn?: string;
   year?: number;

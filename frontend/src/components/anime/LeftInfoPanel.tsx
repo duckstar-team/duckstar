@@ -1,32 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-
-// 커스텀 스크롤바 스타일
-const customScrollbarStyles = `
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f7fafc;
-    border-radius: 3px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #D9D9D9;
-    border-radius: 3px;
-    transition: background 0.2s ease;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background: #718096;
-  }
-`;
+import '../../styles/customScrollbar.css';
 import { cn } from '@/lib/utils';
 import CharacterList from './CharacterList';
 import { CharacterData } from './CharacterCard';
@@ -293,7 +268,7 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
     });
   };
 
-  // 메인 이미지 프리로딩 및 교체 (배경 이미지)
+  // 메인 이미지 프리로딩 및 교체 (배경 이미지) - 최적화된 버전
   useEffect(() => {
     if (mainImageUrl && mainThumbnailUrl && mainImageUrl !== mainThumbnailUrl) {
       const preloadMainImage = async () => {
@@ -312,21 +287,30 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
             const position = await calculateImagePosition(mainImageUrl);
             setBackgroundPosition(position);
             
-            // 메인 이미지 프리로드
+            // 메인 이미지 프리로드 (최적화된 옵션)
             const img = new window.Image();
+            // CORS 설정 (duckstar.kr 도메인만)
+            if (mainImageUrl.includes('duckstar.kr')) {
+              img.crossOrigin = 'anonymous';
+            }
+            img.decoding = 'async';
             img.onload = () => {
               setCurrentBackgroundImage(mainImageUrl);
               setIsMainImageLoaded(true);
             };
             img.onerror = () => {
+              // 에러 시 썸네일 유지
             };
             img.src = mainImageUrl;
           }
         } catch (error) {
+          // 에러 시 썸네일 유지
         }
       };
       
-      preloadMainImage();
+      // 지연 실행으로 초기 로딩 부담 감소
+      const timeoutId = setTimeout(preloadMainImage, 100);
+      return () => clearTimeout(timeoutId);
     }
   }, [mainImageUrl, mainThumbnailUrl]);
 
@@ -461,7 +445,7 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
     });
   };
 
-  // 캐릭터 데이터 (임시 데이터 - 실제로는 API에서 가져와야 함)
+  // 캐릭터 데이터
   const mockCharacters: CharacterData[] = [
     {
       characterId: 1,
@@ -544,7 +528,6 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: customScrollbarStyles }} />
       <div 
         className="relative rounded-[12px] w-[584px]" 
         style={{ height: `${panelHeight}px` }}
