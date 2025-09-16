@@ -241,7 +241,7 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
     });
   };
 
-  // 이미지 위치 계산 함수 (썸네일과 메인 이미지의 크기/위치를 동일하게 미리 계산)
+  // 이미지 위치 계산 함수 - 모든 이미지의 중앙점을 맞춤
   const calculateImagePosition = (imageUrl: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new window.Image();
@@ -251,6 +251,7 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
         const containerAspectRatio = containerWidth / containerHeight;
         const imageAspectRatio = img.width / img.height;
         
+        // 모든 이미지의 중앙점을 컨테이너 중앙에 맞춤
         let position = "center center";
         
         if (imageAspectRatio > containerAspectRatio) {
@@ -278,23 +279,23 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
           
           if (isCached) {
             // 캐시되어 있으면 바로 메인 이미지 사용
+            // 메인 이미지의 중앙점을 계산하여 설정
             const position = await calculateImagePosition(mainImageUrl);
             setBackgroundPosition(position);
             setCurrentBackgroundImage(mainImageUrl);
             setIsMainImageLoaded(true);
           } else {
             // 캐시되어 있지 않으면 썸네일 먼저 표시 후 progressive loading
-            const position = await calculateImagePosition(mainImageUrl);
-            setBackgroundPosition(position);
-            
-            // 메인 이미지 프리로드 (최적화된 옵션)
             const img = new window.Image();
             // CORS 설정 (duckstar.kr 도메인만)
             if (mainImageUrl.includes('duckstar.kr')) {
               img.crossOrigin = 'anonymous';
             }
             img.decoding = 'async';
-            img.onload = () => {
+            img.onload = async () => {
+              // 메인 이미지의 중앙점을 계산하여 설정
+              const position = await calculateImagePosition(mainImageUrl);
+              setBackgroundPosition(position);
               setCurrentBackgroundImage(mainImageUrl);
               setIsMainImageLoaded(true);
             };
@@ -421,7 +422,7 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
         description: (castData.description as string) || (castData.characterDescription as string),
         voiceActor: (castData.voiceActor as string) || (castData.cvName as string) || (castData.cv as string),
         role: (castData.role as 'MAIN' | 'SUPPORTING' | 'MINOR') || (index < 2 ? 'MAIN' : index < 4 ? 'SUPPORTING' : 'MINOR'),
-        gender: (castData.gender as string) || (index % 2 === 0 ? 'FEMALE' : 'MALE'),
+        gender: (castData.gender as 'FEMALE' | 'MALE' | 'OTHER') || (index % 2 === 0 ? 'FEMALE' : 'MALE'),
         age: castData.age as number,
         height: castData.height as number,
         weight: castData.weight as number,
@@ -430,7 +431,11 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
         occupation: castData.occupation as string,
         personality: castData.personality ? (Array.isArray(castData.personality) ? castData.personality as string[] : [castData.personality as string]) : [],
         abilities: castData.abilities ? (Array.isArray(castData.abilities) ? castData.abilities as string[] : [castData.abilities as string]) : [],
-        relationships: (castData.relationships as Array<{ characterName: string; relationship: string }>) || []
+        relationships: ((castData.relationships as Array<{ characterName: string; relationship: string }>) || []).map((rel, relIndex) => ({
+          characterId: relIndex + 1,
+          characterName: rel.characterName,
+          relationship: rel.relationship
+        }))
       };
     });
   };
@@ -553,10 +558,11 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
         style={{ height: `${mainImageHeight}px` }}
       >
         <div 
-          className={`absolute bg-cover bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px] ${!isMainImageLoaded ? 'transition-opacity duration-300' : ''}`}
+          className={`absolute bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px] ${!isMainImageLoaded ? 'transition-opacity duration-300' : ''}`}
           style={{ 
             backgroundImage: `url('${currentBackgroundImage}')`,
-            backgroundPosition: backgroundPosition,
+            backgroundPosition: 'center center',
+            backgroundSize: 'cover',
             opacity: isMainImageLoaded ? 1 : 0.9
           }} 
         />

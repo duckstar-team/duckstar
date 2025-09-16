@@ -12,9 +12,12 @@ import { getCurrentYearAndQuarter } from '@/lib/quarterUtils';
 import { searchMatch, extractChosung } from '@/lib/searchUtils';
 // import { useScrollRestoration } from '@/hooks/useScrollRestoration'; // 제거: 직접 구현
 import { useImagePreloading } from '@/hooks/useImagePreloading';
+import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';
 import { useQuery } from '@tanstack/react-query';
 import { testAnimes } from '@/data/testAnimes';
 import { scrollToTop, scrollToPosition, restoreScrollFromStorage, clearStorageFlags } from '@/utils/scrollUtils';
+import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
+import PreloadingProgress from '@/components/common/PreloadingProgress';
 
 // 애니메이션 데이터 (이제 별도 파일에서 import)
 
@@ -23,6 +26,9 @@ export default function SearchPage() {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('일'); // 기본값을 "일"로 설정
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [preloadingStatus, setPreloadingStatus] = useState({ total: 0, loaded: 0, active: 0 });
+  const preloadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 페이지 로드 시 스크롤 복원 또는 맨 위로 이동
   useEffect(() => {
@@ -226,12 +232,13 @@ export default function SearchPage() {
 
   // 이미지 프리로딩 훅
   const { preloadSearchResults } = useImagePreloading();
+  const { getQueueStatus } = useSmartImagePreloader();
 
   // 현재 연도와 분기
   const { year, quarter } = getCurrentYearAndQuarter();
 
   // React Query를 사용한 데이터 페칭 (개선된 캐싱 설정)
-  const { data: scheduleData, error, isLoading } = useQuery<AnimePreviewListDto>({
+  const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
     queryKey: ['schedule', year, quarter],
     queryFn: getCurrentSchedule,
     staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
@@ -284,10 +291,67 @@ export default function SearchPage() {
     }
   }, [scheduleData]);
 
-  // 스크롤 복원 상태 확인
+  // 프리로딩 상태 모니터링 (캐시 상태 고려)
   useEffect(() => {
-    // 스크롤 복원 활성화 상태 확인
-  }, [scheduleData, isLoading, error]);
+    if (scheduleData) {
+      // 기존 인터벌 정리
+      if (preloadingIntervalRef.current) {
+        clearInterval(preloadingIntervalRef.current);
+      }
+      
+      // 캐시된 데이터인지 확인 (isFetching이 false면 캐시된 데이터)
+      const isCachedData = !isFetching;
+      
+      if (isCachedData) {
+        // 캐시된 데이터면 프리로딩 상태를 false로 설정
+        setIsPreloading(false);
+        setPreloadingStatus({ total: 0, loaded: 0, active: 0 });
+        return;
+      }
+      
+      // 새로운 데이터면 프리로딩 시작
+      setIsPreloading(true);
+      
+      // 1초마다 상태 확인
+      preloadingIntervalRef.current = setInterval(() => {
+        const status = getQueueStatus();
+        const isStillLoading = status.total > 0 || status.active > 0;
+        
+        setIsPreloading(isStillLoading);
+        setPreloadingStatus({
+          total: status.total + status.loaded,
+          loaded: status.loaded,
+          active: status.active
+        });
+        
+        // 로딩 완료 시 인터벌 정리
+        if (!isStillLoading) {
+          if (preloadingIntervalRef.current) {
+            clearInterval(preloadingIntervalRef.current);
+            preloadingIntervalRef.current = null;
+          }
+        }
+      }, 1000);
+      
+      // cleanup 함수
+      return () => {
+        if (preloadingIntervalRef.current) {
+          clearInterval(preloadingIntervalRef.current);
+          preloadingIntervalRef.current = null;
+        }
+      };
+    }
+  }, [scheduleData, isFetching]); // isFetching도 의존성에 추가
+
+  // 컴포넌트 언마운트 시 인터벌 정리
+  useEffect(() => {
+    return () => {
+      if (preloadingIntervalRef.current) {
+        clearInterval(preloadingIntervalRef.current);
+        preloadingIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   // 분기를 시즌으로 변환 (기존 형식 유지)
   const getSeasonInKorean = (quarter: number): string => {
@@ -330,6 +394,7 @@ export default function SearchPage() {
           const selectedAnime = allAnimes[randomIndex];
           
           // 검색 결과 이미지 프리로딩
+          console.log(`🎬 검색 페이지에서 프리로딩 시작: ${allAnimes.length}개 애니메이션`);
           preloadSearchResults(allAnimes);
           const chosung = extractChosung(selectedAnime.titleKor);
           const koreanCount = (selectedAnime.titleKor.match(/[가-힣]/g) || []).length;
@@ -577,6 +642,19 @@ export default function SearchPage() {
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
   };
+
+  // 데이터 로딩 중이거나 (새로운 데이터를 가져오면서) 프리로딩 중일 때만 스켈레톤 UI 표시
+  if (isLoading || (isFetching && isPreloading)) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
+        <SearchLoadingSkeleton 
+          showBanner={true}
+          cardCount={12}
+          className="pt-8"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
@@ -828,6 +906,15 @@ export default function SearchPage() {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* 프리로딩 진행률 표시 (새로운 데이터를 가져올 때만) */}
+      {isFetching && isPreloading && (
+        <PreloadingProgress 
+          total={preloadingStatus.total}
+          loaded={preloadingStatus.loaded}
+          active={preloadingStatus.active}
+        />
       )}
       
     </div>
