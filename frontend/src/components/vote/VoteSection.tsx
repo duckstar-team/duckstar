@@ -21,6 +21,7 @@ interface VoteSectionProps {
   submissionDateTime?: string;
   showNextError?: boolean;
   showConfirmDialog?: boolean;
+  isSubmitting?: boolean;
   onSearchQueryChange?: (query: string) => void;
   onNextClick?: () => void;
   onBonusClick?: () => void;
@@ -43,6 +44,7 @@ const VoteSection = memo(function VoteSection({
   submissionDateTime: _externalSubmissionDateTime = "2025년 8월 21일 18:47",
   showNextError: externalShowNextError = false,
   showConfirmDialog: externalShowConfirmDialog = false,
+  isSubmitting: externalIsSubmitting = false,
   onSearchQueryChange,
   onNextClick,
   onBonusClick,
@@ -228,6 +230,7 @@ const VoteSection = memo(function VoteSection({
               onGenderSelect={handleGenderSelect}
               onBackClick={handleBackClick}
               onSubmitClick={handleSubmitClick}
+              isSubmitting={externalIsSubmitting}
             />
           </div>
         )}
