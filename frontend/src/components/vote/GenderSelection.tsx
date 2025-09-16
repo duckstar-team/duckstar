@@ -7,6 +7,7 @@ interface GenderSelectionProps {
   onGenderSelect: (gender: 'male' | 'female') => void;
   onBackClick: () => void;
   onSubmitClick: () => void;
+  isSubmitting?: boolean;
 }
 
 interface GenderToggleProps {
@@ -101,7 +102,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       onClick={disabled ? undefined : onClick}
     >
       <div className={STYLES.actionButtonText}>
-        <p className="leading-[normal] whitespace-pre">{children}</p>
+        <div className="leading-[normal] whitespace-pre">{children}</div>
       </div>
     </button>
   );
@@ -130,23 +131,32 @@ const GenderToggles = ({
 const ActionButtons = ({ 
   onBackClick, 
   onSubmitClick, 
-  selectedGender 
+  selectedGender,
+  isSubmitting = false
 }: {
   onBackClick: () => void;
   onSubmitClick: () => void;
   selectedGender: 'male' | 'female' | null;
+  isSubmitting?: boolean;
 }) => (
   <div className={STYLES.actionButtonsContainer}>
-    <ActionButton variant="back" onClick={onBackClick}>
+    <ActionButton variant="back" onClick={onBackClick} disabled={isSubmitting}>
       BACK
     </ActionButton>
     
     <ActionButton 
       variant="submit" 
       onClick={onSubmitClick}
-      disabled={!selectedGender}
+      disabled={!selectedGender || isSubmitting}
     >
-      제출하기
+      {isSubmitting ? (
+        <>
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+          <span>제출 중...</span>
+        </>
+      ) : (
+        '제출하기'
+      )}
     </ActionButton>
   </div>
 );
@@ -156,7 +166,8 @@ export default function GenderSelection({
   selectedGender,
   onGenderSelect,
   onBackClick,
-  onSubmitClick
+  onSubmitClick,
+  isSubmitting = false
 }: GenderSelectionProps) {
   return (
     <div className={STYLES.container}>
@@ -168,6 +179,7 @@ export default function GenderSelection({
         onBackClick={onBackClick}
         onSubmitClick={onSubmitClick}
         selectedGender={selectedGender}
+        isSubmitting={isSubmitting}
       />
     </div>
   );
