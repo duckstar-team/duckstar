@@ -874,14 +874,14 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   // 로딩 상태 - 실제 컨텐츠와 동일한 구조로 스켈레톤 표시
   if (loading) {
     return (
-      <div className="w-[610px] bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)' }}>
+      <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
         {/* 에피소드 섹션 스켈레톤 */}
-        <div className="flex justify-center pt-7 pb-1">
+        <div className="flex justify-center pt-7 pb-1" style={{ width: '610px' }}>
           <div className="w-[534px] h-[200px] bg-gray-100 rounded-lg animate-pulse"></div>
         </div>
         
         {/* 댓글 섹션 스켈레톤 */}
-        <div className="w-full bg-white flex flex-col">
+        <div className="w-full bg-white flex flex-col" style={{ width: '608px' }}>
           <div className="w-full flex flex-col justify-start items-start pb-7">
             <div className="w-full flex justify-center items-center py-8">
               <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
@@ -896,9 +896,9 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   // 에러 상태 - 실제 컨텐츠와 동일한 구조로 에러 표시
   if (error) {
     return (
-      <div className="w-[610px] bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)' }}>
+      <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
         {/* 에피소드 섹션 */}
-        <div className="flex justify-center pt-7 pb-1">
+        <div className="flex justify-center pt-7 pb-1" style={{ width: '610px' }}>
           <EpisodeSection 
             episodes={processedEpisodes}
             totalEpisodes={totalEpisodes}
@@ -908,7 +908,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         </div>
         
         {/* 에러 메시지 */}
-        <div className="w-full bg-white flex flex-col">
+        <div className="w-full bg-white flex flex-col" style={{ width: '610px' }}>
           <div className="w-full flex flex-col justify-start items-start pb-7">
             <div className="w-full flex justify-center items-center py-8">
               <div className="text-red-500">{error}</div>
@@ -920,9 +920,9 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
   }
 
   return (
-    <div className="w-[610px] bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
+    <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
       {/* section/episode */}
-      <div className="flex justify-center pt-7 pb-1" style={{ width: '610px' }}>
+      <div className="flex justify-center pt-7 pb-1">
         <EpisodeSection 
           episodes={processedEpisodes}
           totalEpisodes={totalEpisodes}
@@ -935,9 +935,10 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       <div 
         ref={commentHeaderRef} 
         className="sticky top-[60px] z-20 bg-white w-full"
-        style={{ width: '610px' }}
+
+        style={{ width: '608px' }}
       >
-        <div className="size- flex flex-col justify-start items-start gap-5" style={{ width: '610px' }}>
+        <div className="size- flex flex-col justify-start items-start gap-5">
           <CommentHeader 
             totalComments={totalCommentCount}
             variant={activeFilters.length > 0 ? 'withFilters' : 'default'}
@@ -949,8 +950,9 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       </div>
       
       {/* 댓글 작성 폼 */}
+
       <div className="w-full flex flex-col justify-center items-center gap-2.5 px-0 pt-5" style={{ width: '610px' }}>
-        <div className="self-stretch px-[11px] pt-[10px] pb-[16px] bg-[#F8F9FA] flex flex-col justify-center items-center gap-[10px] overflow-hidden" style={{ width: '588px' }}>
+        <div className="self-stretch px-[11px] pt-[10px] pb-[16px] bg-[#F8F9FA] flex flex-col justify-center items-center gap-[10px] overflow-hidden" style={{ width: '608px' }}>
           {/* First Row - Episode Comment Header */}
           <div className="w-[534px] inline-flex justify-end items-center">
             <button 
@@ -969,12 +971,6 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
           <CommentPostForm 
             key="main-comment-form" // 안정적인 key로 댓글 폼 고정
             onSubmit={async (comment, images) => {
-              console.log('RightCommentPanel onSubmit 호출됨:', { 
-                comment, 
-                images: images?.length,
-                timestamp: Date.now()
-              });
-              
               // 인증 상태 확인
               if (!isAuthenticated) {
                 const shouldLogin = confirm('댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?');
@@ -990,11 +986,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
                   attachedImage: images && images.length > 0 ? images[0] : undefined, // 첫 번째 이미지만 전송
                 };
                 
-                console.log('API 호출 시작:', request);
                 await createCommentHandler(request);
-                console.log('API 호출 완료');
               } catch (error) {
-                console.error('API 호출 실패:', error);
                 if (error instanceof Error && error.message.includes('401')) {
                   const shouldReLogin = confirm('로그인이 만료되었습니다. 다시 로그인하시겠습니까?');
                   if (shouldReLogin) {
@@ -1016,7 +1009,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       <div 
         ref={sortingMenuRef} 
         className="sticky z-10 bg-white pl-3.5 pt-5"
-        style={{ top: `${60 + headerHeight}px`, width: '610px' }}
+        style={{ top: `${60 + headerHeight}px`, width: '608px' }}
       >
         <SortingMenu 
           currentSort={currentSort}
@@ -1026,10 +1019,10 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
       
         
         {/* 댓글 목록 */}
-        <div className="w-full bg-white flex flex-col" style={{ width: '610px' }}>
+        <div className="w-full bg-white flex flex-col" style={{ width: '608px' }}>
           
           {/* 댓글 목록 */}
-          <div className="w-full flex flex-col justify-start items-start pb-7" style={{ width: '610px' }}>
+          <div className="w-full flex flex-col justify-start items-start pb-7" style={{ width: '608px' }}>
             {commentsLoading && comments.length === 0 ? (
               <div className="w-full flex flex-col items-center py-8">
                 <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-2"></div>
