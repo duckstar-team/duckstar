@@ -65,8 +65,10 @@ class ImageMemoryManager {
 
     return new Promise((resolve, reject) => {
     const img = new Image();
-    // CORS 설정 (duckstar.kr 도메인만)
+    // CORS는 외부 도메인에서만 필요 (같은 도메인은 제거)
     if (url.includes('duckstar.kr')) {
+      // 같은 도메인이므로 CORS 설정 제거 (성능 향상)
+    } else {
       img.crossOrigin = 'anonymous';
     }
     img.decoding = 'async';
