@@ -420,7 +420,7 @@ export default function AnimeDetailClient() {
           </div>
           
           {/* 오른쪽 영역 */}
-          <div className="flex-1 ml-[612px]">
+          <div className="ml-[612px]" style={{ width: '610px' }}>
             <RightCommentPanel animeId={parseInt(animeId)} />
           </div>
         </div>
