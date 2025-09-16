@@ -93,6 +93,7 @@ export default function VotePage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [bonusVotesRecalled, setBonusVotesRecalled] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   
   // 이미지 프리로딩을 위한 ref
@@ -291,6 +292,8 @@ export default function VotePage() {
   const handleSubmitClick = async () => {
     if (!selectedGender) return;
 
+    setIsSubmitting(true);
+    
     try {
       const ballotRequests = [
         ...selected.map(id => ({ candidateId: id, ballotType: "NORMAL" as const })),
@@ -327,6 +330,8 @@ export default function VotePage() {
       
     } catch (error) {
       alert('투표 제출에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -711,6 +716,7 @@ export default function VotePage() {
                 selectedGender={selectedGender}
                 showNextError={showNextError}
                 showConfirmDialog={showConfirmDialog}
+                isSubmitting={isSubmitting}
                 external={true}
                 onSearchQueryChange={setSearchQuery}
                 onNextClick={handleNextClick}
