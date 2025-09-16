@@ -324,27 +324,79 @@ export default function AnimeDetailClient() {
         <div className="w-full flex justify-center">
           <div className="max-w-7xl w-auto flex">
             {/* 왼쪽 영역: 스켈레톤 로딩 */}
-            <div className="fixed top-[90px] z-10" style={{ width: '584px', left: 'calc(50% - 292px)' }}>
-              <div className="bg-white rounded-2xl shadow-lg h-[600px] animate-pulse">
-                <div className="h-[300px] bg-gray-200 rounded-t-2xl"></div>
-                <div className="p-6 space-y-4">
+            <div className="fixed top-[90px] z-10" style={{ width: '584px', left: 'calc(50% - 511px)' }}>
+              <div className="bg-white rounded-2xl shadow-lg animate-pulse" style={{ minHeight: 'calc(100vh - 120px)' }}>
+                {/* 메인 이미지 스켈레톤 */}
+                <div className="h-[300px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-t-2xl"></div>
+                
+                {/* 정보 영역 스켈레톤 */}
+                <div className="p-6 space-y-3">
+                  {/* 제목 영역 */}
                   <div className="h-6 bg-gray-200 rounded w-3/4"></div>
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  
+                  {/* 탭 영역 스켈레톤 */}
+                  <div className="flex gap-4 mt-4">
+                    <div className="h-8 bg-gray-200 rounded w-16"></div>
+                    <div className="h-8 bg-gray-200 rounded w-20"></div>
+                    <div className="h-8 bg-gray-200 rounded w-18"></div>
+                  </div>
+                  
+                  {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
+                  <div className="space-y-2 mt-4">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                  </div>
+                  
+                  {/* 추가 정보 영역 */}
+                  <div className="space-y-2 mt-4">
+                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                  </div>
                 </div>
               </div>
             </div>
             
             {/* 오른쪽 영역: 스켈레톤 로딩 */}
-            <div className="flex-1 ml-[612px]">
-              <div className="bg-white border-l border-r border-gray-300 h-[600px] animate-pulse">
-                <div className="p-6 space-y-4">
-                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-                  <div className="space-y-3">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+            <div className="ml-[612px]" style={{ width: '610px' }}>
+              <div className="bg-white border-l border-r border-gray-300 animate-pulse" style={{ minHeight: 'calc(100vh - 60px)' }}>
+                {/* 에피소드 섹션 스켈레톤 */}
+                <div className="flex justify-center pt-7 pb-1">
+                  <div className="w-[534px] h-[200px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+                </div>
+                
+                {/* 댓글 헤더 스켈레톤 */}
+                <div className="sticky top-[60px] z-20 bg-white px-6 py-4">
+                  <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                </div>
+                
+                {/* 댓글 작성 폼 스켈레톤 */}
+                <div className="px-6 py-4">
+                  <div className="bg-gray-100 rounded-lg p-4 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-20 bg-gray-200 rounded"></div>
+                    <div className="flex justify-end">
+                      <div className="h-8 bg-gray-200 rounded w-16"></div>
+                    </div>
                   </div>
+                </div>
+                
+                {/* 댓글 목록 스켈레톤 */}
+                <div className="px-6 space-y-4">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-20"></div>
+                        <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      </div>
+                      <div className="space-y-2 ml-11">
+                        <div className="h-4 bg-gray-200 rounded"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

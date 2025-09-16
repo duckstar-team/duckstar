@@ -106,20 +106,32 @@ const Reply: React.FC<ReplyProps> = ({
           
           {/* 댓글 내용 */}
           <div className="self-stretch flex flex-col gap-2">
-            {/* @이름 표시 (텍스트가 있거나 이미지만 있는 경우 모두) */}
-            {(content || attachedImageUrl) && listenerNickname && (
-              <div className="flex justify-start">
-                <span className="inline-flex items-center px-2 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md">
+            {/* @이름과 텍스트 내용을 한 줄로 표시 */}
+            {(content || attachedImageUrl) && listenerNickname && content ? (
+              <div className="justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
+                <span className="inline-flex items-center px-2 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md mr-2">
                   @{listenerNickname}
                 </span>
-              </div>
-            )}
-            
-            {/* 텍스트 내용 */}
-            {content && (
-              <div className="justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
                 {content}
               </div>
+            ) : (
+              <>
+                {/* @이름만 표시 (텍스트가 없는 경우) */}
+                {listenerNickname && (
+                  <div className="flex justify-start">
+                    <span className="inline-flex items-center px-2 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-md">
+                      @{listenerNickname}
+                    </span>
+                  </div>
+                )}
+                
+                {/* 텍스트 내용 */}
+                {content && (
+                  <div className="justify-start text-black text-base font-medium font-['Pretendard'] leading-normal whitespace-pre-wrap">
+                    {content}
+                  </div>
+                )}
+              </>
             )}
             
             {/* 첨부 이미지 */}

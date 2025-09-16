@@ -6,6 +6,9 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { scrollToTop } from '../utils/scrollUtils';
+import { useNavigationPrefetch } from '@/hooks/useNavigationPrefetch';
+import { useNavigationState } from '@/hooks/useNavigationState';
+import NavigationLoadingIndicator from '@/components/common/NavigationLoadingIndicator';
 
 // Navigation items configuration with local icon paths
 const NAV_ITEMS = [
@@ -119,12 +122,17 @@ function NavButton({
   isBeta = false,
   badgeText
 }: NavButtonProps) {
+  const { handleMouseEnter } = useNavigationPrefetch();
+  const { startNavigation } = useNavigationState();
   const state = isActive ? 'active' : isHovered ? 'hover' : 'default';
   // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
   
   // 네비게이션 메뉴 클릭 시 스크롤을 맨 위로 이동
   const handleNavigationClick = () => {
+    // 네비게이션 시작
+    startNavigation();
+    
     // search 화면으로 이동할 때는 사이드바 네비게이션임을 표시
     if (href === '/search') {
       // 사이드바 네비게이션임을 표시하는 플래그 설정
@@ -167,7 +175,11 @@ function NavButton({
           </div>
         </div>
       ) : (
-        <Link href={href} onClick={handleNavigationClick}>
+        <Link 
+          href={href} 
+          onClick={handleNavigationClick}
+          onMouseEnter={() => handleMouseEnter(href)}
+        >
           <div className={cn(voteButtonVariants({ state }), "relative")}>
             {/* Icon container */}
             <div className={cn(iconSize, "relative")}>
@@ -196,6 +208,7 @@ export default function Sidebar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [windowHeight, setWindowHeight] = useState(0);
   const [windowWidth, setWindowWidth] = useState(0);
+  const { isNavigating } = useNavigationState();
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -299,6 +312,9 @@ export default function Sidebar() {
           © 2025 DUCKSTAR
         </div>
       </div>
+      
+      {/* 네비게이션 로딩 인디케이터 */}
+      <NavigationLoadingIndicator isNavigating={isNavigating} />
     </div>
   );
 }
