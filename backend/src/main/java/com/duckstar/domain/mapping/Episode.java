@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_episode_ae",
-                        columnNames = {"anime_id", "episode_number"}),
+        indexes = {
+                @Index(name = "idx_episode_s",
+                        columnList = "scheduled_at"),
         }
 )
 public class Episode extends BaseEntity {
