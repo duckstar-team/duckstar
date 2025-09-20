@@ -38,13 +38,13 @@ jobs:
       # 4. feature → dev PR: 단위 테스트만 실행, mysql 태그 제외
       - name: Run Unit Tests (H2)
         if: github.base_ref == 'dev'
-        run: ./gradlew clean test -Dspring.profiles.active=test-memory
+        run: ./gradlew clean test -Dspring.profiles.active=test-memory -PexcludeTags=mysql
 
       # 5. dev → master PR: 전체 빌드 및 통합 테스트 실행, mysql 태그 제외
       - name: Full Build & Integration Tests
         if: github.base_ref == 'master'
         run: |
-          ./gradlew clean test -Dspring.profiles.active=test-memory
+          ./gradlew clean test -Dspring.profiles.active=test-memory -PexcludeTags=mysql
           ./gradlew build
 
   # 프론트 빌드 및 테스트
