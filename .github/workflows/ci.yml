@@ -45,7 +45,7 @@ jobs:
         if: github.base_ref == 'master'
         run: |
           ./gradlew clean test -Dspring.profiles.active=test-memory
-          ./gradlew build
+          ./gradlew build -x test
 
   # 프론트 빌드 및 테스트
   frontend:
