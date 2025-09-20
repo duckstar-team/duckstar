@@ -43,7 +43,9 @@ jobs:
       # 5. dev → master PR: 전체 빌드 및 통합 테스트 실행, mysql 태그 제외
       - name: Full Build & Integration Tests
         if: github.base_ref == 'master'
-        run: ./gradlew clean build -Dspring.profiles.active=test --exclude-tag mysql
+        run: |
+          ./gradlew clean test -Dspring.profiles.active=test --exclude-tag mysql
+          ./gradlew build
 
   # 프론트 빌드 및 테스트
   frontend:
