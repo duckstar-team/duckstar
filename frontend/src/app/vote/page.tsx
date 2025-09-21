@@ -9,7 +9,8 @@ import VoteSection from "@/components/vote/VoteSection";
 import VoteStamp from "@/components/vote/VoteStamp";
 import ConfettiEffect from "@/components/vote/ConfettiEffect";
 import ConfirmDialog from "@/components/vote/ConfirmDialog";
-import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVoteStatusDto, AnimeVoteStatusDto, VoteHistoryBallotDto } from '@/types/api';
+import VoteDisabledState from "@/components/vote/VoteDisabledState";
+import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVoteStatusDto, AnimeVoteStatusDto, VoteHistoryBallotDto, VoteStatus } from '@/types/api';
 import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
 import { fetcher, submitVote } from '@/api/client';
@@ -636,6 +637,19 @@ export default function VotePage() {
   }
 
 
+  // VoteStatus에 따른 조건부 렌더링
+  const voteStatus = data?.result?.status;
+  
+  // 투표가 비활성화된 상태 (PAUSED, CLOSED)인 경우
+  if (voteStatus && voteStatus !== 'OPEN') {
+    return (
+      <VoteDisabledState 
+        status={voteStatus} 
+        weekDto={data?.result?.weekDto}
+      />
+    );
+  }
+
   // 투표 결과 화면 렌더링
   return (
     <main className="w-full" ref={containerRef}>
@@ -646,6 +660,7 @@ export default function VotePage() {
           customTitle={`${data?.result?.weekDto?.year || 2025} ${getSeasonFromDate(data?.result?.weekDto?.startDate || '2025-07-13')} ${getCategoryText('ANIME')} 투표`}
         />
       </section>
+
 
       {/* 알림 섹션 - 고정 */}
       <section className="w-full max-w-[1240px] mx-auto px-4 pt-6">
