@@ -42,7 +42,7 @@ const NAV_ITEMS = [
     isBeta: false
   },
   { 
-    label: "애니/캐릭터 찾기", 
+    label: "애니/시간표 검색", 
     href: "/search",
     defaultIcon: "/icons/search-default.svg",
     activeIcon: "/icons/search-active.svg",

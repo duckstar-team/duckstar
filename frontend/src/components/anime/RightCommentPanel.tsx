@@ -12,7 +12,7 @@ import OpenOrFoldReplies from '../OpenOrFoldReplies';
 import SortingMenu from '../SortingMenu';
 import { SortOption } from '../SortingMenu';
 import { CommentDto, ReplyDto } from '../../api/comments';
-import { getBusinessQuarter, calculateBusinessWeekNumber, getQuarterInKorean } from '../../lib/quarterUtils';
+import { getThisWeekRecord } from '../../lib/quarterUtils';
 import { useAuth } from '../../context/AuthContext';
 import { startKakaoLogin } from '../../api/client';
 import EpisodeCommentModal from './EpisodeCommentModal';
@@ -33,9 +33,10 @@ import {
 
 interface RightCommentPanelProps {
   animeId?: number;
+  isImageModalOpen?: boolean; // 이미지 모달 상태
 }
 
-export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProps) {
+export default function RightCommentPanel({ animeId = 1, isImageModalOpen = false }: RightCommentPanelProps) {
   // 인증 상태 확인
   const { isAuthenticated } = useAuth();
   
@@ -71,12 +72,11 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
   // 분기/주차 계산 함수 (올바른 비즈니스 로직 사용)
   const getQuarterAndWeek = (date: Date) => {
-    const quarter = getBusinessQuarter(date);
-    const weekNumber = calculateBusinessWeekNumber(date);
+    const record = getThisWeekRecord(date);
     
     return { 
-      quarter: getQuarterInKorean(quarter), 
-      week: `${weekNumber}주차` 
+      quarter: `${record.quarterValue}분기`, 
+      week: `${record.weekValue}주차` 
     };
   };
 
@@ -819,10 +819,10 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
 
   // 총 에피소드 수 계산
-  const totalEpisodes = animeData?.episodeDtos.length || 0;
+  const totalEpisodes = animeData?.animeInfoDto?.totalEpisodes;
 
   // 에피소드 데이터 처리 (각 에피소드의 scheduledAt을 기반으로 분기/주차 계산)
-  const processedEpisodes = animeData?.episodeDtos.map(episodeDto => {
+  const processedEpisodes = animeData?.episodeResponseDtos?.map(episodeDto => {
     const scheduledAt = new Date(episodeDto.scheduledAt);
     const { quarter, week } = getQuarterAndWeek(scheduledAt);
     
@@ -841,7 +841,7 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
 
   // 에피소드 클릭 핸들러 (다중 선택 및 필터 추가/제거)
   const handleEpisodeClick = (episodeId: number) => {
-    const episode = animeData?.episodeDtos.find(ep => ep.episodeId === episodeId);
+    const episode = animeData?.episodeResponseDtos?.find(ep => ep.episodeId === episodeId);
     
     setSelectedEpisodeIds(prev => {
       if (prev.includes(episodeId)) {
@@ -931,13 +931,13 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         />
       </div>
       
-      {/* Sticky 애니 헤더 */}
-      <div 
-        ref={commentHeaderRef} 
-        className="sticky top-[60px] z-20 bg-white w-full"
-
-        style={{ width: '608px' }}
-      >
+      {/* Sticky 애니 헤더 - 이미지 모달이 열려있으면 숨김 */}
+      {!isImageModalOpen && (
+        <div 
+          ref={commentHeaderRef} 
+          className="sticky top-[60px] z-20 bg-white w-full"
+          style={{ width: '608px' }}
+        >
         <div className="size- flex flex-col justify-start items-start gap-5">
           <CommentHeader 
             totalComments={totalCommentCount}
@@ -947,7 +947,8 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
             onRemoveFilter={handleRemoveFilter}
           />
         </div>
-      </div>
+        </div>
+      )}
       
       {/* 댓글 작성 폼 */}
 
@@ -1005,17 +1006,28 @@ export default function RightCommentPanel({ animeId = 1 }: RightCommentPanelProp
         </div>
       </div>
       
-      {/* Sticky 정렬 메뉴 */}
-      <div 
-        ref={sortingMenuRef} 
-        className="sticky z-10 bg-white pl-3.5 pt-5"
-        style={{ top: `${60 + headerHeight}px`, width: '608px' }}
-      >
-        <SortingMenu 
-          currentSort={currentSort}
-          onSortChange={handleSortChange}
-        />
-      </div>
+      {/* Sticky 정렬 메뉴 - 이미지 모달이 열려있으면 숨김 */}
+      {!isImageModalOpen && (
+        <div 
+          ref={sortingMenuRef} 
+          className="sticky z-10 bg-white pl-3.5 pt-5"
+          style={{ top: `${60 + headerHeight}px`, width: '608px' }}
+        >
+          <SortingMenu 
+            currentSort={currentSort}
+            onSortChange={handleSortChange}
+            onScrollToTop={() => {
+              setTimeout(() => {
+                // 스티키 헤더들 아래 위치로 스크롤
+                const targetScrollTop = headerHeight + 165;
+                window.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+                document.documentElement.scrollTop = targetScrollTop;
+                document.body.scrollTop = targetScrollTop;
+              }, 100);
+            }}
+          />
+        </div>
+      )}
       
         
         {/* 댓글 목록 */}

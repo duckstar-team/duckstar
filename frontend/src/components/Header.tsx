@@ -36,8 +36,8 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       </Link>
       
       {/* Right Section - Search Bar + Login Button */}
-      <div className={`absolute right-0 md:right-[25px] top-0 h-[60px] flex items-center gap-3 z-10 ${
-        isAuthenticated ? 'gap-6' : 'gap-2'
+      <div className={`absolute right-0 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
+        isAuthenticated ? 'gap-7' : 'gap-4'
       }`}>
         {/* Search Bar */}
         <div className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50 hidden md:flex">

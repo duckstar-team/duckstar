@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import EpisodeItem from './EpisodeItem';
 import QuarterWeekLabel from './QuarterWeekLabel';
-import { getBusinessQuarter, calculateBusinessWeekNumber } from '../../lib/quarterUtils';
+import { getThisWeekRecord } from '../../lib/quarterUtils';
 
 // 타입 정의
 interface Episode {
@@ -49,15 +49,13 @@ const getEpisodeStatus = (scheduledAt: string): 'past' | 'current' | 'future' =>
   const timeDiff = episodeDate.getTime() - now.getTime();
   
   // 현재 시각의 분기/주차 계산
-  const currentQuarter = getBusinessQuarter(now);
-  const currentWeek = calculateBusinessWeekNumber(now);
+  const currentRecord = getThisWeekRecord(now);
   
   // 에피소드의 분기/주차 계산
-  const episodeQuarter = getBusinessQuarter(episodeDate);
-  const episodeWeek = calculateBusinessWeekNumber(episodeDate);
+  const episodeRecord = getThisWeekRecord(episodeDate);
   
   // 현재 시각에 해당하는 분기/주차의 에피소드인지 확인
-  const isCurrentQuarterWeek = (currentQuarter === episodeQuarter && currentWeek === episodeWeek);
+  const isCurrentQuarterWeek = (currentRecord.quarterValue === episodeRecord.quarterValue && currentRecord.weekValue === episodeRecord.weekValue);
   
   if (timeDiff < 0) {
     return "past"; // 이미 방영됨 (시간까지 지남)
@@ -89,7 +87,9 @@ export default function EpisodeSection({
   // 페이징 상태
   const [currentPage, setCurrentPage] = useState(0);
   const episodesPerPage = 6;
-  const totalPages = Math.ceil(totalEpisodes / episodesPerPage);
+  // totalEpisodes가 0이면 기본값 12로 설정
+  const effectiveTotalEpisodes = totalEpisodes > 0 ? totalEpisodes : 12;
+  const totalPages = Math.ceil(effectiveTotalEpisodes / episodesPerPage);
 
   // 초기화 여부 추적
   const isInitialized = useRef(false);
@@ -117,15 +117,13 @@ export default function EpisodeSection({
   useEffect(() => {
     if (episodes.length > 0 && !isInitialized.current) {
       // 현재 분기/주차에 해당하는 에피소드 찾기
-      const currentQuarter = getBusinessQuarter(new Date());
-      const currentWeek = calculateBusinessWeekNumber(new Date());
+      const currentRecord = getThisWeekRecord(new Date());
       
       const currentEpisodeIndex = episodes.findIndex(episode => {
         const episodeDate = new Date(episode.scheduledAt);
-        const episodeQuarter = getBusinessQuarter(episodeDate);
-        const episodeWeek = calculateBusinessWeekNumber(episodeDate);
+        const episodeRecord = getThisWeekRecord(episodeDate);
         
-        return episodeQuarter === currentQuarter && episodeWeek === currentWeek;
+        return episodeRecord.quarterValue === currentRecord.quarterValue && episodeRecord.weekValue === currentRecord.weekValue;
       });
       
       if (currentEpisodeIndex !== -1) {
@@ -238,10 +236,28 @@ export default function EpisodeSection({
         <div className="text-center justify-start text-black text-xl font-semibold font-['Pretendard'] leading-snug">
           에피소드 공개
         </div>
-        <div className="text-center justify-start">
-          <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span>
-          <span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">{totalEpisodes}</span>
-          <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug"> 화</span>
+        <div className="text-center justify-start flex items-center gap-1">
+          {totalEpisodes && totalEpisodes > 0 ? (
+            <>
+              <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span>
+              <span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">{totalEpisodes}</span>
+              <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug"> 화</span>
+            </>
+          ) : (
+            <div className="relative group">
+              <div className="w-4 h-4 flex-shrink-0 cursor-help">
+                <img 
+                  src="/icons/info.svg" 
+                  alt="정보" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              {/* 툴팁 */}
+              <div className="absolute top-full left-0 mt-1 px-3 py-1.5 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
+                총 화수 정보를 준비 중입니다. (기본값: 12화)
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -272,7 +288,7 @@ export default function EpisodeSection({
               className="flex transition-transform duration-300 ease-in-out"
               style={{ 
                 transform: `translateX(-${currentPage * 464}px)`,
-                width: `${totalEpisodes * 80}px`
+                width: `${effectiveTotalEpisodes * 80}px`
               }}
             >
               <div className="pl-2 inline-flex justify-start items-center overflow-visible">
@@ -314,7 +330,7 @@ export default function EpisodeSection({
               className="flex transition-transform duration-300 ease-in-out"
               style={{ 
                 transform: `translateX(-${currentPage * 464}px)`,
-                width: `${totalEpisodes * 80}px`
+                width: `${effectiveTotalEpisodes * 80}px`
               }}
             >
               <div className="inline-flex justify-start items-start">
