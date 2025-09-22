@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
-import { getBusinessQuarter, calculateBusinessWeekNumber, getQuarterInKorean } from '../../lib/quarterUtils';
+import { getThisWeekRecord } from '../../lib/quarterUtils';
 import { useAuth } from '../../context/AuthContext';
 import { startKakaoLogin } from '../../api/client';
 
@@ -71,17 +71,16 @@ export default function EpisodeCommentModal({
 
   // 분기/주차 계산 함수
   const getQuarterAndWeek = (date: Date) => {
-    const quarter = getBusinessQuarter(date);
-    const weekNumber = calculateBusinessWeekNumber(date);
+    const record = getThisWeekRecord(date);
     
     return { 
-      quarter: getQuarterInKorean(quarter), 
-      week: `${weekNumber}주차` 
+      quarter: `${record.quarterValue}분기`, 
+      week: `${record.weekValue}주차` 
     };
   };
 
   // 에피소드 데이터 처리
-  const processedEpisodes = animeData?.episodeDtos.map(episodeDto => {
+  const processedEpisodes = animeData?.episodeResponseDtos?.map(episodeDto => {
     const scheduledAt = new Date(episodeDto.scheduledAt);
     const { quarter, week } = getQuarterAndWeek(scheduledAt);
     

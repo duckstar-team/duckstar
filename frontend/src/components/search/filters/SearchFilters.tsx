@@ -42,7 +42,7 @@ export default function SearchFilters({
     )}>
       {/* 알림 섹션 - 피그마 디자인에 맞춤 */}
       <div className="flex items-center justify-start">
-        <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-2 pr-5 py-0 rounded-lg w-[283px]">
+        <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-3 pr-5 py-0 rounded-lg w-[265px]">
           {/* 메시지 아이콘 */}
           <div className="flex items-center justify-center w-[34px] h-12">
             <div className="w-3.5 h-3 relative">
@@ -55,9 +55,9 @@ export default function SearchFilters({
           </div>
           
           {/* 텍스트 컨테이너 */}
-          <div className="flex items-center justify-start w-[221px] h-[17px]">
+          <div className="flex items-center justify-start w-[211px] h-[17px]">
             <span className="text-[#23272b] text-sm font-semibold leading-[17px] font-['Pretendard']">
-              분기 신작 애니/캐릭터를 검색해보세요...
+              신작 애니메이션을 검색해보세요...
             </span>
           </div>
         </div>

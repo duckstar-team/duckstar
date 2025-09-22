@@ -5,6 +5,7 @@ import '../../styles/customScrollbar.css';
 import { cn } from '@/lib/utils';
 import CharacterList from './CharacterList';
 import { CharacterData } from './CharacterCard';
+import ImageModal from './ImageModal';
 
 export type TabOption = 'info' | 'performance' | 'characters';
 
@@ -18,6 +19,7 @@ interface TabOptionConfig {
 
 interface LeftInfoPanelProps {
   onBack: () => void;
+  onImageModalToggle?: (isOpen: boolean) => void; // 이미지 모달 상태 전달
   anime: {
     animeId: number;
     mainThumbnailUrl: string;
@@ -46,7 +48,7 @@ interface LeftInfoPanelProps {
   characters?: CharacterData[];
 }
 
-export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPanelProps) {
+export default function LeftInfoPanel({ anime, onBack, characters, onImageModalToggle }: LeftInfoPanelProps) {
   // 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<TabOption>('info');
   const [hoveredTab, setHoveredTab] = useState<TabOption | null>(null);
@@ -136,8 +138,8 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
 
   const tabOptions: TabOptionConfig[] = [
     { key: 'info' as const, label: '애니 정보', width: 'w-[175px]', isBeta: false },
-    { key: 'performance' as const, label: '분기 성적', width: 'w-[175px]', isBeta: true, badgeText: '준비중' },
-    { key: 'characters' as const, label: '등장인물', width: 'w-[175px]', isBeta: false }
+    { key: 'characters' as const, label: '등장인물', width: 'w-[175px]', isBeta: false },
+    { key: 'performance' as const, label: '분기 성적', width: 'w-[175px]', isBeta: true, badgeText: '준비중' }
   ];
 
   // 네비게이션 바 위치 업데이트
@@ -230,6 +232,9 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
   const [currentBackgroundImage, setCurrentBackgroundImage] = useState(mainThumbnailUrl || "/banners/duckstar-logo.svg");
   const [backgroundPosition, setBackgroundPosition] = useState("center center");
   const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
+  
+  // 이미지 모달 상태
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   // 이미지 캐시 확인 함수
   const isImageCached = (imageUrl: string): Promise<boolean> => {
@@ -405,6 +410,22 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
     }
   };
 
+  // 이미지 클릭 핸들러 (메인 이미지 모달 열기)
+  const handleImageClick = () => {
+    // 메인 이미지가 있으면 메인 이미지를, 없으면 썸네일을 사용
+    const imageToShow = mainImageUrl || mainThumbnailUrl;
+    if (imageToShow) {
+      setIsImageModalOpen(true);
+      onImageModalToggle?.(true); // 부모 컴포넌트에 모달 열림 알림
+    }
+  };
+
+  // 이미지 모달 닫기 핸들러
+  const handleImageModalClose = () => {
+    setIsImageModalOpen(false);
+    onImageModalToggle?.(false); // 부모 컴포넌트에 모달 닫힘 알림
+  };
+
   // API 응답에서 캐릭터 데이터를 매핑하는 함수
   const mapCastPreviewsToCharacters = (castPreviews: unknown[]): CharacterData[] => {
     if (!castPreviews || !Array.isArray(castPreviews)) {
@@ -554,8 +575,10 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
       
       {/* 메인 이미지 섹션 */}
       <div 
-        className="absolute bg-white left-0 overflow-clip rounded-tl-[12px] rounded-tr-[12px] top-0 w-[584px]"
+        className="absolute bg-white left-0 overflow-clip rounded-tl-[12px] rounded-tr-[12px] top-0 w-[584px] cursor-pointer hover:opacity-95 transition-opacity duration-200"
         style={{ height: `${mainImageHeight}px` }}
+        onClick={handleImageClick}
+        title="이미지를 클릭하여 크게 보기"
       >
         <div 
           className={`absolute bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px] ${!isMainImageLoaded ? 'transition-opacity duration-300' : ''}`}
@@ -660,10 +683,12 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
       
       {/* 우측 작은 이미지 */}
       <div 
-        className="absolute bg-center bg-cover bg-no-repeat h-[206.958px] left-[419.53px] rounded-[8.91px] top-[111.38px] w-[146.423px]"
+        className="absolute bg-center bg-cover bg-no-repeat h-[206.958px] left-[419.53px] rounded-[8.91px] top-[111.38px] w-[146.423px] cursor-pointer hover:opacity-95 transition-opacity duration-200 shadow-lg hover:shadow-xl"
         style={{ 
           backgroundImage: `url('${currentPosterImage}')`
-        }} 
+        }}
+        onClick={handleImageClick}
+        title="이미지를 클릭하여 크게 보기"
       />
       
       {/* 하단 정보 패널 */}
@@ -1034,6 +1059,14 @@ export default function LeftInfoPanel({ anime, onBack, characters }: LeftInfoPan
       </div>
 
     </div>
+
+    {/* 이미지 확대 모달 */}
+    <ImageModal
+      isOpen={isImageModalOpen}
+      onClose={handleImageModalClose}
+      imageUrl={mainImageUrl || mainThumbnailUrl}
+      title={titleKor}
+    />
     </>
   );
 }

@@ -10,6 +10,7 @@ interface DaySelectionProps {
   onDaySelect: (day: DayOfWeek) => void;
   className?: string;
   onScrollToSection?: (sectionId: string) => void;
+  initialPosition?: boolean; // 초기 위치를 즉시 설정할지 여부
 }
 
 const DAYS: DayOfWeek[] = [
@@ -39,7 +40,8 @@ export default function DaySelection({
   selectedDay,
   onDaySelect,
   className,
-  onScrollToSection
+  onScrollToSection,
+  initialPosition = false
 }: DaySelectionProps) {
   const [hoveredDay, setHoveredDay] = useState<DayOfWeek | null>(null);
   const [selectedBarStyle, setSelectedBarStyle] = useState({
@@ -139,6 +141,24 @@ export default function DaySelection({
     setHoveredBarStyle(prev => ({ ...prev, opacity: 0 }));
   };
 
+  // 컴포넌트 마운트 시 네비게이션 바 위치 설정
+  useEffect(() => {
+    if (selectedDay) {
+      // DOM이 완전히 렌더링된 후 네비게이션 바 위치 설정
+      const timeout = setTimeout(() => {
+        if (initialPosition) {
+          // 초기 위치 설정이 필요한 경우 (sticky 네비게이션 바) 즉시 설정
+          updateNavigationBar(selectedDay, true);
+        } else {
+          // 일반적인 경우 애니메이션과 함께 설정
+          updateNavigationBar(selectedDay);
+        }
+      }, 0);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [initialPosition]); // initialPosition이 변경될 때도 실행
+
   // 선택된 탭 변경 시 네비게이션 바 위치 업데이트
   useEffect(() => {
     if (selectedDay) {
@@ -217,7 +237,7 @@ export default function DaySelection({
                 }
               }}
                     className={cn(
-                      "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150",
+                      "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer",
                       "border-b border-gray-100 last:border-b-0",
                       selectedDay === day
                         ? "bg-[#990033] text-white font-medium"

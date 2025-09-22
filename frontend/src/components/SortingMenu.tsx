@@ -6,9 +6,10 @@ export type SortOption = 'Popular' | 'Recent' | 'Oldest';
 interface SortingMenuProps {
   currentSort: SortOption;
   onSortChange: (sort: SortOption) => void;
+  onScrollToTop?: () => void; // 스크롤 탑 함수
 }
 
-const SortingMenu: React.FC<SortingMenuProps> = ({ currentSort, onSortChange }) => {
+const SortingMenu: React.FC<SortingMenuProps> = ({ currentSort, onSortChange, onScrollToTop }) => {
   const [hoveredSort, setHoveredSort] = useState<SortOption | null>(null);
   const [selectedBarStyle, setSelectedBarStyle] = useState({
     width: '0px',
@@ -164,6 +165,10 @@ const SortingMenu: React.FC<SortingMenuProps> = ({ currentSort, onSortChange }) 
               key={option.key}
               ref={(el) => { tabRefs.current[option.key] = el; }}
               onClick={() => {
+                // 현재 선택된 메뉴가 아닌 다른 메뉴를 클릭했을 때만 스크롤 탑
+                if (option.key !== currentSort && onScrollToTop) {
+                  onScrollToTop();
+                }
                 onSortChange(option.key);
                 updateNavigationBar(option.key, true); // 클릭 시 즉시 이동
               }}

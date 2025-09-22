@@ -40,7 +40,7 @@ export default function AnimeSearchBar({
                 </div>
                 <div className="flex flex-col items-start justify-start ml-2" data-name="Container">
                   <div className="flex flex-col font-['Pretendard'] font-semibold justify-center leading-[0] not-italic relative shrink-0 text-[#23272b] text-[14px] text-nowrap">
-                    <p className="leading-[normal] whitespace-pre">분기 신작 애니/캐릭터를 검색해보세요...</p>
+                    <p className="leading-[normal] whitespace-pre">신작 애니메이션을 검색해보세요...</p>
                   </div>
                 </div>
               </div>
