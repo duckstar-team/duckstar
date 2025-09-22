@@ -9,9 +9,10 @@ import { AnimePreviewDto } from '@/components/search/types';
 interface AnimeCardProps {
   anime: AnimePreviewDto;
   className?: string;
+  isCurrentSeason?: boolean; // 현재 시즌인지 여부
 }
 
-export default function AnimeCard({ anime, className }: AnimeCardProps) {
+export default function AnimeCard({ anime, className, isCurrentSeason = true }: AnimeCardProps) {
   const { animeId, mainThumbnailUrl, status, isBreak, titleKor, dayOfWeek, scheduledAt, isRescheduled, genre, medium, ottDtos } = anime;
   const [imageError, setImageError] = useState(false);
   const router = useRouter();
@@ -34,16 +35,41 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
   };
   
   // 방영 시간 포맷팅
-  const formatAirTime = (scheduledAt: string) => {
-    if (!scheduledAt) return '시간 미정';
-    const date = new Date(scheduledAt);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+  const formatAirTime = (scheduledAt: string, airTime?: string) => {
+    // 종영 애니메이션의 경우 "(종영)" 표시
+    if (status === 'ENDED') {
+      return '· 종영';
+    }
+    
+    // 극장판의 경우 개봉일 표시
+    if (medium === 'MOVIE' && scheduledAt) {
+      const date = new Date(scheduledAt);
+      const month = date.getMonth() + 1; // 0부터 시작하므로 +1
+      const day = date.getDate();
+      return `${month}/${day} 개봉`;
+    }
+    
+    // 시즌별 조회인 경우 airTime 사용
+    if (!isCurrentSeason && airTime) {
+      return airTime;
+    }
+    
+    // 현재 시즌인 경우 scheduledAt 사용
+    if (scheduledAt) {
+      const date = new Date(scheduledAt);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    
+    return '시간 미정';
   };
   
   // 방영까지 남은 시간 계산 (NOW_SHOWING 23분 59초 이내 또는 UPCOMING 12시간 이내)
   const getTimeRemaining = () => {
+    // 시즌별 조회인 경우 추적하지 않음
+    if (!isCurrentSeason) return null;
+    
     if (!scheduledAt) return null;
     
     const now = new Date();
@@ -210,6 +236,12 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
     const dayMap: { [key: string]: string } = {
       'MON': '월', 'TUE': '화', 'WED': '수', 'THU': '목', 'FRI': '금', 'SAT': '토', 'SUN': '일'
     };
+    
+    // TVA 애니메이션 중에서 그룹이 없는 경우 "요일 미정" 표시
+    if (medium === 'TVA' && (day === 'NONE' || day === 'SPECIAL')) {
+      return '요일 미정';
+    }
+    
     return dayMap[day] || day;
   };
 
@@ -364,7 +396,10 @@ export default function AnimeCard({ anime, className }: AnimeCardProps) {
           <div className="flex items-center mt-[9px]">
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
-                {getDayInKorean(dayOfWeek)} {formatAirTime(scheduledAt)}
+                {medium === 'TVA' && (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL') 
+                  ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime)}`
+                  : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime)}`
+                }
               </span>
               {isRescheduled && (
                 <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded font-['Pretendard']">

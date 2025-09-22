@@ -189,6 +189,7 @@ export interface AnimePreviewDto {
   dayOfWeek: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "SPECIAL" | "NONE";
   scheduledAt: string;
   isRescheduled: boolean;
+  airTime: string;  // 방영시간 (HH:mm 형식)
   genre: string;
   medium: "TVA" | "MOVIE" | "OVA" | "SPECIAL";
   ottDtos: OttDto[];

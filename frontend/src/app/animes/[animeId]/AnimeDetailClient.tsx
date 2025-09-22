@@ -72,6 +72,7 @@ export default function AnimeDetailClient() {
   const [anime, setAnime] = useState<AnimeDetailDto>(mockAnimeData);
   const [characters, setCharacters] = useState<CharacterData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   
   // 캐시된 데이터 확인
   const [cachedData, setCachedData] = useState<{ anime: AnimeDetailDto; characters: CharacterData[] } | null>(null);
@@ -416,12 +417,17 @@ export default function AnimeDetailClient() {
           {/* 왼쪽 영역: fixed 고정 */}
           <div className="fixed top-[90px] z-10" style={{ width: '584px', left: 'calc(50% - 511px)' }}>
             {/* LeftInfoPanel */}
-            <LeftInfoPanel anime={anime} onBack={handleBack} characters={characters} />
+            <LeftInfoPanel 
+              anime={anime} 
+              onBack={handleBack} 
+              characters={characters}
+              onImageModalToggle={setIsImageModalOpen}
+            />
           </div>
           
           {/* 오른쪽 영역 */}
-          <div className="ml-[612px]" style={{ width: '610px' }}>
-            <RightCommentPanel animeId={parseInt(animeId)} />
+          <div className="flex-1 ml-[612px]">
+            <RightCommentPanel animeId={parseInt(animeId)} isImageModalOpen={isImageModalOpen} />
           </div>
         </div>
       </div>

@@ -50,8 +50,29 @@ export async function getScheduleByQuarter(
  * @returns 현재 분기 애니메이션 편성표
  */
 export async function getCurrentSchedule(): Promise<AnimePreviewListDto> {
-  const { year, quarter } = getCurrentYearAndQuarter();
-  return getScheduleByQuarter(year, quarter);
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/search`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: ApiResponse<AnimePreviewListDto> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**
@@ -65,6 +86,36 @@ export async function getScheduleByYearAndQuarter(
   quarter: number
 ): Promise<AnimePreviewListDto> {
   return getScheduleByQuarter(year, quarter);
+}
+
+/**
+ * 시즌 목록을 조회합니다.
+ * @returns 연도별 시즌 목록
+ */
+export async function getSeasons(): Promise<{ [year: number]: string[] }> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/search/seasons`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: ApiResponse<{ [year: number]: string[] }> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**
