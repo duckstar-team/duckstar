@@ -389,6 +389,22 @@ export default function SearchPage() {
         const y = parseInt(savedY);
         console.log('🔄 search 화면 스크롤 복원 (데이터 로드 후):', y);
         
+        // 필터 상태 확인 및 로그
+        console.log('🔍 스크롤 복원 시 필터 상태:', {
+          showOnlyAiring,
+          savedShowOnlyAiring: sessionStorage.getItem('showOnlyAiring'),
+          selectedYear,
+          selectedQuarter,
+          isCustomSeason
+        });
+        
+        // 다른 시즌에서 뒤로가기한 경우 방영 중 필터 해제
+        if (isCustomSeason && showOnlyAiring) {
+          console.log('🔧 다른 시즌에서 뒤로가기: 방영 중 필터 해제');
+          setShowOnlyAiring(false);
+          sessionStorage.removeItem('showOnlyAiring');
+        }
+        
         // 즉시 복원 (깜빡임 방지)
         // 1. window.scrollTo 시도
         window.scrollTo(0, y);
@@ -416,7 +432,7 @@ export default function SearchPage() {
         }, 50);
       }
     }
-  }, [scheduleData]);
+  }, [scheduleData, showOnlyAiring, selectedYear, selectedQuarter, isCustomSeason]);
 
   // 프리로딩 상태 모니터링 (캐시 상태 고려)
   useEffect(() => {
@@ -567,7 +583,14 @@ export default function SearchPage() {
     // 방영 중 필터링 함수
     const filterAiringAnimes = (animes: AnimePreviewDto[]) => {
       if (showOnlyAiring) {
-        return animes.filter(anime => anime.status === 'NOW_SHOWING');
+        const filtered = animes.filter(anime => anime.status === 'NOW_SHOWING');
+        console.log('🔍 방영 중 필터링:', {
+          total: animes.length,
+          filtered: filtered.length,
+          showOnlyAiring,
+          statuses: animes.map(a => ({ title: a.titleKor, status: a.status }))
+        });
+        return filtered;
       }
       return animes;
     };
@@ -724,7 +747,7 @@ export default function SearchPage() {
                 // OTT 서비스 필터링
         if (selectedOttServices.length > 0) {
           allAnimes = allAnimes.filter(anime => {
-            const hasMatchingOtt = selectedOttServices.every(selectedOtt => 
+            const hasMatchingOtt = selectedOttServices.some(selectedOtt => 
               anime.ottDtos.some(ott => 
                 ott.ottType && ott.ottType.toLowerCase() === selectedOtt
               )
@@ -767,7 +790,7 @@ export default function SearchPage() {
         // OTT 서비스 필터링
         if (selectedOttServices.length > 0) {
           dayAnimes = dayAnimes.filter(anime => {
-            const hasMatchingOtt = selectedOttServices.every(selectedOtt => 
+            const hasMatchingOtt = selectedOttServices.some(selectedOtt => 
               anime.ottDtos.some(ott => 
                 ott.ottType && ott.ottType.toLowerCase() === selectedOtt
               )
