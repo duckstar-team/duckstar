@@ -363,7 +363,7 @@ export default function EpisodeSection({
                     />
                   </div>
                   {/* 툴팁 */}
-                  <div className="absolute top-full left-0 mt-1 px-3 py-1.5 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
+                  <div className="absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
                     총 화수 정보를 준비 중입니다. (기본값: 12화)
                   </div>
                 </div>
