@@ -139,6 +139,7 @@ function SearchPageContent() {
     }
   }, [searchParams]);
 
+
   // 페이지 로드 시 스크롤 복원 또는 맨 위로 이동
   useEffect(() => {
     // 디버깅: 모든 sessionStorage 값 확인
@@ -147,6 +148,17 @@ function SearchPageContent() {
     const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
     const searchScroll = sessionStorage.getItem('search-scroll');
     const selectedSeason = sessionStorage.getItem('selected-season');
+    
+    // 사이드바 네비게이션 감지 시 즉시 검색 상태 초기화
+    if (sidebarNav === 'true') {
+      setSearchQuery('');
+      setSearchInput('');
+      setIsSearching(false);
+      // 검색 관련 sessionStorage 정리
+      sessionStorage.removeItem('search-query');
+      sessionStorage.removeItem('search-input');
+      sessionStorage.removeItem('is-searching');
+    }
     
     // 스크롤 복원 상태 확인
     
@@ -188,13 +200,21 @@ function SearchPageContent() {
     
     if (isSidebarNavigation) {
       // 사이드바 네비게이션인 경우 스크롤을 맨 위로 이동
+      // 검색 상태 초기화
+      setSearchQuery('');
+      setSearchInput('');
+      setIsSearching(false);
       // 모든 관련 플래그 정리
-      clearStorageFlags('sidebar-navigation', 'search-scroll', 'shouldRestoreScroll', 'from-anime-detail', 'selected-season');
+      clearStorageFlags('sidebar-navigation', 'search-scroll', 'shouldRestoreScroll', 'from-anime-detail', 'selected-season', 'search-query', 'search-input', 'is-searching');
       scrollToTop();
     } else if (isLogoNavigation) {
       // 로고 네비게이션인 경우 스크롤을 맨 위로 이동
+      // 검색 상태 초기화
+      setSearchQuery('');
+      setSearchInput('');
+      setIsSearching(false);
       // 모든 관련 플래그 정리
-      clearStorageFlags('logo-navigation', 'search-scroll', 'shouldRestoreScroll', 'from-anime-detail', 'selected-season');
+      clearStorageFlags('logo-navigation', 'search-scroll', 'shouldRestoreScroll', 'from-anime-detail', 'selected-season', 'search-query', 'search-input', 'is-searching');
       scrollToTop();
     } else if (isFromAnimeDetail) {
       // 애니메이션 상세화면에서 돌아온 경우 스크롤 복원 시도
@@ -1214,18 +1234,42 @@ function SearchPageContent() {
         <div className="absolute -bottom-6 left-0 w-full z-20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex gap-5 items-center justify-start" ref={seasonSelectorRef}>
-              {/* 시즌 선택 드롭다운 */}
-              <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                <SeasonSelector
-                  onSeasonSelect={handleSeasonSelect}
-                  className="w-fit"
-                  currentYear={isThisWeek ? undefined : selectedYear || undefined}
-                  currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
-                />
-              </div>
+              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+              {searchQuery.trim() ? (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchInput('');
+                      setIsSearching(false);
+                      // 검색 상태 정리
+                      sessionStorage.removeItem('search-query');
+                      sessionStorage.removeItem('search-input');
+                      sessionStorage.removeItem('is-searching');
+                      // 스크롤 탑으로 이동
+                      scrollToTop();
+                    }}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="font-medium">이전</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <SeasonSelector
+                    onSeasonSelect={handleSeasonSelect}
+                    className="w-fit"
+                    currentYear={isThisWeek ? undefined : selectedYear || undefined}
+                    currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
+                  />
+                </div>
+              )}
               
-              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아닐 때만 표시 */}
-              {!isThisWeek && (
+              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아니고 검색 중이 아닐 때만 표시 */}
+              {!isThisWeek && !searchQuery.trim() && (
                 <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
                   <input
                     type="checkbox"
@@ -1460,18 +1504,42 @@ function SearchPageContent() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex gap-5 items-center justify-start">
               {/* 애니메이션 그리드와 정렬을 위한 시즌 선택기만 표시 */}
-              {/* 시즌 선택 드롭다운 */}
-              <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                <SeasonSelector
-                  onSeasonSelect={handleSeasonSelect}
-                  className="w-fit"
-                  currentYear={isThisWeek ? undefined : selectedYear || undefined}
-                  currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
-                />
-              </div>
+              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+              {searchQuery.trim() ? (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchInput('');
+                      setIsSearching(false);
+                      // 검색 상태 정리
+                      sessionStorage.removeItem('search-query');
+                      sessionStorage.removeItem('search-input');
+                      sessionStorage.removeItem('is-searching');
+                      // 스크롤 탑으로 이동
+                      scrollToTop();
+                    }}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="font-medium">이전</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <SeasonSelector
+                    onSeasonSelect={handleSeasonSelect}
+                    className="w-fit"
+                    currentYear={isThisWeek ? undefined : selectedYear || undefined}
+                    currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
+                  />
+                </div>
+              )}
               
-              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아닐 때만 표시 */}
-              {!isThisWeek && (
+              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아니고 검색 중이 아닐 때만 표시 */}
+              {!isThisWeek && !searchQuery.trim() && (
                 <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
                   <input
                     type="checkbox"

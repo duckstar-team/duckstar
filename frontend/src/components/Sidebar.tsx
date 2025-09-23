@@ -108,6 +108,7 @@ interface NavButtonProps extends VariantProps<typeof voteButtonVariants> {
   isHovered?: boolean;
   isBeta?: boolean;
   badgeText?: string;
+  pathname?: string;
 }
 
 function NavButton({ 
@@ -120,7 +121,8 @@ function NavButton({
   isActive, 
   isHovered,
   isBeta = false,
-  badgeText
+  badgeText,
+  pathname
 }: NavButtonProps) {
   const { handleMouseEnter } = useNavigationPrefetch();
   const { startNavigation } = useNavigationState();
@@ -137,6 +139,13 @@ function NavButton({
     if (href === '/search') {
       // 사이드바 네비게이션임을 표시하는 플래그 설정
       sessionStorage.setItem('sidebar-navigation', 'true');
+      
+      // 현재 페이지가 이미 /search인 경우 강제로 검색 상태 초기화
+      if (pathname === '/search') {
+        // 검색 상태 초기화를 위한 강제 새로고침
+        window.location.reload();
+        return;
+      }
     }
     // vote 화면으로 이동할 때도 사이드바 네비게이션임을 표시
     if (href === '/vote') {
@@ -259,6 +268,7 @@ export default function Sidebar() {
               isHovered={hoveredItem === item.href && pathname !== item.href}
               isBeta={item.isBeta}
               badgeText={item.badgeText}
+              pathname={pathname}
             />
           </div>
         ))}
