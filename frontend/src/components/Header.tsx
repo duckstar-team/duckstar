@@ -2,6 +2,8 @@
 
 import type { NextPage } from "next";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import LoginButton from './common/LoginButton';
 import { useAuth } from '../context/AuthContext';
 import { scrollToTop } from '../utils/scrollUtils';
@@ -12,11 +14,31 @@ export type HeaderType = {
 
 const Header: NextPage<HeaderType> = ({ className = "" }) => {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
   
   // 덕스타 로고 클릭 시 스크롤 탑으로 이동
   const handleLogoClick = () => {
     sessionStorage.setItem('logo-navigation', 'true');
     scrollToTop();
+  };
+
+  // 검색 실행
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // 검색 결과 페이지로 이동하면서 검색어 전달
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      // 검색 후 검색창 비우기
+      setSearchQuery('');
+    }
+  };
+
+  // 엔터 키 처리
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    }
   };
   
   return (
@@ -40,7 +62,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         isAuthenticated ? 'gap-7' : 'gap-4'
       }`}>
         {/* Search Bar */}
-        <div className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 opacity-50 hidden md:flex">
+        <form onSubmit={handleSearch} className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 hover:opacity-100 transition-opacity hidden md:flex">
           {/* Search Icon */}
           <div className="w-5 h-5 relative overflow-hidden">
             <img
@@ -51,18 +73,20 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
           </div>
           
           {/* Separator */}
-          <div className="w-px h-4 bg-[#E9ECEF]"></div>
+          <div className="w-px h-4 bg-[#CED4DA]"></div>
           
           {/* Search Input */}
           <div className="flex-1">
             <input
               type="text"
-              disabled
-              placeholder="베타 - 곧 업데이트됩니다."
-              className="w-full bg-transparent outline-none text-sm text-gray-400 placeholder-gray-400"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="제목으로 애니 찾기..."
+              className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
             />
           </div>
-        </div>
+        </form>
         
         {/* Login/Logout Button */}
         <div className="flex items-center">

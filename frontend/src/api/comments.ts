@@ -153,7 +153,6 @@ export async function createComment(
   request: CommentRequestDto
 ): Promise<CommentDto> {
   try {
-    console.log('createComment API 호출 시작:', { animeId, request });
     
     // FormData 생성
     const formData = new FormData();
@@ -161,28 +160,17 @@ export async function createComment(
     // body 필드 추가
     if (request.body) {
       formData.append('body', request.body);
-      console.log('FormData에 body 추가:', request.body);
     } else {
-      console.log('body가 비어있음 - 이미지만 업로드');
     }
     
     // episodeId 필드 추가 (있는 경우)
     if (request.episodeId) {
       formData.append('episodeId', request.episodeId.toString());
-      console.log('FormData에 episodeId 추가:', request.episodeId);
     }
     
     // 이미지 파일 추가 (있는 경우)
     if (request.attachedImage) {
-      console.log('FormData에 이미지 추가:', {
-        name: request.attachedImage.name,
-        size: request.attachedImage.size,
-        type: request.attachedImage.type,
-        lastModified: request.attachedImage.lastModified
-      });
       formData.append('attachedImage', request.attachedImage);
-    } else {
-      console.log('attachedImage가 없음');
     }
 
     const response = await fetch(`${BASE_URL}/api/v1/animes/${animeId}`, {

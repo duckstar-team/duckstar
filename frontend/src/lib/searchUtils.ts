@@ -1,12 +1,5 @@
 // 검색 유틸리티 함수들
 
-// 한글 초성 매핑
-const CHOSUNG_MAP: { [key: string]: string } = {
-  'ㄱ': '가', 'ㄲ': '까', 'ㄴ': '나', 'ㄷ': '다', 'ㄸ': '따',
-  'ㄹ': '라', 'ㅁ': '마', 'ㅂ': '바', 'ㅃ': '빠', 'ㅅ': '사',
-  'ㅆ': '싸', 'ㅇ': '아', 'ㅈ': '자', 'ㅉ': '짜', 'ㅊ': '차',
-  'ㅋ': '카', 'ㅌ': '타', 'ㅍ': '파', 'ㅎ': '하'
-};
 
 // 한글 초성 추출 함수
 export function extractChosung(text: string): string {
@@ -27,24 +20,6 @@ export function extractChosung(text: string): string {
       continue;
     } else {
       // 공백이 아닌 다른 문자는 그대로 유지
-      result += char;
-    }
-  }
-  
-  return result;
-}
-
-// 검색어를 초성으로 변환하는 함수
-export function convertToChosung(text: string): string {
-  let result = '';
-  
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    
-    // 한글 자음인 경우
-    if (CHOSUNG_MAP[char]) {
-      result += CHOSUNG_MAP[char];
-    } else {
       result += char;
     }
   }
@@ -103,12 +78,3 @@ export function searchMatch(searchQuery: string, targetText: string): boolean {
   }
 }
 
-// 검색 결과 하이라이트 함수 (선택사항)
-export function highlightSearchResult(text: string, searchQuery: string): string {
-  if (!searchQuery.trim()) return text;
-  
-  const query = searchQuery.trim();
-  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  
-  return text.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
-}

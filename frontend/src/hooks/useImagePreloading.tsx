@@ -27,13 +27,6 @@ export function useImagePreloading() {
       .map(anime => anime.mainThumbnailUrl)
       .filter(url => url && url.trim() !== '');
 
-    // 디버깅: 프리로딩 호출 확인
-    console.log(`🚀 프리로딩 시작: ${imageUrls.length}개 이미지`, {
-      애니메이션수: animes.length,
-      이미지URL수: imageUrls.length,
-      우선순위: priority,
-      샘플URL: imageUrls.slice(0, 3)
-    });
 
     // 우선순위 기반 분할 로딩
     if (priority === 'high') {
@@ -44,7 +37,6 @@ export function useImagePreloading() {
       const visibleImages = imageUrls.slice(0, 12);
       const hiddenImages = imageUrls.slice(12);
       
-      console.log(`📱 화면 우선 로딩: ${visibleImages.length}개, 지연 로딩: ${hiddenImages.length}개`);
       
       // 즉시 로딩
       addToQueue(visibleImages, 'high');
@@ -52,7 +44,6 @@ export function useImagePreloading() {
       // 나머지는 지연 로딩
       if (hiddenImages.length > 0) {
         setTimeout(() => {
-          console.log(`⏰ 지연 로딩 시작: ${hiddenImages.length}개`);
           addToQueue(hiddenImages, 'medium');
         }, 300);
       }

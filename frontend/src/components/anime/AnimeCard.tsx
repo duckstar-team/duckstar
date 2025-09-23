@@ -22,11 +22,37 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
   const handleCardClick = () => {
     // search 화면에서만 스크롤 위치 저장
     if (pathname === '/search') {
-      // 여러 방법으로 스크롤 위치 확인
-      const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      // 실제 스크롤 컨테이너 찾기 (개선된 로직)
+      const allScrollableElements = document.querySelectorAll('*');
+      let foundScrollable = null;
+      let maxScrollTop = 0;
+      
+      // 1. main 요소 우선 확인
+      const mainElement = document.querySelector('main');
+      if (mainElement && mainElement.scrollTop > 0) {
+        foundScrollable = mainElement;
+        maxScrollTop = mainElement.scrollTop;
+      } else {
+        // 2. 모든 스크롤 가능한 요소 중에서 가장 큰 스크롤 값 찾기
+        allScrollableElements.forEach(element => {
+          const el = element as HTMLElement;
+          if (el.scrollTop > 0 && el.scrollTop > maxScrollTop) {
+            maxScrollTop = el.scrollTop;
+            foundScrollable = el;
+          }
+        });
+      }
+      
+      // 실제 스크롤 컨테이너 찾기
+      let scrollY = 0;
+      if (foundScrollable) {
+        scrollY = (foundScrollable as any).scrollTop;
+      } else {
+        // 폴백: 기존 방식
+        scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      }
       
       // 스크롤 위치 저장
-      
       sessionStorage.setItem('search-scroll', scrollY.toString());
       // 애니메이션 상세화면으로 이동하는 것임을 표시
       sessionStorage.setItem('to-anime-detail', 'true');
@@ -36,12 +62,12 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
   
   // 방영 시간 포맷팅
   const formatAirTime = (scheduledAt: string, airTime?: string) => {
-    // 종영 애니메이션의 경우 "(종영)" 표시
-    if (status === 'ENDED') {
-      return '· 종영';
+    // 극장판의 경우 airTime 필드 사용 (8/17 형식)
+    if (medium === 'MOVIE' && airTime) {
+      return `${airTime} 개봉`;
     }
     
-    // 극장판의 경우 개봉일 표시
+    // 극장판이지만 airTime이 없는 경우 scheduledAt 사용
     if (medium === 'MOVIE' && scheduledAt) {
       const date = new Date(scheduledAt);
       const month = date.getMonth() + 1; // 0부터 시작하므로 +1
@@ -54,12 +80,17 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
       return airTime;
     }
     
-    // 현재 시즌인 경우 scheduledAt 사용
-    if (scheduledAt) {
+    // "이번 주" 메뉴에서 종영된 애니메이션도 방영시간 표시
+    if (isCurrentSeason && scheduledAt) {
       const date = new Date(scheduledAt);
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
       return `${hours}:${minutes}`;
+    }
+    
+    // 종영 애니메이션의 경우 "(종영)" 표시 (시즌별 조회에서만)
+    if (status === 'ENDED') {
+      return '· 종영';
     }
     
     return '시간 미정';
@@ -279,7 +310,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
         
         {/* OTT Services Overlay */}
         <div className="absolute bottom-3 left-3 flex gap-[10px] items-center justify-start">
-          {ottDtos.slice(0, 5).map((ott, index) => (
+          {(ottDtos || []).slice(0, 5).map((ott, index) => (
             <div
               key={index}
               className="relative shrink-0 size-[36px] cursor-pointer hover:scale-110 transition-transform duration-200 drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)]"
@@ -396,9 +427,11 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
           <div className="flex items-center mt-[9px]">
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
-                {medium === 'TVA' && (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL') 
-                  ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime)}`
-                  : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime)}`
+                {medium === 'MOVIE' 
+                  ? formatAirTime(scheduledAt, anime.airTime) // 극장판은 요일 없이 시간만 표시
+                  : medium === 'TVA' && (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL') 
+                    ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime)}`
+                    : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime)}`
                 }
               </span>
               {isRescheduled && (

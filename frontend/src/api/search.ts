@@ -1,5 +1,5 @@
 import { getCurrentYearAndQuarter } from '@/lib/quarterUtils';
-import type { AnimePreviewDto, OttDto, WeekDto, AnimePreviewListDto } from '@/types/api';
+import type { AnimePreviewDto, OttDto, WeekDto, AnimePreviewListDto, AnimeSearchListDto } from '@/types/api';
 
 export interface ApiResponse<T> {
   isSuccess: boolean;
@@ -107,6 +107,101 @@ export async function getSeasons(): Promise<{ [year: number]: string[] }> {
     }
 
     const apiResponse: ApiResponse<{ [year: number]: string[] }> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * 애니메이션 검색 API
+ * @param query 검색어
+ * @returns 검색된 애니메이션 목록
+ */
+export async function searchAnimes(query: string): Promise<AnimeSearchListDto> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/search/animes?query=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: ApiResponse<AnimeSearchListDto> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * 관리자용 애니메이션 총 화수 업데이트 API
+ * @param animeId 애니메이션 ID
+ * @param totalEpisodes 총 화수
+ * @returns 업데이트 결과
+ */
+export async function updateAnimeTotalEpisodes(animeId: number, totalEpisodes: number): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/admin/${animeId}/total-episodes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ totalEpisodes }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: ApiResponse<{ success: boolean; message: string }> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * 관리자용 애니메이션 총 화수를 "모름"으로 설정하는 API
+ * @param animeId 애니메이션 ID
+ * @returns 업데이트 결과
+ */
+export async function setAnimeTotalEpisodesUnknown(animeId: number): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/admin/${animeId}/total-episodes/unknown`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: ApiResponse<{ success: boolean; message: string }> = await response.json();
     
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);

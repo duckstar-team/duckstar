@@ -45,156 +45,148 @@ export default function VoteStatus({
   const [_bonusButtonPosition, setBonusButtonPosition] = useState({ x: 0, y: 0 });
   const [_bonusStampPosition, setBonusStampPosition] = useState({ x: 0, y: 0 });
   const [bonusAnimationComplete, setBonusAnimationComplete] = useState(false);
+  
+  // 실시간 추적 상태 관리
+  const [isTrackingButton, setIsTrackingButton] = useState(false);
+  const [isTrackingStamp, setIsTrackingStamp] = useState(false);
+  const buttonTrackingRef = useRef<number | undefined>(undefined);
+  const stampTrackingRef = useRef<number | undefined>(undefined);
 
-  // Track BONUS button position
+  // 실시간 보너스 버튼 위치 추적 함수
+  const startButtonTracking = () => {
+    if (buttonTrackingRef.current) return; // 이미 추적 중이면 중복 방지
+    
+    const track = () => {
+      if (bonusButtonRef.current) {
+        const rect = bonusButtonRef.current.getBoundingClientRect();
+        const position = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + window.scrollY
+        };
+        setBonusButtonPosition(position);
+        onBonusButtonPositionChange?.(position);
+      }
+      buttonTrackingRef.current = requestAnimationFrame(track);
+    };
+    
+    track();
+    setIsTrackingButton(true);
+  };
+
+  const stopButtonTracking = () => {
+    if (buttonTrackingRef.current) {
+      cancelAnimationFrame(buttonTrackingRef.current);
+      buttonTrackingRef.current = undefined;
+    }
+    setIsTrackingButton(false);
+  };
+
+  // 보너스 버튼 실시간 추적
   useEffect(() => {
     const updateBonusButtonPosition = () => {
       if (bonusButtonRef.current) {
         const rect = bonusButtonRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + rect.width / 2,
-          y: rect.top + window.scrollY // 문서 기준 절대 좌표로 변환
+          y: rect.top + window.scrollY
         };
         setBonusButtonPosition(position);
         onBonusButtonPositionChange?.(position);
       }
     };
 
-    // 즉시 위치 업데이트 (렌더링 직후)
+    // 즉시 위치 업데이트
     updateBonusButtonPosition();
     
-    // 추가 위치 업데이트 (애니메이션 진행에 따라)
-    const timeouts = [
-      setTimeout(() => updateBonusButtonPosition(), 16), // 1프레임 후
-      setTimeout(() => updateBonusButtonPosition(), 50), // 애니메이션 중간
-      setTimeout(() => updateBonusButtonPosition(), 100), // 애니메이션 거의 완료
-      setTimeout(() => updateBonusButtonPosition(), 200), // 애니메이션 완료 후
-    ];
-
-    // 근본적인 해결책 1: Intersection Observer로 위치 추적
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            updateBonusButtonPosition();
-          }
-        });
-      },
-      { 
-        threshold: 0,
-        rootMargin: '0px'
-      }
-    );
-
-    // 보너스 버튼이 렌더링되면 관찰 시작
-    if (bonusButtonRef.current) {
-      observer.observe(bonusButtonRef.current);
-    }
-
-    // 근본적인 해결책 2: 여러 요소에 스크롤 이벤트 등록
-    const handleScroll = () => {
-      updateBonusButtonPosition();
-    };
-    
-    // 1. window에 등록
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', updateBonusButtonPosition);
-    
-    // 2. document에 등록
-    document.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // 3. document.body에 등록
-    document.body.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // 4. document.documentElement에 등록
-    document.documentElement.addEventListener('scroll', handleScroll, { passive: true });
+    // 실시간 추적 시작
+    startButtonTracking();
 
     return () => {
-      // 모든 timeout 정리
-      timeouts.forEach(timeout => clearTimeout(timeout));
-      observer.disconnect();
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', updateBonusButtonPosition);
-      document.removeEventListener('scroll', handleScroll);
-      document.body.removeEventListener('scroll', handleScroll);
-      document.documentElement.removeEventListener('scroll', handleScroll);
+      stopButtonTracking();
     };
-  }, [hasReachedMaxVotes, hasClickedBonus, showGenderSelection, onBonusButtonPositionChange]); // 보너스 버튼 렌더링 상태를 의존성에 추가
+  }, [hasReachedMaxVotes, hasClickedBonus, showGenderSelection, onBonusButtonPositionChange]);
 
-  // Track bonus stamp position
+  // 실시간 보너스 도장 위치 추적 함수
+  const startStampTracking = () => {
+    if (stampTrackingRef.current) return; // 이미 추적 중이면 중복 방지
+    
+    const track = () => {
+      if (bonusStampRef.current) {
+        const rect = bonusStampRef.current.getBoundingClientRect();
+        const position = {
+          x: rect.left + 33.5,
+          y: rect.top + window.scrollY
+        };
+        setBonusStampPosition(position);
+        onBonusStampPositionChange?.(position);
+      }
+      stampTrackingRef.current = requestAnimationFrame(track);
+    };
+    
+    track();
+    setIsTrackingStamp(true);
+  };
+
+  const stopStampTracking = () => {
+    if (stampTrackingRef.current) {
+      cancelAnimationFrame(stampTrackingRef.current);
+      stampTrackingRef.current = undefined;
+    }
+    setIsTrackingStamp(false);
+  };
+
+  // 보너스 도장 실시간 추적
   useEffect(() => {
     const updateBonusStampPosition = () => {
       if (bonusStampRef.current) {
         const rect = bonusStampRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + 33.5,
-          y: rect.top + window.scrollY // 문서 기준 절대 좌표로 변환
+          y: rect.top + window.scrollY
         };
         setBonusStampPosition(position);
         onBonusStampPositionChange?.(position);
       }
     };
 
-    // 즉시 위치 업데이트 (렌더링 직후)
+    // 즉시 위치 업데이트
     updateBonusStampPosition();
     
-    // 추가 위치 업데이트 (애니메이션 진행에 따라)
-    const timeouts = [
-      setTimeout(() => updateBonusStampPosition(), 16), // 1프레임 후
-      setTimeout(() => updateBonusStampPosition(), 50), // 애니메이션 중간
-      setTimeout(() => updateBonusStampPosition(), 100), // 애니메이션 거의 완료
-      setTimeout(() => updateBonusStampPosition(), 200), // 애니메이션 완료 후
-    ];
-
-    // 근본적인 해결책 1: Intersection Observer로 위치 추적
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            updateBonusStampPosition();
-          }
-        });
-      },
-      { 
-        threshold: 0,
-        rootMargin: '0px'
-      }
-    );
-
-    // 보너스 스탬프가 렌더링되면 관찰 시작
-    if (bonusStampRef.current) {
-      observer.observe(bonusStampRef.current);
-    }
-
-    // 근본적인 해결책 2: 여러 요소에 스크롤 이벤트 등록
-    const handleScroll = () => {
-      updateBonusStampPosition();
-    };
-    
-    // 1. window에 등록
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', updateBonusStampPosition);
-    
-    // 2. document에 등록
-    document.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // 3. document.body에 등록
-    document.body.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // 4. document.documentElement에 등록
-    document.documentElement.addEventListener('scroll', handleScroll, { passive: true });
+    // 실시간 추적 시작
+    startStampTracking();
 
     return () => {
-      // 모든 timeout 정리
-      timeouts.forEach(timeout => clearTimeout(timeout));
-      observer.disconnect();
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', updateBonusStampPosition);
-      document.removeEventListener('scroll', handleScroll);
-      document.body.removeEventListener('scroll', handleScroll);
-      document.documentElement.removeEventListener('scroll', handleScroll);
+      stopStampTracking();
     };
   }, [isBonusMode, bonusAnimationComplete, showGenderSelection, onBonusStampPositionChange]); // 보너스 스탬프 렌더링 상태를 의존성에 추가
+
+  // 스크롤 이벤트로 실시간 추적 강화
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isTrackingButton && bonusButtonRef.current) {
+        const rect = bonusButtonRef.current.getBoundingClientRect();
+        const position = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + window.scrollY
+        };
+        setBonusButtonPosition(position);
+        onBonusButtonPositionChange?.(position);
+      }
+      
+      if (isTrackingStamp && bonusStampRef.current) {
+        const rect = bonusStampRef.current.getBoundingClientRect();
+        const position = {
+          x: rect.left + 33.5,
+          y: rect.top + window.scrollY
+        };
+        setBonusStampPosition(position);
+        onBonusStampPositionChange?.(position);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isTrackingButton, isTrackingStamp, onBonusButtonPositionChange, onBonusStampPositionChange]);
 
   // Reset animation complete state when bonus mode is disabled
   useEffect(() => {

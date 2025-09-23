@@ -15,14 +15,6 @@ export function useImageUpload() {
   const { canUpload, startUpload, finishUpload, uploadStats, limits } = useUploadLimits();
 
   const uploadImage = useCallback((file: File) => {
-    // 디버깅 정보 출력
-    console.log('파일 업로드 시도:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-      uploadStats: uploadStats
-    });
 
     // 파일 크기 제한 (5MB)
     const maxSize = 5 * 1024 * 1024;
@@ -57,12 +49,6 @@ export function useImageUpload() {
     // 클라이언트 측에서도 ImageIO.read()와 유사한 검증 시도
     const img = new Image();
     img.onload = () => {
-      console.log('이미지 로드 성공:', {
-        width: img.width,
-        height: img.height,
-        naturalWidth: img.naturalWidth,
-        naturalHeight: img.naturalHeight
-      });
     };
     img.onerror = () => {
       console.error('이미지 로드 실패 - 파일이 손상되었거나 유효하지 않은 이미지입니다.');

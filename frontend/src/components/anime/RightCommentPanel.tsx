@@ -143,34 +143,8 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       }
     } catch (err) {
       setError('데이터를 불러오는 중 오류가 발생했습니다.');
-      // 에러 처리
-      
-      // 에러 발생 시 임시 데이터로 폴백
-      const fallbackData: AnimeHomeDto = {
-        animeInfoDto: {
-          medium: "TVA",
-          status: "ONGOING",
-          totalEpisodes: 12,
-          premiereDateTime: new Date().toISOString(),
-          titleKor: "샘플 애니메이션"
-        },
-        animeStatDto: {},
-        episodeDtos: Array.from({ length: 12 }, (_, i) => {
-          const scheduledAt = new Date();
-          scheduledAt.setDate(scheduledAt.getDate() + (i - 5) * 7);
-          
-          return {
-            episodeId: i + 1, // episodeId 추가
-            episodeNumber: i + 1,
-            isBreak: false,
-            scheduledAt: scheduledAt.toISOString(),
-            isRescheduled: false,
-            nextEpScheduledAt: undefined
-          };
-        })
-      };
-      
-      setAnimeData(fallbackData);
+      // 에러 처리 - mock 데이터 제거
+      setAnimeData(null);
     } finally {
       setLoading(false);
     }
@@ -904,6 +878,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             totalEpisodes={totalEpisodes}
             selectedEpisodeIds={selectedEpisodeIds}
             onEpisodeClick={handleEpisodeClick}
+            animeId={animeId || 1}
           />
         </div>
         
@@ -928,6 +903,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
           totalEpisodes={totalEpisodes}
           selectedEpisodeIds={selectedEpisodeIds}
           onEpisodeClick={handleEpisodeClick}
+          animeId={animeId || 1}
         />
       </div>
       
@@ -935,7 +911,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       {!isImageModalOpen && (
         <div 
           ref={commentHeaderRef} 
-          className="sticky top-[60px] z-20 bg-white w-full"
+          className="sticky top-0 z-20 bg-white w-full"
           style={{ width: '608px' }}
         >
         <div className="size- flex flex-col justify-start items-start gap-5">
@@ -1011,7 +987,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
         <div 
           ref={sortingMenuRef} 
           className="sticky z-10 bg-white pl-3.5 pt-5"
-          style={{ top: `${60 + headerHeight}px`, width: '608px' }}
+          style={{ top: `${headerHeight}px`, width: '608px' }}
         >
           <SortingMenu 
             currentSort={currentSort}

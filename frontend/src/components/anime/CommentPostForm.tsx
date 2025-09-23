@@ -63,16 +63,8 @@ export default function CommentPostForm({
   }, [uploadedImages]);
 
   const handleSubmit = useCallback(() => {
-    console.log('handleSubmit 호출됨:', { 
-      comment: commentRef.current.trim(), 
-      images: uploadedImagesRef.current.length,
-      isSubmitting: isSubmittingRef.current,
-      timestamp: Date.now()
-    });
-    
     // 이미 제출 중이면 중복 호출 방지
     if (isSubmittingRef.current) {
-      console.log('이미 제출 중이므로 중복 호출 방지');
       return;
     }
     
@@ -101,7 +93,6 @@ export default function CommentPostForm({
       const imageFiles = currentImages.map(img => img.file);
       const commentText = currentComment;
       
-      console.log('댓글 제출 시작:', { commentText, imageFiles });
       
       // 이미지가 있는 경우 업로드 시작 처리
       if (currentImages.length > 0) {
@@ -129,7 +120,6 @@ export default function CommentPostForm({
           setUploadedImages([]);
           // 제출 완료 후 플래그 리셋
           isSubmittingRef.current = false;
-          console.log('제출 완료, 플래그 리셋');
         });
     }
   }, [onSubmit]); // onSubmit만 의존성으로 유지
