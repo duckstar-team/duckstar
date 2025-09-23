@@ -47,7 +47,7 @@ interface AnimeInfoDto {
 
 interface AnimeHomeDto {
   animeInfoDto: AnimeInfoDto;
-  episodeDtos: EpisodeDto[];
+  episodeResponseDtos: EpisodeDto[];
 }
 
 interface EpisodeCommentModalProps {
@@ -80,7 +80,7 @@ export default function EpisodeCommentModal({
   };
 
   // 에피소드 데이터 처리
-  const processedEpisodes = animeData?.episodeResponseDtos?.map(episodeDto => {
+  const processedEpisodes = animeData?.episodeResponseDtos?.map((episodeDto: EpisodeDto) => {
     const scheduledAt = new Date(episodeDto.scheduledAt);
     const { quarter, week } = getQuarterAndWeek(scheduledAt);
     
@@ -96,10 +96,36 @@ export default function EpisodeCommentModal({
     };
   }) || [];
 
+  // 테스트용 하드코딩 데이터 (데이터가 없을 때)
+  const testEpisodes = [
+    {
+      id: 1,
+      episodeId: 1,
+      episodeNumber: 1,
+      scheduledAt: '2024-01-01T00:00:00Z',
+      quarter: '1분기',
+      week: '1주차',
+      isBreak: false,
+      isRescheduled: false
+    },
+    {
+      id: 2,
+      episodeId: 2,
+      episodeNumber: 2,
+      scheduledAt: '2024-01-08T00:00:00Z',
+      quarter: '1분기',
+      week: '2주차',
+      isBreak: false,
+      isRescheduled: false
+    }
+  ];
+  
+  const finalEpisodes = processedEpisodes.length > 0 ? processedEpisodes : testEpisodes;
+
   // 에피소드 클릭 핸들러 (한 개만 선택 가능, 현재 방영 중인 에피소드 제외)
   const handleEpisodeClick = (episodeId: number) => {
     // 현재 방영 중인 에피소드인지 확인
-    const episode = processedEpisodes.find(ep => ep.episodeId === episodeId);
+    const episode = processedEpisodes.find((ep: any) => ep.episodeId === episodeId);
     if (!episode) return;
 
     // 현재 시간과 에피소드 방영 시간 비교
@@ -186,13 +212,19 @@ export default function EpisodeCommentModal({
     <div className="fixed inset-0 z-50">
       {/* 배경 오버레이 */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* 모달 컨테이너 - 사이드바와 헤더를 제외한 메인 프레임 중앙 정렬 */}
-      <div className="absolute inset-0 flex items-center justify-center lg:left-[240px] top-[60px]">
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[calc(100vh-120px)] overflow-hidden">
+      <div 
+        className="fixed inset-0 flex items-center justify-center lg:left-[240px] top-[60px]"
+        onClick={onClose}
+      >
+        <div 
+          className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[calc(100vh-120px)] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -218,15 +250,14 @@ export default function EpisodeCommentModal({
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-['Pretendard']">
               에피소드 선택
             </h3>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <EpisodeSection
-                episodes={processedEpisodes}
-                totalEpisodes={processedEpisodes.length}
-                selectedEpisodeIds={selectedEpisodeIds}
-                onEpisodeClick={handleEpisodeClick}
-                disableFutureEpisodes={true}
-              />
-            </div>
+            <EpisodeSection
+              animeId={animeId}
+              episodes={finalEpisodes}
+              totalEpisodes={animeData?.animeInfoDto?.totalEpisodes}
+              selectedEpisodeIds={selectedEpisodeIds}
+              onEpisodeClick={handleEpisodeClick}
+              disableFutureEpisodes={true}
+            />
           </div>
 
           {/* 댓글 작성 섹션 */}
@@ -237,7 +268,7 @@ export default function EpisodeCommentModal({
               </h3>
               {selectedEpisodeIds.length > 0 && (
                 <div className="text-2xl font-bold text-[#FFB310] font-['Pretendard']">
-                  {processedEpisodes.find(ep => ep.episodeId === selectedEpisodeIds[0])?.episodeNumber}화
+                  {processedEpisodes.find((ep: any) => ep.episodeId === selectedEpisodeIds[0])?.episodeNumber}화
                 </div>
               )}
             </div>

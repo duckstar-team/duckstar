@@ -1,29 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AnimeSearchBar from '@/components/search/ui/AnimeSearchBar';
 import AnimeCard from '@/components/anime/AnimeCard';
 import DaySelection, { DayOfWeek } from '@/components/search/ui/DaySelection';
 import SearchFilters from '@/components/search/filters/SearchFilters';
 import SearchInput from '@/components/search/ui/SearchInput';
-import { getCurrentSchedule, getScheduleByYearAndQuarter } from '@/api/search';
+import { getCurrentSchedule, getScheduleByYearAndQuarter, searchAnimes } from '@/api/search';
 import SeasonSelector from '@/components/search/ui/SeasonSelector';
-import type { AnimePreviewDto, AnimePreviewListDto } from '@/types/api';
-import { searchMatch, extractChosung } from '@/lib/searchUtils';
-import { getCurrentYearAndQuarter } from '@/lib/quarterUtils';
+import type { AnimePreviewDto, AnimePreviewListDto, AnimeSearchListDto } from '@/types/api';
+import { extractChosung } from '@/lib/searchUtils';
 // import { useScrollRestoration } from '@/hooks/useScrollRestoration'; // 제거: 직접 구현
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';
 import { useQuery } from '@tanstack/react-query';
-import { testAnimes } from '@/data/testAnimes';
 import { scrollToTop, scrollToPosition, restoreScrollFromStorage, clearStorageFlags } from '@/utils/scrollUtils';
 import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
 import PreloadingProgress from '@/components/common/PreloadingProgress';
 
 // 애니메이션 데이터 (이제 별도 파일에서 import)
 
-export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+function SearchPageContent() {
+  const searchParams = useSearchParams();
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('일'); // 기본값을 "일"로 설정
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
@@ -34,7 +33,7 @@ export default function SearchPage() {
   // 분기 선택 상태
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedQuarter, setSelectedQuarter] = useState<number | null>(null);
-  const [isCustomSeason, setIsCustomSeason] = useState(false);
+  const [isThisWeek, setIsThisWeek] = useState(true); // 기본값을 "이번 주"로 설정
   const [isInitialized, setIsInitialized] = useState(false); // 초기화 완료 여부
   const [showOnlyAiring, setShowOnlyAiring] = useState(false); // 방영 중 애니만 보기
   
@@ -45,31 +44,100 @@ export default function SearchPage() {
     // 체크박스 상태를 sessionStorage에 저장
     sessionStorage.setItem('showOnlyAiring', checked.toString());
     
-    // 현재 선택된 요일로 스크롤 유지
-    if (selectedDay && selectedDay !== '곧 시작') {
-      const dayToSectionId = {
-        '일': 'sun',
-        '월': 'mon', 
-        '화': 'tue',
-        '수': 'wed',
-        '목': 'thu',
-        '금': 'fri',
-        '토': 'sat',
-        '특별편성 및 극장판': 'special'
-      };
-      
-      const sectionId = dayToSectionId[selectedDay as keyof typeof dayToSectionId];
-      if (sectionId) {
-        setTimeout(() => {
-          scrollToSection(sectionId);
-        }, 100);
+    if (checked) {
+      // 체크 시: 현재 선택된 요일로 스크롤 유지
+      if (selectedDay && selectedDay !== '곧 시작') {
+        const dayToSectionId = {
+          '일': 'sun',
+          '월': 'mon', 
+          '화': 'tue',
+          '수': 'wed',
+          '목': 'thu',
+          '금': 'fri',
+          '토': 'sat',
+          '특별편성 및 극장판': 'special'
+        };
+        
+        const sectionId = dayToSectionId[selectedDay as keyof typeof dayToSectionId];
+        if (sectionId) {
+          setTimeout(() => {
+            scrollToSection(sectionId);
+          }, 100);
+        }
       }
+    } else {
+      // 체크 해제 시: 나타나는 첫 번째 섹션으로 자동 이동
+      setTimeout(() => {
+        const dayOrder = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+        
+        // 나타나는 첫 번째 섹션 찾기
+        for (const sectionId of dayOrder) {
+          const element = document.getElementById(sectionId);
+          if (element && element.children.length > 0) {
+            // 해당 섹션에 애니메이션이 있는지 확인
+            const animeCards = element.querySelectorAll('[data-anime-card]');
+            if (animeCards.length > 0) {
+              // 첫 번째로 나타나는 섹션으로 이동
+              scrollToSection(sectionId);
+              
+              // 해당 요일로 네비게이션 바도 업데이트
+              const dayMap: { [key: string]: string } = {
+                'upcoming': '곧 시작',
+                'sun': '일',
+                'mon': '월',
+                'tue': '화',
+                'wed': '수',
+                'thu': '목',
+                'fri': '금',
+                'sat': '토',
+                'special': '특별편성 및 극장판'
+              };
+              
+              const newSelectedDay = dayMap[sectionId];
+              if (newSelectedDay) {
+                setSelectedDay(newSelectedDay as any);
+              }
+              break;
+            }
+          }
+        }
+      }, 200); // 데이터 업데이트를 위한 충분한 시간
     }
   };
   
   // 스티키 요소들을 위한 ref와 상태
   const seasonSelectorRef = useRef<HTMLDivElement>(null);
   const [seasonSelectorHeight, setSeasonSelectorHeight] = useState(0);
+
+  // 검색 상태 복원 (애니메이션 상세화면에서 돌아온 경우)
+  useEffect(() => {
+    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+    const savedSearchQuery = sessionStorage.getItem('search-query');
+    const savedSearchInput = sessionStorage.getItem('search-input');
+    const savedIsSearching = sessionStorage.getItem('is-searching');
+    
+    if (fromAnimeDetail === 'true' && savedSearchQuery) {
+      
+      setSearchQuery(savedSearchQuery);
+      setSearchInput(savedSearchInput || savedSearchQuery);
+      setIsSearching(savedIsSearching === 'true');
+      
+      // 플래그는 스크롤 복원 로직에서 정리하도록 유지
+    }
+  }, []);
+
+  // URL 쿼리 파라미터 처리 (검색 상태 복원 후에 실행)
+  useEffect(() => {
+    const queryParam = searchParams.get('q');
+    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+    
+    // 애니메이션 상세화면에서 돌아온 경우가 아닐 때만 URL 파라미터 처리
+    if (queryParam && fromAnimeDetail !== 'true') {
+      setSearchQuery(queryParam);
+      setSearchInput(queryParam);
+      setIsSearching(true);
+    }
+  }, [searchParams]);
 
   // 페이지 로드 시 스크롤 복원 또는 맨 위로 이동
   useEffect(() => {
@@ -92,15 +160,23 @@ export default function SearchPage() {
     // 저장된 시즌 정보 복원
     if (selectedSeason && !isSidebarNavigation && !isLogoNavigation) {
       try {
-        const { year, quarter } = JSON.parse(selectedSeason);
-        setSelectedYear(year);
-        setSelectedQuarter(quarter);
-        
-        // 현재 시즌인지 확인하여 isCustomSeason 설정
-        const isCurrent = isCurrentSeason(year, quarter);
-        setIsCustomSeason(!isCurrent);
+        const seasonData = JSON.parse(selectedSeason);
+        if (seasonData.isThisWeek) {
+          setIsThisWeek(true);
+          setSelectedYear(null);
+          setSelectedQuarter(null);
+        } else {
+          const { year, quarter } = seasonData;
+          setSelectedYear(year);
+          setSelectedQuarter(quarter);
+          setIsThisWeek(false);
+        }
       } catch (error) {
         console.error('Failed to parse selected season:', error);
+        // 기본값으로 "이번 주" 설정
+        setIsThisWeek(true);
+        setSelectedYear(null);
+        setSelectedQuarter(null);
       }
     }
     
@@ -150,18 +226,13 @@ export default function SearchPage() {
 
   // 스크롤 컨테이너 찾기 함수
   const findScrollContainer = () => {
-    const candidates = [
-      document.documentElement, // html
-      document.body, // body
-      document.querySelector('main'), // main
-    ];
-    
-    for (const container of candidates) {
-      if (container && container.scrollHeight > container.clientHeight) {
-        return container;
-      }
+    // 메인 컨테이너를 우선적으로 확인
+    const mainContainer = document.querySelector('main');
+    if (mainContainer && mainContainer.scrollHeight > mainContainer.clientHeight) {
+      return mainContainer;
     }
     
+    // 메인 컨테이너가 스크롤 가능하지 않으면 window 사용
     return window;
   };
 
@@ -248,6 +319,39 @@ export default function SearchPage() {
       return;
     }
 
+    // 첫 번째로 나타나는 섹션 찾기
+    const dayOrder = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+    let firstVisibleSection = null;
+    
+    for (const daySectionId of dayOrder) {
+      const element = document.getElementById(daySectionId);
+      if (element) {
+        // 다양한 선택자로 애니메이션 카드 찾기
+        const animeCards = element.querySelectorAll('div[class*="bg-white"], div[class*="rounded-2xl"], .anime-card, [data-anime-card]');
+        if (animeCards.length > 0) {
+          firstVisibleSection = daySectionId;
+          break;
+        }
+      }
+    }
+
+    // 현재 선택된 섹션이 첫 번째 섹션이면 스크롤 탑으로 이동
+    const currentIndex = dayOrder.indexOf(sectionId);
+    const firstIndex = dayOrder.indexOf(firstVisibleSection || '');
+    
+    
+    if (currentIndex !== -1 && firstIndex !== -1 && currentIndex === firstIndex) {
+      // 첫 번째 섹션이면 스크롤 탑으로 이동
+      const container = findScrollContainer();
+      if (container === window) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // 일반적인 섹션이면 오프셋을 고려한 위치로 이동
     const element = document.getElementById(sectionId);
     if (element) {
       const container = findScrollContainer();
@@ -276,28 +380,27 @@ export default function SearchPage() {
   const { preloadSearchResults } = useImagePreloading();
   const { getQueueStatus } = useSmartImagePreloader();
 
-  // 현재 시즌인지 확인하는 함수
-  const isCurrentSeason = (year: number, quarter: number): boolean => {
-    const current = getCurrentYearAndQuarter();
-    return year === current.year && quarter === current.quarter;
-  };
-
   // 분기 선택 핸들러
   const handleSeasonSelect = (year: number, quarter: number) => {
-    setSelectedYear(year);
-    setSelectedQuarter(quarter);
+    // "이번 주" 선택인지 확인 (year=0, quarter=0으로 전달됨)
+    const isThisWeekSelected = year === 0 && quarter === 0;
     
-    // 현재 시즌인지 확인하여 isCustomSeason 설정
-    const isCurrent = isCurrentSeason(year, quarter);
-    setIsCustomSeason(!isCurrent);
+    if (isThisWeekSelected) {
+      setIsThisWeek(true);
+      setSelectedYear(null);
+      setSelectedQuarter(null);
+    } else {
+      setIsThisWeek(false);
+      setSelectedYear(year);
+      setSelectedQuarter(quarter);
+    }
     
-    // 다른 시즌으로 이동할 때는 체크박스 상태를 sessionStorage에 저장하고 현재 분기로 돌아올 때만 복원
-    if (!isCurrent) {
-      // 과거 분기로 이동할 때는 체크박스 상태를 저장하고 해제
+    // "이번 주"가 아닌 경우에만 체크박스 상태를 sessionStorage에 저장하고 해제
+    if (!isThisWeekSelected) {
       sessionStorage.setItem('showOnlyAiring', showOnlyAiring.toString());
       setShowOnlyAiring(false);
     } else {
-      // 현재 분기로 돌아올 때는 저장된 체크박스 상태 복원
+      // "이번 주"로 돌아올 때는 저장된 체크박스 상태 복원
       const savedShowOnlyAiring = sessionStorage.getItem('showOnlyAiring');
       if (savedShowOnlyAiring !== null) {
         setShowOnlyAiring(savedShowOnlyAiring === 'true');
@@ -305,65 +408,93 @@ export default function SearchPage() {
     }
     
     // 선택된 시즌 정보를 sessionStorage에 저장
-    sessionStorage.setItem('selected-season', JSON.stringify({ year, quarter }));
+    if (isThisWeekSelected) {
+      sessionStorage.setItem('selected-season', JSON.stringify({ isThisWeek: true }));
+    } else {
+      sessionStorage.setItem('selected-season', JSON.stringify({ year, quarter }));
+    }
     
-    // 현재 분기로 돌아올 때 "곧 시작" 그룹이 있으면 "곧 시작"으로, 없으면 기존 요일 유지
-    if (isCurrent) {
-      // 데이터가 로드된 후 "곧 시작" 그룹이 있는지 확인
-      setTimeout(() => {
-        if (scheduleData?.upcomingAnimes && scheduleData.upcomingAnimes.length > 0) {
-          setSelectedDay('곧 시작');
-          scrollToSection('upcoming');
-        } else if (selectedDay && selectedDay !== '곧 시작') {
-          // "곧 시작" 그룹이 없으면 기존 선택된 요일로 스크롤
-          const dayToSectionId = {
-            '일': 'sun',
-            '월': 'mon', 
-            '화': 'tue',
-            '수': 'wed',
-            '목': 'thu',
-            '금': 'fri',
-            '토': 'sat',
-            '특별편성 및 극장판': 'special'
-          };
-          
-          const sectionId = dayToSectionId[selectedDay as keyof typeof dayToSectionId];
-          if (sectionId) {
-            scrollToSection(sectionId);
-          }
+    // 드롭다운을 통해 다른 시즌 접근 시 스크롤 처리
+    if (isThisWeekSelected) {
+      // "이번 주" 선택 시: "곧 시작"~"일" 메뉴에서는 스크롤 탑, "화"~"특별편성 및 극장판"에서는 "곧 시작" 그룹 높이 고려
+      const topMenuDays = ['곧 시작', '일'];
+      if (topMenuDays.includes(selectedDay)) {
+        setSelectedDay('곧 시작');
+        // "곧 시작"~"일" 메뉴에서는 스크롤 탑으로 이동
+        const container = findScrollContainer();
+        if (container === window) {
+          window.scrollTo(0, 0);
+        } else {
+          container.scrollTo(0, 0);
         }
-      }, 200); // 데이터 로딩을 위한 충분한 시간
-    } else if (selectedDay && selectedDay !== '곧 시작') {
-      // 다른 경우에는 현재 선택된 요일로 스크롤 유지
-      const dayToSectionId = {
-        '일': 'sun',
-        '월': 'mon', 
-        '화': 'tue',
-        '수': 'wed',
-        '목': 'thu',
-        '금': 'fri',
-        '토': 'sat',
-        '특별편성 및 극장판': 'special'
-      };
-      
-      const sectionId = dayToSectionId[selectedDay as keyof typeof dayToSectionId];
-      if (sectionId) {
-        setTimeout(() => {
-          scrollToSection(sectionId);
-        }, 100);
+      } else {
+        // "화"~"특별편성 및 극장판" 메뉴에서는 해당 요일의 섹션으로 스크롤 유지
+        const dayToSectionId = {
+          '화': 'tue',
+          '수': 'wed',
+          '목': 'thu',
+          '금': 'fri',
+          '토': 'sat',
+          '특별편성 및 극장판': 'special'
+        };
+        
+        const sectionId = dayToSectionId[selectedDay as keyof typeof dayToSectionId];
+        if (sectionId) {
+          setTimeout(() => {
+            scrollToSection(sectionId);
+          }, 100);
+        }
+      }
+    } else {
+      // 다른 시즌 선택 시: "곧 시작"~"일" 메뉴에서는 스크롤 탑, "화"~"특별편성 및 극장판"에서는 기존 스크롤 유지
+      const topMenuDays = ['곧 시작', '일'];
+      if (topMenuDays.includes(selectedDay)) {
+        // "곧 시작"~"일" 메뉴에서는 스크롤 탑으로 이동
+        const container = findScrollContainer();
+        if (container === window) {
+          window.scrollTo(0, 0);
+        } else {
+          container.scrollTo(0, 0);
+        }
+      } else {
+        // "화"~"특별편성 및 극장판" 메뉴에서는 기존 스크롤 유지
+        const dayToSectionId = {
+          '화': 'tue',
+          '수': 'wed',
+          '목': 'thu',
+          '금': 'fri',
+          '토': 'sat',
+          '특별편성 및 극장판': 'special'
+        };
+        
+        const sectionId = dayToSectionId[selectedDay as keyof typeof dayToSectionId];
+        if (sectionId) {
+          setTimeout(() => {
+            scrollToSection(sectionId);
+          }, 100);
+        }
       }
     }
   };
 
+  // 검색 쿼리 상태
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // 입력 중인 검색어
+  const [isSearching, setIsSearching] = useState(false);
+
   // React Query를 사용한 데이터 페칭 (개선된 캐싱 설정)
   const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
-    queryKey: isCustomSeason && selectedYear && selectedQuarter 
-      ? ['schedule', selectedYear, selectedQuarter]
-      : ['schedule', 'current'],
-    queryFn: isCustomSeason && selectedYear && selectedQuarter
-      ? () => getScheduleByYearAndQuarter(selectedYear, selectedQuarter)
-      : getCurrentSchedule, // 현재 시즌일 때는 /api/v1/search 호출
-    enabled: isInitialized, // 초기화 완료 후에만 API 호출
+    queryKey: isThisWeek 
+      ? ['schedule', 'this-week']
+      : selectedYear && selectedQuarter 
+        ? ['schedule', selectedYear, selectedQuarter]
+        : ['schedule', 'this-week'],
+    queryFn: isThisWeek
+      ? getCurrentSchedule // "이번 주"일 때는 /api/v1/search 호출
+      : selectedYear && selectedQuarter
+        ? () => getScheduleByYearAndQuarter(selectedYear, selectedQuarter)
+        : getCurrentSchedule, // 기본값은 "이번 주"
+    enabled: isInitialized && !searchQuery.trim(), // 검색 중이 아닐 때만 API 호출
     staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
     gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
     refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
@@ -374,65 +505,147 @@ export default function SearchPage() {
     retryOnMount: true, // 마운트 시 재시도
   });
 
-  // 현재 연도와 분기 (WeekDto에서만 가져오기)
-  const currentYear = scheduleData?.weekDto?.year;
-  const currentQuarter = scheduleData?.weekDto?.quarter;
+  // 검색 쿼리
+  const { data: searchData, error: searchError, isLoading: isSearchLoading } = useQuery<AnimeSearchListDto>({
+    queryKey: ['search', searchQuery],
+    queryFn: () => searchAnimes(searchQuery),
+    enabled: isInitialized && searchQuery.trim().length > 0, // 검색어가 있을 때만 API 호출
+    staleTime: 2 * 60 * 1000, // 2분간 fresh 상태 유지
+    gcTime: 5 * 60 * 1000, // 5분간 캐시 유지
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: 3,
+    retryDelay: 5000,
+  });
 
-  // 스크롤 복원 직접 구현 (search 화면에서만) - 깜빡임 방지
+  // 검색 상태 저장 (검색어가 변경될 때마다)
   useEffect(() => {
-    if (scheduleData) {
+    if (searchQuery.trim()) {
+      sessionStorage.setItem('search-query', searchQuery);
+      sessionStorage.setItem('search-input', searchInput);
+      sessionStorage.setItem('is-searching', isSearching.toString());
+    } else {
+      // 검색어가 비어있으면 저장된 검색 상태 정리
+      sessionStorage.removeItem('search-query');
+      sessionStorage.removeItem('search-input');
+      sessionStorage.removeItem('is-searching');
+    }
+  }, [searchQuery, searchInput, isSearching]);
+
+  // 현재 연도와 분기는 더 이상 사용하지 않음 (isThisWeek로 관리)
+
+  // 스크롤 복원 직접 구현 (search 화면에서만) - 깜빡임 완전 방지
+  useEffect(() => {
+    if (scheduleData || searchData) {
       const savedY = sessionStorage.getItem('search-scroll');
       const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
       
       // 애니메이션 상세화면에서 돌아온 경우에만 스크롤 복원
       if (savedY && isFromAnimeDetail) {
-        const y = parseInt(savedY);
-        console.log('🔄 search 화면 스크롤 복원 (데이터 로드 후):', y);
+            const y = parseInt(savedY);
         
-        // 필터 상태 확인 및 로그
-        console.log('🔍 스크롤 복원 시 필터 상태:', {
-          showOnlyAiring,
-          savedShowOnlyAiring: sessionStorage.getItem('showOnlyAiring'),
-          selectedYear,
-          selectedQuarter,
-          isCustomSeason
-        });
+        // 필터 상태 확인
         
         // 다른 시즌에서 뒤로가기한 경우 방영 중 필터 해제
-        if (isCustomSeason && showOnlyAiring) {
-          console.log('🔧 다른 시즌에서 뒤로가기: 방영 중 필터 해제');
+        if (!isThisWeek && showOnlyAiring) {
           setShowOnlyAiring(false);
           sessionStorage.removeItem('showOnlyAiring');
         }
         
-        // 즉시 복원 (깜빡임 방지)
-        // 1. window.scrollTo 시도
+        // 즉시 복원 (깜빡임 완전 방지) - 모든 방법 동시 사용
         window.scrollTo(0, y);
-        
-        // 2. body 스크롤도 시도 (body가 스크롤 컨테이너인 경우)
         document.body.scrollTop = y;
-        
-        // 3. documentElement 스크롤도 시도
         document.documentElement.scrollTop = y;
         
-        // 추가로 지연 복원도 시도 (확실하게)
+        // 실제 스크롤 컨테이너 찾기 (개선된 로직)
+        let foundScrollable: HTMLElement | null = null;
+        
+        // 1. main 요소 우선 확인
+        const mainElement = document.querySelector('main');
+        if (mainElement && mainElement.scrollHeight > mainElement.clientHeight) {
+          foundScrollable = mainElement;
+        } else {
+          // 2. 모든 스크롤 가능한 요소 중에서 main 요소 찾기
+          const allScrollableElements = document.querySelectorAll('*');
+          allScrollableElements.forEach(element => {
+            const el = element as HTMLElement;
+            if (el.tagName === 'MAIN' && el.scrollHeight > el.clientHeight) {
+              foundScrollable = el;
+            }
+          });
+        }
+        
+        // 실제 스크롤 컨테이너에 복원
+        if (foundScrollable) {
+          (foundScrollable as any).scrollTop = y;
+        }
+        
+        // 추가 즉시 복원 (확실하게)
         setTimeout(() => {
           window.scrollTo(0, y);
           document.body.scrollTop = y;
           document.documentElement.scrollTop = y;
+          if (foundScrollable) {
+            (foundScrollable as any).scrollTop = y;
+          }
         }, 0);
         
+        // 빠른 지연 복원 (깜빡임 최소화)
         setTimeout(() => {
-          window.scrollTo(0, y);
-          document.body.scrollTop = y;
-          document.documentElement.scrollTop = y;
+          // 지연 시점에서 다시 main 요소 찾기 (개선된 로직)
+          let delayedFoundScrollable: HTMLElement | null = null;
+          
+          // 1. main 요소 우선 확인
+          const mainElement = document.querySelector('main');
+          if (mainElement && mainElement.scrollHeight > mainElement.clientHeight) {
+            delayedFoundScrollable = mainElement;
+          } else {
+            // 2. 모든 main 요소 중에서 스크롤 가능한 것 찾기
+            const mainElements = document.querySelectorAll('main');
+            mainElements.forEach(element => {
+              const el = element as HTMLElement;
+              if (el.scrollHeight > el.clientHeight) {
+                delayedFoundScrollable = el;
+              }
+            });
+          }
+          
+          if (delayedFoundScrollable) {
+            (delayedFoundScrollable as any).scrollTop = y;
+          } else {
+            window.scrollTo(0, y);
+            document.body.scrollTop = y;
+            document.documentElement.scrollTop = y;
+          }
           
           // 스크롤 복원 완료 후 플래그 정리
           sessionStorage.removeItem('from-anime-detail');
-        }, 50);
+        }, 10);
       }
     }
-  }, [scheduleData, showOnlyAiring, selectedYear, selectedQuarter, isCustomSeason]);
+  }, [scheduleData, searchData, showOnlyAiring, selectedYear, selectedQuarter, isThisWeek]);
+
+  // 페이지 로드 시 즉시 스크롤 복원 (깜빡임 완전 방지)
+  useEffect(() => {
+    const savedY = sessionStorage.getItem('search-scroll');
+    const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
+    
+    if (savedY && isFromAnimeDetail) {
+      const y = parseInt(savedY);
+      
+      // 페이지 로드 즉시 복원 (깜빡임 완전 방지)
+      window.scrollTo(0, y);
+      document.body.scrollTop = y;
+      document.documentElement.scrollTop = y;
+      
+      // 추가 즉시 복원 (확실하게)
+      setTimeout(() => {
+        window.scrollTo(0, y);
+        document.body.scrollTop = y;
+        document.documentElement.scrollTop = y;
+      }, 0);
+    }
+  }, []);
 
   // 프리로딩 상태 모니터링 (캐시 상태 고려)
   useEffect(() => {
@@ -517,17 +730,27 @@ export default function SearchPage() {
   // 데이터 로딩 완료 시 초기 설정
   useEffect(() => {
     if (scheduleData) {
-      // "곧 시작" 그룹이 있는지 확인하고, 있으면 "곧 시작"으로, 없으면 "일"로 기본값 설정
-      const upcomingAnimes = Object.values(scheduleData.schedule).flat().filter(anime => {
-        // NOW_SHOWING 상태이고 scheduledAt이 유효한 애니메이션만
-        return anime.status === 'NOW_SHOWING' && anime.scheduledAt;
-      });
-      
-      if (upcomingAnimes.length > 0) {
-        setSelectedDay('곧 시작');
-      } else {
-        setSelectedDay('일');
+      // "이번 주" 메뉴에서만 "곧 시작" 그룹 확인
+      if (isThisWeek) {
+        // "곧 시작" 그룹이 있는지 확인 (12시간 이내 방영 예정인 애니메이션들)
+        const hasUpcomingGroup = Object.values(scheduleData.schedule).flat().some(anime => {
+          if (anime.status !== 'NOW_SHOWING' || !anime.scheduledAt) return false;
+          
+          const now = new Date();
+          const scheduled = new Date(anime.scheduledAt);
+          const diff = scheduled.getTime() - now.getTime();
+          const twelveHoursInMs = 12 * 60 * 60 * 1000;
+          
+          return diff <= twelveHoursInMs && diff >= 0;
+        });
+        
+        if (hasUpcomingGroup) {
+          setSelectedDay('곧 시작');
+        } else {
+          setSelectedDay('일');
+        }
       }
+      // 다른 시즌에서는 기존 요일 유지
       
       // 서버에서 받은 애니메이션 중에서 랜덤으로 하나 선택
       if (scheduleData.schedule) {
@@ -537,7 +760,6 @@ export default function SearchPage() {
           const selectedAnime = allAnimes[randomIndex];
           
           // 검색 결과 이미지 프리로딩
-          console.log(`🎬 검색 페이지에서 프리로딩 시작: ${allAnimes.length}개 애니메이션`);
           preloadSearchResults(allAnimes);
           const chosung = extractChosung(selectedAnime.titleKor);
           const koreanCount = (selectedAnime.titleKor.match(/[가-힣]/g) || []).length;
@@ -553,7 +775,7 @@ export default function SearchPage() {
         }
       }
     }
-  }, [scheduleData]);
+  }, [scheduleData, isThisWeek]);
   
   // 스티키 요소들의 높이 측정
   useEffect(() => {
@@ -571,25 +793,48 @@ export default function SearchPage() {
     };
   }, [isSeasonSelectorSticky]); // 스티키 상태 변경 시에도 높이 재측정
 
+  // 현재 사용할 데이터 결정 (검색 중이면 검색 결과, 아니면 스케줄 데이터)
+  const isSearchMode = searchQuery.trim().length > 0;
+  const currentData = isSearchMode ? searchData : scheduleData;
+  const currentError = isSearchMode ? searchError : error;
+  const currentIsLoading = isSearchMode ? isSearchLoading : isLoading;
+  
+  // 초기 로딩 상태 확인 - 데이터가 아직 로드되지 않았고 에러도 없는 경우
+  const isInitialLoading = !currentData && !currentError && !isSearchMode;
+  
+  // 검색 결과 데이터 (검색 API 응답 구조가 다름)
+  const searchResults = isSearchMode && searchData ? searchData.animePreviews : [];
+
   // 전체 보기를 위한 요일별 그룹화된 데이터
   const groupedAnimes = useMemo(() => {
-    if (!scheduleData) return {};
+    if (!currentData) return {};
     
     return (() => {
+    // 검색 중일 때는 다른 처리 방식 사용
+    if (isSearchMode) {
+      // 검색 결과를 하나의 그룹으로 처리
+      if (searchResults.length > 0) {
+        return {
+          'SEARCH_RESULTS': searchResults
+        };
+      } else {
+        // 검색 결과가 없는 경우
+        return {};
+      }
+    }
 
-    const dayOrder: (keyof typeof scheduleData.schedule)[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SPECIAL'];
+    // 일반 스케줄 데이터 처리
+    if (!currentData || !('schedule' in currentData)) {
+      return {};
+    }
+
+    const dayOrder: (keyof typeof currentData.schedule)[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SPECIAL'];
     const grouped: { [key: string]: AnimePreviewDto[] } = {};
     
     // 방영 중 필터링 함수
     const filterAiringAnimes = (animes: AnimePreviewDto[]) => {
       if (showOnlyAiring) {
         const filtered = animes.filter(anime => anime.status === 'NOW_SHOWING');
-        console.log('🔍 방영 중 필터링:', {
-          total: animes.length,
-          filtered: filtered.length,
-          showOnlyAiring,
-          statuses: animes.map(a => ({ title: a.titleKor, status: a.status }))
-        });
         return filtered;
       }
       return animes;
@@ -597,8 +842,8 @@ export default function SearchPage() {
     
     // "곧 시작" 그룹 추가 (12시간 이내 방영 예정인 애니메이션들 + 현재 방영중인 애니메이션들)
     // OTT 필터링이 활성화된 경우 또는 검색 중일 때 "곧 시작" 그룹은 제외
-    if (selectedOttServices.length === 0 && !searchQuery.trim()) {
-      const upcomingAnimes = Object.values(scheduleData!.schedule).flat().filter(anime => {
+    if (selectedOttServices.length === 0 && !isSearchMode) {
+      const upcomingAnimes = Object.values(currentData.schedule).flat().filter(anime => {
         // NOW_SHOWING 상태이고 scheduledAt이 유효한 애니메이션만
         if (anime.status !== 'NOW_SHOWING' || !anime.scheduledAt) return false;
         
@@ -679,17 +924,9 @@ export default function SearchPage() {
         return false;
       });
       
-      if (upcomingAnimes.length > 0) {
-        // 검색어 필터링 (제목에 대해서만 검색)
-        let filteredUpcoming = [...upcomingAnimes];
-        if (searchQuery.trim()) {
-          filteredUpcoming = filteredUpcoming.filter(anime => 
-            searchMatch(searchQuery, anime.titleKor)
-          );
-        }
-        
-        // 방영 중 필터링 적용
-        filteredUpcoming = filterAiringAnimes(filteredUpcoming);
+        if (upcomingAnimes.length > 0) {
+          // 방영 중 필터링 적용
+          const filteredUpcoming = filterAiringAnimes(upcomingAnimes);
         
         if (filteredUpcoming.length > 0) {
           // 방영 시간 순서대로 정렬 (현재 방영중인 것 먼저, 그 다음 방영 예정 순)
@@ -722,24 +959,17 @@ export default function SearchPage() {
     dayOrder.forEach(day => {
       if (day === 'SPECIAL') {
         // 특별편성 및 극장판: SPECIAL 요일 + MOVIE 타입 애니메이션
-        const specialAnimes = scheduleData.schedule['SPECIAL'] || [];
-        const movieAnimes = Object.values(scheduleData.schedule).flat().filter(anime => 
+        const specialAnimes = currentData.schedule['SPECIAL'] || [];
+        const movieAnimes = Object.values(currentData.schedule).flat().filter(anime => 
           anime.medium === 'MOVIE'
         );
         
         // 중복 제거 (animeId 기준)
         const uniqueMovieAnimes = movieAnimes.filter(anime => 
-          !scheduleData.schedule['SPECIAL']?.some(special => special.animeId === anime.animeId)
+          !currentData.schedule['SPECIAL']?.some((special: AnimePreviewDto) => special.animeId === anime.animeId)
         );
         
         let allAnimes = [...specialAnimes, ...uniqueMovieAnimes];
-        
-        // 검색어 필터링 (제목에 대해서만 검색)
-        if (searchQuery.trim()) {
-          allAnimes = allAnimes.filter(anime => 
-            searchMatch(searchQuery, anime.titleKor)
-          );
-        }
         
         // 방영 중 필터링 적용
         allAnimes = filterAiringAnimes(allAnimes);
@@ -748,7 +978,7 @@ export default function SearchPage() {
         if (selectedOttServices.length > 0) {
           allAnimes = allAnimes.filter(anime => {
             const hasMatchingOtt = selectedOttServices.some(selectedOtt => 
-              anime.ottDtos.some(ott => 
+              anime.ottDtos.some((ott: any) => 
                 ott.ottType && ott.ottType.toLowerCase() === selectedOtt
               )
             );
@@ -774,15 +1004,8 @@ export default function SearchPage() {
           
           grouped[day] = allAnimes;
         }
-      } else if (scheduleData.schedule[day] && scheduleData.schedule[day].length > 0) {
-        let dayAnimes = [...scheduleData.schedule[day]];
-        
-        // 검색어 필터링 (제목에 대해서만 검색)
-        if (searchQuery.trim()) {
-          dayAnimes = dayAnimes.filter(anime => 
-            searchMatch(searchQuery, anime.titleKor)
-          );
-        }
+      } else if (currentData.schedule[day] && currentData.schedule[day].length > 0) {
+        let dayAnimes = [...currentData.schedule[day]];
         
         // 방영 중 필터링 적용
         dayAnimes = filterAiringAnimes(dayAnimes);
@@ -791,7 +1014,7 @@ export default function SearchPage() {
         if (selectedOttServices.length > 0) {
           dayAnimes = dayAnimes.filter(anime => {
             const hasMatchingOtt = selectedOttServices.some(selectedOtt => 
-              anime.ottDtos.some(ott => 
+              anime.ottDtos.some((ott: any) => 
                 ott.ottType && ott.ottType.toLowerCase() === selectedOtt
               )
             );
@@ -822,7 +1045,7 @@ export default function SearchPage() {
     
     return grouped;
     })();
-  }, [scheduleData, searchQuery, selectedOttServices, showOnlyAiring]);
+  }, [currentData, selectedOttServices, showOnlyAiring, isSearchMode, searchResults]);
 
   // 3. 스크롤 네비게이션 연동 - groupedAnimes가 정의된 후에 실행
   useEffect(() => {
@@ -914,12 +1137,21 @@ export default function SearchPage() {
     };
   }, [groupedAnimes]);
 
+  const handleSearchInputChange = (input: string) => {
+    setSearchInput(input);
+  };
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setIsSearching(searchInput.trim().length > 0);
+  };
+
   const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
+    setSearchInput(query);
   };
 
   // 데이터 로딩 중이거나 (새로운 데이터를 가져오면서) 프리로딩 중일 때만 스켈레톤 UI 표시
-  if (isLoading || (isFetching && isPreloading)) {
+  if (currentIsLoading || (isFetching && isPreloading)) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
         <SearchLoadingSkeleton 
@@ -967,50 +1199,13 @@ export default function SearchPage() {
             {/* SearchInput과 OTT 필터 큐 */}
             <div className="relative">
               <SearchInput
-                value={searchQuery}
+                value={searchInput}
                 onChange={handleSearchChange}
-                onSearch={() => {
-                  // 검색 실행 로직 (현재는 필터링이 실시간으로 되고 있음)
-                }}
+                onSearch={handleSearch}
                 placeholder={randomAnimeTitle || "분기 신작 애니/캐릭터를 검색해보세요..."}
                 className="w-full h-[62px]"
               />
               
-              {/* OTT 필터 큐 - 검색창 오른쪽에 오버레이 */}
-              {selectedOttServices.length > 0 && (
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex gap-3 items-center">
-                  {/* OTT 필터 아이콘들 */}
-                  <div className="flex gap-2 items-center">
-                    {selectedOttServices.map((ottService, index) => (
-                      <div key={index} className="relative">
-                        <div 
-                          onClick={() => setSelectedOttServices(prev => prev.filter(id => id !== ottService))}
-                          className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
-                        >
-                          <img
-                            src={`/icons/${ottService.toLowerCase()}-logo.svg`}
-                            alt={ottService}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <img
-                          src="/icons/remove-filter.svg"
-                          alt="제거"
-                          className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* 필터 초기화 버튼 */}
-                  <button
-                    onClick={() => setSelectedOttServices([])}
-                    className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
-                  >
-                    필터 초기화
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -1024,13 +1219,13 @@ export default function SearchPage() {
                 <SeasonSelector
                   onSeasonSelect={handleSeasonSelect}
                   className="w-fit"
-                  currentYear={isCustomSeason ? selectedYear || undefined : currentYear}
-                  currentQuarter={isCustomSeason ? selectedQuarter || undefined : currentQuarter}
+                  currentYear={isThisWeek ? undefined : selectedYear || undefined}
+                  currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
                 />
               </div>
               
-              {/* 방영 중 애니만 보기 체크박스 - 현재 분기일 때만 표시 */}
-              {!isCustomSeason && (
+              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아닐 때만 표시 */}
+              {!isThisWeek && (
                 <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
                   <input
                     type="checkbox"
@@ -1055,8 +1250,8 @@ export default function SearchPage() {
       {/* Search and Content Section */}
       <div className="w-full h-[95px] bg-white">
         <div className="max-w-7xl mx-auto px-6 pt-[50px] pb-8">
-          {/* Day Selection - OTT 필터링 시 또는 검색 중일 때 숨김 */}
-          {selectedOttServices.length === 0 && !searchQuery.trim() && (
+          {/* Day Selection 또는 OTT 필터 큐 */}
+          {selectedOttServices.length === 0 && !searchQuery.trim() ? (
             <div ref={daySelectionRef} className="mb-[40px] flex justify-center">
               <DaySelection
                 selectedDay={selectedDay}
@@ -1064,7 +1259,47 @@ export default function SearchPage() {
                 onScrollToSection={scrollToSection}
               />
             </div>
-          )}
+          ) : selectedOttServices.length > 0 ? (
+            <div className="mb-[40px] flex justify-start">
+              <div className="flex gap-3 items-center">
+                {/* 선택됨 텍스트 */}
+                <span className="text-sm font-medium text-gray-700 font-['Pretendard']">
+                  선택됨:
+                </span>
+                
+                {/* OTT 필터 아이콘들 */}
+                <div className="flex gap-2 items-center">
+                  {selectedOttServices.map((ottService, index) => (
+                    <div key={index} className="relative">
+                      <div 
+                        onClick={() => setSelectedOttServices(prev => prev.filter(id => id !== ottService))}
+                        className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+                      >
+                        <img
+                          src={`/icons/${ottService.toLowerCase()}-logo.svg`}
+                          alt={ottService}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <img
+                        src="/icons/remove-filter.svg"
+                        alt="제거"
+                        className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                {/* 필터 초기화 버튼 */}
+                <button
+                  onClick={() => setSelectedOttServices([])}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
+                >
+                  필터 초기화
+                </button>
+              </div>
+            </div>
+          ) : null}
 
 
 
@@ -1075,15 +1310,17 @@ export default function SearchPage() {
       <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
         <div className="max-w-7xl mx-auto px-6 pt-8 pb-8">
           {/* Anime Grid - OTT 필터링 시 요일 구분 없이 표시 */}
-          {groupedAnimes ? (
+          {groupedAnimes && Object.keys(groupedAnimes).length > 0 ? (
             <div className="space-y-0" data-content-loaded>
-              {selectedOttServices.length > 0 || searchQuery.trim() ? (
+              {selectedOttServices.length > 0 || isSearchMode ? (
                 // OTT 필터링 시 또는 검색 중일 때: 모든 애니메이션을 하나의 그리드로 표시
                 <div>
                   <div className="flex items-end gap-3 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">검색 결과</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {searchQuery.trim() ? '검색 결과' : '필터링 결과'}
+                    </h2>
                     <span className="text-[12px] font-normal text-[#868E96] font-['Pretendard']">
-                      {Object.values(groupedAnimes).flat().length}개의 애니메이션
+                      {isSearchMode ? searchResults.length : Object.values(groupedAnimes).flat().length}개의 애니메이션
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px]">
@@ -1091,7 +1328,7 @@ export default function SearchPage() {
                       <AnimeCard
                         key={anime.animeId}
                         anime={anime}
-                        isCurrentSeason={!isCustomSeason}
+                        isCurrentSeason={isThisWeek}
                       />
                     ))}
                   </div>
@@ -1135,7 +1372,7 @@ export default function SearchPage() {
                             <AnimeCard
                               key={anime.animeId}
                               anime={anime}
-                              isCurrentSeason={!isCustomSeason}
+                              isCurrentSeason={isThisWeek}
                             />
                           ))}
                         </div>
@@ -1150,13 +1387,13 @@ export default function SearchPage() {
                 )}
             </div>
         ) : (
-          // 데이터 로딩 중 또는 에러
+          // 데이터 로딩 중 또는 에러 또는 검색 결과 없음
           <div className="text-center py-16">
-            {isLoading ? (
+            {currentIsLoading || isInitialLoading ? (
                 <div className="text-gray-400 mb-4">
-                  <svg className="mx-auto h-12 w-12 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
+                  <div className="mx-auto h-12 w-12 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-500"></div>
+                  </div>
                 </div>
               ) : error ? (
                 <div className="text-gray-400 mb-4">
@@ -1166,20 +1403,42 @@ export default function SearchPage() {
                 </div>
               ) : (
                 <div className="text-gray-400 mb-4">
-                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  {isSearchMode ? (
+                    // 검색 결과 없음 - 빈 상태 아이콘
+                    <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  ) : selectedOttServices.length > 0 ? (
+                    // OTT 필터링 결과 없음 - 필터 아이콘
+                    <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  ) : showOnlyAiring ? (
+                    // 방영 중 필터 결과 없음 - TV 아이콘
+                    <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  ) : (
+                    // 일반 데이터 없음 - 빈 상태 아이콘
+                    <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  )}
                 </div>
               )}
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {isLoading ? '데이터를 불러오는 중...' : 
-                 error ? '데이터 로딩에 실패했습니다' : 
-                 '검색 결과가 없습니다'}
+                {currentIsLoading || isInitialLoading ? '데이터를 불러오는 중...' : 
+                 currentError ? '데이터 로딩에 실패했습니다' : 
+                 isSearchMode ? '검색 결과가 없습니다' : 
+                 selectedOttServices.length > 0 ? '필터링 결과가 없습니다' : 
+                 showOnlyAiring ? '방영 중인 애니메이션이 없습니다' : '데이터가 없습니다'}
               </h3>
               <p className="text-gray-500">
-                {isLoading ? '잠시만 기다려주세요' : 
-                 error ? '다시 시도해주세요' : 
-                 '다른 검색어를 시도해보세요'}
+                {currentIsLoading || isInitialLoading ? '잠시만 기다려주세요' : 
+                 currentError ? '다시 시도해주세요' : 
+                 isSearchMode ? `"${searchQuery}"에 대한 검색 결과가 없습니다. 다른 검색어를 시도해보세요.` : 
+                 selectedOttServices.length > 0 ? '선택한 OTT 서비스에 해당하는 애니메이션이 없습니다.' : 
+                 showOnlyAiring ? '필터를 해제하거나 다른 시즌을 확인해보세요.' : '데이터를 불러오는 중입니다'}
               </p>
             </div>
           )}
@@ -1206,13 +1465,13 @@ export default function SearchPage() {
                 <SeasonSelector
                   onSeasonSelect={handleSeasonSelect}
                   className="w-fit"
-                  currentYear={isCustomSeason ? selectedYear || undefined : currentYear}
-                  currentQuarter={isCustomSeason ? selectedQuarter || undefined : currentQuarter}
+                  currentYear={isThisWeek ? undefined : selectedYear || undefined}
+                  currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
                 />
               </div>
               
-              {/* 방영 중 애니만 보기 체크박스 - 현재 분기일 때만 표시 */}
-              {!isCustomSeason && (
+              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아닐 때만 표시 */}
+              {!isThisWeek && (
                 <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
                   <input
                     type="checkbox"
@@ -1237,7 +1496,7 @@ export default function SearchPage() {
       {/* Sticky DaySelection - SeasonSelector 아래에 고정, 검색 중일 때는 숨김 */}
       {isDaySelectionSticky && !searchQuery.trim() && (
         <div 
-          className="fixed left-0 w-full bg-white border-b border-gray-200 z-30"
+          className="fixed left-[65px] w-full bg-white border-b border-gray-200 z-30"
           style={{ 
             top: isSeasonSelectorSticky ? `${60 + seasonSelectorHeight}px` : '60px',
             zIndex: 30,
@@ -1269,5 +1528,22 @@ export default function SearchPage() {
       )}
       
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 flex items-center justify-center mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-500"></div>
+          </div>
+          <p className="text-gray-600">페이지를 불러오는 중...</p>
+        </div>
+      </div>
+    }>
+      <SearchPageContent />
+    </Suspense>
   );
 }

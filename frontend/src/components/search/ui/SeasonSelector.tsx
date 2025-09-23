@@ -13,9 +13,10 @@ interface SeasonSelectorProps {
 }
 
 interface SeasonOption {
-  year: number;
-  quarter: number;
+  year?: number;
+  quarter?: number;
   label: string;
+  isThisWeek?: boolean;
 }
 
 export default function SeasonSelector({ onSeasonSelect, className, currentYear, currentQuarter }: SeasonSelectorProps) {
@@ -48,6 +49,13 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
 
   // 시즌 옵션 생성
   const seasonOptions: SeasonOption[] = [];
+  
+  // "이번 주" 옵션을 맨 위에 추가
+  seasonOptions.push({
+    label: '이번 주',
+    isThisWeek: true
+  });
+  
   if (seasonsData) {
     Object.entries(seasonsData).forEach(([yearStr, seasons]) => {
       const year = parseInt(yearStr);
@@ -67,7 +75,7 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
   // 현재 선택된 시즌 표시
   const currentSeasonLabel = currentYear && currentQuarter 
     ? `${currentYear}년 ${getSeasonInKorean(getSeasonFromQuarter(currentQuarter))} 애니메이션`
-    : '분기 선택';
+    : '이번 주';
 
   // 시즌 타입을 분기로 변환
   function getQuarterFromSeason(season: string): number | null {
@@ -105,7 +113,12 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
   // 시즌 선택 핸들러
   const handleSeasonSelect = (option: SeasonOption) => {
     setSelectedSeason(option);
-    onSeasonSelect(option.year, option.quarter);
+    if (option.isThisWeek) {
+      // "이번 주" 선택 시 특별 처리 (year, quarter를 null로 전달)
+      onSeasonSelect(0, 0); // 특별 값으로 "이번 주" 구분
+    } else if (option.year && option.quarter) {
+      onSeasonSelect(option.year, option.quarter);
+    }
     setIsOpen(false);
   };
 
@@ -141,14 +154,15 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
       
       {/* 드롭다운 메뉴 */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto min-w-fit">
           {seasonOptions.map((option, index) => (
             <button
-              key={`${option.year}-${option.quarter}`}
+              key={option.isThisWeek ? 'this-week' : `${option.year}-${option.quarter}`}
               onClick={() => handleSeasonSelect(option)}
               className={cn(
-                "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer",
-                selectedSeason?.year === option.year && selectedSeason?.quarter === option.quarter
+                "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer whitespace-nowrap",
+                (option.isThisWeek && selectedSeason?.isThisWeek) ||
+                (option.year && option.quarter && selectedSeason?.year === option.year && selectedSeason?.quarter === option.quarter)
                   ? "bg-[#990033] text-white hover:bg-[#990033]"
                   : "text-gray-900"
               )}

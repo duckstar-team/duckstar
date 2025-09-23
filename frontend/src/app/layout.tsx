@@ -78,7 +78,7 @@ export default function RootLayout({
             </div>
             
             {/* Main Content */}
-            <main className="ml-[50px] sm:ml-[55px] md:ml-[200px] mt-[60px] bg-gray-50 transition-all duration-300 ease-in-out group-hover:ml-[200px]">
+            <main className="ml-[50px] sm:ml-[55px] md:ml-[200px] mt-[60px] bg-gray-50 transition-all duration-300 ease-in-out group-hover:ml-[200px] h-[calc(100vh-60px)] overflow-y-auto">
               {children}
             </main>
           </AuthProvider>

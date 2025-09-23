@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import CharacterList from './CharacterList';
 import { CharacterData } from './CharacterCard';
 import ImageModal from './ImageModal';
+import { useImageCache } from '../../hooks/useImageCache';
 
 export type TabOption = 'info' | 'performance' | 'characters';
 
@@ -49,6 +50,9 @@ interface LeftInfoPanelProps {
 }
 
 export default function LeftInfoPanel({ anime, onBack, characters, onImageModalToggle }: LeftInfoPanelProps) {
+  // 이미지 캐시 훅 사용
+  const { isImageLoaded, isImageError } = useImageCache();
+  
   // 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<TabOption>('info');
   const [hoveredTab, setHoveredTab] = useState<TabOption | null>(null);
@@ -232,16 +236,35 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
   const [currentBackgroundImage, setCurrentBackgroundImage] = useState(mainThumbnailUrl || "/banners/duckstar-logo.svg");
   const [backgroundPosition, setBackgroundPosition] = useState("center center");
   const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
+  const [isCachedImage, setIsCachedImage] = useState(false); // 캐시된 이미지 여부
+  const [skipTransition, setSkipTransition] = useState(false); // 전환 효과 건너뛰기
+  const [initialImageSet, setInitialImageSet] = useState(false); // 초기 이미지 설정 여부
   
   // 이미지 모달 상태
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
-  // 이미지 캐시 확인 함수
+  // 이미지 캐시 확인 함수 (간단하고 확실한 방법)
   const isImageCached = (imageUrl: string): Promise<boolean> => {
     return new Promise((resolve) => {
+      // 브라우저 캐시를 직접 확인하는 가장 확실한 방법
       const img = new window.Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
+      
+      // 타임아웃 설정 (1초)
+      const timeout = setTimeout(() => {
+        resolve(false);
+      }, 1000);
+      
+      img.onload = () => {
+        clearTimeout(timeout);
+        resolve(true);
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timeout);
+        resolve(false);
+      };
+      
+      // CORS 설정 없이 로드 시도
       img.src = imageUrl;
     });
   };
@@ -274,39 +297,79 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
     });
   };
 
+  // 초기 캐시 확인 및 이미지 설정
+  useEffect(() => {
+    if (mainImageUrl && mainThumbnailUrl && mainImageUrl !== mainThumbnailUrl && !initialImageSet) {
+      const checkInitialCache = async () => {
+        const isCached = await isImageCached(mainImageUrl);
+        if (isCached) {
+          setCurrentBackgroundImage(mainImageUrl);
+          setIsMainImageLoaded(true);
+          setIsCachedImage(true);
+          setSkipTransition(true);
+          setInitialImageSet(true);
+        }
+      };
+      checkInitialCache();
+    }
+  }, [mainImageUrl, mainThumbnailUrl, initialImageSet]);
+
   // 메인 이미지 프리로딩 및 교체 (배경 이미지) - 최적화된 버전
   useEffect(() => {
-    if (mainImageUrl && mainThumbnailUrl && mainImageUrl !== mainThumbnailUrl) {
+    if (mainImageUrl && mainThumbnailUrl && mainImageUrl !== mainThumbnailUrl && !isCachedImage) {
       const preloadMainImage = async () => {
         try {
-          // 메인 이미지 캐시 확인
+          // 메인 이미지 캐시 확인 (Promise 기반)
           const isCached = await isImageCached(mainImageUrl);
           
           if (isCached) {
-            // 캐시되어 있으면 바로 메인 이미지 사용
-            // 메인 이미지의 중앙점을 계산하여 설정
+            // 캐시되어 있으면 바로 메인 이미지 사용 (thumb -> main 전환 건너뛰기)
+            // 전환 효과 완전히 건너뛰기
+            setSkipTransition(true);
+            setIsCachedImage(true);
+            
+            // 즉시 상태 업데이트 (전환 효과 없이)
             const position = await calculateImagePosition(mainImageUrl);
             setBackgroundPosition(position);
+            
+            // 배경 이미지를 즉시 변경 (전환 없이)
             setCurrentBackgroundImage(mainImageUrl);
             setIsMainImageLoaded(true);
           } else {
             // 캐시되어 있지 않으면 썸네일 먼저 표시 후 progressive loading
+            // 이미지 로딩을 위한 새로운 Image 객체 생성
             const img = new window.Image();
-            // CORS 설정 (duckstar.kr 도메인만)
-            if (mainImageUrl.includes('duckstar.kr')) {
+            
+            // CORS 설정 - duckstar.kr 도메인은 CORS 설정하지 않음
+            if (!mainImageUrl.includes('duckstar.kr')) {
               img.crossOrigin = 'anonymous';
             }
+            
+            // 이미지 로딩 옵션 설정
             img.decoding = 'async';
+            img.loading = 'eager'; // 즉시 로딩
+            
+            // 성공 콜백
             img.onload = async () => {
-              // 메인 이미지의 중앙점을 계산하여 설정
-              const position = await calculateImagePosition(mainImageUrl);
-              setBackgroundPosition(position);
-              setCurrentBackgroundImage(mainImageUrl);
-              setIsMainImageLoaded(true);
+              try {
+                // 메인 이미지의 중앙점을 계산하여 설정
+                const position = await calculateImagePosition(mainImageUrl);
+                setBackgroundPosition(position);
+                setCurrentBackgroundImage(mainImageUrl);
+                setIsMainImageLoaded(true);
+              } catch (error) {
+                // 위치 계산 실패해도 이미지는 표시
+                setCurrentBackgroundImage(mainImageUrl);
+                setIsMainImageLoaded(true);
+              }
             };
+            
+            // 에러 콜백
             img.onerror = () => {
-              // 에러 시 썸네일 유지
+              // 에러 시 썸네일 유지 (이미 설정된 상태)
             };
+            
+            // 이미지 로딩 시작
             img.src = mainImageUrl;
           }
         } catch (error) {
@@ -471,79 +534,7 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
     });
   };
 
-  // 캐릭터 데이터
-  const mockCharacters: CharacterData[] = [
-    {
-      characterId: 1,
-      nameKor: "노아",
-      nameJpn: "ノア",
-      nameEng: "Noah",
-      imageUrl: "/banners/duckstar-logo.svg",
-      description: "주인공. 밝고 긍정적인 성격으로 항상 주변 사람들을 웃게 만든다.",
-      voiceActor: "김아영",
-      role: "MAIN",
-      gender: "FEMALE",
-      age: 17,
-      personality: ["밝음", "긍정적", "활발함"],
-      abilities: ["노래", "춤"]
-    },
-    {
-      characterId: 2,
-      nameKor: "미나",
-      nameJpn: "ミナ",
-      nameEng: "Mina",
-      imageUrl: "/banners/duckstar-logo.svg",
-      description: "노아의 친구. 조용하지만 마음이 따뜻한 성격이다.",
-      voiceActor: "박지은",
-      role: "MAIN",
-      gender: "FEMALE",
-      age: 17,
-      personality: ["조용함", "따뜻함", "신중함"],
-      abilities: ["피아노", "독서"]
-    },
-    {
-      characterId: 3,
-      nameKor: "타쿠야",
-      nameJpn: "タクヤ",
-      nameEng: "Takuya",
-      imageUrl: "/banners/duckstar-logo.svg",
-      description: "반 친구. 운동을 좋아하고 리더십이 있다.",
-      voiceActor: "이민호",
-      role: "SUPPORTING",
-      gender: "MALE",
-      age: 17,
-      personality: ["리더십", "운동적", "의리"],
-      abilities: ["축구", "기타"]
-    },
-    {
-      characterId: 4,
-      nameKor: "사쿠라",
-      nameJpn: "サクラ",
-      nameEng: "Sakura",
-      imageUrl: "/banners/duckstar-logo.svg",
-      description: "선배. 예술에 대한 열정이 강하다.",
-      voiceActor: "최유진",
-      role: "SUPPORTING",
-      gender: "FEMALE",
-      age: 18,
-      personality: ["예술적", "열정적", "독립적"],
-      abilities: ["그림", "조각"]
-    },
-    {
-      characterId: 5,
-      nameKor: "히로시",
-      nameJpn: "ヒロシ",
-      nameEng: "Hiroshi",
-      imageUrl: "/banners/duckstar-logo.svg",
-      description: "교사. 학생들을 진심으로 아끼는 선생님이다.",
-      voiceActor: "정우성",
-      role: "MINOR",
-      gender: "MALE",
-      age: 35,
-      personality: ["따뜻함", "책임감", "인내심"],
-      abilities: ["교육", "상담"]
-    }
-  ];
+  // mock 데이터 제거 - API 실패 시 빈 배열 처리
 
   // 캐릭터 이미지 프리로딩 실행
   useEffect(() => {
@@ -581,12 +572,12 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
         title="이미지를 클릭하여 크게 보기"
       >
         <div 
-          className={`absolute bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px] ${!isMainImageLoaded ? 'transition-opacity duration-300' : ''}`}
+          className={`absolute bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px] ${!skipTransition && !isMainImageLoaded && !isCachedImage ? 'transition-opacity duration-300' : ''}`}
           style={{ 
             backgroundImage: `url('${currentBackgroundImage}')`,
             backgroundPosition: 'center center',
             backgroundSize: 'cover',
-            opacity: isMainImageLoaded ? 1 : 0.9
+            opacity: isMainImageLoaded || isCachedImage ? 1 : 0.9
           }} 
         />
       </div>
@@ -790,7 +781,7 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
             }}
           >
             <CharacterList
-              characters={characters || mockCharacters}
+              characters={characters || []}
               className="w-full"
             />
           </div>

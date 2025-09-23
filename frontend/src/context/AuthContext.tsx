@@ -116,12 +116,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
 
-        const userData = await getUserInfo();
-        // API 응답에서 실제 사용자 데이터 추출
-        const user = userData.data || userData;
-        login(user as User);
+        // localStorage에서 accessToken 확인 - 토큰이 있을 때만 getUserInfo 호출
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+          const userData = await getUserInfo();
+          // API 응답에서 실제 사용자 데이터 추출
+          const user = userData.data || userData;
+          login(user as User);
+        }
       } catch (error) {
         // 사용자 인증 실패 처리 - 로그인되지 않은 상태
+        // 토큰이 유효하지 않으면 localStorage에서 제거
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+        }
+        resetAuthState();
       }
     };
 
