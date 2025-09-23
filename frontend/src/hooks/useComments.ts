@@ -73,9 +73,7 @@ export function useComments(animeId: number) {
 
   // 댓글 생성
   const createCommentHandler = useCallback(async (request: CommentRequestDto) => {
-    console.log('createCommentHandler 호출됨:', request);
     await createComment(animeId, request);
-    console.log('createComment 완료, 댓글 목록 새로고침 시작');
     loadComments(0, true);
   }, [animeId, loadComments]);
 

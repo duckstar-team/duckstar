@@ -2,6 +2,8 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import EpisodeItem from './EpisodeItem';
 import QuarterWeekLabel from './QuarterWeekLabel';
 import { getThisWeekRecord } from '../../lib/quarterUtils';
+import { updateAnimeTotalEpisodes, setAnimeTotalEpisodesUnknown } from '@/api/search';
+import { useAuth } from '@/context/AuthContext';
 
 // 타입 정의
 interface Episode {
@@ -19,6 +21,7 @@ interface EpisodeSectionProps {
   selectedEpisodeIds: number[];
   onEpisodeClick: (episodeId: number) => void;
   disableFutureEpisodes?: boolean; // 미래 에피소드 비활성화 옵션
+  animeId: number; // animeId required로 변경
 }
 
 // 툴팁 관련 타입
@@ -82,8 +85,81 @@ export default function EpisodeSection({
   totalEpisodes,
   selectedEpisodeIds,
   onEpisodeClick,
-  disableFutureEpisodes = false
+  disableFutureEpisodes = false,
+  animeId
 }: EpisodeSectionProps) {
+  const { user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(totalEpisodes || 12);
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // 관리자 여부 확인
+  const isAdmin = user?.role === 'ADMIN';
+
+  // 편집 모드 토글
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+    setEditValue(totalEpisodes || 12);
+  };
+
+  // 편집 값 변경
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setEditValue(value);
+    }
+  };
+
+  // 편집 저장
+  const handleEditSave = async () => {
+    if (!animeId || isUpdating) {
+      if (!animeId) {
+        alert('애니메이션 ID가 없습니다.');
+      }
+      return;
+    }
+    
+    try {
+      setIsUpdating(true);
+      await updateAnimeTotalEpisodes(animeId, editValue);
+      setIsEditing(false);
+      // 페이지 새로고침으로 최신 데이터 반영
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to update total episodes:', error);
+      alert('총 화수 업데이트에 실패했습니다.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // 편집 취소
+  const handleEditCancel = () => {
+    setIsEditing(false);
+    setEditValue(totalEpisodes || 12);
+  };
+
+  // "모름" 버튼 처리
+  const handleSetUnknown = async () => {
+    if (!animeId || isUpdating) {
+      if (!animeId) {
+        alert('애니메이션 ID가 없습니다.');
+      }
+      return;
+    }
+    
+    try {
+      setIsUpdating(true);
+      await setAnimeTotalEpisodesUnknown(animeId);
+      // 페이지 새로고침으로 최신 데이터 반영
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to set total episodes as unknown:', error);
+      alert('총 화수를 "모름"으로 설정하는데 실패했습니다.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   // 페이징 상태
   const [currentPage, setCurrentPage] = useState(0);
   const episodesPerPage = 6;
@@ -237,26 +313,80 @@ export default function EpisodeSection({
           에피소드 공개
         </div>
         <div className="text-center justify-start flex items-center gap-1">
-          {totalEpisodes && totalEpisodes > 0 ? (
-            <>
-              <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span>
-              <span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">{totalEpisodes}</span>
-              <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug"> 화</span>
-            </>
-          ) : (
-            <div className="relative group">
-              <div className="w-4 h-4 flex-shrink-0 cursor-help">
-                <img 
-                  src="/icons/info.svg" 
-                  alt="정보" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              {/* 툴팁 */}
-              <div className="absolute top-full left-0 mt-1 px-3 py-1.5 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
-                총 화수 정보를 준비 중입니다. (기본값: 12화)
+          {isEditing ? (
+            // 편집 모드
+            <div className="flex items-center gap-2">
+              <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 화수:</span>
+              <input
+                type="number"
+                value={editValue}
+                onChange={handleEditChange}
+                min="1"
+                max="999"
+                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isUpdating}
+              />
+              <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">화</span>
+              <div className="flex gap-1">
+                <button
+                  onClick={handleEditSave}
+                  disabled={isUpdating}
+                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 cursor-pointer"
+                >
+                  {isUpdating ? '저장중...' : '저장'}
+                </button>
+                <button
+                  onClick={handleEditCancel}
+                  disabled={isUpdating}
+                  className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 cursor-pointer"
+                >
+                  취소
+                </button>
               </div>
             </div>
+          ) : (
+            // 일반 모드
+            <>
+              {totalEpisodes && totalEpisodes > 0 ? (
+                <>
+                  <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span>
+                  <span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">{totalEpisodes}</span>
+                  <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug"> 화</span>
+                </>
+              ) : (
+                <div className="relative group">
+                  <div className="w-4 h-4 flex-shrink-0 cursor-help">
+                    <img 
+                      src="/icons/info.svg" 
+                      alt="정보" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  {/* 툴팁 */}
+                  <div className="absolute top-full left-0 mt-1 px-3 py-1.5 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
+                    총 화수 정보를 준비 중입니다. (기본값: 12화)
+                  </div>
+                </div>
+              )}
+                      {/* 관리자 편집 버튼 */}
+                      {isAdmin && (
+                        <div className="ml-2 flex gap-1">
+                          <button
+                            onClick={handleEditToggle}
+                            className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors cursor-pointer"
+                          >
+                            편집
+                          </button>
+                          <button
+                            onClick={handleSetUnknown}
+                            disabled={isUpdating}
+                            className="px-2 py-1 text-xs bg-orange-100 text-orange-600 rounded hover:bg-orange-200 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            {isUpdating ? '처리중...' : '모름'}
+                          </button>
+                        </div>
+                      )}
+            </>
           )}
         </div>
       </div>

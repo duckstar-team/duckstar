@@ -39,37 +39,13 @@ interface AnimeDetailDto {
   ottDtos: OttDto[];
 }
 
-// 애니메이션 데이터 (API 실패 시 fallback)
-const mockAnimeData: AnimeDetailDto = {
-  animeId: 1,
-  mainThumbnailUrl: "/banners/duckstar-logo.svg",
-  mainImageUrl: "/banners/duckstar-logo.svg",
-  titleKor: "노랫소리는 밀푀유",
-  titleJpn: "うたごえはミルフィーユ",
-  status: "UPCOMING" as const,
-  dayOfWeek: "THU" as const,
-  scheduledAt: "2025-01-23T21:25:00Z",
-  genre: "음악, 아카펠라",
-  medium: "TVA" as const,
-  year: 2025,
-  quarter: 2,
-  studio: "쥬몬도",
-  director: "사토 타쿠야",
-  source: "포니 캐니온",
-  startDate: "2025.07.10",
-  rating: "12세 이상",
-  officialSite: "https://example.com",
-  ottDtos: [
-    { ottType: "LAFTEL", watchUrl: "https://laftel.net" },
-    { ottType: "NETFLIX", watchUrl: "https://netflix.com" }
-  ]
-};
+// mock 데이터 제거 - API 실패 시 null 처리
 
 export default function AnimeDetailClient() {
   const params = useParams();
   const router = useRouter();
   const animeId = params.animeId as string;
-  const [anime, setAnime] = useState<AnimeDetailDto>(mockAnimeData);
+  const [anime, setAnime] = useState<AnimeDetailDto | null>(null);
   const [characters, setCharacters] = useState<CharacterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -80,7 +56,7 @@ export default function AnimeDetailClient() {
   // 이미지 프리로딩 훅
   const { preloadAnimeDetails } = useImagePreloading();
   
-  // search 화면으로 돌아가기 (스크롤 복원)
+  // 이전 화면으로 돌아가기 (스크롤 복원)
   const navigateBackToSearch = () => {
     // 스크롤 복원을 위한 네비게이션
     
@@ -97,8 +73,19 @@ export default function AnimeDetailClient() {
       }
     }
     
-    // router.back() 대신 명시적으로 search 화면으로 이동
-    router.push('/search');
+    // 브라우저 히스토리를 고려하여 이전 페이지로 이동
+    // 히스토리가 있으면 router.back() 사용, 없으면 기본 페이지로 이동
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      // 히스토리가 없으면 투표 결과 화면인지 확인하여 적절한 페이지로 이동
+      const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
+      if (voteResultScroll) {
+        router.push('/vote');
+      } else {
+        router.push('/search');
+      }
+    }
   };
   
   const [error, setError] = useState<string | null>(null);
@@ -302,8 +289,8 @@ export default function AnimeDetailClient() {
         }, 0);
       } catch (error) {
         setError('애니메이션 정보를 불러오는데 실패했습니다.');
-        // 에러 시 mock 데이터 사용
-        setAnime(mockAnimeData);
+        // 에러 시 mock 데이터 제거
+        setAnime(null);
       } finally {
         setLoading(false);
       }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ReplyDto } from '@/api/comments';
 import VoteCount from './VoteCount';
+import { useLazyImage } from '../hooks/useLazyImage';
 
 // 시간 포맷팅 유틸리티 함수
 const formatTimeAgo = (dateString: string): string => {
@@ -49,6 +50,13 @@ const Reply: React.FC<ReplyProps> = ({
     attachedImageUrl
   } = reply;
 
+  // 답글 첨부 이미지 지연 로딩 (낮은 우선순위)
+  const { imgRef: attachedImgRef, isInView: isAttachedImageInView, handleLoad: handleAttachedImageLoad, handleError: handleAttachedImageError } = useLazyImage({
+    threshold: 0.1,
+    rootMargin: '100px', // 답글 이미지는 더 늦게 로딩
+    priority: false
+  });
+
   return (
     <div className="w-full flex flex-col justify-center items-end gap-2.5 pr-[10px]">
       <div className="w-[calc(100%-76px)] px-5 py-3 bg-[#f8f9fa] rounded-2xl flex justify-start items-start gap-3.5">
@@ -59,7 +67,9 @@ const Reply: React.FC<ReplyProps> = ({
             className="block max-w-none size-full rounded-full" 
             height="40" 
             src={profileImageUrl || imgProfileDefault} 
-            width="40" 
+            width="40"
+            loading="lazy"
+            decoding="async"
           />
         </div>
         
@@ -137,12 +147,23 @@ const Reply: React.FC<ReplyProps> = ({
             {/* 첨부 이미지 */}
             {attachedImageUrl && (
               <div className="flex justify-start">
-                <img 
-                  src={attachedImageUrl} 
-                  alt="답글 첨부 이미지"
-                  className="max-w-[250px] max-h-[250px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => window.open(attachedImageUrl, '_blank')}
-                />
+                {isAttachedImageInView ? (
+                  <img 
+                    ref={attachedImgRef}
+                    src={attachedImageUrl} 
+                    alt="답글 첨부 이미지"
+                    className="max-w-[250px] max-h-[250px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    loading="lazy"
+                    decoding="async"
+                    onLoad={handleAttachedImageLoad}
+                    onError={handleAttachedImageError}
+                    onClick={() => window.open(attachedImageUrl, '_blank')}
+                  />
+                ) : (
+                  <div className="max-w-[250px] max-h-[250px] rounded-lg bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">이미지 로딩 중...</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

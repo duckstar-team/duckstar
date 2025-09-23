@@ -14,8 +14,8 @@ import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVo
 import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
 import { fetcher, submitVote } from '@/api/client';
-import { searchMatch } from '@/lib/searchUtils';
 import { scrollToTop, scrollToPosition, clearStorageFlags } from '@/utils/scrollUtils';
+import { searchMatch } from '@/lib/searchUtils';
 
 interface Anime {
   id: number;
@@ -73,15 +73,19 @@ export default function VotePage() {
         clearStorageFlags('from-anime-detail', 'to-vote-result');
       }
     } else {
-      // 모든 관련 플래그 정리
-      clearStorageFlags('vote-result-scroll', 'sidebar-navigation', 'logo-navigation', 'from-anime-detail', 'to-vote-result');
-      scrollToTop();
+      // 애니메이션 상세화면에서 돌아온 경우가 아닐 때만 플래그 정리
+      // 투표 결과 화면에서 직접 접근한 경우에만 스크롤 탑으로 이동
+      if (!fromAnimeDetail && !toVoteResult) {
+        clearStorageFlags('sidebar-navigation', 'logo-navigation');
+        scrollToTop();
+      }
     }
   }, []);
   
   const [selected, setSelected] = useState<number[]>([]);
   const [bonusSelected, setBonusSelected] = useState<number[]>([]);
   const [errorCards, setErrorCards] = useState<Set<number>>(new Set());
+  
   const [isBonusMode, setIsBonusMode] = useState(false);
   const [hasClickedBonus, setHasClickedBonus] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -247,13 +251,42 @@ export default function VotePage() {
     // 검색 쿼리 초기화 (상태 4로 넘어갈 때 검색 필터 해제)
     setSearchQuery('');
     
-    // 2단계: 투명해지는 애니메이션 완료 후 페이지 최상단으로 이동
+    // 즉시 스크롤 탑으로 이동 (애니메이션 없이)
+    scrollToTop();
+    
+    // 추가적인 즉시 스크롤 탑 이동 보장
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
+    // 2단계: 투명해지는 애니메이션 완료 후 다시 한번 스크롤 탑으로 이동
     setTimeout(() => {
       // 여러 방법으로 스크롤을 맨 위로 강제 이동
       scrollToTop();
       
+      // 추가적인 스크롤 탑 이동 보장
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      
       // 상태 4로 이동 - 스크롤을 맨 위로 이동
     }, 500); // 투명해지는 시간 (0.5초)
+    
+    // 3단계: 추가 보장을 위한 지연 실행
+    setTimeout(() => {
+      scrollToTop();
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }, 100);
+    
+    // 4단계: 최종 보장을 위한 지연 실행
+    setTimeout(() => {
+      scrollToTop();
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }, 200);
     
     // 3단계: 선택한 후보들이 나타남 (0.8초 동안 선명해짐)
     setTimeout(() => {
@@ -380,60 +413,61 @@ export default function VotePage() {
     }
   }, [voteStatusData]);
 
-  // 투표 결과 데이터 로드 후 스크롤 복원
+  // 페이지 로드 시 즉시 스크롤 복원 (검색 화면과 동일한 방식)
+  useEffect(() => {
+    const savedY = sessionStorage.getItem('vote-result-scroll');
+    const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
+    
+    if (savedY && isFromAnimeDetail) {
+      const y = parseInt(savedY);
+      
+      // 페이지 로드 즉시 복원 (깜빡임 완전 방지)
+      window.scrollTo(0, y);
+      document.body.scrollTop = y;
+      document.documentElement.scrollTop = y;
+      
+      // 추가 즉시 복원 (확실하게)
+      setTimeout(() => {
+        window.scrollTo(0, y);
+        document.body.scrollTop = y;
+        document.documentElement.scrollTop = y;
+      }, 0);
+    }
+  }, []);
+
+  // 투표 결과 데이터 로드 후 스크롤 복원 (검색 화면과 동일한 방식)
   useEffect(() => {
     if (voteHistory) {
       const savedY = sessionStorage.getItem('vote-result-scroll');
       const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
-      const isToVoteResult = sessionStorage.getItem('to-vote-result') === 'true';
-
-      if (savedY && isFromAnimeDetail && isToVoteResult) {
+      
+      if (savedY && isFromAnimeDetail) {
         const y = parseInt(savedY);
-        // 스크롤 복원
-        scrollToPosition(y);
-        setTimeout(() => {
+        
+        // 실제 스크롤 컨테이너에 복원
+        const mainElement = document.querySelector('main');
+        if (mainElement) {
+          (mainElement as any).scrollTop = y;
+        } else {
+          // 폴백: window 스크롤
           scrollToPosition(y);
-          // 스크롤 복원 완료 후 플래그 정리
-          clearStorageFlags('from-anime-detail', 'to-vote-result');
-        }, 50);
+        }
+        
+        // 플래그 정리
+        clearStorageFlags('from-anime-detail', 'to-anime-detail');
+      } else {
       }
     }
   }, [voteHistory]);
 
-  // 전체 애니메이션 리스트 생성 (API 데이터 또는 기본 데이터) - 메모이제이션
+  // 전체 애니메이션 리스트 생성 (API 데이터만 사용) - 메모이제이션
   const allAnimeList: Anime[] = useMemo(() => {
     return data?.result?.animeCandidates?.map((anime: AnimeCandidateDto) => ({
       id: anime.animeCandidateId,
       title: anime.titleKor || '제목 없음',
       thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
       medium: anime.medium
-    })) || [
-      // 기본 데이터 (API 데이터가 없을 때)
-      {
-        id: 1,
-        title: "9-nine- Ruler's Crown",
-        thumbnailUrl: "/imagemainthumbnail@2x.png",
-        medium: "TVA" as const,
-      },
-      {
-        id: 2,
-        title: "NEW 팬티 & 스타킹 with 가터벨트",
-        thumbnailUrl: "/imagemainthumbnail@2x.png",
-        medium: "TVA" as const,
-      },
-      {
-        id: 3,
-        title: "그 비스크 돌은 사랑을 한다 Season 2",
-        thumbnailUrl: "/imagemainthumbnail@2x.png",
-        medium: "TVA" as const,
-      },
-      {
-        id: 4,
-        title: "원피스",
-        thumbnailUrl: "/imagemainthumbnail@2x.png",
-        medium: "MOVIE" as const,
-      }
-    ];
+    })) || [];
   }, [data?.result?.animeCandidates]);
 
   // 검색어에 따라 애니메이션 리스트 필터링 (검색 페이지와 동일한 로직 적용) - 메모이제이션
@@ -597,10 +631,20 @@ export default function VotePage() {
                       key={ballot.animeId}
                       className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
                       onClick={() => {
-                        // 투표 결과 화면에서 애니메이션 상세 화면으로 갈 때 스크롤 위치 저장
-                        const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+                        // 실제 스크롤 컨테이너 찾기
+                        const mainElement = document.querySelector('main');
+                        let scrollY = 0;
+                        
+                        if (mainElement && mainElement.scrollTop > 0) {
+                          scrollY = (mainElement as any).scrollTop;
+                        } else {
+                          // 폴백: window 스크롤
+                          scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+                        }
+                        
                         sessionStorage.setItem('vote-result-scroll', scrollY.toString());
                         sessionStorage.setItem('to-anime-detail', 'true');
+                        
                         router.push(`/animes/${ballot.animeId}`);
                       }}
                     >
@@ -652,7 +696,7 @@ export default function VotePage() {
 
   // 투표 결과 화면 렌더링
   return (
-    <main className="w-full" ref={containerRef}>
+    <main className="w-full h-screen overflow-y-auto" ref={containerRef}>
       {/* 배너 - 전체 너비, 패딩 없음 */}
       <section>
         <VoteBanner 
@@ -707,12 +751,12 @@ export default function VotePage() {
 
       {/* 투표 섹션 - Sticky */}
       <section 
-        className="sticky top-[60px] z-50 w-full" 
+        className="sticky top-0 z-50 w-full" 
         data-sticky-section
         style={{ 
           willChange: 'transform',
           position: 'sticky',
-          top: '60px',
+          top: '0px',
           zIndex: 50
         }}
       >

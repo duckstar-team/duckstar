@@ -3,12 +3,52 @@
  */
 
 /**
- * 페이지를 맨 위로 스크롤
+ * 페이지를 맨 위로 스크롤 (100% 확실한 버전)
  */
 export function scrollToTop(): void {
+  // 1. 모든 가능한 스크롤 방법을 동시에 사용
   window.scrollTo(0, 0);
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'instant'
+  });
+  
+  // 2. document 요소들 직접 설정
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
+  document.body.scrollLeft = 0;
+  document.documentElement.scrollLeft = 0;
+  
+  // 3. 모든 스크롤 가능한 요소들 처리
+  const scrollableElements = document.querySelectorAll('*');
+  scrollableElements.forEach(element => {
+    const htmlElement = element as HTMLElement;
+    if (htmlElement.scrollTop !== undefined) {
+      htmlElement.scrollTop = 0;
+    }
+    if (htmlElement.scrollLeft !== undefined) {
+      htmlElement.scrollLeft = 0;
+    }
+  });
+  
+  // 4. 강제 리플로우로 확실한 적용
+  document.body.offsetHeight;
+  document.documentElement.offsetHeight;
+  
+  // 5. 추가 보장을 위한 지연 실행
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, 0);
+  
+  // 6. 한 번 더 지연 실행으로 확실히 보장
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, 10);
 }
 
 /**

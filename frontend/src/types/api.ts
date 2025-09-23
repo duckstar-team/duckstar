@@ -13,6 +13,7 @@ export interface WeekDto {
   year: number;
   quarter: number;
   week: number;
+  weekNumber: number;
   startDate: string;
   endDate: string;
 }
@@ -201,6 +202,12 @@ export interface AnimePreviewListDto {
   schedule: {
     [key: string]: AnimePreviewDto[];
   };
+}
+
+// Search API Response DTO
+export interface AnimeSearchListDto {
+  size: number;
+  animePreviews: AnimePreviewDto[];
 }
 
 export type ApiResponseAnimePreviewListDto = ApiResponse<AnimePreviewListDto>;

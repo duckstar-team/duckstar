@@ -67,14 +67,12 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
     const shouldRestore = sessionStorage.getItem('shouldRestoreScroll') === 'true';
     
     if (shouldRestore) {
-      console.log('스크롤 복원 시작:', { pathname, enabled });
       
       // 여러 번 시도하여 확실히 복원
       const attemptRestore = (attempt = 1) => {
         const maxAttempts = 10;
         
         if (attempt > maxAttempts) {
-          console.log('스크롤 복원 최대 시도 횟수 초과');
           sessionStorage.removeItem('shouldRestoreScroll');
           return;
         }
@@ -83,7 +81,6 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
                           document.body.scrollHeight > window.innerHeight;
         
         if (hasContent) {
-          console.log(`스크롤 복원 시도 ${attempt}:`, {
             scrollHeight: document.body.scrollHeight,
             windowHeight: window.innerHeight,
             hasContent
@@ -94,7 +91,6 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
             sessionStorage.removeItem('shouldRestoreScroll');
           }, restoreDelay);
         } else {
-          console.log(`스크롤 복원 대기 ${attempt}:`, {
             scrollHeight: document.body.scrollHeight,
             windowHeight: window.innerHeight
           });
@@ -119,12 +115,10 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
   useEffect(() => {
     if (typeof window === 'undefined' || !enabled) return;
 
-    console.log('스크롤 이벤트 리스너 등록:', { pathname, enabled });
 
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      console.log('스크롤 이벤트 리스너 제거:', pathname);
       window.removeEventListener('scroll', handleScroll);
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -144,7 +138,6 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
             const now = Date.now();
             // 2초 이내에 저장된 값이 있고, 스크롤 값이 100 이상이면 언마운트 시 저장 건너뛰기
             if (now - timestamp < 2000 && y > 100) {
-              console.log('✅ 클릭 시점에 이미 저장된 스크롤 위치 사용, 언마운트 시 저장 건너뛰기:', {
                 savedY: y,
                 timeDiff: now - timestamp
               });
@@ -155,7 +148,6 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
           }
         }
         
-        console.log('컴포넌트 언마운트 - 스크롤 위치 저장');
         saveScrollPosition();
       }
     };
@@ -163,7 +155,6 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
 
   // 스크롤 위치 저장과 함께 네비게이션 (단순화)
   const navigateWithScroll = useCallback((url: string) => {
-    console.log('🚀 navigateWithScroll 호출:', { url, pathname });
     
     // 클릭 시점의 스크롤 위치를 즉시 저장
     saveScrollPosition();
@@ -188,7 +179,6 @@ export function useScrollRestoration(options: UseScrollRestorationOptions = {}) 
 // 별도의 useNavigateWithScroll 훅 - 비활성화
 export function useNavigateWithScroll() {
   // 완전히 비활성화 - search 화면에서 직접 구현
-  console.log('🚫 useNavigateWithScroll 비활성화됨 - search 화면에서 직접 구현');
   return {
     navigateWithScroll: () => {},
     navigateBackWithScroll: () => {}
