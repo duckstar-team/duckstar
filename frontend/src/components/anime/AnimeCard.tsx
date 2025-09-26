@@ -75,13 +75,13 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
       return `${month}/${day} 개봉`;
     }
     
-    // 시즌별 조회인 경우 airTime 사용
-    if (!isCurrentSeason && airTime) {
+    // airTime이 있는 경우 우선 사용 (검색 결과 포함)
+    if (airTime) {
       return airTime;
     }
     
-    // "이번 주" 메뉴에서 종영된 애니메이션도 방영시간 표시
-    if (isCurrentSeason && scheduledAt) {
+    // airTime이 없는 경우 scheduledAt 사용
+    if (scheduledAt) {
       const date = new Date(scheduledAt);
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
