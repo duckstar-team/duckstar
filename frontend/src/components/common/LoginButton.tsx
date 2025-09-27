@@ -16,7 +16,7 @@ export default function LoginButton({
   showProfileImage = true,
   className = '' 
 }: LoginButtonProps) {
-  const { isAuthenticated, user, logout, withdraw } = useAuth();
+  const { isAuthenticated, isLoading, user, logout, withdraw } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -35,12 +35,6 @@ export default function LoginButton({
     setIsDropdownOpen(false);
   };
 
-  const handleWithdrawClick = () => {
-    if (confirm('정말로 회원탈퇴를 하시겠습니까?')) {
-      withdraw();
-      setIsDropdownOpen(false);
-    }
-  };
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -59,6 +53,16 @@ export default function LoginButton({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // 로딩 중일 때
+  if (isLoading) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="w-6 h-6 rounded-full bg-gray-200 animate-pulse"></div>
+        <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+    );
+  }
 
   if (isAuthenticated && user) {
     return (
@@ -107,12 +111,6 @@ export default function LoginButton({
               className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer"
             >
               로그아웃
-            </button>
-            <button
-              onClick={handleWithdrawClick}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap cursor-pointer"
-            >
-              회원탈퇴
             </button>
           </div>
         )}

@@ -55,6 +55,7 @@ interface EpisodeCommentModalProps {
   onClose: () => void;
   animeId: number;
   animeData?: AnimeHomeDto;
+  rawAnimeData?: any; // 백엔드 원본 데이터
   onCommentSubmit?: (episodeIds: number[], content: string, images?: File[]) => void;
 }
 
@@ -63,11 +64,13 @@ export default function EpisodeCommentModal({
   onClose,
   animeId,
   animeData,
+  rawAnimeData,
   onCommentSubmit
 }: EpisodeCommentModalProps) {
   const { isAuthenticated } = useAuth();
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [commentContent, setCommentContent] = useState('');
+  const [episodeCurrentPage, setEpisodeCurrentPage] = useState(0);
 
   // 분기/주차 계산 함수
   const getQuarterAndWeek = (date: Date) => {
@@ -79,8 +82,8 @@ export default function EpisodeCommentModal({
     };
   };
 
-  // 에피소드 데이터 처리
-  const processedEpisodes = animeData?.episodeResponseDtos?.map((episodeDto: EpisodeDto) => {
+  // 에피소드 데이터 처리 (rawAnimeData 사용)
+  const processedEpisodes = rawAnimeData?.episodeResponseDtos?.map((episodeDto: any) => {
     const scheduledAt = new Date(episodeDto.scheduledAt);
     const { quarter, week } = getQuarterAndWeek(scheduledAt);
     
@@ -96,31 +99,8 @@ export default function EpisodeCommentModal({
     };
   }) || [];
 
-  // 테스트용 하드코딩 데이터 (데이터가 없을 때)
-  const testEpisodes = [
-    {
-      id: 1,
-      episodeId: 1,
-      episodeNumber: 1,
-      scheduledAt: '2024-01-01T00:00:00Z',
-      quarter: '1분기',
-      week: '1주차',
-      isBreak: false,
-      isRescheduled: false
-    },
-    {
-      id: 2,
-      episodeId: 2,
-      episodeNumber: 2,
-      scheduledAt: '2024-01-08T00:00:00Z',
-      quarter: '1분기',
-      week: '2주차',
-      isBreak: false,
-      isRescheduled: false
-    }
-  ];
-  
-  const finalEpisodes = processedEpisodes.length > 0 ? processedEpisodes : testEpisodes;
+  // 실제 에피소드 데이터 사용
+  const finalEpisodes = processedEpisodes;
 
   // 에피소드 클릭 핸들러 (한 개만 선택 가능, 현재 방영 중인 에피소드 제외)
   const handleEpisodeClick = (episodeId: number) => {
@@ -257,6 +237,8 @@ export default function EpisodeCommentModal({
               selectedEpisodeIds={selectedEpisodeIds}
               onEpisodeClick={handleEpisodeClick}
               disableFutureEpisodes={true}
+              currentPage={episodeCurrentPage}
+              onPageChange={setEpisodeCurrentPage}
             />
           </div>
 

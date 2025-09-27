@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from 'next/font/local';
+import { Suspense } from 'react';
 import "./globals.css";
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import QueryProvider from '@/components/providers/QueryProvider';
+import MigrationToast from '@/components/common/MigrationToast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -81,6 +83,11 @@ export default function RootLayout({
             <main className="ml-[50px] sm:ml-[55px] md:ml-[200px] mt-[60px] bg-gray-50 transition-all duration-300 ease-in-out group-hover:ml-[200px] h-[calc(100vh-60px)] overflow-y-auto">
               {children}
             </main>
+            
+            {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
+            <Suspense fallback={null}>
+              <MigrationToast />
+            </Suspense>
           </AuthProvider>
         </QueryProvider>
       </body>

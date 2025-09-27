@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LeftInfoPanel from '@/components/anime/LeftInfoPanel';
 import RightCommentPanel from '@/components/anime/RightCommentPanel';
 import { getAnimeDetail } from '@/api/search';
@@ -29,6 +29,7 @@ interface AnimeDetailDto {
   medium: 'TVA' | 'MOVIE' | 'OVA' | 'SPECIAL';
   year?: number;
   quarter?: number;
+  seasons?: Array<{ year: number; seasonType: string }>; // 모든 시즌 정보
   studio?: string;
   director?: string;
   source?: string;
@@ -49,6 +50,9 @@ export default function AnimeDetailClient() {
   const [characters, setCharacters] = useState<CharacterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [rawAnimeData, setRawAnimeData] = useState<any>(null); // 백엔드 원본 데이터 저장
+  const isLoadingRef = useRef(false); // 중복 호출 방지용
+  const prevAnimeIdRef = useRef<string | null>(null); // 이전 animeId 추적
   
   // 캐시된 데이터 확인
   const [cachedData, setCachedData] = useState<{ anime: AnimeDetailDto; characters: CharacterData[] } | null>(null);
@@ -94,6 +98,7 @@ export default function AnimeDetailClient() {
   const fetchLatestData = async () => {
     try {
       const data = await getAnimeDetail(parseInt(animeId));
+      setRawAnimeData(data); // 백엔드 원본 데이터 저장
       // 최신 데이터로 업데이트 (사용자에게는 보이지 않음)
       // 필요시 여기서 상태 업데이트
     } catch (error) {
@@ -141,7 +146,19 @@ export default function AnimeDetailClient() {
     window.scrollTo(0, 0);
     
     const fetchAnimeData = async () => {
+      // 중복 호출 방지
+      if (isLoadingRef.current) {
+        return;
+      }
+      
+      // animeId가 변경되지 않았으면 API 호출하지 않음
+      if (prevAnimeIdRef.current === animeId) {
+        return;
+      }
+      
       try {
+        isLoadingRef.current = true;
+        prevAnimeIdRef.current = animeId;
         setLoading(true);
         setError(null);
         
@@ -153,6 +170,7 @@ export default function AnimeDetailClient() {
             const parsedCache = JSON.parse(cached);
             setAnime(parsedCache.anime);
             setCharacters(parsedCache.characters);
+            setRawAnimeData(parsedCache.rawAnimeData); // 캐시된 원본 데이터 설정
             setLoading(false);
             // 백그라운드에서 최신 데이터 가져오기
             setTimeout(() => fetchLatestData(), 0);
@@ -169,6 +187,9 @@ export default function AnimeDetailClient() {
             setTimeout(() => reject(new Error('Request timeout')), 10000)
           )
         ]) as unknown;
+        
+        // 백엔드 원본 데이터 저장
+        setRawAnimeData(data);
         
         // API 응답을 AnimeDetailDto 형식으로 변환
         // data는 AnimeHomeDto 구조: { animeInfoDto, animeStatDto, episodeDtos, rackUnitDtos, castPreviews }
@@ -230,6 +251,7 @@ export default function AnimeDetailClient() {
                    animeInfo?.seasonDtos?.[0]?.seasonType === "SUMMER" ? 3 :
                    animeInfo?.seasonDtos?.[0]?.seasonType === "AUTUMN" ? 4 :
                    animeInfo?.seasonDtos?.[0]?.seasonType === "WINTER" ? 1 : 2,
+          seasons: animeInfo?.seasonDtos || [], // 모든 시즌 정보 저장
           studio: animeInfo?.corp || "",
           director: animeInfo?.director || "",
           source: animeInfo?.author || "",
@@ -280,7 +302,7 @@ export default function AnimeDetailClient() {
         setCharacters(characterData);
         
         // 캐시에 저장
-        const cacheData = { anime: animeDetail, characters: characterData };
+        const cacheData = { anime: animeDetail, characters: characterData, rawAnimeData: data };
         sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
         
         // 애니메이션 상세 이미지 프리로딩 (비동기로 처리하여 로딩 속도 향상)
@@ -293,6 +315,7 @@ export default function AnimeDetailClient() {
         setAnime(null);
       } finally {
         setLoading(false);
+        isLoadingRef.current = false;
       }
     };
 
@@ -304,7 +327,7 @@ export default function AnimeDetailClient() {
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [animeId]);
+  }, [animeId]); // animeId가 변경될 때만 실행
 
   if (loading) {
     return (
@@ -414,7 +437,12 @@ export default function AnimeDetailClient() {
           
           {/* 오른쪽 영역 */}
           <div className="flex-1 ml-[612px]">
-            <RightCommentPanel animeId={parseInt(animeId)} isImageModalOpen={isImageModalOpen} />
+            <RightCommentPanel 
+              animeId={parseInt(animeId)} 
+              isImageModalOpen={isImageModalOpen}
+              animeData={anime} // 애니메이션 데이터 전달
+              rawAnimeData={rawAnimeData} // 백엔드 원본 데이터 전달
+            />
           </div>
         </div>
       </div>

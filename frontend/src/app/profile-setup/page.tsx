@@ -7,7 +7,7 @@ import { updateProfile } from '@/api/client';
 
 export default function ProfileSetupPage() {
   const router = useRouter();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isAuthenticated } = useAuth();
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profileImageUrl || null);
@@ -22,6 +22,9 @@ export default function ProfileSetupPage() {
       setPreviewUrl(user.profileImageUrl || null);
     }
   }, [user]);
+
+
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,6 +81,9 @@ export default function ProfileSetupPage() {
 
       const formData = new FormData();
       
+      // isSkip 필드 추가 (프로필 저장 시 false)
+      formData.append('isSkip', 'false');
+      
       if (trimmedNickname) {
         formData.append('nickname', trimmedNickname);
       }
@@ -96,8 +102,14 @@ export default function ProfileSetupPage() {
         updateUser(response.mePreviewDto);
       }
 
-      // 메인 페이지로 리다이렉트 (새로고침하여 최신 사용자 정보 반영)
-      window.location.href = '/';
+      // 원래 페이지로 리다이렉트 (returnUrl이 있으면 해당 페이지, 없으면 홈)
+      const returnUrl = sessionStorage.getItem('returnUrl');
+      if (returnUrl) {
+        sessionStorage.removeItem('returnUrl');
+        window.location.href = returnUrl;
+      } else {
+        window.location.href = '/';
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '프로필 업데이트에 실패했습니다.');
     } finally {
@@ -105,9 +117,64 @@ export default function ProfileSetupPage() {
     }
   };
 
-  const handleSkip = () => {
-    // 메인 페이지로 리다이렉트 (새로고침하여 최신 사용자 정보 반영)
-    window.location.href = '/';
+  const handleSkip = async () => {
+    // 이미 프로필이 초기화된 경우 API 호출하지 않고 원래 페이지로 이동
+    if (user?.isProfileInitialized) {
+      const returnUrl = sessionStorage.getItem('returnUrl');
+      if (returnUrl) {
+        sessionStorage.removeItem('returnUrl');
+        window.location.href = returnUrl;
+      } else {
+        window.location.href = '/';
+      }
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      
+      // isSkip 필드 추가 (건너뛰기 시 true)
+      formData.append('isSkip', 'true');
+      
+      const response = await updateProfile(formData);
+      
+      // 사용자 정보 업데이트
+      if (response.data?.mePreviewDto) {
+        updateUser(response.data.mePreviewDto);
+      } else if (response.mePreviewDto) {
+        updateUser(response.mePreviewDto);
+      }
+
+      // 원래 페이지로 리다이렉트 (returnUrl이 있으면 해당 페이지, 없으면 홈)
+      const returnUrl = sessionStorage.getItem('returnUrl');
+      if (returnUrl) {
+        sessionStorage.removeItem('returnUrl');
+        window.location.href = returnUrl;
+      } else {
+        window.location.href = '/';
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '프로필 설정에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWithdraw = () => {
+    if (confirm('정말로 회원탈퇴를 하시겠습니까? 탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
+      // 회원탈퇴 API 호출
+      import('@/api/client').then(({ withdraw }) => {
+        withdraw().then(() => {
+          // 탈퇴 성공 시 홈으로 리다이렉트
+          window.location.href = '/';
+        }).catch((error) => {
+          alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
+        });
+      });
+    }
   };
 
   return (
@@ -227,10 +294,19 @@ export default function ProfileSetupPage() {
           </div>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 flex justify-between items-center">
           <p className="text-xs text-gray-500">
             프로필은 언제든지 설정에서 변경할 수 있습니다
           </p>
+          {/* 신규 회원가입이 아닌 경우에만 회원탈퇴 버튼 표시 */}
+          {user?.isProfileInitialized && (
+            <button
+              onClick={handleWithdraw}
+              className="text-xs text-red-600 hover:text-red-700 transition-colors cursor-pointer"
+            >
+              회원탈퇴
+            </button>
+          )}
         </div>
       </div>
     </div>

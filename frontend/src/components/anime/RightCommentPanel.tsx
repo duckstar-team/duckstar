@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
 import ReplyForm from './ReplyForm';
@@ -34,15 +34,17 @@ import {
 interface RightCommentPanelProps {
   animeId?: number;
   isImageModalOpen?: boolean; // 이미지 모달 상태
+  animeData?: AnimeDetailDto | null; // 애니메이션 데이터
+  rawAnimeData?: any; // 백엔드 원본 데이터
 }
 
-export default function RightCommentPanel({ animeId = 1, isImageModalOpen = false }: RightCommentPanelProps) {
+export default function RightCommentPanel({ animeId = 1, isImageModalOpen = false, animeData, rawAnimeData }: RightCommentPanelProps) {
   // 인증 상태 확인
   const { isAuthenticated } = useAuth();
   
   // 상태 관리
-  const [animeData, setAnimeData] = useState<AnimeHomeDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  // 애니메이션 데이터는 부모 컴포넌트에서 전달받음
+  const [loading, setLoading] = useState(false); // 애니메이션 데이터는 부모에서 전달받으므로 로딩 불필요
   const [error, setError] = useState<string | null>(null);
   
   // 댓글 관련 상태 (useComments 훅 사용)
@@ -69,6 +71,32 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   } = useComments(animeId);
   
   const [activeFilters, setActiveFilters] = useState<number[]>([]); // 활성화된 에피소드 필터들
+  
+  // 에피소드 페이지 상태를 부모에서 관리
+  const [episodeCurrentPage, setEpisodeCurrentPage] = useState(0);
+  
+  // 현재 분기/주차에 해당하는 페이지로 초기 설정 (NOW_SHOWING 상태일 때만)
+  useEffect(() => {
+    if (rawAnimeData?.episodeResponseDtos?.length > 0 && rawAnimeData?.animeInfoDto?.status === 'NOW_SHOWING') {
+      const currentRecord = getThisWeekRecord(new Date());
+      
+      const currentEpisodeIndex = rawAnimeData.episodeResponseDtos.findIndex((episode: any) => {
+        const episodeDate = new Date(episode.scheduledAt);
+        const episodeRecord = getThisWeekRecord(episodeDate);
+        
+        return episodeRecord.quarterValue === currentRecord.quarterValue && episodeRecord.weekValue === currentRecord.weekValue;
+      });
+      
+      if (currentEpisodeIndex !== -1) {
+        const episodesPerPage = 6;
+        const targetPage = Math.floor(currentEpisodeIndex / episodesPerPage);
+        setEpisodeCurrentPage(targetPage);
+      }
+    }
+  }, [rawAnimeData?.episodeResponseDtos, rawAnimeData?.animeInfoDto?.status]);
+  
+  // 에피소드 섹션 페이지 상태를 부모에서 관리
+  
 
   // 분기/주차 계산 함수 (올바른 비즈니스 로직 사용)
   const getQuarterAndWeek = (date: Date) => {
@@ -107,58 +135,14 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
 
 
 
-  // API 호출 함수
-  const fetchAnimeData = useCallback(async (animeId: number = 1) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // 실제 API 엔드포인트 호출
-      const response = await fetch(`/api/v1/animes/${animeId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`애니메이션 ID ${animeId}를 찾을 수 없습니다.`);
-        } else if (response.status >= 500) {
-          throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-      }
-      
-      const apiResponse: ApiResponse<AnimeHomeDto> = await response.json();
-      
-      // API 응답 구조 확인 및 디버깅
-      
-      if (apiResponse.isSuccess && apiResponse.result) {
-        setAnimeData(apiResponse.result);
-      } else {
-        // API 응답이 실패했을 때 더 자세한 정보 로깅
-        throw new Error(apiResponse.message || '데이터를 불러오는데 실패했습니다.');
-      }
-    } catch (err) {
-      setError('데이터를 불러오는 중 오류가 발생했습니다.');
-      // 에러 처리 - mock 데이터 제거
-      setAnimeData(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []); // useCallback 의존성 배열
-
-  // 컴포넌트 마운트 시 데이터 로드
-  useEffect(() => {
-    fetchAnimeData(animeId);
-  }, [animeId, fetchAnimeData]);
+  // 애니메이션 데이터는 부모 컴포넌트에서 전달받음 (API 호출 제거)
 
   // 댓글 데이터 로드
   useEffect(() => {
     loadComments(0, true);
   }, [loadComments]);
+
+  // 에피소드 필터는 시각적 표시만 하고 댓글 API 호출하지 않음
 
   // 무한스크롤을 위한 Intersection Observer
   useEffect(() => {
@@ -193,31 +177,37 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
     };
   }, [hasMoreComments, loadingMore, commentsLoading, currentPage]);
 
-  // 에피소드 필터 변경 시 댓글 재로드
+  // 에피소드 필터 변경 시 댓글 재로드 (초기 로딩 제외)
   useEffect(() => {
     if (animeId) {
+      // 현재 스크롤 위치 저장
+      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
       loadComments(0, true);
+      
+      // 댓글 로딩 완료 후 스크롤 위치 복원 (적절한 지연시간)
+      setTimeout(() => {
+        window.scrollTo({ top: currentScrollTop, behavior: 'auto' });
+      }, 200);
     }
-  }, [selectedEpisodeIds, animeId, loadComments]);
+  }, [selectedEpisodeIds, animeId]);
 
+  // 에피소드 섹션 초기 페이지 설정 (현재 분기/주차)
 
   // 필터 핸들러 함수들
   const handleClearFilters = () => {
     setActiveFilters([]);
     setSelectedEpisodeIds([]);
-    setCurrentPage(0); // 필터 클리어 시 페이지 초기화
   };
 
   const handleRemoveFilter = (episodeNumber: number) => {
     setActiveFilters(prev => prev.filter(ep => ep !== episodeNumber));
     
     // episodeNumber에 해당하는 episodeId를 찾아서 selectedEpisodeIds에서 제거
-    const episode = animeData?.episodeDtos.find(ep => ep.episodeNumber === episodeNumber);
+    const episode = rawAnimeData?.episodeResponseDtos?.find(ep => ep.episodeNumber === episodeNumber);
     if (episode) {
       setSelectedEpisodeIds(prev => prev.filter(id => id !== episode.episodeId));
     }
-    
-    setCurrentPage(0); // 필터 제거 시 페이지 초기화
   };
 
   // 답글 관련 상태 및 핸들러
@@ -232,6 +222,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   
   // 무한스크롤을 위한 ref
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  
   
   // Sticky 상태 관리 (간소화)
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
@@ -578,244 +569,38 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       clearTimeout(timeoutId);
       resizeObserver.disconnect();
     };
-  }, [activeFilters]); // 필터 변경 시 높이 재측정
+  }, []); // 컴포넌트 마운트 시에만 실행
 
-  // 댓글 데이터 로드
-  useEffect(() => {
-    // 댓글 데이터
-    const testComments: CommentDto[] = [
-      {
-        status: "NORMAL",
-        commentId: 1,
-        canDeleteThis: false,
-        isLiked: false,
-        commentLikeId: 0,
-        likeCount: 120,
-        authorId: 1,
-        nickname: "fever",
-        profileImageUrl: "",
-        voteCount: 1,
-        createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(), // 25분 전
-        attachedImageUrl: undefined,
-        body: "무지성으로 잘대해준다는 느낌이 아니고 제대로 본인 노력에 걸맞는 평가 받아가고 본인도 점점 나아가고 하는 느낌이라 이 훈훈한 분위기가 몇배로 맛있게 느껴지는듯 이번화 특히 間 를 절묘하게 잘써서 더 재밋게 본듯",
-        replyCount: 2
-      },
-      {
-        status: "NORMAL",
-        commentId: 2,
-        canDeleteThis: false,
-        isLiked: true,
-        commentLikeId: 1,
-        likeCount: 89,
-        authorId: 3,
-        nickname: "anime_lover",
-        profileImageUrl: "",
-        voteCount: 5,
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2시간 전
-        attachedImageUrl: undefined,
-        body: "이번 에피소드 정말 감동적이었어요. 캐릭터들의 성장이 잘 드러나고 특히 마지막 장면이 인상적이었습니다. 다음 주가 너무 기대돼요!",
-        replyCount: 0
-      },
-      {
-        status: "NORMAL",
-        commentId: 3,
-        canDeleteThis: false,
-        isLiked: false,
-        commentLikeId: 0,
-        likeCount: 45,
-        authorId: 4,
-        nickname: "otaku_master",
-        profileImageUrl: "",
-        voteCount: 2,
-        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4시간 전
-        attachedImageUrl: undefined,
-        body: "작화가 정말 좋네요. 특히 배경과 캐릭터의 조화가 완벽합니다. 이런 퀄리티로 계속 나와주면 좋겠어요.",
-        replyCount: 1
-      },
-      {
-        status: "NORMAL",
-        commentId: 4,
-        canDeleteThis: false,
-        isLiked: false,
-        commentLikeId: 0,
-        likeCount: 67,
-        authorId: 5,
-        nickname: "weeb_king",
-        profileImageUrl: "",
-        voteCount: 3,
-        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6시간 전
-        attachedImageUrl: undefined,
-        body: "스토리 전개가 예상보다 빨라서 좋네요. 원작을 안 읽어봤는데도 이해하기 쉽게 잘 만들어졌어요. 추천합니다!",
-        replyCount: 0
-      },
-      {
-        status: "NORMAL",
-        commentId: 5,
-        canDeleteThis: false,
-        isLiked: true,
-        commentLikeId: 2,
-        likeCount: 156,
-        authorId: 6,
-        nickname: "manga_reader",
-        profileImageUrl: "",
-        voteCount: 8,
-        createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8시간 전
-        attachedImageUrl: undefined,
-        body: "원작을 읽어본 입장에서 애니메이션화가 정말 잘 되었네요. 원작의 분위기를 잘 살리면서도 애니메이션만의 매력도 추가되었어요. 특히 음악이 정말 좋습니다.",
-        replyCount: 3
-      },
-      {
-        status: "NORMAL",
-        commentId: 6,
-        canDeleteThis: false,
-        isLiked: false,
-        commentLikeId: 0,
-        likeCount: 23,
-        authorId: 7,
-        nickname: "casual_watcher",
-        profileImageUrl: "",
-        voteCount: 1,
-        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12시간 전
-        attachedImageUrl: undefined,
-        body: "처음 보는 애니인데 재밌네요. 계속 챙겨봐야겠어요.",
-        replyCount: 0
-      }
-    ];
-
-    const testReplies: { [commentId: number]: ReplyDto[] } = {
-      1: [
-        {
-          status: "NORMAL",
-          replyId: 1,
-          canDeleteThis: true,
-          isLiked: false,
-          replyLikeId: 0,
-          likeCount: 55,
-          authorId: 2,
-          nickname: "braid",
-          profileImageUrl: "",
-          voteCount: 12,
-          createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5분 전
-          listenerId: 1,
-          attachedImageUrl: undefined,
-          body: "인정합니다."
-        },
-        {
-          status: "NORMAL",
-          replyId: 2,
-          canDeleteThis: true,
-          isLiked: false,
-          replyLikeId: 0,
-          likeCount: 17,
-          authorId: 2,
-          nickname: "braid",
-          profileImageUrl: "",
-          voteCount: 12,
-          createdAt: new Date(Date.now() - 29 * 1000).toISOString(), // 29초 전
-          listenerId: 1,
-          attachedImageUrl: undefined,
-          body: "오랜만인데 되게 편안함. 노아 뭔가 티는 냈는데 시원하게 질러버리네"
-        }
-      ],
-      3: [
-        {
-          status: "NORMAL",
-          replyId: 3,
-          canDeleteThis: true,
-          isLiked: true,
-          replyLikeId: 1,
-          likeCount: 12,
-          authorId: 8,
-          nickname: "art_critic",
-          profileImageUrl: "",
-          voteCount: 1,
-          createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3시간 전
-          listenerId: 3,
-          attachedImageUrl: undefined,
-          body: "작화팀이 정말 대단해요. 디테일이 놀라워요."
-        }
-      ],
-      5: [
-        {
-          status: "NORMAL",
-          replyId: 4,
-          canDeleteThis: true,
-          isLiked: false,
-          replyLikeId: 0,
-          likeCount: 8,
-          authorId: 9,
-          nickname: "music_fan",
-          profileImageUrl: "",
-          voteCount: 0,
-          createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(), // 7시간 전
-          listenerId: 5,
-          attachedImageUrl: undefined,
-          body: "음악이 정말 좋네요. OST 구매하고 싶어요."
-        },
-        {
-          status: "NORMAL",
-          replyId: 5,
-          canDeleteThis: true,
-          isLiked: false,
-          replyLikeId: 0,
-          likeCount: 15,
-          authorId: 10,
-          nickname: "book_worm",
-          profileImageUrl: "",
-          voteCount: 2,
-          createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(), // 7시간 30분 전
-          listenerId: 5,
-          attachedImageUrl: undefined,
-          body: "원작도 추천해요. 더 자세한 심리 묘사가 있어서 좋아요."
-        },
-        {
-          status: "NORMAL",
-          replyId: 6,
-          canDeleteThis: true,
-          isLiked: true,
-          replyLikeId: 2,
-          likeCount: 22,
-          authorId: 11,
-          nickname: "anime_veteran",
-          profileImageUrl: "",
-          voteCount: 4,
-          createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // 7시간 전
-          listenerId: 5,
-          attachedImageUrl: undefined,
-          body: "이런 퀄리티의 애니메이션이 나오는 게 정말 감사해요. 제작진들 수고하셨어요!"
-        }
-      ]
-    };
-
-    setComments(testComments);
-    setReplies(testReplies);
-  }, []);
+  // 댓글 데이터 로드 - mock 데이터 제거됨
 
 
-  // 총 에피소드 수 계산
-  const totalEpisodes = animeData?.animeInfoDto?.totalEpisodes;
+  // 총 에피소드 수 계산 (백엔드 원본 데이터에서 가져옴)
+  const totalEpisodes = rawAnimeData?.animeInfoDto?.totalEpisodes || 0;
 
-  // 에피소드 데이터 처리 (각 에피소드의 scheduledAt을 기반으로 분기/주차 계산)
-  const processedEpisodes = animeData?.episodeResponseDtos?.map(episodeDto => {
-    const scheduledAt = new Date(episodeDto.scheduledAt);
-    const { quarter, week } = getQuarterAndWeek(scheduledAt);
-    
-    return {
-      id: episodeDto.episodeId, // episodeId를 id로 사용
-      episodeId: episodeDto.episodeId,
-      episodeNumber: episodeDto.episodeNumber,
-      scheduledAt: episodeDto.scheduledAt,
-      quarter,
-      week,
-      isBreak: episodeDto.isBreak,
-      isRescheduled: episodeDto.isRescheduled
-    };
-  }) || [];
+  // 에피소드 데이터 처리 (백엔드 원본 데이터에서 가져옴) - 메모이제이션
+  const processedEpisodes = useMemo(() => {
+    return rawAnimeData?.episodeResponseDtos?.map(episodeDto => {
+      const scheduledAt = new Date(episodeDto.scheduledAt);
+      const { quarter, week } = getQuarterAndWeek(scheduledAt);
+      
+      return {
+        id: episodeDto.episodeId, // episodeId를 id로 사용
+        episodeId: episodeDto.episodeId,
+        episodeNumber: episodeDto.episodeNumber,
+        scheduledAt: episodeDto.scheduledAt,
+        quarter,
+        week,
+        isBreak: episodeDto.isBreak,
+        isRescheduled: episodeDto.isRescheduled
+      };
+    }) || [];
+  }, [rawAnimeData?.episodeResponseDtos]);
+  
 
 
   // 에피소드 클릭 핸들러 (다중 선택 및 필터 추가/제거)
-  const handleEpisodeClick = (episodeId: number) => {
-    const episode = animeData?.episodeResponseDtos?.find(ep => ep.episodeId === episodeId);
+  const handleEpisodeClick = useCallback((episodeId: number) => {
+    const episode = rawAnimeData?.episodeResponseDtos?.find(ep => ep.episodeId === episodeId);
     
     setSelectedEpisodeIds(prev => {
       if (prev.includes(episodeId)) {
@@ -823,8 +608,6 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
         if (episode) {
           setActiveFilters(current => current.filter(num => num !== episode.episodeNumber));
         }
-        // 필터 변경 시 페이지 초기화
-        setCurrentPage(0);
         return prev.filter(id => id !== episodeId);
       } else {
         // 새로운 에피소드 선택 (기존 선택 유지) 및 필터 추가
@@ -837,16 +620,14 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             return current;
           });
         }
-        // 필터 변경 시 페이지 초기화
-        setCurrentPage(0);
         return [...prev, episodeId];
       }
     });
-  };
+  }, [rawAnimeData?.episodeResponseDtos]);
 
 
-  // 로딩 상태 - 실제 컨텐츠와 동일한 구조로 스켈레톤 표시
-  if (loading) {
+  // 로딩 상태 - 댓글 로딩 중일 때만 표시
+  if (commentsLoading) {
     return (
       <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
         {/* 에피소드 섹션 스켈레톤 */}
@@ -903,7 +684,9 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
           totalEpisodes={totalEpisodes}
           selectedEpisodeIds={selectedEpisodeIds}
           onEpisodeClick={handleEpisodeClick}
-          animeId={animeId || 1}
+          animeId={animeId}
+          currentPage={episodeCurrentPage}
+          onPageChange={setEpisodeCurrentPage}
         />
       </div>
       
@@ -1171,7 +954,8 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
           isOpen={isEpisodeCommentModalOpen}
           onClose={() => setIsEpisodeCommentModalOpen(false)}
           animeId={animeId}
-          animeData={animeData || undefined}
+          animeData={animeData} // 애니메이션 데이터 전달
+          rawAnimeData={rawAnimeData} // 백엔드 원본 데이터 전달
           onCommentSubmit={handleEpisodeCommentSubmit}
         />
     </div>
