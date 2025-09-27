@@ -2,6 +2,7 @@ interface QuarterWeekLabelProps {
   variant?: "past" | "current" | "future";
   quarter?: string;
   week?: string;
+  episodeNumber?: number;
   isLast?: boolean;
   isSelected?: boolean;
   isHovered?: boolean;
@@ -16,6 +17,7 @@ export default function QuarterWeekLabel({
   variant = "past", 
   quarter = "3분기",
   week = "7주차",
+  episodeNumber = 1,
   isLast = false,
   isSelected = false,
   isHovered = false,
@@ -29,14 +31,14 @@ export default function QuarterWeekLabel({
   if (variant === "past") {
     return (
       <div 
-        className={`w-20 h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
+        className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
       >
                                <div 
-          className={`w-12 text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
+          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
           onMouseEnter={(e) => { e.stopPropagation(); onMouseEnter?.(); }}
           onMouseMove={(e) => { e.stopPropagation(); onMouseMove?.(e); }}
           onMouseLeave={(e) => { e.stopPropagation(); onMouseLeave?.(); }}
@@ -58,14 +60,14 @@ export default function QuarterWeekLabel({
   if (variant === "current") {
     return (
       <div 
-        className={`w-20 h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
+        className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
       >
                                <div 
-          className={`w-12 text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
+          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
           onMouseEnter={(e) => { e.stopPropagation(); onMouseEnter?.(); }}
           onMouseMove={(e) => { e.stopPropagation(); onMouseMove?.(e); }}
           onMouseLeave={(e) => { e.stopPropagation(); onMouseLeave?.(); }}
@@ -88,9 +90,12 @@ export default function QuarterWeekLabel({
   // future variant
   if (variant === "future") {
     return (
-      <div className="w-20 h-auto inline-flex justify-start items-center pt-[12px]">
+      <div className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-start items-center pt-[12px] cursor-default`}>
         <div 
-          className="w-12 text-center transition-transform duration-200 hover:scale-110 relative z-10"
+          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
+          onMouseEnter={onMouseEnter}
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
         >
           <span className="text-sm font-light font-['Pretendard']" style={{ color: '#CED4DA' }}>{quarter}<br/></span>
           <span className="text-base font-medium font-['Pretendard']" style={{ color: '#CED4DA' }}>{week}</span>
@@ -104,8 +109,8 @@ export default function QuarterWeekLabel({
 
   // 기본값 (past)
   return (
-    <div className="w-20 h-auto inline-flex justify-start items-center gap-2.5">
-      <div className="w-12 text-center justify-start pointer-events-none">
+    <div className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-start items-center gap-2.5`}>
+      <div className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center justify-start pointer-events-none`}>
         <span className="text-black text-sm font-light font-['Pretendard']">{quarter}<br/></span>
         <span className="text-black text-base font-medium font-['Pretendard']">{week}</span>
       </div>

@@ -27,10 +27,13 @@ function setCookie(name: string, value: string, days: number) {
 function getCookie(name: string): string | null {
   const nameEQ = name + "=";
   const ca = document.cookie.split(';');
+
   for (let i = 0; i < ca.length; i++) {
     let c = ca[i];
     while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    if (c.indexOf(nameEQ) === 0) {
+      return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    }
   }
   return null;
 }
@@ -109,4 +112,46 @@ export function deleteVoteProgress() {
 // 투표 완료 시 진행 상황 삭제
 export function clearVoteProgressOnComplete() {
   deleteVoteProgress();
+}
+
+// vote_cookie_id 쿠키 확인
+export function hasVoteCookieId(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const voteCookieId = getCookie('vote_cookie_id');
+  return voteCookieId !== null && voteCookieId !== '';
+}
+
+// voted_this_week 쿠키 확인
+export function hasVotedThisWeek(): boolean {
+  if (typeof window === 'undefined') return false;
+  const votedThisWeek = getCookie('voted_this_week');
+  return votedThisWeek === '1';
+}
+
+// LOGIN_STATE 쿠키 읽기
+export function getLoginState(): { isNewUser: boolean; isMigrated: boolean } | null {
+  if (typeof window === 'undefined') return null;
+  
+  const loginState = getCookie('LOGIN_STATE');
+  if (!loginState) return null;
+  
+  try {
+    // Base64 디코딩
+    const decoded = atob(loginState);
+    const parsed = JSON.parse(decoded);
+    return {
+      isNewUser: parsed.isNewUser === true,
+      isMigrated: parsed.isMigrated === true
+    };
+  } catch (error) {
+    console.error('LOGIN_STATE 파싱 오류:', error);
+    return null;
+  }
+}
+
+// LOGIN_STATE 쿠키 삭제
+export function clearLoginState(): void {
+  if (typeof window === 'undefined') return;
+  deleteCookie('LOGIN_STATE');
 }

@@ -60,6 +60,28 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
     router.push(`/animes/${animeId}`);
   };
   
+  // 디데이 계산 함수 (8/22 형식에서 현재 시간까지의 차이)
+  const calculateDaysUntilAir = (airTime: string) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    // airTime을 파싱 (예: "8/22")
+    const [month, day] = airTime.split('/').map(Number);
+    
+    // 올해의 해당 날짜 생성
+    const airDate = new Date(currentYear, month - 1, day);
+    
+    // 이미 지난 경우 내년으로 설정
+    if (airDate < now) {
+      airDate.setFullYear(currentYear + 1);
+    }
+    
+    const diffTime = airDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
   // 방영 시간 포맷팅
   const formatAirTime = (scheduledAt: string, airTime?: string) => {
     // 극장판의 경우 airTime 필드 사용 (8/17 형식)
@@ -73,6 +95,14 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
       const month = date.getMonth() + 1; // 0부터 시작하므로 +1
       const day = date.getDate();
       return `${month}/${day} 개봉`;
+    }
+    
+    // UPCOMING 상태이고 airTime이 있는 경우 (8/22 형식) 디데이 계산
+    if (status === 'UPCOMING' && airTime && airTime.includes('/')) {
+      const daysUntil = calculateDaysUntilAir(airTime);
+      if (daysUntil > 0) {
+        return `D-${daysUntil}`;
+      }
     }
     
     // airTime이 있는 경우 우선 사용 (검색 결과 포함)
@@ -426,14 +456,41 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
           {/* Air Time and Countdown */}
           <div className="flex items-center mt-[9px]">
             <div className="flex items-center gap-2">
-              <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
-                {medium === 'MOVIE' 
-                  ? formatAirTime(scheduledAt, anime.airTime) // 극장판은 요일 없이 시간만 표시
-                  : medium === 'TVA' && (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL') 
-                    ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime)}`
-                    : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime)}`
+              {(() => {
+                const airTimeText = formatAirTime(scheduledAt, anime.airTime);
+                const isUpcomingCountdown = status === 'UPCOMING' && airTimeText.includes('D-');
+                
+                if (isUpcomingCountdown) {
+                  // UPCOMING 상태의 "D-" 텍스트에 검정 바탕에 흰 글씨 스타일 적용
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
+                        {medium === 'MOVIE' 
+                          ? getDayInKorean(dayOfWeek) // 극장판은 요일만 표시
+                          : medium === 'TVA' && (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL') 
+                            ? getDayInKorean(dayOfWeek)
+                            : getDayInKorean(dayOfWeek)
+                        }
+                      </span>
+                      <span className="bg-black text-white px-2 py-1 rounded text-[13px] font-bold font-['Pretendard']">
+                        {airTimeText}
+                      </span>
+                    </div>
+                  );
+                } else {
+                  // 일반적인 airTime 표시
+                  return (
+                    <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
+                      {medium === 'MOVIE' 
+                        ? formatAirTime(scheduledAt, anime.airTime) // 극장판은 요일 없이 시간만 표시
+                        : medium === 'TVA' && (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL') 
+                          ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime)}`
+                          : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime)}`
+                      }
+                    </span>
+                  );
                 }
-              </span>
+              })()}
               {isRescheduled && (
                 <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded font-['Pretendard']">
                   편성 변경

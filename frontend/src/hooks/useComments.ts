@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { CommentDto, ReplyDto } from '../api/comments';
 import { 
   getAnimeComments, 
@@ -30,12 +30,29 @@ export function useComments(animeId: number) {
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [currentSort, setCurrentSort] = useState<SortOption>('Recent');
   const [replies, setReplies] = useState<{ [commentId: number]: ReplyDto[] }>({});
+  
+  // 중복 호출 방지용 ref
+  const isLoadingRef = useRef(false);
+  
+  // selectedEpisodeIds 최신 값 참조용 ref
+  const selectedEpisodeIdsRef = useRef(selectedEpisodeIds);
+  
+  // selectedEpisodeIds가 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    selectedEpisodeIdsRef.current = selectedEpisodeIds;
+  }, [selectedEpisodeIds]);
 
   // 댓글 데이터 로딩
-  const loadComments = useCallback(async (page: number = 0, reset: boolean = false) => {
+  const loadComments = useCallback(async (page: number = 0, reset: boolean = false, resetPage: boolean = true) => {
     if (!animeId) return;
     
+    // 중복 호출 방지
+    if (isLoadingRef.current) {
+      return;
+    }
+    
     try {
+      isLoadingRef.current = true;
       if (reset) {
         setCommentsLoading(true);
       } else {
@@ -46,7 +63,7 @@ export function useComments(animeId: number) {
       const sortBy = mapSortOptionToBackend(currentSort);
       const data = await getAnimeComments(
         animeId,
-        selectedEpisodeIds.length > 0 ? selectedEpisodeIds : undefined,
+        selectedEpisodeIdsRef.current.length > 0 ? selectedEpisodeIdsRef.current : undefined,
         sortBy,
         page,
         10
@@ -54,7 +71,9 @@ export function useComments(animeId: number) {
       
       if (reset) {
         setComments(data.commentDtos);
-        setCurrentPage(0);
+        if (resetPage) {
+          setCurrentPage(0);
+        }
         setTotalCommentCount(data.totalCount || 0);
       } else {
         setComments(prev => [...prev, ...data.commentDtos]);
@@ -68,8 +87,16 @@ export function useComments(animeId: number) {
     } finally {
       setCommentsLoading(false);
       setLoadingMore(false);
+      isLoadingRef.current = false;
     }
-  }, [animeId, currentSort, selectedEpisodeIds]);
+  }, [animeId, currentSort]); // selectedEpisodeIds 의존성 제거
+
+  // 초기 댓글 로딩
+  useEffect(() => {
+    if (animeId) {
+      loadComments(0, true);
+    }
+  }, [animeId]); // loadComments 의존성 제거
 
   // 댓글 생성
   const createCommentHandler = useCallback(async (request: CommentRequestDto) => {

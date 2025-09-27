@@ -4,7 +4,8 @@ import {
   ApiResponseVoteReceiptDto 
 } from '@/types/api';
 
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
+// Next.js 프록시를 사용하므로 상대 경로 사용
+export const BASE_URL = '';
 
 // API Configuration
 const API_CONFIG = {
@@ -33,19 +34,11 @@ const ENDPOINTS = {
 
 // Default fetch options
 const getDefaultOptions = (): RequestInit => {
-  const headers: Record<string, string> = { ...API_CONFIG.defaultHeaders };
-  
-  // localStorage에서 accessToken 가져오기
-  if (typeof window !== 'undefined') {
-    const accessToken = localStorage.getItem('accessToken');
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-  }
-  
   return {
-    credentials: API_CONFIG.credentials,
-    headers,
+    credentials: 'include', // ACCESS_TOKEN 쿠키 첨부 필수
+    headers: {
+      'Content-Type': 'application/json',
+    },
   };
 };
 
@@ -80,11 +73,12 @@ async function apiCall<T>(
 export function startKakaoLogin() {
   // 현재 페이지 URL을 sessionStorage에 저장
   if (typeof window !== 'undefined') {
-    sessionStorage.setItem('returnUrl', window.location.href);
+    const currentUrl = window.location.href;
+    sessionStorage.setItem('returnUrl', currentUrl);
+    
+    // 카카오 로그인 페이지로 이동
+    window.location.href = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.kakaoLogin}`;
   }
-  
-  // 카카오 로그인 페이지로 이동
-  window.location.href = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.kakaoLogin}`;
 }
 
 export async function refreshToken(): Promise<{ accessToken: string }> {
@@ -96,7 +90,28 @@ export async function logout(): Promise<void> {
 }
 
 export async function withdraw(): Promise<void> {
-  await apiCall(ENDPOINTS.auth.withdraw, { method: 'POST' });
+  const url = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.withdraw}`;
+  const config = {
+    ...getDefaultOptions(),
+    method: 'POST',
+  };
+
+  const response = await fetch(url, config);
+  
+  if (!response.ok) {
+    throw new Error(`회원탈퇴 실패: ${response.status} ${response.statusText}`);
+  }
+  
+  // 응답이 비어있거나 JSON이 아닌 경우 처리
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      await response.json();
+    } catch (error) {
+      // JSON 파싱 실패 시 무시 (성공으로 처리)
+      console.log('회원탈퇴 성공 (빈 응답)');
+    }
+  }
 }
 
 export async function getUserInfo(): Promise<Record<string, unknown>> {

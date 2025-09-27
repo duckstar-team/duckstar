@@ -8,13 +8,15 @@ interface User {
   nickname: string;
   profileImageUrl?: string;
   role: string;
+  isProfileInitialized?: boolean;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   user: User | null;
   accessToken: string | null;
-  login: (userData: User) => void;
+  login: (userData?: User) => Promise<void>;
   logout: () => Promise<void>;
   withdraw: () => Promise<void>;
   updateUser: (userData: User) => void;
@@ -36,29 +38,59 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   const resetAuthState = () => {
     setUser(null);
     setIsAuthenticated(false);
     setAccessToken(null);
+    setIsLoading(false);
+    setHasCheckedAuth(false); // 🔑 인증 확인 상태도 초기화
   };
 
-  const login = (userData: User) => {
-    setUser(userData);
-    setIsAuthenticated(true);
+  const login = async (userData?: User) => {
+    if (userData) {
+      // 사용자 데이터가 제공된 경우 (OAuth 로그인 후)
+      setUser(userData);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+    } else {
+      // 수동 로그인의 경우 API에서 사용자 정보 가져오기
+      setIsLoading(true);
+      try {
+        const userData = await getUserInfo();
+        const user = userData.result || userData;
+        setUser(user as User);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('사용자 정보 가져오기 실패:', error);
+        resetAuthState();
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const logoutUser = async () => {
     try {
-      await logout();
+      // 백엔드 로그아웃 API 호출
+      await fetch('/api/v1/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
     } catch (error) {
-      // 에러 처리 로직 추가 가능
+      console.error('로그아웃 API 호출 실패:', error);
     } finally {
       // localStorage에서 토큰 제거
       if (typeof window !== 'undefined') {
         localStorage.removeItem('accessToken');
+        // 프로필 설정 페이지에서 로그아웃 시 홈페이지로 리다이렉트
+        if (window.location.pathname === '/profile-setup') {
+          window.location.href = '/';
+        }
       }
       resetAuthState();
     }
@@ -82,63 +114,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(userData);
   };
 
+  // 🔑 핵심: 초기 로드 시 인증 상태 확인 (단순하고 명확한 설계)
   useEffect(() => {
-    const checkUserAuth = async () => {
-      try {
-        // URL에서 accessToken 파라미터 확인 (로그인 후 리다이렉트)
-        const urlParams = new URLSearchParams(window.location.search);
-        const accessTokenFromUrl = urlParams.get('accessToken');
-        const isNewUser = urlParams.get('isNewUser') === 'true';
-        
-        if (accessTokenFromUrl) {
-          // accessToken을 localStorage에 저장
-          localStorage.setItem('accessToken', accessTokenFromUrl);
-          setAccessToken(accessTokenFromUrl);
-          
-          // URL에서 파라미터 제거 (보안상 이유)
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete('accessToken');
-          newUrl.searchParams.delete('isNewUser');
-          window.history.replaceState({}, '', newUrl.toString());
-          
-          // 새로 가입한 사용자라면 프로필 설정 페이지로 리다이렉트
-          if (isNewUser) {
-            window.location.href = '/profile-setup';
-            return;
-          }
-          
-          // 저장된 returnUrl이 있으면 해당 페이지로 리다이렉트
-          const returnUrl = sessionStorage.getItem('returnUrl');
-          if (returnUrl && returnUrl !== window.location.href) {
-            sessionStorage.removeItem('returnUrl');
-            window.location.href = returnUrl;
-            return; // 리다이렉트하므로 아래 코드 실행하지 않음
-          }
-        }
-
-        // localStorage에서 accessToken 확인 - 토큰이 있을 때만 getUserInfo 호출
-        const storedToken = localStorage.getItem('accessToken');
-        if (storedToken) {
+    const checkAuthStatus = async () => {
+      // 로딩 중이 아닐 때만 실행
+      if (!isLoading) {
+        setIsLoading(true);
+        try {
           const userData = await getUserInfo();
-          // API 응답에서 실제 사용자 데이터 추출
-          const user = userData.data || userData;
-          login(user as User);
+          const user = userData.result || userData;
+          setUser(user as User);
+          setIsAuthenticated(true);
+        } catch (error) {
+          // 401 에러는 정상적인 동작이므로 조용히 처리
+          resetAuthState();
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        // 사용자 인증 실패 처리 - 로그인되지 않은 상태
-        // 토큰이 유효하지 않으면 localStorage에서 제거
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-        }
-        resetAuthState();
       }
     };
 
-    checkUserAuth();
-  }, []);
+    checkAuthStatus();
+  }, []); // 🔑 한 번만 실행
 
   const contextValue: AuthContextType = {
     isAuthenticated,
+    isLoading,
     user,
     accessToken,
     login,

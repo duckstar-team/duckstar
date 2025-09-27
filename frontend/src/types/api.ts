@@ -163,6 +163,7 @@ export type ApiResponseAnimeVoteHistoryDto = ApiResponse<AnimeVoteHistoryDto>;
 // Vote Status DTO (통합된 API 응답)
 export interface AnimeVoteStatusDto {
   hasVoted: boolean;
+  nickName?: string;
   submissionId: number;
   weekDto: WeekDto;
   category: "ANIME" | "HERO" | "HEROINE";
