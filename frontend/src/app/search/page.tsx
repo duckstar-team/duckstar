@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import AnimeSearchBar from '@/components/search/ui/AnimeSearchBar';
 import AnimeCard from '@/components/anime/AnimeCard';
 import DaySelection, { DayOfWeek } from '@/components/search/ui/DaySelection';
@@ -23,6 +23,7 @@ import PreloadingProgress from '@/components/common/PreloadingProgress';
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('일'); // 기본값을 "일"로 설정
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
@@ -41,8 +42,14 @@ function SearchPageContent() {
   const handleShowOnlyAiringChange = (checked: boolean) => {
     setShowOnlyAiring(checked);
     
-    // 체크박스 상태를 sessionStorage에 저장
-    sessionStorage.setItem('showOnlyAiring', checked.toString());
+    // "이번 주"가 아닌 경우에만 체크박스 상태를 sessionStorage에 저장
+    // isThisWeek 상태 대신 현재 선택된 시즌 정보를 확인
+    const isCurrentlyThisWeek = selectedYear === null && selectedQuarter === null;
+    if (!isCurrentlyThisWeek) {
+      // 시즌별로 독립적인 필터링 상태 저장
+      const seasonKey = `showOnlyAiring_${selectedYear}_${selectedQuarter}`;
+      sessionStorage.setItem(seasonKey, checked.toString());
+    }
     
     if (checked) {
       // 체크 시: 현재 선택된 요일로 스크롤 유지
@@ -140,6 +147,7 @@ function SearchPageContent() {
   }, [searchParams]);
 
 
+
   // 페이지 로드 시 스크롤 복원 또는 맨 위로 이동
   useEffect(() => {
     // 디버깅: 모든 sessionStorage 값 확인
@@ -192,10 +200,15 @@ function SearchPageContent() {
       }
     }
     
-    // 저장된 체크박스 상태 복원
-    const savedShowOnlyAiring = sessionStorage.getItem('showOnlyAiring');
-    if (savedShowOnlyAiring !== null) {
-      setShowOnlyAiring(savedShowOnlyAiring === 'true');
+    // 저장된 체크박스 상태 복원 ("이번 주"가 아닌 경우에만)
+    const isCurrentlyThisWeek = selectedYear === null && selectedQuarter === null;
+    if (!isCurrentlyThisWeek) {
+      // 시즌별로 독립적인 필터링 상태 복원
+      const seasonKey = `showOnlyAiring_${selectedYear}_${selectedQuarter}`;
+      const savedShowOnlyAiring = sessionStorage.getItem(seasonKey);
+      if (savedShowOnlyAiring !== null) {
+        setShowOnlyAiring(savedShowOnlyAiring === 'true');
+      }
     }
     
     if (isSidebarNavigation) {
@@ -226,6 +239,7 @@ function SearchPageContent() {
         // 스크롤 위치가 없으면 즉시 플래그 제거
         sessionStorage.removeItem('from-anime-detail');
       }
+      
     } else {
       // 리프레시 또는 직접 URL 접근인 경우 스크롤을 맨 위로 이동
       // 모든 관련 플래그 정리
@@ -236,6 +250,24 @@ function SearchPageContent() {
     // 초기화 완료 표시
     setIsInitialized(true);
   }, []);
+
+  // 애니메이션 상세화면에서 돌아올 때 필터링 상태 복원
+  useEffect(() => {
+    const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
+    
+    if (isFromAnimeDetail && isInitialized) {
+      // 애니메이션 상세화면에서 돌아온 경우 필터링 상태 복원
+      const isCurrentlyThisWeek = selectedYear === null && selectedQuarter === null;
+      if (!isCurrentlyThisWeek) {
+        // 시즌별로 독립적인 필터링 상태 복원
+        const seasonKey = `showOnlyAiring_${selectedYear}_${selectedQuarter}`;
+        const savedShowOnlyAiring = sessionStorage.getItem(seasonKey);
+        if (savedShowOnlyAiring !== null) {
+          setShowOnlyAiring(savedShowOnlyAiring === 'true');
+        }
+      }
+    }
+  }, [isInitialized, selectedYear, selectedQuarter]);
   
   // DaySelection sticky 관련 상태
   const [isDaySelectionSticky, setIsDaySelectionSticky] = useState(false);
@@ -415,15 +447,17 @@ function SearchPageContent() {
       setSelectedQuarter(quarter);
     }
     
-    // "이번 주"가 아닌 경우에만 체크박스 상태를 sessionStorage에 저장하고 해제
-    if (!isThisWeekSelected) {
-      sessionStorage.setItem('showOnlyAiring', showOnlyAiring.toString());
+    // "이번 주"로 변경된 경우 방영 중 필터 해제
+    if (isThisWeekSelected) {
       setShowOnlyAiring(false);
     } else {
-      // "이번 주"로 돌아올 때는 저장된 체크박스 상태 복원
-      const savedShowOnlyAiring = sessionStorage.getItem('showOnlyAiring');
+      // 다른 시즌으로 변경된 경우 해당 시즌의 저장된 필터링 상태 복원
+      const seasonKey = `showOnlyAiring_${year}_${quarter}`;
+      const savedShowOnlyAiring = sessionStorage.getItem(seasonKey);
       if (savedShowOnlyAiring !== null) {
         setShowOnlyAiring(savedShowOnlyAiring === 'true');
+      } else {
+        setShowOnlyAiring(false);
       }
     }
     
@@ -436,7 +470,7 @@ function SearchPageContent() {
     
     // 드롭다운을 통해 다른 시즌 접근 시 스크롤 처리
     if (isThisWeekSelected) {
-      // "이번 주" 선택 시: "곧 시작"~"일" 메뉴에서는 스크롤 탑, "화"~"특별편성 및 극장판"에서는 "곧 시작" 그룹 높이 고려
+      // "이번 주" 선택 시: "곧 시작"~"일" 메뉴에서는 스크롤 탑, "월"~"특별편성 및 극장판"에서는 해당 요일의 섹션으로 스크롤 유지
       const topMenuDays = ['곧 시작', '일'];
       if (topMenuDays.includes(selectedDay)) {
         setSelectedDay('곧 시작');
@@ -448,8 +482,9 @@ function SearchPageContent() {
           container.scrollTo(0, 0);
         }
       } else {
-        // "화"~"특별편성 및 극장판" 메뉴에서는 해당 요일의 섹션으로 스크롤 유지
+        // "월"~"특별편성 및 극장판" 메뉴에서는 해당 요일의 섹션으로 스크롤 유지
         const dayToSectionId = {
+          '월': 'mon',
           '화': 'tue',
           '수': 'wed',
           '목': 'thu',
@@ -466,7 +501,7 @@ function SearchPageContent() {
         }
       }
     } else {
-      // 다른 시즌 선택 시: "곧 시작"~"일" 메뉴에서는 스크롤 탑, "화"~"특별편성 및 극장판"에서는 기존 스크롤 유지
+      // 다른 시즌 선택 시: "곧 시작"~"일" 메뉴에서는 스크롤 탑, "월"~"특별편성 및 극장판"에서는 기존 스크롤 유지
       const topMenuDays = ['곧 시작', '일'];
       if (topMenuDays.includes(selectedDay)) {
         // "곧 시작"~"일" 메뉴에서는 스크롤 탑으로 이동
@@ -477,8 +512,9 @@ function SearchPageContent() {
           container.scrollTo(0, 0);
         }
       } else {
-        // "화"~"특별편성 및 극장판" 메뉴에서는 기존 스크롤 유지
+        // "월"~"특별편성 및 극장판" 메뉴에서는 기존 스크롤 유지
         const dayToSectionId = {
+          '월': 'mon',
           '화': 'tue',
           '수': 'wed',
           '목': 'thu',
@@ -566,10 +602,10 @@ function SearchPageContent() {
         
         // 필터 상태 확인
         
-        // 다른 시즌에서 뒤로가기한 경우 방영 중 필터 해제
-        if (!isThisWeek && showOnlyAiring) {
+        // "이번 주"로 변경된 경우 방영 중 필터 해제
+        const isCurrentlyThisWeek = selectedYear === null && selectedQuarter === null;
+        if (isCurrentlyThisWeek && showOnlyAiring) {
           setShowOnlyAiring(false);
-          sessionStorage.removeItem('showOnlyAiring');
         }
         
         // 즉시 복원 (깜빡임 완전 방지) - 모든 방법 동시 사용
@@ -1007,19 +1043,55 @@ function SearchPageContent() {
         }
         
         if (allAnimes.length > 0) {
-          // 시간 순서대로 정렬 (scheduledAt 기준)
+          // 상태별 정렬: 방영중 > 예정, 예정끼리는 디데이 순
           allAnimes.sort((a, b) => {
-            if (!a.scheduledAt || !b.scheduledAt) return 0;
+            // 1. 상태별 우선순위: NOW_SHOWING > UPCOMING
+            if (a.status !== b.status) {
+              if (a.status === 'NOW_SHOWING') return -1;
+              if (b.status === 'NOW_SHOWING') return 1;
+            }
             
-            // scheduledAt에서 시간 부분만 추출
-            const aTime = new Date(a.scheduledAt);
-            const bTime = new Date(b.scheduledAt);
+            // 2. UPCOMING 상태끼리는 디데이 순으로 정렬
+            if (a.status === 'UPCOMING' && b.status === 'UPCOMING') {
+              // airTime이 있는 경우 디데이 계산
+              const getDaysUntil = (anime: AnimePreviewDto) => {
+                if (!anime.airTime || !anime.airTime.includes('/')) return Infinity;
+                
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const [month, day] = anime.airTime.split('/').map(Number);
+                const airDate = new Date(currentYear, month - 1, day);
+                
+                if (airDate < now) {
+                  airDate.setFullYear(currentYear + 1);
+                }
+                
+                const diffTime = airDate.getTime() - now.getTime();
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              };
+              
+              const aDays = getDaysUntil(a);
+              const bDays = getDaysUntil(b);
+              
+              return aDays - bDays;
+            }
             
-            // 시간을 분 단위로 변환하여 비교 (같은 날짜 내에서 시간 순서)
-            const aMinutes = aTime.getHours() * 60 + aTime.getMinutes();
-            const bMinutes = bTime.getHours() * 60 + bTime.getMinutes();
+            // 3. 같은 상태끼리는 시간 순서대로 정렬 (NOW_SHOWING 등)
+            if (a.status === b.status) {
+              if (!a.scheduledAt || !b.scheduledAt) return 0;
+              
+              // scheduledAt에서 시간 부분만 추출
+              const aTime = new Date(a.scheduledAt);
+              const bTime = new Date(b.scheduledAt);
+              
+              // 시간을 분 단위로 변환하여 비교 (같은 날짜 내에서 시간 순서)
+              const aMinutes = aTime.getHours() * 60 + aTime.getMinutes();
+              const bMinutes = bTime.getHours() * 60 + bTime.getMinutes();
+              
+              return aMinutes - bMinutes;
+            }
             
-            return aMinutes - bMinutes;
+            return 0;
           });
           
           grouped[day] = allAnimes;
@@ -1043,19 +1115,55 @@ function SearchPageContent() {
         }
         
         if (dayAnimes.length > 0) {
-          // 시간 순서대로 정렬 (scheduledAt 기준)
+          // 상태별 정렬: 방영중 > 예정, 예정끼리는 디데이 순
           dayAnimes.sort((a, b) => {
-            if (!a.scheduledAt || !b.scheduledAt) return 0;
+            // 1. 상태별 우선순위: NOW_SHOWING > UPCOMING
+            if (a.status !== b.status) {
+              if (a.status === 'NOW_SHOWING') return -1;
+              if (b.status === 'NOW_SHOWING') return 1;
+            }
             
-            // scheduledAt에서 시간 부분만 추출
-            const aTime = new Date(a.scheduledAt);
-            const bTime = new Date(b.scheduledAt);
+            // 2. UPCOMING 상태끼리는 디데이 순으로 정렬
+            if (a.status === 'UPCOMING' && b.status === 'UPCOMING') {
+              // airTime이 있는 경우 디데이 계산
+              const getDaysUntil = (anime: AnimePreviewDto) => {
+                if (!anime.airTime || !anime.airTime.includes('/')) return Infinity;
+                
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const [month, day] = anime.airTime.split('/').map(Number);
+                const airDate = new Date(currentYear, month - 1, day);
+                
+                if (airDate < now) {
+                  airDate.setFullYear(currentYear + 1);
+                }
+                
+                const diffTime = airDate.getTime() - now.getTime();
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              };
+              
+              const aDays = getDaysUntil(a);
+              const bDays = getDaysUntil(b);
+              
+              return aDays - bDays;
+            }
             
-            // 시간을 분 단위로 변환하여 비교 (같은 날짜 내에서 시간 순서)
-            const aMinutes = aTime.getHours() * 60 + aTime.getMinutes();
-            const bMinutes = bTime.getHours() * 60 + bTime.getMinutes();
+            // 3. 같은 상태끼리는 시간 순서대로 정렬 (NOW_SHOWING 등)
+            if (a.status === b.status) {
+              if (!a.scheduledAt || !b.scheduledAt) return 0;
+              
+              // scheduledAt에서 시간 부분만 추출
+              const aTime = new Date(a.scheduledAt);
+              const bTime = new Date(b.scheduledAt);
+              
+              // 시간을 분 단위로 변환하여 비교 (같은 날짜 내에서 시간 순서)
+              const aMinutes = aTime.getHours() * 60 + aTime.getMinutes();
+              const bMinutes = bTime.getHours() * 60 + bTime.getMinutes();
+              
+              return aMinutes - bMinutes;
+            }
             
-            return aMinutes - bMinutes;
+            return 0;
           });
           
           grouped[day] = dayAnimes;
@@ -1594,6 +1702,7 @@ function SearchPageContent() {
           active={preloadingStatus.active}
         />
       )}
+      
       
     </div>
   );

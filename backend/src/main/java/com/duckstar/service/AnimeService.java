@@ -31,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.duckstar.web.dto.AnimeResponseDto.*;
@@ -48,14 +50,10 @@ public class AnimeService {
     private final AnimeOttRepository animeOttRepository;
     private final AnimeCharacterRepository animeCharacterRepository;
     private final EpisodeRepository episodeRepository;
-    private final ScheduleState scheduleState;
     private final AnimeCommentRepository animeCommentRepository;
     private final WeekRepository weekRepository;
 
-    public Anime findByIdOrThrow(Long animeId) {
-        return animeRepository.findById(animeId).orElseThrow(() ->
-                new AnimeHandler(ErrorStatus.ANIME_NOT_FOUND));
-    }
+    private final ScheduleState scheduleState;
 
     public List<DuckstarRankPreviewDto> getAnimeRankPreviewsByWeekId(Long weekId, int size) {
         List<AnimeCandidate> animeCandidates =
@@ -71,7 +69,8 @@ public class AnimeService {
 
     public AnimeHomeDto getAnimeHomeDtoById(Long animeId) {
         // 애니 정보, 분기 성적 통계
-        Anime anime = findByIdOrThrow(animeId);
+        Anime anime = animeRepository.findById(animeId).orElseThrow(() ->
+                new AnimeHandler(ErrorStatus.ANIME_NOT_FOUND));
 
         LocalDateTime premiereDateTime = anime.getPremiereDateTime();
 
@@ -125,31 +124,31 @@ public class AnimeService {
     }
 
     @Transactional
-    public List<Anime> getAnimesForCandidate(boolean isQuarterChanged, Season season) {
-        List<Anime> animes = animeRepository.findAllByStatus(AnimeStatus.NOW_SHOWING);
-
+    public List<Anime> getAnimesForCandidate(boolean isQuarterChanged, Season season, LocalDateTime now) {
         // 시즌 애니메이션
         List<Anime> seasonAnimes = animeSeasonRepository.findAllBySeason_Id(season.getId()).stream()
                 .map(AnimeSeason::getAnime)
                 .filter(anime -> anime.getStatus() != AnimeStatus.UPCOMING)
                 .toList();
 
-        Set<Long> set = new HashSet<>();
-        List<Anime> result;
+        // 이번 주 첫 방영 애니
+        List<Anime> thisWeekComingAnimes = animeRepository
+                .findAllByPremiereDateTimeGreaterThanEqualAndPremiereDateTimeLessThan(now, now.plusWeeks(1));
 
-        // 바뀐 주차까지만 합집합
+        List<Anime> combinedList = new ArrayList<>();
+        combinedList.addAll(seasonAnimes);
+        combinedList.addAll(thisWeekComingAnimes);
+
+        // 바뀐 주차까지만 NOW_SHOWING 합집합
         if (isQuarterChanged) {
-            result = Stream.concat(
-                            animes.stream(),
-                            seasonAnimes.stream()
-                    )
-                    .filter(anime -> set.add(anime.getId()))
-                    .toList();
-        } else {
-            result = seasonAnimes;
+            combinedList.addAll(animeRepository.findAllByStatus(AnimeStatus.NOW_SHOWING));
         }
 
-        return result;
+        // 마지막에만 distinct 처리
+        return combinedList.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
     }
 
     @Transactional

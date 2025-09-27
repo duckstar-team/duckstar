@@ -4,7 +4,7 @@ spring:
       on-profile: test-db
 
   datasource:
-    url: jdbc:mysql://localhost:3306/duckstar-test
+    url: jdbc:mysql://localhost:3306/duckstar_test
     username: root
     password: 12345678
   jpa:
@@ -33,26 +33,23 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
-
 app:
-  frontend:
-    redirect-uri: "https://localhost:3000/oauth/callback"  # 로그인 성공 후 프론트로 최종 리다이렉트
   kakao:
-    admin-key: dummy
-  jwt:
-    secure-cookie: false
+    admin-key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+  cookie:
+    same-site: None
+    secure: false
+  base-url: http://localhost:3000
 
 jwt:
   secret: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  issuer: "localhost"
 
 cloud:
   aws:
     s3:
       bucket: img.duckstar.kr
-    region:
-      static: ap-northeast-2
-    stack:
-      auto: false
 
 logging:
   level:

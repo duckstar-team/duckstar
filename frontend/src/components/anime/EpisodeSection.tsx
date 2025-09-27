@@ -22,6 +22,8 @@ interface EpisodeSectionProps {
   onEpisodeClick: (episodeId: number) => void;
   disableFutureEpisodes?: boolean; // 미래 에피소드 비활성화 옵션
   animeId: number; // animeId required로 변경
+  currentPage: number; // 부모에서 관리하는 페이지 상태
+  onPageChange: (page: number) => void; // 페이지 변경 핸들러
 }
 
 // 툴팁 관련 타입
@@ -86,7 +88,9 @@ export default function EpisodeSection({
   selectedEpisodeIds,
   onEpisodeClick,
   disableFutureEpisodes = false,
-  animeId
+  animeId,
+  currentPage,
+  onPageChange
 }: EpisodeSectionProps) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
@@ -160,15 +164,12 @@ export default function EpisodeSection({
       setIsUpdating(false);
     }
   };
-  // 페이징 상태
-  const [currentPage, setCurrentPage] = useState(0);
   const episodesPerPage = 6;
   // totalEpisodes가 0이면 기본값 12로 설정
   const effectiveTotalEpisodes = totalEpisodes > 0 ? totalEpisodes : 12;
-  const totalPages = Math.ceil(effectiveTotalEpisodes / episodesPerPage);
+  // 실제 에피소드 데이터의 길이를 기준으로 페이지 수 계산
+  const totalPages = Math.ceil(episodes.length / episodesPerPage);
 
-  // 초기화 여부 추적
-  const isInitialized = useRef(false);
 
   // 호버 상태
   const [hoveredEpisodeId, setHoveredEpisodeId] = useState<number | null>(null);
@@ -189,42 +190,19 @@ export default function EpisodeSection({
     return episodes.slice(startIndex, startIndex + episodesPerPage);
   }, [episodes, currentPage, episodesPerPage]);
 
-  // 현재 분기/주차에 해당하는 페이지로 초기 설정 (한 번만 실행)
-  useEffect(() => {
-    if (episodes.length > 0 && !isInitialized.current) {
-      // 현재 분기/주차에 해당하는 에피소드 찾기
-      const currentRecord = getThisWeekRecord(new Date());
-      
-      const currentEpisodeIndex = episodes.findIndex(episode => {
-        const episodeDate = new Date(episode.scheduledAt);
-        const episodeRecord = getThisWeekRecord(episodeDate);
-        
-        return episodeRecord.quarterValue === currentRecord.quarterValue && episodeRecord.weekValue === currentRecord.weekValue;
-      });
-      
-      if (currentEpisodeIndex !== -1) {
-        // 현재 분기/주차 에피소드가 있는 페이지 계산
-        const targetPage = Math.floor(currentEpisodeIndex / episodesPerPage);
-        setCurrentPage(targetPage);
-      }
-      
-      // 초기화 완료 표시
-      isInitialized.current = true;
-    }
-  }, [episodes, episodesPerPage]);
 
   // 페이지 네비게이션 핸들러
   const handlePreviousPage = useCallback(() => {
     if (currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
+      onPageChange(currentPage - 1);
     }
-  }, [currentPage]);
+  }, [currentPage, onPageChange]);
 
   const handleNextPage = useCallback(() => {
     if (currentPage < totalPages - 1) {
-      setCurrentPage(prev => prev + 1);
+      onPageChange(currentPage + 1);
     }
-  }, [currentPage, totalPages]);
+  }, [currentPage, totalPages, onPageChange]);
 
   // 툴팁 관련 핸들러들
   const clearTooltipTimers = useCallback(() => {
@@ -421,7 +399,7 @@ export default function EpisodeSection({
                 width: `${effectiveTotalEpisodes * 80}px`
               }}
             >
-              <div className="pl-2 inline-flex justify-start items-center overflow-visible">
+              <div className="pl-2 ml-2 inline-flex justify-start items-center overflow-visible">
                 {episodes.map((episode, index) => {
                   const isSelected = selectedEpisodeIds.includes(episode.id);
                   const status = getEpisodeStatus(episode.scheduledAt);
@@ -463,7 +441,7 @@ export default function EpisodeSection({
                 width: `${effectiveTotalEpisodes * 80}px`
               }}
             >
-              <div className="inline-flex justify-start items-start">
+              <div className="ml-2 inline-flex justify-start items-start">
                 {episodes.map((episode, index) => {
                   const isSelected = selectedEpisodeIds.includes(episode.id);
                   const status = getEpisodeStatus(episode.scheduledAt);
@@ -478,6 +456,7 @@ export default function EpisodeSection({
                         variant={status}
                         quarter={episode.quarter}
                         week={episode.week}
+                        episodeNumber={episode.episodeNumber}
                         isLast={isLast}
                         isSelected={isSelected}
                         isHovered={hoveredEpisodeId === episode.id}

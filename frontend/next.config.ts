@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // 환경 변수 기본값 설정
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
   },
   
   // ESLint 비활성화 (배포용)
@@ -23,8 +23,16 @@ const nextConfig: NextConfig = {
   
   // API 프록시 설정
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     return [
+      {
+        source: "/oauth2/:path*",
+        destination: `${apiUrl}/oauth2/:path*`,
+      },
+      {
+        source: "/login/:path*",
+        destination: `${apiUrl}/login/:path*`,
+      },
       {
         source: "/api/:path*",
         destination: `${apiUrl}/api/:path*`,

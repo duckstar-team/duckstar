@@ -28,14 +28,14 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final S3Uploader s3Uploader;
 
-    public Member findByIdOrThrow(Long id) {
-        return memberRepository.findById(id).orElseThrow(() ->
-                new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-    }
-
-    public MePreviewDto getCurrentUser(Long memberId) {
-        Member member = findByIdOrThrow(memberId);
-        return MePreviewDto.of(member);
+    public MePreviewDto getCurrentUser(MemberPrincipal principal) {
+        if (principal == null) {
+            return MePreviewDto.ofEmpty();
+        } else {
+            Member member = memberRepository.findById(principal.getId()).orElseThrow(() ->
+                    new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+            return MePreviewDto.of(member);
+        }
     }
 
     @Transactional
@@ -44,34 +44,48 @@ public class MemberService {
             throw new AuthHandler(ErrorStatus.PRINCIPAL_NOT_FOUND);
         }
 
-        Member member = findByIdOrThrow(principal.getId());
-        String nickname = member.getNickname();
-        String profileImageUrl = member.getProfileImageUrl();
+        Member member = memberRepository.findById(principal.getId()).orElseThrow(() ->
+                new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        String reqNickname = request.getNickname();
-        if (StringUtils.hasText(reqNickname)) {
-            nickname = reqNickname;
+        member.updateInitializeInfo();
+
+        if (request.getIsSkip()) {
+            return UpdateReceiptDto.builder()
+                    .isChanged(false)
+                    .mePreviewDto(
+                            MePreviewDto.of(member)
+                    )
+                    .build();
+        } else {
+
+            String nickname = member.getNickname();
+            String profileImageUrl = member.getProfileImageUrl();
+
+            String reqNickname = request.getNickname();
+            if (StringUtils.hasText(reqNickname)) {
+                nickname = reqNickname;
+            }
+
+            MultipartFile reqImage = request.getImage();
+            if (reqImage != null && !reqImage.isEmpty()) {
+                s3Uploader.delete(profileImageUrl);
+                profileImageUrl = s3Uploader.uploadWithUUID(reqImage, "members");
+            }
+
+            boolean nicknameChanged = !Objects.equals(member.getNickname(), nickname);
+            boolean imageChanged = !Objects.equals(member.getProfileImageUrl(), profileImageUrl);
+
+            boolean isChanged = nicknameChanged || imageChanged;
+            if (isChanged) {
+                member.updateProfile(nickname, profileImageUrl);
+            }
+
+            return UpdateReceiptDto.builder()
+                    .isChanged(isChanged)
+                    .mePreviewDto(
+                            MePreviewDto.of(member)
+                    )
+                    .build();
         }
-
-        MultipartFile reqImage = request.getImage();
-        if (reqImage != null && !reqImage.isEmpty()) {
-            s3Uploader.delete(profileImageUrl);
-            profileImageUrl = s3Uploader.uploadWithUUID(reqImage, "members");
-        }
-
-        boolean nicknameChanged = !Objects.equals(member.getNickname(), nickname);
-        boolean imageChanged = !Objects.equals(member.getProfileImageUrl(), profileImageUrl);
-
-        boolean isChanged = nicknameChanged || imageChanged;
-        if (isChanged) {
-            member.updateProfile(nickname, profileImageUrl);
-        }
-
-        return UpdateReceiptDto.builder()
-                .isChanged(isChanged)
-                .mePreviewDto(
-                        MePreviewDto.of(member)
-                )
-                .build();
     }
 }

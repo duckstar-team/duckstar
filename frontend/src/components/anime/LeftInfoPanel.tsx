@@ -36,6 +36,7 @@ interface LeftInfoPanelProps {
     medium: 'TVA' | 'MOVIE' | 'OVA' | 'SPECIAL';
     year?: number;
     quarter?: number;
+    seasons?: Array<{ year: number; seasonType: string }>; // 모든 시즌 정보
     // 추가 정보들
     studio?: string;
     director?: string;
@@ -48,6 +49,17 @@ interface LeftInfoPanelProps {
   };
   characters?: CharacterData[];
 }
+
+// 시즌 타입을 한국어로 변환하는 함수
+const getSeasonInKorean = (seasonType: string): string => {
+  const seasonMap: { [key: string]: string } = {
+    'SPRING': '봄',
+    'SUMMER': '여름',
+    'AUTUMN': '가을',
+    'WINTER': '겨울'
+  };
+  return seasonMap[seasonType] || seasonType;
+};
 
 export default function LeftInfoPanel({ anime, onBack, characters, onImageModalToggle }: LeftInfoPanelProps) {
   // 이미지 캐시 훅 사용
@@ -606,7 +618,10 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
           {/* 정보 텍스트 */}
           <div className="[text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] font-medium font-['Pretendard'] leading-[0] not-italic relative shrink-0 text-[14.6px] text-white w-[400px]">
             <p className="leading-[normal]">
-              {year}년 {getQuarterInKorean(quarter)} · {medium === 'MOVIE' ? '극장판' : medium} 
+              {anime.seasons && anime.seasons.length > 0 
+                ? anime.seasons.map(season => `${season.year}년 ${getSeasonInKorean(season.seasonType)}`).join(' · ')
+                : `${year}년 ${getQuarterInKorean(quarter)}`
+              } · {medium === 'MOVIE' ? '극장판' : medium} 
               {dayOfWeek !== 'NONE' && ` · ${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt)}`}
             </p>
           </div>

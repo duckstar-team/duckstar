@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import VoteCard from "@/components/vote/VoteCard";
 import VoteBanner from "@/components/vote/VoteBanner";
 import VoteSection from "@/components/vote/VoteSection";
@@ -16,16 +16,19 @@ import { getSeasonFromDate } from '@/lib/utils';
 import { fetcher, submitVote } from '@/api/client';
 import { scrollToTop, scrollToPosition, clearStorageFlags } from '@/utils/scrollUtils';
 import { searchMatch } from '@/lib/searchUtils';
+import { hasVoteCookieId, hasVotedThisWeek } from '@/lib/cookieUtils';
+import { useAuth } from '@/context/AuthContext';
 
 interface Anime {
   id: number;
   title: string;
   thumbnailUrl: string;
-  medium: 'TVA' | 'MOVIE';
 }
 
-export default function VotePage() {
+function VotePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isAuthenticated } = useAuth();
   
 
   // 스티키 요소 초기화를 위한 useEffect
@@ -81,6 +84,7 @@ export default function VotePage() {
       }
     }
   }, []);
+
   
   const [selected, setSelected] = useState<number[]>([]);
   const [bonusSelected, setBonusSelected] = useState<number[]>([]);
@@ -97,6 +101,7 @@ export default function VotePage() {
   const [scrollCompleted, setScrollCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showVotedThisWeekMessage, setShowVotedThisWeekMessage] = useState(false);
   const [bonusVotesRecalled, setBonusVotesRecalled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -137,9 +142,9 @@ export default function VotePage() {
     });
   };
 
-  // 투표 상태 조회 (통합 API) - 캐시 시간 연장
+  // 투표 상태 조회 (통합 API) - 로그인 상태 또는 vote_cookie_id가 있을 때 호출
   const { data: voteStatusData, isLoading: isVoteStatusLoading } = useSWR(
-    '/api/v1/vote/anime/status',
+    '/api/v1/vote/anime/status', // 항상 호출 (백엔드에서 쿠키 자동 인식)
     fetcher<ApiResponseAnimeVoteStatusDto>,
     {
       revalidateOnFocus: false,
@@ -148,11 +153,78 @@ export default function VotePage() {
     }
   );
 
-  // 투표하지 않은 경우에만 후보 목록 조회 - 캐시 시간 연장
-  const shouldFetchCandidates = voteStatusData && !voteStatusData.result?.hasVoted;
+  // voted_this_week 쿠키 체크 - 클라이언트에서만 체크 (Hydration 에러 방지)
+  useEffect(() => {
+    const hasVoted = hasVotedThisWeek();
+    
+    // voted_this_week만 있고 vote_cookie_id가 없으면 메시지 표시
+    if (hasVoted) {
+      setShowVotedThisWeekMessage(true);
+    }
+  }, []);
+
+  // 로그인 상태 변경 감지
+  useEffect(() => {
+    // 로그아웃된 상태에서 voted_this_week 쿠키가 있으면 메시지 표시
+    if (!isAuthenticated && hasVotedThisWeek()) {
+      setShowVotedThisWeekMessage(true);
+      // 투표 결과 화면 숨김
+      setShowVoteResult(false);
+      setVoteHistory(null);
+    } else if (isAuthenticated) {
+      // 로그인한 상태이면 메시지 숨김
+      setShowVotedThisWeekMessage(false);
+    }
+  }, [isAuthenticated]);
+
+  // voteStatusData 로드 후 추가 체크
+  useEffect(() => {
+    if (voteStatusData !== undefined) {
+      // 로그인한 상태이면 메시지 숨김
+      if (voteStatusData?.result?.nickName) {
+        setShowVotedThisWeekMessage(false);
+      } else {
+        // 로그인하지 않은 상태에서 voted_this_week 쿠키가 있으면 메시지 표시
+        if (hasVotedThisWeek()) {
+          setShowVotedThisWeekMessage(true);
+        }
+      }
+      
+      // 투표한 이력이 있으면 투표 결과 표시 (로그인 또는 vote_cookie_id)
+      if (voteStatusData?.result?.hasVoted) {
+        setShowVoteResult(true);
+        // 투표 내역 설정 (voteStatusData에서 가져온 정보 사용)
+        setVoteHistory({
+          weekDto: voteStatusData.result.weekDto,
+          category: voteStatusData.result.category || 'ANIME',
+          ballots: voteStatusData.result.animeBallotDtos || []
+        });
+      } else {
+        // 투표하지 않은 경우 결과 화면 숨김
+        setShowVoteResult(false);
+        setVoteHistory(null);
+      }
+    }
+  }, [voteStatusData]);
+
+  // 후보 목록 조회 조건 (Hydration 에러 방지를 위해 클라이언트에서만 체크)
+  const [shouldFetchCandidates, setShouldFetchCandidates] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    // 로그인한 경우: voteStatusData 결과에 따라 결정
+    if (voteStatusData !== undefined) {
+      const result = !voteStatusData?.result?.hasVoted;
+      setShouldFetchCandidates(result);
+      return;
+    }
+    
+    // 로그인하지 않은 경우: voted_this_week 쿠키가 없으면 API 호출
+    const result = !hasVotedThisWeek();
+    setShouldFetchCandidates(result);
+  }, [voteStatusData]);
   
   const { data, error, isLoading } = useSWR<ApiResponseAnimeCandidateListDto>(
-    shouldFetchCandidates ? '/api/v1/vote/anime' : null,
+    shouldFetchCandidates === true ? '/api/v1/vote/anime' : null,
     fetcher<ApiResponseAnimeCandidateListDto>,
     {
       revalidateOnFocus: false,
@@ -168,7 +240,6 @@ export default function VotePage() {
         id: anime.animeCandidateId,
         title: anime.titleKor,
         thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
-        medium: anime.medium as 'TVA' | 'MOVIE'
       }));
       
       // 우선순위 기반 프리로딩으로 초기 로딩 시간 단축
@@ -343,7 +414,7 @@ export default function VotePage() {
       const result = await submitVote(requestBody);
       
       // 성공 시 SWR 캐시 업데이트
-      if (result.result) {
+      if (result.isSuccess) {
         // 투표 상태 데이터 캐시 업데이트
         await mutate('/api/v1/vote/anime/status');
         
@@ -352,8 +423,10 @@ export default function VotePage() {
         
         // 투표 결과 화면으로 전환
         setShowVoteResult(true);
+        
+        // voteStatusData가 업데이트되면 useEffect에서 voteHistory를 설정할 것임
       } else {
-        alert('투표는 완료되었지만 결과를 불러올 수 없습니다.');
+        alert('투표 제출에 실패했습니다. 다시 시도해주세요.');
       }
       
       // API 호출 성공 시 바로 TOP으로 이동
@@ -466,7 +539,6 @@ export default function VotePage() {
       id: anime.animeCandidateId,
       title: anime.titleKor || '제목 없음',
       thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
-      medium: anime.medium
     })) || [];
   }, [data?.result?.animeCandidates]);
 
@@ -517,8 +589,8 @@ export default function VotePage() {
     );
   }
 
-  // 투표하지 않은 사람이지만 후보 목록 로딩 중 - 스켈레톤 UI
-  if (isLoading) {
+  // 투표하지 않은 사람이지만 후보 목록 로딩 중 - 스켈레톤 UI (shouldFetchCandidates가 null이거나 로딩 중일 때)
+  if (shouldFetchCandidates === null || isLoading) {
     return (
       <main className="w-full">
         <section>
@@ -548,8 +620,8 @@ export default function VotePage() {
     return <div className="text-center text-red-500">투표 후보를 불러오는 중 오류가 발생했습니다.</div>;
   }
 
-  // 투표한 사람인 경우 바로 투표 결과 화면 표시
-  if (voteStatusData?.result?.hasVoted) {
+  // 투표한 사람인 경우 바로 투표 결과 화면 표시 (투표 제출 후 또는 기존 투표자)
+  if ((voteStatusData?.result?.hasVoted && isAuthenticated) || showVoteResult) {
     // 투표 내역이 아직 로드되지 않은 경우 로딩 표시
     if (!voteHistory) {
       return <div className="text-center">투표 기록을 불러오는 중...</div>;
@@ -613,7 +685,9 @@ export default function VotePage() {
           {/* 감사 메시지 및 결과 공개 안내 */}
           <div className="w-full bg-[#F1F3F5] rounded-xl p-4 sm:p-6 pb-0 mt-6">
             <div className="flex flex-col items-center gap-2 sm:gap-3">
-              <div className="text-center text-black text-xl sm:text-2xl lg:text-3xl font-semibold font-['Pretendard']">소중한 참여 감사합니다!</div>
+              <div className="text-center text-black text-xl sm:text-2xl lg:text-3xl font-semibold font-['Pretendard']">
+                {voteHistory.nickName ? `${voteHistory.nickName} 님, 소중한 참여 감사합니다!` : '소중한 참여 감사합니다!'}
+              </div>
               <div className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#F8F9FA] rounded-[12px] relative -mb-5 lg:-mb-11">
                 <div className="text-center text-black text-sm sm:text-base font-medium font-['Pretendard']">{getResultAnnouncementMessage()}</div>
               </div>
@@ -623,7 +697,40 @@ export default function VotePage() {
 
           {/* 투표된 아이템 리스트 */}
           <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">투표한 {categoryText}</h2>
+            <div className="flex items-end justify-between mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold">투표한 {categoryText}</h2>
+              
+              {/* 비로그인 투표 시 로그인 안내 문구 */}
+              {(!voteHistory.nickName || hasVoteCookieId()) && (
+                <button 
+                  onClick={() => {
+                    // 현재 URL을 sessionStorage에 저장하고 로그인 페이지로 이동
+                    sessionStorage.setItem('returnUrl', window.location.href);
+                    router.push('/login');
+                  }}
+                  className="text-gray-500 text-base hover:text-gray-700 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+                  style={{ 
+                    borderBottom: '1px solid #c4c7cc',
+                    lineHeight: '1.1'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderBottomColor = '#374151';
+                    const svg = e.currentTarget.querySelector('svg');
+                    if (svg) svg.style.stroke = '#374151';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderBottomColor = '#c4c7cc';
+                    const svg = e.currentTarget.querySelector('svg');
+                    if (svg) svg.style.stroke = '#9ca3af';
+                  }}
+                >
+                  로그인으로 투표 내역 저장하기
+                  <svg className="w-4 h-4" fill="none" stroke="#9ca3af" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
             {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
                   {voteHistory.animeBallotDtos.map((ballot: VoteHistoryBallotDto) => (
@@ -662,7 +769,6 @@ export default function VotePage() {
                           isBonusVote={ballot.ballotType === 'BONUS'}
                           onMouseLeave={() => {}}
                           weekDto={data?.result?.weekDto}
-                          medium={ballot.medium}
                           disabled={true}
                         />
                       </div>
@@ -694,9 +800,55 @@ export default function VotePage() {
     );
   }
 
+  // voted_this_week 메시지 표시
+  if (showVotedThisWeekMessage) {
+    return (
+      <main className="w-full">
+        {/* 배너 - 전체 너비, 패딩 없음 */}
+        <section>
+          <VoteBanner 
+            weekDto={data?.result?.weekDto} 
+            customTitle={`${data?.result?.weekDto?.year || 2025} ${getSeasonFromDate(data?.result?.weekDto?.startDate || '2025-07-13')} ${getCategoryText('ANIME')} 투표`}
+          />
+        </section>
+
+        {/* 메인 컨텐츠 */}
+        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="text-center">
+              <div className="text-2xl mb-2">😎</div>
+              <h2 className="text-xl font-semibold mb-2">기존 투표 이력이 확인되었습니다</h2>
+              <p className="text-gray-600 mb-6">다음 주차 투표는 일요일 22시에 시작됩니다.</p>
+              <p className="text-sm text-gray-500 mb-6">투표한 적이 없으시다면, 중복 투표 방지를 위해 로그인이 필요합니다.</p>
+              <button
+                onClick={() => {
+                  // 현재 URL을 sessionStorage에 저장하고 로그인 페이지로 이동
+                  sessionStorage.setItem('returnUrl', window.location.href);
+                  router.push('/login');
+                }}
+                className="text-black font-semibold py-2 px-6 rounded-lg transition-colors duration-200 cursor-pointer"
+                style={{ backgroundColor: '#FED783' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FED783';
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FED783';
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                로그인하기
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   // 투표 결과 화면 렌더링
   return (
-    <main className="w-full h-screen overflow-y-auto" ref={containerRef}>
+    <main className="w-full" ref={containerRef}>
       {/* 배너 - 전체 너비, 패딩 없음 */}
       <section>
         <VoteBanner 
@@ -887,6 +1039,24 @@ export default function VotePage() {
         onConfirm={handleConfirmDialogConfirm}
         onCancel={handleConfirmDialogCancel}
       />
+
     </main>
+  );
+}
+
+export default function VotePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 flex items-center justify-center mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-500"></div>
+          </div>
+          <p className="text-gray-600">페이지를 불러오는 중...</p>
+        </div>
+      </div>
+    }>
+      <VotePageContent />
+    </Suspense>
   );
 }
