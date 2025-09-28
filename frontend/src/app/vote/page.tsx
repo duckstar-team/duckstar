@@ -18,6 +18,7 @@ import { scrollToTop, scrollToPosition, clearStorageFlags } from '@/utils/scroll
 import { searchMatch } from '@/lib/searchUtils';
 import { hasVoteCookieId, hasVotedThisWeek } from '@/lib/cookieUtils';
 import { useAuth } from '@/context/AuthContext';
+import { useModal } from '@/components/AppContainer';
 
 interface Anime {
   id: number;
@@ -29,6 +30,7 @@ function VotePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useModal();
   
 
   // 스티키 요소 초기화를 위한 useEffect
@@ -171,6 +173,8 @@ function VotePageContent() {
       // 투표 결과 화면 숨김
       setShowVoteResult(false);
       setVoteHistory(null);
+      // SWR 캐시 무효화 - 로그아웃 시 투표 상태 데이터 새로고침
+      mutate('/api/v1/vote/anime/status');
     } else if (isAuthenticated) {
       // 로그인한 상태이면 메시지 숨김
       setShowVotedThisWeekMessage(false);
@@ -180,8 +184,12 @@ function VotePageContent() {
   // voteStatusData 로드 후 추가 체크
   useEffect(() => {
     if (voteStatusData !== undefined) {
-      // 로그인한 상태이면 메시지 숨김
-      if (voteStatusData?.result?.nickName) {
+      // 실제 로그인 상태와 API 응답을 모두 고려하여 판단
+      // memberId가 null이 아니면 실제 로그인한 사용자로 판단
+      const isActuallyLoggedIn = isAuthenticated && voteStatusData?.result?.memberId !== null;
+      
+      if (isActuallyLoggedIn) {
+        // 실제 로그인한 상태이면 메시지 숨김
         setShowVotedThisWeekMessage(false);
       } else {
         // 로그인하지 않은 상태에서 voted_this_week 쿠키가 있으면 메시지 표시
@@ -191,21 +199,25 @@ function VotePageContent() {
       }
       
       // 투표한 이력이 있으면 투표 결과 표시 (로그인 또는 vote_cookie_id)
+      // 단, 로그아웃 상태에서는 비로그인 투표 기록만 표시
       if (voteStatusData?.result?.hasVoted) {
-        setShowVoteResult(true);
-        // 투표 내역 설정 (voteStatusData에서 가져온 정보 사용)
-        setVoteHistory({
-          weekDto: voteStatusData.result.weekDto,
-          category: voteStatusData.result.category || 'ANIME',
-          ballots: voteStatusData.result.animeBallotDtos || []
-        });
+        // 실제 로그인 상태이거나 비로그인 투표 기록인 경우만 결과 표시
+        if (isActuallyLoggedIn || (voteStatusData?.result?.memberId === null && voteStatusData?.result?.hasVoted)) {
+          setShowVoteResult(true);
+          // 투표 내역 설정 (voteStatusData에서 가져온 정보 사용)
+          setVoteHistory(voteStatusData.result);
+        } else {
+          // 로그아웃 상태에서 로그인한 사용자의 투표 기록은 숨김
+          setShowVoteResult(false);
+          setVoteHistory(null);
+        }
       } else {
         // 투표하지 않은 경우 결과 화면 숨김
         setShowVoteResult(false);
         setVoteHistory(null);
       }
     }
-  }, [voteStatusData]);
+  }, [voteStatusData, isAuthenticated]);
 
   // 후보 목록 조회 조건 (Hydration 에러 방지를 위해 클라이언트에서만 체크)
   const [shouldFetchCandidates, setShouldFetchCandidates] = useState<boolean | null>(null);
@@ -246,6 +258,14 @@ function VotePageContent() {
       preloadImages(animes);
     }
   }, [data, preloadImages]);
+
+  // 로그인한 사용자의 성별 정보로 성별 선택란 미리 선택
+  useEffect(() => {
+    if (data?.result?.memberGender && data.result.memberGender !== 'UNKNOWN') {
+      const gender = data.result.memberGender === 'MALE' ? 'male' : 'female';
+      setSelectedGender(gender);
+    }
+  }, [data?.result?.memberGender]);
 
 
   const handleSelect = (animeId: number, isBonusVote?: boolean) => {
@@ -621,7 +641,8 @@ function VotePageContent() {
   }
 
   // 투표한 사람인 경우 바로 투표 결과 화면 표시 (투표 제출 후 또는 기존 투표자)
-  if ((voteStatusData?.result?.hasVoted && isAuthenticated) || showVoteResult) {
+  // 로그인 상태이거나 비로그인 투표 기록이 있을 때만 결과 표시
+  if ((voteStatusData?.result?.hasVoted && (isAuthenticated || voteStatusData?.result?.nickName === null)) || showVoteResult) {
     // 투표 내역이 아직 로드되지 않은 경우 로딩 표시
     if (!voteHistory) {
       return <div className="text-center">투표 기록을 불러오는 중...</div>;
@@ -701,13 +722,9 @@ function VotePageContent() {
               <h2 className="text-lg sm:text-xl font-semibold">투표한 {categoryText}</h2>
               
               {/* 비로그인 투표 시 로그인 안내 문구 */}
-              {(!voteHistory.nickName || hasVoteCookieId()) && (
+              {(!isAuthenticated && (!voteHistory.nickName || hasVoteCookieId())) && (
                 <button 
-                  onClick={() => {
-                    // 현재 URL을 sessionStorage에 저장하고 로그인 페이지로 이동
-                    sessionStorage.setItem('returnUrl', window.location.href);
-                    router.push('/login');
-                  }}
+                  onClick={openLoginModal}
                   className="text-gray-500 text-base hover:text-gray-700 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
                   style={{ 
                     borderBottom: '1px solid #c4c7cc',
@@ -821,11 +838,7 @@ function VotePageContent() {
               <p className="text-gray-600 mb-6">다음 주차 투표는 일요일 22시에 시작됩니다.</p>
               <p className="text-sm text-gray-500 mb-6">투표한 적이 없으시다면, 중복 투표 방지를 위해 로그인이 필요합니다.</p>
               <button
-                onClick={() => {
-                  // 현재 URL을 sessionStorage에 저장하고 로그인 페이지로 이동
-                  sessionStorage.setItem('returnUrl', window.location.href);
-                  router.push('/login');
-                }}
+                onClick={openLoginModal}
                 className="text-black font-semibold py-2 px-6 rounded-lg transition-colors duration-200 cursor-pointer"
                 style={{ backgroundColor: '#FED783' }}
                 onMouseEnter={(e) => {
@@ -903,12 +916,12 @@ function VotePageContent() {
 
       {/* 투표 섹션 - Sticky */}
       <section 
-        className="sticky top-0 z-50 w-full" 
+        className="sticky top-[60px] z-50 w-full" 
         data-sticky-section
         style={{ 
           willChange: 'transform',
           position: 'sticky',
-          top: '0px',
+          top: '60px',
           zIndex: 50
         }}
       >
@@ -1022,7 +1035,6 @@ function VotePageContent() {
                     isBonusVote={bonusSelected.includes(anime.id)}
                     onMouseLeave={() => handleCardMouseLeave(anime.id)}
                     weekDto={data?.result?.weekDto}
-                    medium={anime.medium}
                     disabled={showGenderSelection}
                     showGenderSelection={showGenderSelection}
                   />

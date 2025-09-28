@@ -1,10 +1,11 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getUserInfo, logout, withdraw } from '../api/client';
+import { getUserInfo, logout, withdraw, withdrawWithGoogleCode, withdrawWithNaverCode } from '../api/client';
 
 interface User {
   id: number;
+  provider?: string;
   nickname: string;
   profileImageUrl?: string;
   role: string;
@@ -134,8 +135,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
+    // 회원탈퇴 모드는 별도 useEffect에서 처리
+
     checkAuthStatus();
   }, []); // 🔑 한 번만 실행
+
+  // 회원탈퇴 모드 감지 (isAuthenticated 변경 시)
+  useEffect(() => {
+    const checkWithdrawMode = async () => {
+      if (typeof window !== 'undefined') {
+        const withdrawMode = sessionStorage.getItem('withdrawMode');
+        const withdrawProvider = sessionStorage.getItem('withdrawProvider');
+        
+        console.log('회원탈퇴 모드 확인:', { withdrawMode, withdrawProvider, isAuthenticated });
+        
+        if (withdrawMode === 'true' && withdrawProvider && isAuthenticated) {
+          try {
+            // OAuth 인증 완료 후 회원탈퇴 API 호출
+            if (withdrawProvider === 'GOOGLE') {
+              // 구글 회원탈퇴: 백엔드에서 자동으로 처리되므로 직접 API 호출
+              console.log('Google 회원탈퇴 처리');
+              await withdraw(); // 일반 회원탈퇴 API 호출
+            } else if (withdrawProvider === 'NAVER') {
+              // 네이버 회원탈퇴: 백엔드에서 자동으로 처리되므로 직접 API 호출
+              console.log('Naver 회원탈퇴 처리');
+              await withdraw(); // 일반 회원탈퇴 API 호출
+            } else {
+              await withdraw(); // 카카오 회원탈퇴
+            }
+            
+            // 성공 시 상태 초기화
+            sessionStorage.removeItem('withdrawMode');
+            sessionStorage.removeItem('withdrawProvider');
+            sessionStorage.removeItem('returnUrl');
+            resetAuthState();
+            alert('회원탈퇴가 완료되었습니다.');
+            window.location.href = '/';
+          } catch (error) {
+            console.error('회원탈퇴 실패:', error);
+            alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
+            sessionStorage.removeItem('withdrawMode');
+            sessionStorage.removeItem('withdrawProvider');
+          }
+        }
+      }
+    };
+
+    if (isAuthenticated) {
+      checkWithdrawMode();
+    }
+  }, [isAuthenticated]);
 
   const contextValue: AuthContextType = {
     isAuthenticated,
