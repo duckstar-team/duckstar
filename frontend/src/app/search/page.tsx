@@ -820,12 +820,37 @@ function SearchPageContent() {
           const chosung = extractChosung(selectedAnime.titleKor);
           const koreanCount = (selectedAnime.titleKor.match(/[가-힣]/g) || []).length;
           
-          // 한글이 3글자 이상인 순수 한글 제목만 초성 표시
-          if (koreanCount >= 3 && chosung.length >= 3) {
-            const limitedChosung = chosung.slice(0, 3);
+          // 초성 추천 로직 개선 - 부정확한 추천 방지
+          const shouldShowChosung = (() => {
+            // 숫자나 특수문자가 포함된 경우 초성 추천 제외
+            const hasNumbers = /\d/.test(selectedAnime.titleKor);
+            const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(selectedAnime.titleKor);
+            
+            if (hasNumbers || hasSpecialChars) {
+              return false;
+            }
+            
+            // 1. 한글이 3글자 이상인 경우만 초성 추천 (정확도 우선)
+            if (koreanCount >= 3 && chosung.length >= 3) {
+              return true;
+            }
+            
+            // 2. 한글이 2글자인 경우, 영문이 많지 않은 경우만 초성 추천
+            if (koreanCount >= 2 && chosung.length >= 2) {
+              const englishCount = (selectedAnime.titleKor.match(/[a-zA-Z]/g) || []).length;
+              // 영문이 한글보다 많지 않은 경우만 초성 추천
+              return englishCount <= koreanCount;
+            }
+            
+            // 3. 그 외의 경우는 초성 추천하지 않음
+            return false;
+          })();
+          
+          if (shouldShowChosung) {
+            const limitedChosung = chosung.slice(0, Math.min(4, chosung.length));
             setRandomAnimeTitle(`${selectedAnime.titleKor} (예: ${limitedChosung}...)`);
           } else {
-            // 혼합 제목이나 한글이 적은 경우는 초성 없이 표시
+            // 초성 추천이 부정확할 수 있는 경우는 원본 제목만 표시
             setRandomAnimeTitle(selectedAnime.titleKor);
           }
         }

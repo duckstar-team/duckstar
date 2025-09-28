@@ -3,7 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { updateProfile } from '@/api/client';
+import { updateProfile, startGoogleWithdraw, startNaverWithdraw, withdraw } from '@/api/client';
+import { extractFirstFrameFromGif, isGifFile } from '@/utils/gifFrameExtractor';
 
 export default function ProfileSetupPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function ProfileSetupPage() {
 
 
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // 파일 크기 검증 (5MB 제한)
@@ -41,11 +42,33 @@ export default function ProfileSetupPage() {
         return;
       }
 
-      setProfileImage(file);
+      let processedFile = file;
+
+      // GIF 파일인 경우 첫 번째 프레임 추출
+      if (isGifFile(file)) {
+        setError('GIF 파일을 정적 이미지로 변환 중...');
+        
+        try {
+          const result = await extractFirstFrameFromGif(file);
+          
+          if (result.success && result.file) {
+            processedFile = result.file;
+            setError(null);
+          } else {
+            setError(result.error || 'GIF 프레임 추출에 실패했습니다.');
+            return;
+          }
+        } catch (error) {
+          setError('GIF 파일 처리 중 오류가 발생했습니다.');
+          return;
+        }
+      }
+
+      setProfileImage(processedFile);
       setError(null);
       
       // 미리보기 URL 생성
-      const url = URL.createObjectURL(file);
+      const url = URL.createObjectURL(processedFile);
       setPreviewUrl(url);
     }
   };
@@ -95,10 +118,7 @@ export default function ProfileSetupPage() {
       const response = await updateProfile(formData);
       
       // 사용자 정보 업데이트
-      if (response.data?.mePreviewDto) {
-        updateUser(response.data.mePreviewDto);
-      } else if (response.mePreviewDto) {
-        // 응답 구조가 다를 수 있으므로 두 가지 경우 모두 처리
+      if (response.mePreviewDto) {
         updateUser(response.mePreviewDto);
       }
 
@@ -142,9 +162,7 @@ export default function ProfileSetupPage() {
       const response = await updateProfile(formData);
       
       // 사용자 정보 업데이트
-      if (response.data?.mePreviewDto) {
-        updateUser(response.data.mePreviewDto);
-      } else if (response.mePreviewDto) {
+      if (response.mePreviewDto) {
         updateUser(response.mePreviewDto);
       }
 
@@ -165,15 +183,24 @@ export default function ProfileSetupPage() {
 
   const handleWithdraw = () => {
     if (confirm('정말로 회원탈퇴를 하시겠습니까? 탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
-      // 회원탈퇴 API 호출
-      import('@/api/client').then(({ withdraw }) => {
+      // 사용자의 OAuth 제공자에 따라 다른 회원탈퇴 방식 사용
+      if (user?.provider === 'GOOGLE') {
+        // 구글 OAuth를 통한 회원탈퇴 - 로그인 상태 유지하면서 OAuth 인증
+        alert('회원탈퇴를 위해 구글 계정 인증이 필요합니다.');
+        startGoogleWithdraw();
+      } else if (user?.provider === 'NAVER') {
+        // 네이버 OAuth를 통한 회원탈퇴 - 로그인 상태 유지하면서 OAuth 인증
+        alert('회원탈퇴를 위해 네이버 계정 인증이 필요합니다.');
+        startNaverWithdraw();
+      } else {
+        // 카카오 또는 기타 제공자의 경우 기존 방식 사용
         withdraw().then(() => {
           // 탈퇴 성공 시 홈으로 리다이렉트
           window.location.href = '/';
         }).catch((error) => {
           alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
         });
-      });
+      }
     }
   };
 
@@ -278,7 +305,7 @@ export default function ProfileSetupPage() {
           <div className="space-y-3">
             <button
               type="submit"
-              disabled={isLoading || (!nickname.trim() && !profileImage) || (nickname.trim() && nickname.trim().length < 2)}
+              disabled={isLoading || (!nickname.trim() && !profileImage) || (!!nickname.trim() && nickname.trim().length < 2)}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               {isLoading ? '저장 중...' : '프로필 저장'}

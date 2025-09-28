@@ -23,26 +23,38 @@ const nextConfig: NextConfig = {
   
   // API 프록시 설정
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     return [
       {
         source: "/oauth2/:path*",
-        destination: `${apiUrl}/oauth2/:path*`,
+        destination: "http://localhost:8080/oauth2/:path*",
       },
       {
         source: "/login/:path*",
-        destination: `${apiUrl}/login/:path*`,
+        destination: "http://localhost:8080/login/:path*",
       },
       {
         source: "/api/:path*",
-        destination: `${apiUrl}/api/:path*`,
+        destination: "http://localhost:8080/api/:path*",
       },
     ];
   },
 
-  // HTTP 헤더 설정 (브라우저 캐시 TTL)
+  // HTTP 헤더 설정 (브라우저 캐시 TTL + 프록시 설정)
   async headers() {
     return [
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Connection",
+            value: "keep-alive",
+          },
+          {
+            key: "Keep-Alive",
+            value: "timeout=5, max=1000",
+          },
+        ],
+      },
       {
         source: "/_next/image(.*)",
         headers: [

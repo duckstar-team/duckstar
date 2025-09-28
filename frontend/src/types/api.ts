@@ -123,6 +123,7 @@ export interface AnimeCandidateListDto {
   weekDto: WeekDto;
   animeCandidates: AnimeCandidateDto[];
   candidatesCount: number;
+  memberGender?: 'MALE' | 'FEMALE' | 'UNKNOWN';
 }
 
 export type ApiResponseAnimeCandidateListDto = ApiResponse<AnimeCandidateListDto>;
@@ -163,6 +164,7 @@ export type ApiResponseAnimeVoteHistoryDto = ApiResponse<AnimeVoteHistoryDto>;
 // Vote Status DTO (통합된 API 응답)
 export interface AnimeVoteStatusDto {
   hasVoted: boolean;
+  memberId?: number | null;
   nickName?: string;
   submissionId: number;
   weekDto: WeekDto;
@@ -407,3 +409,23 @@ export interface AnimeCommentSliceDto {
 }
 
 export type ApiResponseAnimeCommentSliceDto = ApiResponse<AnimeCommentSliceDto>;
+
+// Me Preview DTO
+export interface MePreviewDto {
+  id: number;
+  provider?: string;
+  nickname: string;
+  profileImageUrl?: string;
+  role: string;
+  isProfileInitialized?: boolean;
+}
+
+export type ApiResponseMePreviewDto = ApiResponse<MePreviewDto>;
+
+// Update Profile Response DTO
+export interface UpdateProfileResponseDto {
+  isChanged: boolean;
+  mePreviewDto: MePreviewDto;
+}
+
+export type ApiResponseUpdateProfileResponseDto = ApiResponse<UpdateProfileResponseDto>;

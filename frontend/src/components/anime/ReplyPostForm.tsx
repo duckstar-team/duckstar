@@ -9,7 +9,7 @@ import ImageUploadPreview from '../common/ImageUploadPreview';
 const imgGroup = "/icons/picture-upload.svg";
 
 interface ReplyPostFormProps {
-  onSubmit?: (comment: string, images?: File[]) => void;
+  onSubmit?: (comment: string, images?: File[]) => Promise<void>;
   onImageUpload?: (file: File) => void;
   placeholder?: string;
   maxLength?: number;
@@ -29,6 +29,7 @@ export default function ReplyPostForm({
 }: ReplyPostFormProps) {
   const { isAuthenticated } = useAuth();
   const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMountedRef = useRef(false);
   const isSubmittingRef = useRef(false);
@@ -116,7 +117,7 @@ export default function ReplyPostForm({
 
   const handleSubmit = useCallback(() => {
     // 이미 제출 중이면 중복 호출 방지
-    if (isSubmittingRef.current) {
+    if (isSubmittingRef.current || isSubmitting) {
       return;
     }
     
@@ -141,6 +142,7 @@ export default function ReplyPostForm({
       
       // 제출 중 플래그 설정
       isSubmittingRef.current = true;
+      setIsSubmitting(true);
       
       const imageFiles = currentImages.map(img => img.file);
       const commentText = currentComment;
@@ -151,6 +153,7 @@ export default function ReplyPostForm({
         if (!uploadStart.canUpload) {
           alert(uploadStart.message);
           isSubmittingRef.current = false;
+          setIsSubmitting(false);
           return;
         }
       }
@@ -178,9 +181,10 @@ export default function ReplyPostForm({
           
           // 제출 완료 후 플래그 리셋
           isSubmittingRef.current = false;
+          setIsSubmitting(false);
         });
     }
-  }, [onSubmit, globalKey]);
+  }, [onSubmit, globalKey, isSubmitting]);
 
   const handleImageUpload = () => {
     // 파일 입력 엘리먼트 생성
@@ -203,7 +207,7 @@ export default function ReplyPostForm({
     input.click();
   };
 
-  const isSubmitDisabled = disabled || (!comment.trim() && uploadedImages.length === 0);
+  const isSubmitDisabled = disabled || isSubmitting || (!comment.trim() && uploadedImages.length === 0);
 
   // 답글 폼 전용 스타일 설정 (기존 variant="forReply"와 동일)
   const containerWidth = 'w-[494px]';
@@ -287,7 +291,14 @@ export default function ReplyPostForm({
             disabled={isSubmitDisabled}
             className={`w-20 ${buttonHeight} px-8 bg-[#FED783]/70 border-l border-t border-[#adb5bd] flex justify-center items-center gap-2.5 overflow-hidden rounded-br-[10px] cursor-pointer hover:bg-[#FED783] transition-colors duration-200`}
           >
-            <span className="text-white text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">작성</span>
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                <span className="text-white text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">작성 중...</span>
+              </>
+            ) : (
+              <span className="text-white text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">작성</span>
+            )}
           </button>
         </div>
       </div>
