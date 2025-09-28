@@ -3,12 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
 import "./globals.css";
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import QueryProvider from '@/components/providers/QueryProvider';
 import MigrationToast from '@/components/common/MigrationToast';
+import ClientAppContainer from '@/components/ClientAppContainer';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,20 +68,9 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            {/* Fixed Header */}
-            <div className="fixed top-0 left-0 right-0 z-[9999]">
-              <Header />
-            </div>
-            
-            {/* Fixed Sidebar */}
-            <div className="fixed top-[60px] left-0 bottom-0 z-[9999999]">
-              <Sidebar />
-            </div>
-            
-            {/* Main Content */}
-            <main className="ml-[50px] sm:ml-[55px] md:ml-[200px] mt-[60px] bg-gray-50 transition-all duration-300 ease-in-out group-hover:ml-[200px] h-[calc(100vh-60px)] overflow-y-auto">
+            <ClientAppContainer>
               {children}
-            </main>
+            </ClientAppContainer>
             
             {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
             <Suspense fallback={null}>

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { startKakaoLogin } from '@/api/client';
+import { useModal } from '@/components/AppContainer';
 
 interface LoginButtonProps {
   variant?: 'default' | 'compact';
@@ -17,12 +17,13 @@ export default function LoginButton({
   className = '' 
 }: LoginButtonProps) {
   const { isAuthenticated, isLoading, user, logout, withdraw } = useAuth();
+  const { openLoginModal } = useModal();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const handleLoginClick = () => {
-    startKakaoLogin();
+    openLoginModal();
   };
 
   const handleProfileEditClick = () => {

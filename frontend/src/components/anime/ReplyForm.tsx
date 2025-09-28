@@ -6,12 +6,12 @@ import ReplyPostForm from './ReplyPostForm';
 interface ReplyFormProps {
   commentId: number;
   listenerId?: number;
-  onSubmit: (content: string, commentId: number, listenerId?: number, images?: File[]) => void;
+  onSubmit: (content: string, commentId: number, listenerId?: number, images?: File[]) => Promise<void>;
 }
 
 const ReplyForm = React.memo(({ commentId, listenerId, onSubmit }: ReplyFormProps) => {
-  const handleSubmit = useCallback((content: string, images?: File[]) => {
-    onSubmit(content, commentId, listenerId, images);
+  const handleSubmit = useCallback(async (content: string, images?: File[]) => {
+    return await onSubmit(content, commentId, listenerId, images);
   }, [onSubmit, commentId, listenerId]);
   
   return (
