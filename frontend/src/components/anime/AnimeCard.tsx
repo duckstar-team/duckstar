@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-// import { useNavigateWithScroll } from '@/hooks/useScrollRestoration'; // 제거: search 화면에서만 스크롤 저장
+import { useAdvancedScrollRestoration } from '@/hooks/useAdvancedScrollRestoration';
 import { AnimePreviewDto } from '@/components/search/types';
 
 interface AnimeCardProps {
@@ -18,46 +18,28 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // 애니메이션 카드 클릭 핸들러 (search 화면에서만 스크롤 저장)
-  const handleCardClick = () => {
-    // search 화면에서만 스크롤 위치 저장
-    if (pathname === '/search') {
-      // 실제 스크롤 컨테이너 찾기 (개선된 로직)
-      const allScrollableElements = document.querySelectorAll('*');
-      let foundScrollable = null;
-      let maxScrollTop = 0;
-      
-      // 1. main 요소 우선 확인
-      const mainElement = document.querySelector('main');
-      if (mainElement && mainElement.scrollTop > 0) {
-        foundScrollable = mainElement;
-        maxScrollTop = mainElement.scrollTop;
-      } else {
-        // 2. 모든 스크롤 가능한 요소 중에서 가장 큰 스크롤 값 찾기
-        allScrollableElements.forEach(element => {
-          const el = element as HTMLElement;
-          if (el.scrollTop > 0 && el.scrollTop > maxScrollTop) {
-            maxScrollTop = el.scrollTop;
-            foundScrollable = el;
-          }
-        });
-      }
-      
-      // 실제 스크롤 컨테이너 찾기
-      let scrollY = 0;
-      if (foundScrollable) {
-        scrollY = (foundScrollable as any).scrollTop;
-      } else {
-        // 폴백: 기존 방식
-        scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      }
-      
-      // 스크롤 위치 저장
-      sessionStorage.setItem('search-scroll', scrollY.toString());
-      // 애니메이션 상세화면으로 이동하는 것임을 표시
-      sessionStorage.setItem('to-anime-detail', 'true');
+  
+  // 고급 스크롤 복원 훅 사용
+  const { navigateWithScroll } = useAdvancedScrollRestoration({
+    enabled: true,
+    scrollKey: pathname === '/search' ? 'search' : 'home',
+    navigationTypes: {
+      detail: 'from-anime-detail'
     }
-    router.push(`/animes/${animeId}`);
+  });
+  
+  // 애니메이션 카드 클릭 핸들러
+  const handleCardClick = () => {
+    // 홈페이지에서 상세화면으로 이동할 때 스크롤 저장
+    if (pathname === '/' && typeof window !== 'undefined') {
+      const currentScrollY = window.scrollY || 0;
+      sessionStorage.setItem('home-scroll', currentScrollY.toString());
+      sessionStorage.setItem('navigation-type', 'from-anime-detail');
+      console.log('🎬 AnimeCard: 홈페이지 스크롤 저장:', currentScrollY);
+    }
+    
+    // 모든 페이지에서 Next.js 클라이언트 사이드 라우팅 사용
+    navigateWithScroll(`/animes/${animeId}`);
   };
   
   // 디데이 계산 함수 (8/22 형식에서 현재 시간까지의 차이)
@@ -280,7 +262,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'UPCOMING':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-orange-100 text-orange-800';
       case 'NOW_SHOWING':
         return 'bg-green-100 text-green-800';
       case 'COOLING':
@@ -289,6 +271,28 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // 상태별 텍스트
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'UPCOMING':
+        // 이번주 메뉴에서는 UPCOMING 상태를 매체 타입에 따라 다르게 표시
+        if (isCurrentSeason) {
+          return medium === 'MOVIE' ? '개봉주' : '첫 방영';
+        } else {
+          // 시즌 메뉴에서는 '예정'으로 표시
+          return '예정';
+        }
+      case 'NOW_SHOWING':
+        return '방영중';
+      case 'COOLING':
+        return '휴방';
+      case 'ENDED':
+        return '종영';
+      default:
+        return '알 수 없음';
     }
   };
   
@@ -410,9 +414,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
         {/* Status Badge */}
         <div className="absolute top-3 left-3">
           <span className={cn("px-2 py-1 rounded text-xs font-medium font-['Pretendard']", getStatusColor(status))}>
-            {status === 'UPCOMING' ? '예정' : 
-             status === 'NOW_SHOWING' ? (anime.medium === 'MOVIE' ? '상영중' : '방영중') : 
-             status === 'COOLING' ? '휴방' : '종영'}
+            {getStatusText(status)}
           </span>
         </div>
         

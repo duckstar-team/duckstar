@@ -27,6 +27,8 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      // 헤더 검색 플래그 설정
+      sessionStorage.setItem('from-header-search', 'true');
       // 검색 결과 페이지로 이동하면서 검색어 전달
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       // 검색 후 검색창 비우기

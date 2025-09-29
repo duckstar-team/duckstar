@@ -190,6 +190,7 @@ const VoteCard = memo(function VoteCard({
             }}
             disabled={disabled}
             cardHoverSide={hoverSide}
+            weekDto={weekDto}
           />
         </div>
 
@@ -241,6 +242,7 @@ const VoteCard = memo(function VoteCard({
                   disabled={disabled}
                   cardHoverSide={hoverSide}
                   isMobile={true}
+                  weekDto={weekDto}
                 />
               </div>
             </div>

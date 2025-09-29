@@ -29,6 +29,7 @@ interface VoteSectionProps {
   onGenderSelect?: (gender: 'male' | 'female') => void;
   onSubmitClick?: () => void;
   external?: boolean;
+  weekDto?: { year: number; startDate: string } | null;
 }
 
 const VoteSection = memo(function VoteSection({
@@ -51,7 +52,8 @@ const VoteSection = memo(function VoteSection({
   onBackClick,
   onGenderSelect,
   onSubmitClick,
-  external = false
+  external = false,
+  weekDto = null
 }: VoteSectionProps) {
   const router = useRouter();
   
@@ -191,6 +193,7 @@ const VoteSection = memo(function VoteSection({
             onBonusButtonPositionChange={setBonusButtonPosition}
             onBonusStampPositionChange={setBonusStampPosition}
             onHideBonusTooltip={() => setShowBonusTooltip(false)}
+            weekDto={weekDto}
           />
         </div>
 

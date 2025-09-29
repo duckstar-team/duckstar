@@ -53,12 +53,12 @@ const STYLES = {
     zIndex: 999999,
   },
   desktopBonusPosition: {
-    top: -45,
+    top: -75,
     transform: 'translateX(-50%)',
     zIndex: 999999,
   },
   desktopMaxVotesPosition: {
-    top: -55,
+    top: -75,
     transform: 'translateX(-50%)',
     zIndex: 999999,
   },
@@ -206,13 +206,12 @@ export default function TooltipPortal({
   const config = TOOLTIP_CONFIG[type];
   const desktopPosition = getDesktopPosition(type);
 
-  // 문서 기준 절대 좌표로 받은 position을 그대로 사용
-  // absolute 포지션으로 문서에 고정
+  // 상대 위치를 그대로 사용하여 스크롤에 독립적으로 동작
   const topPosition = position.y + desktopPosition.top;
 
   return createPortal(
     <div 
-      className="absolute pointer-events-none"
+      className="fixed pointer-events-none"
       style={{
         left: `${position.x}px`,
         top: `${topPosition}px`,

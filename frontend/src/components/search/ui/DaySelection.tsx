@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 export type DayOfWeek = '곧 시작' | '일' | '월' | '화' | '수' | '목' | '금' | '토' | '특별편성 및 극장판';
@@ -11,6 +12,10 @@ interface DaySelectionProps {
   className?: string;
   onScrollToSection?: (sectionId: string) => void;
   initialPosition?: boolean; // 초기 위치를 즉시 설정할지 여부
+  emptyDays?: Set<DayOfWeek>; // 비어있는 요일들
+  isThisWeek?: boolean; // 이번 주인지 여부
+  showEmptyMessage?: DayOfWeek | null; // 외부에서 관리하는 메시지 상태
+  onEmptyMessageChange?: (day: DayOfWeek | null) => void; // 메시지 상태 변경 콜백
 }
 
 const DAYS: DayOfWeek[] = [
@@ -41,9 +46,20 @@ export default function DaySelection({
   onDaySelect,
   className,
   onScrollToSection,
-  initialPosition = false
+  initialPosition = false,
+  emptyDays = new Set(),
+  isThisWeek = true,
+  showEmptyMessage: externalShowEmptyMessage,
+  onEmptyMessageChange
 }: DaySelectionProps) {
   const [hoveredDay, setHoveredDay] = useState<DayOfWeek | null>(null);
+  const [internalShowEmptyMessage, setInternalShowEmptyMessage] = useState<DayOfWeek | null>(null);
+  const [messagePosition, setMessagePosition] = useState({ top: 0, left: 0 });
+  const [isTrackingMessage, setIsTrackingMessage] = useState(false);
+  const messageTrackingRef = useRef<number | undefined>(undefined);
+  
+  // 외부에서 관리하는 메시지 상태가 있으면 사용, 없으면 내부 상태 사용
+  const showEmptyMessage = externalShowEmptyMessage !== undefined ? externalShowEmptyMessage : internalShowEmptyMessage;
   const [selectedBarStyle, setSelectedBarStyle] = useState({
     width: '0px',
     left: '0px',
@@ -56,6 +72,35 @@ export default function DaySelection({
     opacity: 0,
     transition: 'all 0.3s ease-out'
   });
+
+  // 실시간 메시지 위치 추적 함수
+  const startMessageTracking = (day: DayOfWeek) => {
+    if (messageTrackingRef.current) return; // 이미 추적 중이면 중복 방지
+    
+    const track = () => {
+      const buttonElement = tabRefs.current[day];
+      if (buttonElement) {
+        const rect = buttonElement.getBoundingClientRect();
+        const position = {
+          top: rect.top - 30,
+          left: rect.left + rect.width / 2
+        };
+        setMessagePosition(position);
+      }
+      messageTrackingRef.current = requestAnimationFrame(track);
+    };
+    
+    track();
+    setIsTrackingMessage(true);
+  };
+
+  const stopMessageTracking = () => {
+    if (messageTrackingRef.current) {
+      cancelAnimationFrame(messageTrackingRef.current);
+      messageTrackingRef.current = undefined;
+    }
+    setIsTrackingMessage(false);
+  };
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -187,6 +232,41 @@ export default function DaySelection({
     };
   }, [selectedDay, hoveredDay]);
 
+  // 스크롤 이벤트로 실시간 추적 강화
+  useEffect(() => {
+    const handleScroll = () => {
+      if (showEmptyMessage) {
+        const buttonElement = tabRefs.current[showEmptyMessage];
+        if (buttonElement) {
+          const rect = buttonElement.getBoundingClientRect();
+          const position = {
+            top: rect.top - 30,
+            left: rect.left + rect.width / 2
+          };
+          setMessagePosition(position);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showEmptyMessage]);
+
+  // 스티키 상태 감지
+  useEffect(() => {
+    const handleScroll = () => {
+      const daySelectionElement = document.querySelector('[data-day-selection]');
+      if (daySelectionElement) {
+        const rect = daySelectionElement.getBoundingClientRect();
+        const isSticky = rect.top <= 60; // 헤더 높이 60px
+        setIsTrackingMessage(isSticky);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <>
       {/* 모바일: 드롭다운 */}
@@ -256,6 +336,7 @@ export default function DaySelection({
       {/* 태블릿/데스크톱: 기존 탭 형태 (점진적으로 작아짐) */}
       <div 
         ref={containerRef}
+        data-day-selection
         className={cn(
           "relative hidden md:flex items-center justify-start gap-1",
           className
@@ -293,45 +374,86 @@ export default function DaySelection({
         {DAYS.map((day) => {
           const isSelected = selectedDay === day;
           const isHovered = hoveredDay === day;
+          const isEmpty = emptyDays.has(day);
           const dayWidth = getDayWidth(day);
           
           return (
-            <button
-              key={day}
-              ref={(el) => { tabRefs.current[day] = el; }}
-              onClick={() => {
-                onDaySelect(day);
-                updateNavigationBar(day, true); // 클릭 시 즉시 이동 (애니메이션 없음)
-                // 스크롤 기능 추가
-                if (onScrollToSection) {
-                  const sectionId = day === '곧 시작' ? 'upcoming' : 
-                                   day === '특별편성 및 극장판' ? 'special' : 
-                                   day === '일' ? 'sun' : 
-                                   day === '월' ? 'mon' : 
-                                   day === '화' ? 'tue' : 
-                                   day === '수' ? 'wed' : 
-                                   day === '목' ? 'thu' : 
-                                   day === '금' ? 'fri' : 
-                                   day === '토' ? 'sat' : 'upcoming';
-                  onScrollToSection(sectionId);
-                }
-              }}
-              onMouseEnter={() => handleMouseEnter(day)}
-              className={cn(
-                "h-11 px-4 py-2.5 flex items-center justify-center transition-all duration-200 cursor-pointer",
-                "relative",
-                dayWidth
+            <div key={day} className="relative">
+              <button
+                ref={(el) => { tabRefs.current[day] = el; }}
+                onClick={() => {
+                  onDaySelect(day);
+                  updateNavigationBar(day, true); // 클릭 시 즉시 이동 (애니메이션 없음)
+                  
+                  // 비어있는 요일인 경우 메시지 표시 (단, "곧 시작"은 제외)
+                  if (isEmpty && day !== '곧 시작') {
+                    // 실시간 추적 시작
+                    startMessageTracking(day);
+                    
+                    if (onEmptyMessageChange) {
+                      onEmptyMessageChange(day);
+                      // 3초 후에 메시지 숨기기
+                      setTimeout(() => {
+                        onEmptyMessageChange(null);
+                        stopMessageTracking();
+                      }, 3000);
+                    } else {
+                      setInternalShowEmptyMessage(day);
+                      // 3초 후에 메시지 숨기기
+                      setTimeout(() => {
+                        setInternalShowEmptyMessage(null);
+                        stopMessageTracking();
+                      }, 3000);
+                    }
+                  }
+                  
+                  // 스크롤 기능 추가
+                  if (onScrollToSection) {
+                    const sectionId = day === '곧 시작' ? 'upcoming' : 
+                                     day === '특별편성 및 극장판' ? 'special' : 
+                                     day === '일' ? 'sun' : 
+                                     day === '월' ? 'mon' : 
+                                     day === '화' ? 'tue' : 
+                                     day === '수' ? 'wed' : 
+                                     day === '목' ? 'thu' : 
+                                     day === '금' ? 'fri' : 
+                                     day === '토' ? 'sat' : 'upcoming';
+                    onScrollToSection(sectionId);
+                  }
+                }}
+                onMouseEnter={() => handleMouseEnter(day)}
+                className={cn(
+                  "h-11 px-4 py-2.5 flex items-center justify-center transition-all duration-200 cursor-pointer",
+                  "relative",
+                  dayWidth
+                )}
+              >
+                <span className={cn(
+                  "text-lg leading-none whitespace-nowrap transition-colors duration-200",
+                  isSelected || isHovered
+                    ? "text-[#990033] font-semibold"
+                    : "text-[#adb5bd] font-normal"
+                )}>
+                  {day}
+                </span>
+              </button>
+              
+              {/* 비어있는 요일에 대한 에러 메시지 - 이번 주에서만 표시 */}
+              {showEmptyMessage === day && isThisWeek && typeof window !== 'undefined' && createPortal(
+                <div 
+                  className="fixed bg-white px-2 py-1 text-xs font-medium text-[#990033] transition-opacity duration-300 ease-in-out whitespace-nowrap border border-gray-200 rounded shadow-sm pointer-events-none"
+                  style={{ 
+                    zIndex: 999999,
+                    top: `${messagePosition.top}px`,
+                    left: `${messagePosition.left}px`,
+                    transform: 'translateX(-50%)'
+                  }}
+                >
+                  이번 주 없음
+                </div>,
+                document.body
               )}
-            >
-              <span className={cn(
-                "text-lg leading-none whitespace-nowrap transition-colors duration-200",
-                isSelected || isHovered
-                  ? "text-[#990033] font-semibold"
-                  : "text-[#adb5bd] font-normal"
-              )}>
-                {day}
-              </span>
-            </button>
+            </div>
           );
         })}
       </div>

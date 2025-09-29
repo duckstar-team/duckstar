@@ -514,14 +514,22 @@ function VotePageContent() {
     if (savedY && isFromAnimeDetail) {
       const y = parseInt(savedY);
       
-      // 페이지 로드 즉시 복원 (깜빡임 완전 방지)
-      window.scrollTo(0, y);
+      // 페이지 로드 즉시 복원 (애니메이션 없이)
+      window.scrollTo({
+        top: y,
+        left: 0,
+        behavior: 'instant'
+      });
       document.body.scrollTop = y;
       document.documentElement.scrollTop = y;
       
       // 추가 즉시 복원 (확실하게)
       setTimeout(() => {
-        window.scrollTo(0, y);
+        window.scrollTo({
+          top: y,
+          left: 0,
+          behavior: 'instant'
+        });
         document.body.scrollTop = y;
         document.documentElement.scrollTop = y;
       }, 0);
@@ -942,6 +950,7 @@ function VotePageContent() {
                 showConfirmDialog={showConfirmDialog}
                 isSubmitting={isSubmitting}
                 external={true}
+                weekDto={data?.result?.weekDto}
                 onSearchQueryChange={setSearchQuery}
                 onNextClick={handleNextClick}
                 onBackClick={handleBackClick}

@@ -21,6 +21,7 @@ interface VoteStatusProps {
   onBonusButtonPositionChange?: (position: { x: number; y: number }) => void;
   onBonusStampPositionChange?: (position: { x: number; y: number }) => void;
   onHideBonusTooltip?: () => void;
+  weekDto?: { year: number; startDate: string } | null;
 }
 
 export default function VoteStatus({
@@ -38,7 +39,8 @@ export default function VoteStatus({
   onBonusAnimationComplete,
   onBonusButtonPositionChange,
   onBonusStampPositionChange,
-  onHideBonusTooltip
+  onHideBonusTooltip,
+  weekDto = null
 }: VoteStatusProps) {
   const bonusButtonRef = useRef<HTMLDivElement>(null);
   const bonusStampRef = useRef<HTMLDivElement>(null);
@@ -61,7 +63,7 @@ export default function VoteStatus({
         const rect = bonusButtonRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + rect.width / 2,
-          y: rect.top + window.scrollY
+          y: rect.top + rect.height / 2 // 스크롤에 독립적인 상대 위치 사용
         };
         setBonusButtonPosition(position);
         onBonusButtonPositionChange?.(position);
@@ -115,7 +117,7 @@ export default function VoteStatus({
         const rect = bonusStampRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + 33.5,
-          y: rect.top + window.scrollY
+          y: rect.top + rect.height / 2 // 스크롤에 독립적인 상대 위치 사용
         };
         setBonusStampPosition(position);
         onBonusStampPositionChange?.(position);
@@ -142,7 +144,7 @@ export default function VoteStatus({
         const rect = bonusStampRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + 33.5,
-          y: rect.top + window.scrollY
+          y: rect.top + rect.height / 2 // 스크롤에 독립적인 상대 위치 사용
         };
         setBonusStampPosition(position);
         onBonusStampPositionChange?.(position);
@@ -167,7 +169,7 @@ export default function VoteStatus({
         const rect = bonusButtonRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + rect.width / 2,
-          y: rect.top + window.scrollY
+          y: rect.top + rect.height / 2 // 스크롤에 독립적인 상대 위치 사용
         };
         setBonusButtonPosition(position);
         onBonusButtonPositionChange?.(position);
@@ -177,7 +179,7 @@ export default function VoteStatus({
         const rect = bonusStampRef.current.getBoundingClientRect();
         const position = {
           x: rect.left + 33.5,
-          y: rect.top + window.scrollY
+          y: rect.top + rect.height / 2 // 스크롤에 독립적인 상대 위치 사용
         };
         setBonusStampPosition(position);
         onBonusStampPositionChange?.(position);
@@ -232,6 +234,7 @@ export default function VoteStatus({
             currentVotes={currentVotes}
             maxVotes={maxVotes}
             showGenderSelection={showGenderSelection}
+            weekDto={weekDto}
           />
         </motion.div>
 
@@ -267,6 +270,7 @@ export default function VoteStatus({
               bonusVotesUsed={bonusVotesUsed}
               showTooltip={showBonusTooltip && !showGenderSelection}
               onHideTooltip={onHideBonusTooltip}
+              weekDto={weekDto}
             />
           </motion.div>
         )}

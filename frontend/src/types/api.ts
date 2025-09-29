@@ -10,6 +10,7 @@ export interface ApiResponse<T> {
 
 // Week DTO
 export interface WeekDto {
+  voteStatus: VoteStatus;
   year: number;
   quarter: number;
   week: number;
@@ -215,15 +216,6 @@ export interface AnimeSearchListDto {
 
 export type ApiResponseAnimePreviewListDto = ApiResponse<AnimePreviewListDto>;
 
-// Rank Preview DTO
-export interface RankPreviewDto {
-  rank: number;
-  rankDiff: number;
-  consecutiveWeeksAtSameRank: number;
-  mainThumbnailUrl: string;
-  title: string;
-  subTitle: string;
-}
 
 // Duckstar Rank Preview DTO
 export interface DuckstarRankPreviewDto {
@@ -239,12 +231,45 @@ export interface HomeBannerDto {
   subTitle: string;
   animeImageUrl: string;
   characterImageUrl: string;
+  contentId: number;
+}
+
+
+// Rank Preview DTO
+export interface RankPreviewDto {
+  type: "ANIME" | "HERO" | "HEROINE";
+  contentId: number;
+  rank: number;
+  rankDiff: number | null;
+  consecutiveWeeksAtSameRank: number | null;
+  mainThumbnailUrl: string;
+  title: string;
+  subTitle: string;
+}
+
+// Duckstar Rank Preview DTO
+export interface DuckstarRankPreviewDto {
+  votePercent: number;
+  rankPreviewDto: RankPreviewDto;
 }
 
 // Weekly Top DTO
 export interface WeeklyTopDto {
+  isPrepared: boolean;
   duckstarRankPreviews: DuckstarRankPreviewDto[];
-  crawlerRankDtos: RankPreviewDto[];
+  anilabRankPreviews: RankPreviewDto[];
+  animeTrendingRankPreviews: RankPreviewDto[];
+}
+
+// Home Banner DTO
+export interface HomeBannerDto {
+  bannerType: "HOT";
+  contentType: "ANIME" | "HERO" | "HEROINE";
+  mainTitle: string;
+  subTitle: string;
+  animeImageUrl: string;
+  characterImageUrl: string;
+  contentId: number;
 }
 
 // Home DTO
