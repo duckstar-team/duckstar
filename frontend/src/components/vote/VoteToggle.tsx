@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getCurrentVoteStampImagePath } from "@/utils/voteStampUtils";
 
 type VoteToggleProps = {
   selected: boolean;
@@ -13,6 +14,7 @@ type VoteToggleProps = {
   disabled?: boolean;
   cardHoverSide?: 'left' | 'right' | null;
   isMobile?: boolean;
+  weekDto?: { year: number; startDate: string } | null;
 };
 
 export default function VoteToggle({ 
@@ -27,7 +29,8 @@ export default function VoteToggle({
   onClick,
   disabled = false,
   cardHoverSide = null,
-  isMobile = false
+  isMobile = false,
+  weekDto = null
 }: VoteToggleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hoverSide, setHoverSide] = useState<'left' | 'right' | null>(null);
@@ -127,7 +130,7 @@ export default function VoteToggle({
         {/* 선택 상태일 때 이미지 표시 */}
         {selected && (
           <img
-            src={isBonusVote ? "/voted-bonus.svg" : "/voted-normal.svg"}
+            src={getCurrentVoteStampImagePath(weekDto, isBonusVote)}
             alt="Selected"
             className={
               isMobile 

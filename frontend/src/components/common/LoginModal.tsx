@@ -44,6 +44,7 @@ export default function LoginModal({ isOpen, onClose, backdropStyle = 'blur' }: 
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
+    // 모달 컨텐츠가 아닌 배경 영역을 클릭했을 때만 닫기
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -68,26 +69,22 @@ export default function LoginModal({ isOpen, onClose, backdropStyle = 'blur' }: 
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className={`fixed inset-0 z-50 ${getBackdropClass()}`}
-            onClick={handleBackdropClick}
-          />
-          
-          {/* Modal */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${getBackdropClass()}`}
+          onClick={handleBackdropClick}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto">
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
                 <h2 className="text-xl font-bold text-gray-900">로그인</h2>
@@ -147,9 +144,8 @@ export default function LoginModal({ isOpen, onClose, backdropStyle = 'blur' }: 
                 </p>
 
               </div>
-            </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

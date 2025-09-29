@@ -62,13 +62,16 @@ export default function AnimeDetailClient() {
   
   // 이전 화면으로 돌아가기 (스크롤 복원)
   const navigateBackToSearch = () => {
+    console.log('🔙 navigateBackToSearch 함수 호출됨');
     // 스크롤 복원을 위한 네비게이션
     
     // to-anime-detail 플래그가 있으면 from-anime-detail 플래그 설정
     const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
+    console.log('🔍 상세화면에서 to-anime-detail 확인:', toAnimeDetail);
     if (toAnimeDetail === 'true') {
       sessionStorage.setItem('from-anime-detail', 'true');
       sessionStorage.removeItem('to-anime-detail');
+      console.log('🎬 from-anime-detail 플래그 설정 완료');
       
       // vote-result-scroll이 있으면 투표 결과 화면에서 온 것으로 판단
       const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
@@ -82,15 +85,23 @@ export default function AnimeDetailClient() {
     if (window.history.length > 1) {
       router.back();
     } else {
-      // 히스토리가 없으면 투표 결과 화면인지 확인하여 적절한 페이지로 이동
-      const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
-      if (voteResultScroll) {
-        router.push('/vote');
-      } else {
-        router.push('/search');
-      }
+      router.push('/search');
     }
   };
+  
+  // 컴포넌트 언마운트 시 from-anime-detail 플래그 설정
+  useEffect(() => {
+    return () => {
+      console.log('🔙 컴포넌트 언마운트 감지');
+      const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
+      if (toAnimeDetail === 'true') {
+        sessionStorage.setItem('from-anime-detail', 'true');
+        sessionStorage.setItem('detail-restore-done', 'true'); // 즉시 설정
+        sessionStorage.removeItem('to-anime-detail');
+        console.log('🎬 from-anime-detail 플래그 설정 완료 (언마운트)');
+      }
+    };
+  }, []);
   
   const [error, setError] = useState<string | null>(null);
   
@@ -106,31 +117,32 @@ export default function AnimeDetailClient() {
     }
   };
 
-  // 컴포넌트 마운트 시 스크롤을 맨 위로 강제 이동
+  // 컴포넌트 마운트 시 스크롤을 맨 위로 강제 이동 (상세화면에서만)
   useEffect(() => {
-    // 여러 방법으로 스크롤을 맨 위로 강제 이동
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    
-    // 추가로 setTimeout으로 지연 실행
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }, 0);
-    
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }, 100);
-    
-    // 애니메이션 상세화면 마운트 - 스크롤 맨 위로 강제 이동
-    
-    // to-anime-detail 플래그가 있으면 from-anime-detail 플래그 미리 설정
+    // to-anime-detail 플래그가 있으면 상세화면 진입으로 판단
     const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
     if (toAnimeDetail === 'true') {
+      console.log('🎬 상세화면: 스크롤 맨 위로 강제 이동');
+      
+      // 여러 방법으로 스크롤을 맨 위로 강제 이동
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
+      // 추가로 setTimeout으로 지연 실행
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 0);
+      
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 100);
+      
+      // from-anime-detail 플래그 미리 설정
       sessionStorage.setItem('from-anime-detail', 'true');
       
       // vote-result-scroll이 있으면 투표 결과 화면에서 온 것으로 판단
@@ -138,6 +150,8 @@ export default function AnimeDetailClient() {
       if (voteResultScroll) {
         sessionStorage.setItem('to-vote-result', 'true');
       }
+    } else {
+      console.log('🎬 상세화면: 스크롤 강제 이동 건너뛰기 (홈페이지에서 돌아온 경우)');
     }
   }, []);
 
@@ -162,23 +176,6 @@ export default function AnimeDetailClient() {
         setLoading(true);
         setError(null);
         
-        // 캐시된 데이터가 있으면 먼저 사용
-        const cacheKey = `anime-${animeId}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) {
-          try {
-            const parsedCache = JSON.parse(cached);
-            setAnime(parsedCache.anime);
-            setCharacters(parsedCache.characters);
-            setRawAnimeData(parsedCache.rawAnimeData); // 캐시된 원본 데이터 설정
-            setLoading(false);
-            // 백그라운드에서 최신 데이터 가져오기
-            setTimeout(() => fetchLatestData(), 0);
-            return;
-          } catch (e) {
-            // 캐시 파싱 실패 시 무시하고 새로 가져오기
-          }
-        }
         
         // 실제 API 호출 (병렬 처리로 성능 최적화)
         const data = await Promise.race([
@@ -301,9 +298,6 @@ export default function AnimeDetailClient() {
         const characterData = mapCastPreviewsToCharacters(castPreviews);
         setCharacters(characterData);
         
-        // 캐시에 저장
-        const cacheData = { anime: animeDetail, characters: characterData, rawAnimeData: data };
-        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
         
         // 애니메이션 상세 이미지 프리로딩 (비동기로 처리하여 로딩 속도 향상)
         setTimeout(() => {
@@ -418,7 +412,10 @@ export default function AnimeDetailClient() {
   }
 
   // 뒤로가기 핸들러 (search 화면으로만 스크롤 복원)
-  const handleBack = navigateBackToSearch;
+  const handleBack = () => {
+    console.log('🔙 handleBack 함수 호출됨');
+    navigateBackToSearch();
+  };
 
   return (
     <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>

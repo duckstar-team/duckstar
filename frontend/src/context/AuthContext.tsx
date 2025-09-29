@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getUserInfo, logout, withdraw, withdrawWithGoogleCode, withdrawWithNaverCode } from '../api/client';
+import { getUserInfo, logout, withdraw, withdrawKakao, withdrawGoogle, withdrawNaver } from '../api/client';
 
 interface User {
   id: number;
@@ -99,9 +99,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const withdrawUser = async () => {
     try {
-      await withdraw();
+      // 사용자의 provider에 따라 다른 API 호출
+      if (!user?.provider) {
+        throw new Error('사용자 정보를 찾을 수 없습니다.');
+      }
+
+      switch (user.provider.toLowerCase()) {
+        case 'kakao':
+          await withdrawKakao();
+          break;
+        case 'google':
+          await withdrawGoogle();
+          break;
+        case 'naver':
+          await withdrawNaver();
+          break;
+        default:
+          // 기본값으로 기존 withdraw 사용 (하위 호환성)
+          await withdraw();
+      }
     } catch (error) {
-      // 에러 처리 로직 추가 가능
+      console.error('회원탈퇴 실패:', error);
+      throw error; // 에러를 다시 던져서 UI에서 처리할 수 있도록 함
     } finally {
       // localStorage에서 토큰 제거
       if (typeof window !== 'undefined') {
@@ -135,56 +154,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // 회원탈퇴 모드는 별도 useEffect에서 처리
-
     checkAuthStatus();
   }, []); // 🔑 한 번만 실행
 
-  // 회원탈퇴 모드 감지 (isAuthenticated 변경 시)
+  // OAuth 로그인 후 처리 (LOGIN_STATE 쿠키 확인)
   useEffect(() => {
-    const checkWithdrawMode = async () => {
-      if (typeof window !== 'undefined') {
-        const withdrawMode = sessionStorage.getItem('withdrawMode');
-        const withdrawProvider = sessionStorage.getItem('withdrawProvider');
-        
-        console.log('회원탈퇴 모드 확인:', { withdrawMode, withdrawProvider, isAuthenticated });
-        
-        if (withdrawMode === 'true' && withdrawProvider && isAuthenticated) {
-          try {
-            // OAuth 인증 완료 후 회원탈퇴 API 호출
-            if (withdrawProvider === 'GOOGLE') {
-              // 구글 회원탈퇴: 백엔드에서 자동으로 처리되므로 직접 API 호출
-              console.log('Google 회원탈퇴 처리');
-              await withdraw(); // 일반 회원탈퇴 API 호출
-            } else if (withdrawProvider === 'NAVER') {
-              // 네이버 회원탈퇴: 백엔드에서 자동으로 처리되므로 직접 API 호출
-              console.log('Naver 회원탈퇴 처리');
-              await withdraw(); // 일반 회원탈퇴 API 호출
-            } else {
-              await withdraw(); // 카카오 회원탈퇴
-            }
-            
-            // 성공 시 상태 초기화
-            sessionStorage.removeItem('withdrawMode');
-            sessionStorage.removeItem('withdrawProvider');
-            sessionStorage.removeItem('returnUrl');
-            resetAuthState();
-            alert('회원탈퇴가 완료되었습니다.');
-            window.location.href = '/';
-          } catch (error) {
-            console.error('회원탈퇴 실패:', error);
-            alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
-            sessionStorage.removeItem('withdrawMode');
-            sessionStorage.removeItem('withdrawProvider');
+    const handleOAuthCallback = () => {
+      if (typeof window === 'undefined') return;
+
+      // LOGIN_STATE 쿠키 확인
+      const loginStateCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('LOGIN_STATE='));
+      
+      if (loginStateCookie) {
+        try {
+          const encoded = loginStateCookie.split('=')[1];
+          const decoded = atob(encoded);
+          const loginState = JSON.parse(decoded);
+          
+          console.log('OAuth 로그인 상태:', loginState);
+          
+          // 새 사용자인 경우 프로필 설정 페이지로 리다이렉트
+          if (loginState.isNewUser) {
+            window.location.href = '/profile-setup';
+            return;
           }
+          
+          // 기존 사용자인 경우 원래 페이지로 리다이렉트
+          const returnUrl = sessionStorage.getItem('returnUrl');
+          if (returnUrl) {
+            sessionStorage.removeItem('returnUrl');
+            window.location.href = returnUrl;
+          }
+          
+        } catch (error) {
+          console.error('LOGIN_STATE 쿠키 파싱 실패:', error);
         }
       }
     };
 
-    if (isAuthenticated) {
-      checkWithdrawMode();
-    }
-  }, [isAuthenticated]);
+    // 페이지 로드 시 OAuth 콜백 처리
+    handleOAuthCallback();
+  }, []);
+
 
   const contextValue: AuthContextType = {
     isAuthenticated,

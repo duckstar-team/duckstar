@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
 import ReplyForm from './ReplyForm';
@@ -217,17 +217,22 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   const [replyPageInfo, setReplyPageInfo] = useState<{ [commentId: number]: PageInfo }>({});
   
   // Intersection Observer를 위한 ref
-  const commentHeaderRef = useRef<HTMLDivElement>(null);
-  const sortingMenuRef = useRef<HTMLDivElement>(null);
   
   // 무한스크롤을 위한 ref
   const loadMoreRef = useRef<HTMLDivElement>(null);
   
+  // 스티키 상태 관리
+  const [isCommentHeaderSticky, setIsCommentHeaderSticky] = useState(false);
+  const [isSortingMenuSticky, setIsSortingMenuSticky] = useState(false);
+  const [rightPanelLeft, setRightPanelLeft] = useState(200); // RightCommentPanel의 left 위치
+  const [commentHeaderHeight, setCommentHeaderHeight] = useState(60); // 댓글 헤더 높이 (기본값)
   
-  // Sticky 상태 관리 (간소화)
-  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
-  const [isSortingSticky, setIsSortingSticky] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(80); // 기본 헤더 높이
+  // 스티키 요소들의 ref
+  const commentHeaderRef = useRef<HTMLDivElement>(null);
+  const sortingMenuRef = useRef<HTMLDivElement>(null);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
+  
+  
   
   // 에피소드 댓글 모달 상태
   const [isEpisodeCommentModalOpen, setIsEpisodeCommentModalOpen] = useState(false);
@@ -503,73 +508,93 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   }, [handleReplySubmit]);
 
 
-  // Intersection Observer를 사용한 스티키 상태 감지 (스타일링용)
+
+
+  // RightCommentPanel의 실제 위치 계산
   useEffect(() => {
-    const headerObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // header가 sticky 상태인지 감지 (스타일링용)
-          setIsHeaderSticky(!entry.isIntersecting);
-        });
-      },
-      { 
-        threshold: 0,
-        rootMargin: '-60px 0px 0px 0px' // 상단 60px 여백
+    const updateRightPanelPosition = () => {
+      if (rightPanelRef.current) {
+        const rect = rightPanelRef.current.getBoundingClientRect();
+        setRightPanelLeft(rect.left);
       }
-    );
-
-    const sortingObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // sorting menu가 sticky 상태인지 감지 (스타일링용)
-          setIsSortingSticky(!entry.isIntersecting);
-        });
-      },
-      { 
-        threshold: 0,
-        rootMargin: `-${60 + headerHeight}px 0px 0px 0px` // 동적 여백 (상단 메뉴 + 헤더 높이)
-      }
-    );
-
-    // 헤더와 소팅 메뉴 관찰 시작
-    if (commentHeaderRef.current) {
-      headerObserver.observe(commentHeaderRef.current);
-    }
-    if (sortingMenuRef.current) {
-      sortingObserver.observe(sortingMenuRef.current);
-    }
-
-    return () => {
-      headerObserver.disconnect();
-      sortingObserver.disconnect();
     };
-  }, [headerHeight]); // 헤더 높이 변경 시 Observer 재생성
 
-  // 헤더 높이 동적 측정
+    // 초기 위치 설정
+    updateRightPanelPosition();
+    
+    // 리사이즈 이벤트 리스너
+    window.addEventListener('resize', updateRightPanelPosition);
+    
+    return () => {
+      window.removeEventListener('resize', updateRightPanelPosition);
+    };
+  }, []);
+
+  // 댓글 헤더 높이 동적 측정
   useEffect(() => {
-    const updateHeaderHeight = () => {
+    const updateCommentHeaderHeight = () => {
       if (commentHeaderRef.current) {
         const height = commentHeaderRef.current.offsetHeight;
         if (height > 0) {
-          setHeaderHeight(height);
+          setCommentHeaderHeight(height);
         }
       }
     };
 
     // 초기 높이 측정
-    const timeoutId = setTimeout(updateHeaderHeight, 100);
-
-    // ResizeObserver로 높이 변화 감지
-    const resizeObserver = new ResizeObserver(updateHeaderHeight);
-    if (commentHeaderRef.current) {
-      resizeObserver.observe(commentHeaderRef.current);
-    }
-
+    updateCommentHeaderHeight();
+    
+    // 필터 상태 변경 시 높이 재측정
+    const timeoutId = setTimeout(updateCommentHeaderHeight, 100);
+    
     return () => {
       clearTimeout(timeoutId);
-      resizeObserver.disconnect();
     };
-  }, []); // 컴포넌트 마운트 시에만 실행
+  }, [activeFilters]); // 필터 상태 변경 시 높이 재측정
+
+  // 스티키 상태 감지 로직
+  useEffect(() => {
+    const handleStickyScroll = () => {
+      if (!commentHeaderRef.current || !sortingMenuRef.current) return;
+      
+      const scrollY = window.scrollY;
+      
+      // 댓글 헤더 스티키 감지
+      const commentHeaderRect = commentHeaderRef.current.getBoundingClientRect();
+      const commentHeaderTop = commentHeaderRect.top + scrollY;
+      const shouldCommentHeaderBeSticky = scrollY >= commentHeaderTop - 60;
+      
+      if (shouldCommentHeaderBeSticky !== isCommentHeaderSticky) {
+        setIsCommentHeaderSticky(shouldCommentHeaderBeSticky);
+      }
+      
+      // 정렬 메뉴 스티키 감지 (댓글 헤더가 스티키일 때만)
+      if (shouldCommentHeaderBeSticky) {
+        const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
+        const sortingMenuTop = sortingMenuRect.top + scrollY;
+        const shouldSortingMenuBeSticky = scrollY >= sortingMenuTop - 60;
+        
+        if (shouldSortingMenuBeSticky !== isSortingMenuSticky) {
+          setIsSortingMenuSticky(shouldSortingMenuBeSticky);
+        }
+      } else {
+        // 댓글 헤더가 스티키가 아니면 정렬 메뉴도 스티키 해제
+        if (isSortingMenuSticky) {
+          setIsSortingMenuSticky(false);
+        }
+      }
+    };
+
+    // 초기 체크
+    handleStickyScroll();
+    
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', handleStickyScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleStickyScroll);
+    };
+  }, [isCommentHeaderSticky, isSortingMenuSticky]);
 
   // 댓글 데이터 로드 - mock 데이터 제거됨
 
@@ -676,7 +701,11 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   }
 
   return (
-    <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
+    <div 
+      ref={rightPanelRef}
+      className="bg-white border-l border-r border-gray-300" 
+      style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}
+    >
       {/* section/episode */}
       <div className="flex justify-center pt-7 pb-1">
         <EpisodeSection 
@@ -690,11 +719,11 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
         />
       </div>
       
-      {/* Sticky 애니 헤더 - 이미지 모달이 열려있으면 숨김 */}
+      {/* 애니 댓글 헤더 - 이미지 모달이 열려있으면 숨김 */}
       {!isImageModalOpen && (
         <div 
-          ref={commentHeaderRef} 
-          className="sticky top-0 z-20 bg-white w-full"
+          ref={commentHeaderRef}
+          className="bg-white w-full"
           style={{ width: '608px' }}
         >
         <div className="size- flex flex-col justify-start items-start gap-5">
@@ -765,26 +794,98 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
         </div>
       </div>
       
-      {/* Sticky 정렬 메뉴 - 이미지 모달이 열려있으면 숨김 */}
+      {/* 정렬 메뉴 - 이미지 모달이 열려있으면 숨김 */}
       {!isImageModalOpen && (
         <div 
-          ref={sortingMenuRef} 
-          className="sticky z-10 bg-white pl-3.5 pt-5"
-          style={{ top: `${headerHeight}px`, width: '608px' }}
+          ref={sortingMenuRef}
+          className="bg-white pl-3.5 pt-5"
+          style={{ width: '608px' }}
         >
           <SortingMenu 
             currentSort={currentSort}
             onSortChange={handleSortChange}
             onScrollToTop={() => {
               setTimeout(() => {
-                // 스티키 헤더들 아래 위치로 스크롤
-                const targetScrollTop = headerHeight + 165;
-                window.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
-                document.documentElement.scrollTop = targetScrollTop;
-                document.body.scrollTop = targetScrollTop;
+                // 댓글 헤더가 스티키되기 시작하는 지점으로 스크롤
+                if (commentHeaderRef.current) {
+                  const commentHeaderRect = commentHeaderRef.current.getBoundingClientRect();
+                  const commentHeaderTop = commentHeaderRect.top + window.scrollY;
+                  const stickyStartPoint = commentHeaderTop - 60; // 헤더 높이만큼 빼기
+                  
+                  window.scrollTo({ 
+                    top: Math.max(0, stickyStartPoint), 
+                    behavior: 'auto' 
+                  });
+                } else {
+                  // fallback: 상단으로 스크롤
+                  window.scrollTo({ top: 0, behavior: 'auto' });
+                }
               }, 100);
             }}
           />
+        </div>
+      )}
+      
+      {/* Sticky 댓글 헤더 - 헤더 아래에 고정 */}
+      {isCommentHeaderSticky && !isImageModalOpen && (
+        <div 
+          className="fixed bg-white border-b border-gray-200 z-30 pb-3"
+          style={{ 
+            top: '60px',
+            left: `${rightPanelLeft}px`,
+            width: '608px',
+            zIndex: 30,
+            transition: 'all 0.3s ease-in-out'
+          }}
+        >
+          <div className="size- flex flex-col justify-start items-start gap-5">
+            <CommentHeader 
+              totalComments={totalCommentCount}
+              variant={activeFilters.length > 0 ? 'withFilters' : 'default'}
+              activeFilters={activeFilters}
+              onClearFilters={handleClearFilters}
+              onRemoveFilter={handleRemoveFilter}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Sticky 정렬 메뉴 - 댓글 헤더 아래에 고정 */}
+      {isSortingMenuSticky && !isImageModalOpen && (
+        <div 
+          className="fixed bg-white border-b border-gray-200 z-30"
+          style={{ 
+            top: `${60 + commentHeaderHeight}px`, // 헤더 + 댓글 헤더 높이
+            left: `${rightPanelLeft}px`,
+            width: '608px',
+            zIndex: 30,
+            transition: 'all 0.3s ease-in-out'
+          }}
+        >
+          <div className="pl-3.5 pt-3">
+            <SortingMenu 
+              currentSort={currentSort}
+              onSortChange={handleSortChange}
+              onScrollToTop={() => {
+                setTimeout(() => {
+                  // 댓글 헤더가 스티키되기 시작하는 지점으로 스크롤
+                  if (commentHeaderRef.current) {
+                    const commentHeaderRect = commentHeaderRef.current.getBoundingClientRect();
+                    const commentHeaderTop = commentHeaderRect.top + window.scrollY;
+                    const stickyStartPoint = commentHeaderTop - 60; // 헤더 높이만큼 빼기
+                    
+                    window.scrollTo({ 
+                      top: Math.max(0, stickyStartPoint), 
+                      behavior: 'auto' 
+                    });
+                  } else {
+                    // fallback: 상단으로 스크롤
+                    window.scrollTo({ top: 0, behavior: 'auto' });
+                  }
+                }, 100);
+              }}
+            />
+          </div>
         </div>
       )}
       
@@ -802,10 +903,6 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             ) : commentsError ? (
               <div className="w-full flex justify-center items-center py-8">
                 <div className="text-red-500">{commentsError}</div>
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="w-full flex justify-center items-center py-8">
-                <div className="text-gray-500">아직 댓글이 없습니다.</div>
               </div>
             ) : (() => {
               // CommentsBoard의 로직을 여기로 이동
@@ -840,7 +937,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
                     <div className="text-gray-400 text-base font-normal font-['Pretendard'] text-center">
                       아직 댓글이 없습니다.
                     </div>
-                    <div className="text-gray-300 text-sm font-normal font-['Pretendard'] text-center mt-2">
+                    <div className="text-gray-400 text-sm font-normal font-['Pretendard'] text-center mt-2">
                       첫 번째 댓글을 작성해보세요!
                     </div>
                   </div>
