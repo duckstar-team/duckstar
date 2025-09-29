@@ -3,12 +3,12 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { updateProfile, startGoogleWithdraw, startNaverWithdraw, withdraw } from '@/api/client';
+import { updateProfile } from '@/api/client';
 import { extractFirstFrameFromGif, isGifFile } from '@/utils/gifFrameExtractor';
 
 export default function ProfileSetupPage() {
   const router = useRouter();
-  const { user, updateUser, isAuthenticated } = useAuth();
+  const { user, updateUser, isAuthenticated, withdraw: withdrawUser } = useAuth();
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profileImageUrl || null);
@@ -183,24 +183,14 @@ export default function ProfileSetupPage() {
 
   const handleWithdraw = () => {
     if (confirm('정말로 회원탈퇴를 하시겠습니까? 탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
-      // 사용자의 OAuth 제공자에 따라 다른 회원탈퇴 방식 사용
-      if (user?.provider === 'GOOGLE') {
-        // 구글 OAuth를 통한 회원탈퇴 - 로그인 상태 유지하면서 OAuth 인증
-        alert('회원탈퇴를 위해 구글 계정 인증이 필요합니다.');
-        startGoogleWithdraw();
-      } else if (user?.provider === 'NAVER') {
-        // 네이버 OAuth를 통한 회원탈퇴 - 로그인 상태 유지하면서 OAuth 인증
-        alert('회원탈퇴를 위해 네이버 계정 인증이 필요합니다.');
-        startNaverWithdraw();
-      } else {
-        // 카카오 또는 기타 제공자의 경우 기존 방식 사용
-        withdraw().then(() => {
-          // 탈퇴 성공 시 홈으로 리다이렉트
-          window.location.href = '/';
-        }).catch((error) => {
-          alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
-        });
-      }
+      // AuthContext의 withdrawUser 사용 (provider별 API 호출)
+      withdrawUser().then(() => {
+        // 탈퇴 성공 시 홈으로 리다이렉트
+        window.location.href = '/';
+      }).catch((error) => {
+        console.error('회원탈퇴 실패:', error);
+        alert(`회원탈퇴에 실패했습니다: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
+      });
     }
   };
 

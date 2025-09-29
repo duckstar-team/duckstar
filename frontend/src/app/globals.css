@@ -28,12 +28,17 @@ html, body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   overflow-y: auto;
-  height: 100%;
+  min-height: 100%;
 }
 
 /* 스티키 요소를 위한 스크롤 컨테이너 설정 */
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto !important;
+}
+
+/* 스크롤 애니메이션 완전 차단 */
+* {
+  scroll-behavior: auto !important;
 }
 
 /* Line Clamp Utilities */

@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef } from 'react';
+import { getCurrentVoteStampImagePath } from '@/utils/voteStampUtils';
 
 // Types
 interface VoteStampProps {
@@ -13,6 +14,7 @@ interface VoteStampProps {
   showTooltip?: boolean;
   onHideTooltip?: () => void;
   showGenderSelection?: boolean;
+  weekDto?: { year: number; startDate: string } | null;
 }
 
 // Constants
@@ -63,7 +65,8 @@ const getNormalStampBackground = (showGenderSelection: boolean, currentVotes: nu
   return 'bg-neutral-600/20';
 };
 
-const getNormalStampImage = (showGenderSelection: boolean, currentVotes: number, maxVotes: number): string => {
+const getNormalStampImage = (showGenderSelection: boolean, currentVotes: number, maxVotes: number, weekDto?: { year: number; startDate: string } | null): string => {
+  // VoteSection에서는 기존 도장 디자인 사용
   if (showGenderSelection) return "/icons/voteSection-normal-default.svg";
   if (currentVotes >= maxVotes) return "/icons/voteSection-normal-full.svg";
   return "/icons/voteSection-normal-default.svg";
@@ -197,13 +200,14 @@ const VoteStamp = forwardRef<HTMLDivElement, VoteStampProps>(({
   showResult = false,
   showTooltip = false,
   onHideTooltip,
-  showGenderSelection = false
+  showGenderSelection = false,
+  weekDto = null
 }, ref) => {
   if (type === 'normal') {
     const stampSizes = STAMP_SIZES.normal;
     const roundedCorners = `${ROUNDED_CORNERS.mobile} ${ROUNDED_CORNERS.tablet} ${ROUNDED_CORNERS.desktop}`;
     const backgroundClass = getNormalStampBackground(showGenderSelection, currentVotes, maxVotes);
-    const imageSrc = getNormalStampImage(showGenderSelection, currentVotes, maxVotes);
+    const imageSrc = getNormalStampImage(showGenderSelection, currentVotes, maxVotes, weekDto);
 
     return (
       <div className="flex items-center gap-3 sm:gap-4 lg:gap-[20px]">

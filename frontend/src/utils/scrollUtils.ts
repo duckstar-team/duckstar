@@ -56,7 +56,11 @@ export function scrollToTop(): void {
  * @param y - Y 좌표
  */
 export function scrollToPosition(y: number): void {
-  window.scrollTo(0, y);
+  window.scrollTo({
+    top: y,
+    left: 0,
+    behavior: 'instant'
+  });
   document.body.scrollTop = y;
   document.documentElement.scrollTop = y;
 }
