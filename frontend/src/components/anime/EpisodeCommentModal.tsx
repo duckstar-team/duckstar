@@ -6,7 +6,7 @@ import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
 import { getThisWeekRecord } from '../../lib/quarterUtils';
 import { useAuth } from '../../context/AuthContext';
-import { startKakaoLogin } from '../../api/client';
+import { useModal } from '../AppContainer';
 
 // API 응답 타입 정의
 interface EpisodeDto {
@@ -68,6 +68,7 @@ export default function EpisodeCommentModal({
   onCommentSubmit
 }: EpisodeCommentModalProps) {
   const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useModal();
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [commentContent, setCommentContent] = useState('');
   const [episodeCurrentPage, setEpisodeCurrentPage] = useState(0);
@@ -131,7 +132,7 @@ export default function EpisodeCommentModal({
     if (!isAuthenticated) {
       const shouldLogin = confirm('댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?');
       if (shouldLogin) {
-        startKakaoLogin();
+        openLoginModal();
       }
       return;
     }
