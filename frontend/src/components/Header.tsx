@@ -20,6 +20,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
   // 덕스타 로고 클릭 시 스크롤 탑으로 이동
   const handleLogoClick = () => {
     sessionStorage.setItem('logo-navigation', 'true');
+    sessionStorage.setItem('home-scroll-top', 'true');
     scrollToTop();
   };
 

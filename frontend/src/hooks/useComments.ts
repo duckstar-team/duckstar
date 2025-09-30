@@ -17,8 +17,11 @@ import {
   PageInfo
 } from '../api/comments';
 import { SortOption } from '../components/SortingMenu';
+import { useModal } from '../components/AppContainer';
 
 export function useComments(animeId: number) {
+  const { openLoginModal } = useModal();
+  
   // 댓글 관련 상태
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -43,7 +46,7 @@ export function useComments(animeId: number) {
   }, [selectedEpisodeIds]);
 
   // 댓글 데이터 로딩
-  const loadComments = useCallback(async (page: number = 0, reset: boolean = false, resetPage: boolean = true) => {
+  const loadComments = useCallback(async (page: number = 0, reset: boolean = false, resetPage: boolean = true, skipLoadingState: boolean = false) => {
     if (!animeId) return;
     
     // 중복 호출 방지
@@ -53,9 +56,9 @@ export function useComments(animeId: number) {
     
     try {
       isLoadingRef.current = true;
-      if (reset) {
+      if (reset && !skipLoadingState) {
         setCommentsLoading(true);
-      } else {
+      } else if (!skipLoadingState) {
         setLoadingMore(true);
       }
       setCommentsError(null);
@@ -85,8 +88,10 @@ export function useComments(animeId: number) {
     } catch (err) {
       setCommentsError('댓글을 불러오는 중 오류가 발생했습니다.');
     } finally {
-      setCommentsLoading(false);
-      setLoadingMore(false);
+      if (!skipLoadingState) {
+        setCommentsLoading(false);
+        setLoadingMore(false);
+      }
       isLoadingRef.current = false;
     }
   }, [animeId, currentSort]); // selectedEpisodeIds 의존성 제거
@@ -97,6 +102,13 @@ export function useComments(animeId: number) {
       loadComments(0, true);
     }
   }, [animeId]); // loadComments 의존성 제거
+
+  // 정렬 옵션 변경 시 댓글 재로드
+  useEffect(() => {
+    if (animeId) {
+      loadComments(0, true, true, true); // 로딩 상태 건너뛰기
+    }
+  }, [currentSort, animeId]);
 
   // 댓글 생성
   const createCommentHandler = useCallback(async (request: CommentRequestDto) => {
@@ -156,7 +168,14 @@ export function useComments(animeId: number) {
         );
       }
     } catch (error) {
-      alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+      if (error instanceof Error && error.message.includes('401')) {
+        const shouldLogin = confirm('로그인 후에 좋아요를 남길 수 있습니다. 로그인하시겠습니까?');
+        if (shouldLogin) {
+          openLoginModal();
+        }
+      } else {
+        alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+      }
     }
   }, [comments]);
 

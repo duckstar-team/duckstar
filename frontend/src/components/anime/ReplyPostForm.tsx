@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { startKakaoLogin } from '../../api/client';
+import { useModal } from '../AppContainer';
 import { useImageUpload, UploadedImage } from '../../hooks/useImageUpload';
 import ImageUploadPreview from '../common/ImageUploadPreview';
 
@@ -28,6 +28,7 @@ export default function ReplyPostForm({
   listenerId
 }: ReplyPostFormProps) {
   const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useModal();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -235,7 +236,7 @@ export default function ReplyPostForm({
               if (!isAuthenticated) {
                 const shouldLogin = confirm('로그인 후에 답글을 남길 수 있습니다. 로그인하시겠습니까?');
                 if (shouldLogin) {
-                  startKakaoLogin();
+                  openLoginModal();
                 }
               }
             }}

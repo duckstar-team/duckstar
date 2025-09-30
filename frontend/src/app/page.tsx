@@ -14,25 +14,28 @@ import { HomeDto, WeekDto, RankPreviewDto, DuckstarRankPreviewDto } from '@/type
 import { useAdvancedScrollRestoration } from '@/hooks/useAdvancedScrollRestoration';
 
 // 순위 변동 타입 결정 함수
-function getRankDiffType(rankDiff: number, consecutiveWeeks: number): "new" | "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "Zero" {
-  // consecutiveWeeks가 2 이상일 때만 same-rank 우선 적용
-  if (consecutiveWeeks >= 2) {
-    return "same-rank";
-  }
-  
-  // consecutiveWeeks가 0이고 rankDiff가 0일 때 NEW
-  if (consecutiveWeeks === 0 && rankDiff === 0) {
-    return "new";
-  }
-  
-  // rankDiff에 따른 처리
+function getRankDiffType(rankDiff: number, consecutiveWeeks: number, isAnilab: boolean = false): "new" | "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "Zero" {
+  // rankDiff가 0이 아니면 up/down 우선 처리
   if (rankDiff > 0) {
     return rankDiff >= 5 ? "up-greater-equal-than-5" : "up-less-than-5";
   }
   if (rankDiff < 0) {
     return rankDiff <= -5 ? "down-greater-equal-than-5" : "down-less-than-5";
   }
-  if (rankDiff === 0) return "same-rank";
+  
+  // 그 외의 경우 Zero, NEW, consecutive 판단
+  
+  // consecutiveWeeks가 2 이상일 때 same-rank
+  if (consecutiveWeeks >= 2) {
+    return "same-rank";
+  }
+  
+  // consecutiveWeeks가 1일 때 NEW (anilab이 아닌 경우에만)
+  if (consecutiveWeeks === 1 && !isAnilab) {
+    return "new";
+  }
+  
+  // anilab이거나 consecutiveWeeks가 0일 때 Zero
   return "Zero";
 }
 
@@ -207,14 +210,27 @@ export default function Home() {
     }
   }, [homeData]);
 
-  // 페이지 로드 시 스크롤 복원 (검색 화면과 동일한 방식)
+  // 비상대책: 홈 스크롤 탑 로직 완전 단순화
   useEffect(() => {
     if (isInitialized && homeData?.result) {
+      // 홈 스크롤 탑 플래그가 있으면 무조건 스크롤 탑으로 이동 (다른 조건 무시)
+      const isHomeScrollTop = sessionStorage.getItem('home-scroll-top') === 'true';
+      
+      if (isHomeScrollTop) {
+        console.log('🚨 비상대책: 홈 스크롤 탑으로 강제 이동');
+        scrollToTop();
+        // 모든 플래그 정리
+        sessionStorage.clear();
+        return;
+      }
+      
+      // 홈 스크롤 탑이 아닌 경우에만 애니 상세화면에서 돌아온 스크롤 복원 처리
       const savedY = sessionStorage.getItem(`scroll-${scrollKey}`);
       const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
       
       if (savedY && isFromAnimeDetail) {
         const y = parseInt(savedY);
+        console.log('🏠 애니 상세화면에서 돌아온 스크롤 복원:', y);
         
         // 페이지 로드 즉시 복원 (애니메이션 없이)
         window.scrollTo({
@@ -239,14 +255,27 @@ export default function Home() {
     }
   }, [isInitialized, homeData, scrollKey]);
 
-  // 데이터 로드 후 스크롤 복원 (검색 화면과 동일한 방식)
+  // 비상대책: 데이터 로드 후 스크롤 복원 로직 단순화
   useEffect(() => {
     if (homeData?.result && isInitialized) {
+      // 홈 스크롤 탑 플래그가 있으면 무조건 스크롤 탑으로 이동 (다른 조건 무시)
+      const isHomeScrollTop = sessionStorage.getItem('home-scroll-top') === 'true';
+      
+      if (isHomeScrollTop) {
+        console.log('🚨 비상대책: 홈 스크롤 탑으로 강제 이동 (데이터 로드 후)');
+        scrollToTop();
+        // 모든 플래그 정리
+        sessionStorage.clear();
+        return;
+      }
+      
+      // 홈 스크롤 탑이 아닌 경우에만 애니 상세화면에서 돌아온 스크롤 복원 처리
       const savedY = sessionStorage.getItem(`scroll-${scrollKey}`);
       const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
       
       if (savedY && isFromAnimeDetail) {
         const y = parseInt(savedY);
+        console.log('🏠 애니 상세화면에서 돌아온 스크롤 복원 (데이터 로드 후):', y);
         
         // 실제 스크롤 컨테이너에 복원
         const mainElement = document.querySelector('main');
@@ -347,11 +376,8 @@ export default function Home() {
 
   // 주차 변경 핸들러 (모든 패널 데이터를 함께 로드)
   const handleLeftPanelWeekChange = async (week: WeekDto) => {
-    // 스크롤 위치 저장
-    saveCurrentScrollPosition();
-    
-    // 주차 변경을 위한 네비게이션 타입 설정
-    sessionStorage.setItem('navigation-type', 'week-change');
+    // 주차 변경 시에는 스크롤 복원하지 않음 (주차 변경은 스크롤 복원 불필요)
+    console.log('🏠 주차 변경 시작:', week.year, week.quarter, week.week);
     
     setSelectedWeek(week);
     
@@ -366,8 +392,8 @@ export default function Home() {
         await updateAllPanelData(response.result, week);
         console.log('🏠 ✅ 주차 변경 완료 - 모든 패널이 주차', week.year, week.quarter, week.week, '로 통일됨');
         
-        // 스크롤 복원
-        setTimeout(() => restoreScrollPosition(), 100);
+        // 주차 변경 시에는 스크롤 복원하지 않음
+        console.log('🏠 주차 변경 완료 - 스크롤 복원 없음');
       } else {
         handleWeekChangeError(`데이터 로딩 실패: ${response.message}`);
       }
@@ -378,7 +404,7 @@ export default function Home() {
     }
   };
 
-  // 현재 스크롤 위치 저장
+  // 현재 스크롤 위치 저장 (애니 상세화면에서 돌아올 때만 사용)
   const saveCurrentScrollPosition = () => {
     const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
     if (currentScrollY > 0) {
@@ -482,7 +508,7 @@ export default function Home() {
         {/* 텍스트 오버레이 */}
         <div className="absolute inset-0 flex items-center justify-center px-4">
           <div className="text-white font-bold text-[33.83px] leading-tight text-left" style={{ fontFamily: 'Pretendard' }}>
-          매 분기 신작 애니 차트 및<br />
+          분기 신작 애니 차트와<br />
           시간표 서비스 ✨ 한국에서 런칭 !
           </div>
         </div>
@@ -574,9 +600,9 @@ export default function Home() {
                     const safeRankDiff = rankPreview.rankDiff ?? 0;
                     const safeConsecutiveWeeks = rankPreview.consecutiveWeeksAtSameRank ?? 0;
                     
-                    // Anilab에서만 NEW를 Zero로 변경, Anime Trending에서는 NEW 그대로 사용
-                    const rankDiffType = getRankDiffType(safeRankDiff, safeConsecutiveWeeks);
-                    const finalRankDiffType = (selectedRightTab === 'anilab' && rankDiffType === "new") ? "Zero" : rankDiffType;
+                    // anilab 데이터인지 확인하여 NEW 처리
+                    const isAnilab = selectedRightTab === 'anilab';
+                    const finalRankDiffType = getRankDiffType(safeRankDiff, safeConsecutiveWeeks, isAnilab);
                     
                     return (
                       <AbroadRankInfo 

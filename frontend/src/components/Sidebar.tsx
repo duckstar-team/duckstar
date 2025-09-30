@@ -134,6 +134,17 @@ function NavButton({
     // 네비게이션 시작
     startNavigation();
     
+    // 홈으로 이동할 때는 사이드바 네비게이션임을 표시하고 스크롤 탑으로 이동
+    if (href === '/') {
+      sessionStorage.setItem('sidebar-navigation', 'true');
+      sessionStorage.setItem('home-scroll-top', 'true');
+      scrollToTop();
+      return;
+    }
+    
+    // 다른 메뉴로 이동할 때는 홈 스크롤 탑 플래그를 제거하고 스크롤 탑 실행하지 않음
+    sessionStorage.removeItem('home-scroll-top');
+    
     // search 화면으로 이동할 때는 사이드바 네비게이션임을 표시
     if (href === '/search') {
       // 사이드바 네비게이션임을 표시하는 플래그 설정
@@ -150,7 +161,9 @@ function NavButton({
     if (href === '/vote') {
       sessionStorage.setItem('sidebar-navigation', 'true');
     }
-    scrollToTop();
+    
+    // 다른 메뉴로 이동할 때는 스크롤 탑 실행하지 않음 (번쩍 이동 방지)
+    // scrollToTop(); // 제거!
   };
 
   return (

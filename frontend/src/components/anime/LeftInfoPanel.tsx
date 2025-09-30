@@ -219,24 +219,34 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
     setHoveredBarStyle(prev => ({ ...prev, opacity: 0 }));
   };
 
+  // anime 객체가 null인 경우 early return
+  if (!anime) {
+    return (
+      <div className="w-[612px] h-[1144px] bg-white rounded-xl border border-[#D1D1D6] flex items-center justify-center">
+        <div className="text-gray-500">애니메이션 정보를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // anime 객체가 null일 경우를 대비한 기본값 설정
   const {
-    mainThumbnailUrl,
-    mainImageUrl,
-    thumbnailImageUrl,
-    thumbnailPosterUrl,
-    titleKor,
-    titleJpn,
-    status,
-    dayOfWeek,
-    scheduledAt,
-    genre,
-    medium,
+    mainThumbnailUrl = '',
+    mainImageUrl = '',
+    thumbnailImageUrl = '',
+    thumbnailPosterUrl = '',
+    titleKor = '',
+    titleJpn = '',
+    status = '',
+    dayOfWeek = '',
+    scheduledAt = '',
+    genre = '',
+    medium = '',
     year = 2025,
     quarter = 2,
-              studio = '',
-          director = '',
-          source = '',
-          startDate = '',
+    studio = '',
+    director = '',
+    source = '',
+    startDate = '',
           rating = '',
           synopsis = '',
     officialSite,
