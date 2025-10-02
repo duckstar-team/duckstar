@@ -62,16 +62,19 @@ export default function AnimeDetailClient() {
   
   // 이전 화면으로 돌아가기 (스크롤 복원)
   const navigateBackToSearch = () => {
-    console.log('🔙 navigateBackToSearch 함수 호출됨');
     // 스크롤 복원을 위한 네비게이션
     
     // to-anime-detail 플래그가 있으면 from-anime-detail 플래그 설정
     const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
-    console.log('🔍 상세화면에서 to-anime-detail 확인:', toAnimeDetail);
     if (toAnimeDetail === 'true') {
       sessionStorage.setItem('from-anime-detail', 'true');
       sessionStorage.removeItem('to-anime-detail');
-      console.log('🎬 from-anime-detail 플래그 설정 완료');
+      
+      // 검색 페이지의 스크롤 위치 확인
+      const savedScrollY = sessionStorage.getItem('scroll-search-return');
+      if (savedScrollY) {
+      } else {
+      }
       
       // vote-result-scroll이 있으면 투표 결과 화면에서 온 것으로 판단
       const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
@@ -92,13 +95,11 @@ export default function AnimeDetailClient() {
   // 컴포넌트 언마운트 시 from-anime-detail 플래그 설정
   useEffect(() => {
     return () => {
-      console.log('🔙 컴포넌트 언마운트 감지');
       const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
       if (toAnimeDetail === 'true') {
         sessionStorage.setItem('from-anime-detail', 'true');
         sessionStorage.setItem('detail-restore-done', 'true'); // 즉시 설정
         sessionStorage.removeItem('to-anime-detail');
-        console.log('🎬 from-anime-detail 플래그 설정 완료 (언마운트)');
       }
     };
   }, []);
@@ -122,7 +123,6 @@ export default function AnimeDetailClient() {
     // to-anime-detail 플래그가 있으면 상세화면 진입으로 판단
     const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
     if (toAnimeDetail === 'true') {
-      console.log('🎬 상세화면: 스크롤 맨 위로 강제 이동');
       
       // 여러 방법으로 스크롤을 맨 위로 강제 이동
       window.scrollTo(0, 0);
@@ -151,7 +151,6 @@ export default function AnimeDetailClient() {
         sessionStorage.setItem('to-vote-result', 'true');
       }
     } else {
-      console.log('🎬 상세화면: 스크롤 강제 이동 건너뛰기 (홈페이지에서 돌아온 경우)');
     }
   }, []);
 
@@ -413,7 +412,6 @@ export default function AnimeDetailClient() {
 
   // 뒤로가기 핸들러 (search 화면으로만 스크롤 복원)
   const handleBack = () => {
-    console.log('🔙 handleBack 함수 호출됨');
     navigateBackToSearch();
   };
 

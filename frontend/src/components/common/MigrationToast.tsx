@@ -13,20 +13,65 @@ export default function MigrationToast() {
 
 
   useEffect(() => {
+    // 로그인 시점에서 마이그레이션 정보 확인
+    // URL 파라미터나 세션 스토리지에서 마이그레이션 완료 정보 확인
+    const migrationCompleted = searchParams.get('migration_completed');
+    const sessionMigrationCompleted = sessionStorage.getItem('migration_completed');
+    
+    
+    // 개발 환경에서 마이그레이션 토스트 테스트 (임시)
+    if (process.env.NODE_ENV === 'development') {
+      const testMigration = searchParams.get('test_migration');
+      if (testMigration === 'true') {
+        setShowToast(true);
+        
+        // 6초 후 자동으로 토스트 숨기기
+        timerRef.current = setTimeout(() => {
+          setShowToast(false);
+          timerRef.current = null;
+        }, 6000);
+        
+        // URL에서 파라미터 제거
+        const url = new URL(window.location.href);
+        url.searchParams.delete('test_migration');
+        window.history.replaceState({}, '', url.toString());
+        return;
+      }
+    }
+    
+    if (migrationCompleted === 'true' || sessionMigrationCompleted === 'true') {
+      setShowToast(true);
+      
+      // 6초 후 자동으로 토스트 숨기기
+      timerRef.current = setTimeout(() => {
+        setShowToast(false);
+        timerRef.current = null;
+      }, 6000);
+      
+      // URL에서 파라미터 제거
+      if (migrationCompleted === 'true') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('migration_completed');
+        window.history.replaceState({}, '', url.toString());
+      }
+      
+      // 세션 스토리지에서 플래그 제거
+      if (sessionMigrationCompleted === 'true') {
+        sessionStorage.removeItem('migration_completed');
+      }
+      return;
+    }
+    
     // LOGIN_STATE 쿠키 확인
     const loginState = getLoginState();
-    console.log('MigrationToast - loginState:', loginState);
     
     if (loginState) {
-      console.log('MigrationToast - isNewUser:', loginState.isNewUser, 'isMigrated:', loginState.isMigrated);
       
       // isNewUser이면 프로필 설정 페이지로 이동 (returnUrl 보존)
       if (loginState.isNewUser) {
-        console.log('MigrationToast - 신규 사용자, 프로필 설정으로 이동');
         
         // isMigrated=true인 경우에만 토스트 표시 플래그 설정
         if (loginState.isMigrated) {
-          console.log('MigrationToast - 신규 사용자이지만 마이그레이션됨, 토스트 플래그 설정');
           sessionStorage.setItem('pendingMigrationToast', 'true');
         }
         
@@ -38,7 +83,6 @@ export default function MigrationToast() {
       
       // isMigrated이면 토스트 표시
       if (loginState.isMigrated) {
-        console.log('MigrationToast - 마이그레이션 토스트 표시');
         setShowToast(true);
         
         // 6초 후 자동으로 토스트 숨기기
@@ -50,9 +94,7 @@ export default function MigrationToast() {
       
       // returnUrl이 있으면 해당 페이지로 이동
       const returnUrl = sessionStorage.getItem('returnUrl');
-      console.log('MigrationToast - returnUrl:', returnUrl);
-      if (returnUrl && returnUrl !== window.location.href) {
-        console.log('MigrationToast - returnUrl로 이동');
+        if (returnUrl && returnUrl !== window.location.href) {
         sessionStorage.removeItem('returnUrl');
         router.replace(returnUrl);
         return;
@@ -61,14 +103,11 @@ export default function MigrationToast() {
       // LOGIN_STATE 쿠키 삭제
       clearLoginState();
     } else {
-      console.log('MigrationToast - loginState 없음');
       
       // 프로필 설정 완료 후 토스트 표시 (isMigrated=true인 경우)
       const pendingMigrationToast = sessionStorage.getItem('pendingMigrationToast');
-      console.log('MigrationToast - pendingMigrationToast:', pendingMigrationToast);
       
       if (pendingMigrationToast === 'true') {
-        console.log('MigrationToast - 프로필 설정 완료 후 마이그레이션 토스트 표시');
         setShowToast(true);
         
         // 6초 후 자동으로 토스트 숨기기

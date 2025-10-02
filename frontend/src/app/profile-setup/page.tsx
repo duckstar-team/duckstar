@@ -126,14 +126,19 @@ export default function ProfileSetupPage() {
       const returnUrl = sessionStorage.getItem('returnUrl');
       if (returnUrl) {
         sessionStorage.removeItem('returnUrl');
-        window.location.href = returnUrl;
+        setTimeout(() => {
+          window.location.href = returnUrl;
+        }, 1000); // 1초 지연
       } else {
-        window.location.href = '/';
+        // returnUrl이 없으면 홈으로 리다이렉트
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000); // 1초 지연
       }
+      // 성공 시에는 로딩 상태를 유지 (리다이렉트까지)
     } catch (err) {
       setError(err instanceof Error ? err.message : '프로필 업데이트에 실패했습니다.');
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // 에러 시에만 로딩 상태 해제
     }
   };
 
@@ -170,14 +175,18 @@ export default function ProfileSetupPage() {
       const returnUrl = sessionStorage.getItem('returnUrl');
       if (returnUrl) {
         sessionStorage.removeItem('returnUrl');
-        window.location.href = returnUrl;
+        setTimeout(() => {
+          window.location.href = returnUrl;
+        }, 1000); // 1초 지연
       } else {
-        window.location.href = '/';
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000); // 1초 지연
       }
+      // 성공 시에는 로딩 상태를 유지 (리다이렉트까지)
     } catch (err) {
       setError(err instanceof Error ? err.message : '프로필 설정에 실패했습니다.');
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // 에러 시에만 로딩 상태 해제
     }
   };
 
@@ -188,7 +197,7 @@ export default function ProfileSetupPage() {
         // 탈퇴 성공 시 홈으로 리다이렉트
         window.location.href = '/';
       }).catch((error) => {
-        console.error('회원탈퇴 실패:', error);
+error('회원탈퇴 실패:', error);
         alert(`회원탈퇴에 실패했습니다: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
       });
     }
@@ -296,17 +305,32 @@ export default function ProfileSetupPage() {
             <button
               type="submit"
               disabled={isLoading || (!nickname.trim() && !profileImage) || (!!nickname.trim() && nickname.trim().length < 2)}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2"
             >
-              {isLoading ? '저장 중...' : '프로필 저장'}
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>설정 중...</span>
+                </>
+              ) : (
+                '프로필 저장'
+              )}
             </button>
             
             <button
               type="button"
               onClick={handleSkip}
-              className="w-full text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+              disabled={isLoading}
+              className="w-full text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
-              나중에 설정하기
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                  <span>설정 중...</span>
+                </>
+              ) : (
+                '나중에 설정하기'
+              )}
             </button>
           </div>
         </form>

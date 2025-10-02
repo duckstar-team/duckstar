@@ -7,6 +7,7 @@ import CommentPostForm from './CommentPostForm';
 import { getThisWeekRecord } from '../../lib/quarterUtils';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../AppContainer';
+import { showToast } from '../common/Toast';
 
 // API 응답 타입 정의
 interface EpisodeDto {
@@ -72,6 +73,7 @@ export default function EpisodeCommentModal({
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [commentContent, setCommentContent] = useState('');
   const [episodeCurrentPage, setEpisodeCurrentPage] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // 분기/주차 계산 함수
   const getQuarterAndWeek = (date: Date) => {
@@ -122,6 +124,8 @@ export default function EpisodeCommentModal({
       if (prev.includes(episodeId)) {
         return []; // 선택 해제
       } else {
+        // 에피소드 선택 시 경고 메시지 숨기기
+        setErrorMessage('');
         return [episodeId]; // 새로 선택 (기존 선택 자동 해제)
       }
     });
@@ -129,31 +133,34 @@ export default function EpisodeCommentModal({
 
   // 댓글 제출 핸들러
   const handleCommentSubmit = async (content: string, images?: File[]) => {
+    setErrorMessage(''); // 에러 메시지 초기화
+
     if (!isAuthenticated) {
-      const shouldLogin = confirm('댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?');
-      if (shouldLogin) {
-        openLoginModal();
-      }
-      return;
+      setErrorMessage('댓글을 작성하려면 로그인이 필요합니다.');
+      return Promise.reject(new Error('로그인이 필요합니다.'));
     }
 
     if (selectedEpisodeIds.length === 0) {
-      alert('댓글을 작성할 에피소드를 선택해주세요.');
-      return;
+      setErrorMessage('댓글을 작성할 에피소드를 선택해주세요.');
+      return Promise.reject(new Error('에피소드를 선택해주세요.'));
     }
 
     if (!content.trim() && (!images || images.length === 0)) {
-      alert('댓글 내용을 입력하거나 이미지를 업로드해주세요.');
-      return;
+      setErrorMessage('댓글 내용을 입력하거나 이미지를 업로드해주세요.');
+      return Promise.reject(new Error('댓글 내용을 입력해주세요.'));
     }
 
     try {
       await onCommentSubmit?.(selectedEpisodeIds, content, images);
       setCommentContent('');
       setSelectedEpisodeIds([]);
+      setErrorMessage('');
+      // 성공 메시지 표시
+      showToast.success(`${animeData?.animeInfoDto?.titleKor || '애니메이션'}에 댓글이 성공적으로 작성되었습니다.`);
       onClose();
     } catch (error) {
-      alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
+      setErrorMessage('댓글 작성에 실패했습니다. 다시 시도해주세요.');
+      throw error;
     }
   };
 
@@ -255,12 +262,35 @@ export default function EpisodeCommentModal({
                 </div>
               )}
             </div>
+            
+            {/* 에러 메시지 표시 */}
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-red-600 font-['Pretendard']">
+                    {errorMessage}
+                  </p>
+                  {!isAuthenticated && errorMessage.includes('로그인') && (
+                    <button
+                      onClick={() => {
+                        setErrorMessage('');
+                        openLoginModal();
+                      }}
+                      className="ml-3 px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors font-['Pretendard']"
+                    >
+                      로그인
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <div className="bg-gray-50 rounded-lg p-4 pr-25 flex justify-center">
               <div className="w-full max-w-md">
                 <CommentPostForm
                   onSubmit={handleCommentSubmit}
                   onImageUpload={(file) => {
-                    // 이미지 업로드 기능은 현재 구현되지 않음
+                    // 이미지 업로드 기능 활성화
                   }}
                   placeholder="선택한 에피소드에 대한 댓글을 작성해주세요..."
                 />

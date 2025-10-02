@@ -121,7 +121,6 @@ export function useAdvancedScrollRestoration(
       return;
     }
 
-    console.log('💾 스크롤 저장:', { scrollKey, scrollY });
 
     // 스크롤 위치 저장
     sessionStorage.setItem(`scroll-${scrollKey}`, scrollY.toString());
@@ -141,21 +140,16 @@ export function useAdvancedScrollRestoration(
     // 상세화면 복원이 이미 완료된 경우 다른 복원 방지
     const detailRestoreDone = sessionStorage.getItem('detail-restore-done');
     if (detailRestoreDone === 'true') {
-      console.log('🔄 상세화면 복원 완료로 인해 다른 복원 건너뛰기');
       return;
     }
     
     const savedY = sessionStorage.getItem(`scroll-${scrollKey}`);
-    console.log('🔄 스크롤 복원 시도:', { scrollKey, savedY });
-    
     if (!savedY) {
-      console.log('🔄 저장된 스크롤 위치 없음:', scrollKey);
       return;
     }
     
     const y = parseInt(savedY);
     if (isNaN(y) || y < 0) {
-      console.log('🔄 잘못된 스크롤 위치:', y);
       return;
     }
     
@@ -169,7 +163,6 @@ export function useAdvancedScrollRestoration(
     
     isRestoringRef.current = true;
     
-    console.log('🔄 스크롤 복원:', { scrollKey, y });
     
     // 🚨 비상대책: 완전 즉시 복원 (애니메이션 0%)
     // 1. CSS scroll-behavior 강제 무시
@@ -248,7 +241,6 @@ export function useAdvancedScrollRestoration(
       });
     } else if (fromDetail === 'true') {
       // 상세화면에서 돌아온 경우 스크롤 복원
-      console.log('🔄 상세화면에서 돌아온 경우 스크롤 복원');
       
       // 상세화면 복원 플래그를 즉시 설정 (다른 복원 방지)
       sessionStorage.setItem('detail-restore-done', 'true');
@@ -257,41 +249,34 @@ export function useAdvancedScrollRestoration(
       const savedY = sessionStorage.getItem('scroll-search-return');
       if (savedY) {
         const y = parseInt(savedY);
-        console.log('🔄 상세화면 복원:', { y });
         
         // 즉시 스크롤 복원 (지연 없음) - 한 번만 실행
         window.scrollTo({ top: y, left: 0, behavior: 'instant' });
         document.body.scrollTop = y;
         document.documentElement.scrollTop = y;
-        console.log('🔄 스크롤 복원 완료:', window.scrollY);
         
         // 0ms 지연으로 즉시 강제 유지
         setTimeout(() => {
           window.scrollTo({ top: y, left: 0, behavior: 'instant' });
           document.body.scrollTop = y;
           document.documentElement.scrollTop = y;
-          console.log('🔄 스크롤 위치 강제 유지:', window.scrollY);
         }, 0);
       }
       
       sessionStorage.removeItem(navigationTypes.detail || 'from-anime-detail');
     } else if (seasonChange === 'season-change') {
       // 시즌 변경인 경우 스크롤 복원
-      console.log('🔄 시즌 변경 감지, 스크롤 복원 시작');
-      console.log('🔄 현재 스크롤 키:', scrollKey);
       
       // 시즌 변경 시에는 현재 스크롤 키로 복원
       const savedY = sessionStorage.getItem(`scroll-${scrollKey}`);
       if (savedY) {
         const y = parseInt(savedY);
-        console.log('🔄 시즌 변경 스크롤 복원:', { scrollKey, y });
         
         // 즉시 스크롤 복원
         window.scrollTo(0, y);
         document.body.scrollTop = y;
         document.documentElement.scrollTop = y;
       } else {
-        console.log('🔄 시즌 변경: 저장된 스크롤 위치 없음');
       }
       
       sessionStorage.removeItem('navigation-type');
@@ -424,7 +409,7 @@ export function useAdvancedScrollRestoration(
               return;
             }
           } catch (error) {
-            console.error('저장된 스크롤 위치 파싱 실패:', error);
+console.error('저장된 스크롤 위치 파싱 실패:', error);
           }
         }
         
@@ -443,13 +428,11 @@ export function useAdvancedScrollRestoration(
     // 애니메이션 상세화면으로 이동하는 경우 to-anime-detail 플래그 설정
     if (url.includes('/animes/')) {
       sessionStorage.setItem('to-anime-detail', 'true');
-      console.log('🎬 to-anime-detail 플래그 설정:', url);
       
       // 현재 스크롤 위치를 즉시 저장 (고정된 키 사용)
       const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
       if (currentScrollY > 0) {
         sessionStorage.setItem('scroll-search-return', currentScrollY.toString());
-        console.log('💾 애니메이션 카드 클릭 시 스크롤 저장:', { key: 'scroll-search-return', scrollY: currentScrollY });
       }
     }
     

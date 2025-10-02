@@ -1,7 +1,6 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { getCurrentVoteStampImagePath } from '@/utils/voteStampUtils';
 
 // Types
 interface VoteStampProps {

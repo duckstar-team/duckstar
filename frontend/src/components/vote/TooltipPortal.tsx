@@ -48,18 +48,18 @@ const STYLES = {
     filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.15))',
   },
   position: {
-    top: -26,
+    top: -10,
     transform: 'translateX(-50%)',
     zIndex: 999999,
   },
   desktopBonusPosition: {
-    top: -75,
+    top: -50,
     transform: 'translateX(-50%)',
     zIndex: 999999,
   },
   desktopMaxVotesPosition: {
-    top: -75,
-    transform: 'translateX(-50%)',
+    top: -50,
+    transform: 'translateX(-50%)', // 정확한 중앙 정렬
     zIndex: 999999,
   },
 } as const;
@@ -126,9 +126,7 @@ const getOverlayClasses = (type: 'bonus' | 'max-votes') => {
 
 const getContainerClasses = (type: 'bonus' | 'max-votes') => {
   const baseClasses = 'relative w-max pointer-events-auto';
-  const transformClasses = type === 'bonus' 
-    ? 'translate-x-[5px] -translate-y-[5px]' 
-    : '';
+  const transformClasses = 'translate-x-[-215px] -translate-y-[5px]'; // 오프셋 줄임
   
   return `${baseClasses} ${transformClasses}`.trim();
 };
@@ -138,7 +136,11 @@ const TooltipBalloon = ({ type }: { type: 'bonus' | 'max-votes' }) => {
   const config = TOOLTIP_CONFIG[type];
   
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.2, duration: 0.3 }}
+    >
       {/* Mobile balloon */}
       <img
         src="/icons/textBalloon.svg"
@@ -157,7 +159,7 @@ const TooltipBalloon = ({ type }: { type: 'bonus' | 'max-votes' }) => {
         className="w-auto h-auto hidden md:block"
         style={STYLES.tooltip}
       />
-    </>
+    </motion.div>
   );
 };
 
@@ -165,18 +167,28 @@ const TooltipText = ({ type }: { type: 'bonus' | 'max-votes' }) => {
   const textContent = getTextContent(type);
   
   return (
-    <div className={getOverlayClasses(type)}>
+    <motion.div 
+      className={getOverlayClasses(type)}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.3 }}
+    >
       <div className={getTextClasses(type)}>
         <p className={`whitespace-pre ${getLineHeightClasses(type)}`}>
           {textContent.mobile}
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 const HideButton = ({ onHide }: { onHide: () => void }) => (
-  <div className="absolute top-1 right-1">
+  <motion.div 
+    className="absolute top-1 right-1"
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 0.4, duration: 0.3 }}
+  >
     <motion.button
       className="w-4 h-4 flex items-center justify-center cursor-pointer"
       whileHover={{ scale: 1.1 }}
@@ -189,7 +201,7 @@ const HideButton = ({ onHide }: { onHide: () => void }) => (
         className="w-full h-full"
       />
     </motion.button>
-  </div>
+  </motion.div>
 );
 
 // Main component
@@ -210,7 +222,7 @@ export default function TooltipPortal({
   const topPosition = position.y + desktopPosition.top;
 
   return createPortal(
-    <div 
+    <motion.div 
       className="fixed pointer-events-none"
       style={{
         left: `${position.x}px`,
@@ -218,16 +230,35 @@ export default function TooltipPortal({
         transform: desktopPosition.transform,
         zIndex: 9999999, // 헤더보다 확실히 높게 설정
       }}
+      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1, 
+        y: 0,
+        x: 0 // 위치 전환을 위한 x 애니메이션 추가
+      }}
+      exit={{ opacity: 0, scale: 0.8, y: 10 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 200, 
+        damping: 20,
+        duration: 0.3
+      }}
     >
-      <div className={getContainerClasses(type)}>
+      <motion.div 
+        className={getContainerClasses(type)}
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.3 }}
+      >
         <TooltipBalloon type={type} />
         <TooltipText type={type} />
         
         {config.showHideButton && onHide && (
           <HideButton onHide={onHide} />
         )}
-      </div>
-    </div>,
+      </motion.div>
+    </motion.div>,
     document.body
   );
 }

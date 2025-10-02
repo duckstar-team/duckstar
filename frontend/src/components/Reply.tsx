@@ -76,10 +76,10 @@ const Reply: React.FC<ReplyProps> = ({
         {/* 댓글 내용 */}
         <div className="basis-0 box-border content-stretch flex flex-col gap-[5px] grow items-start justify-start min-h-px min-w-px pb-0 pt-[3px] px-0 relative shrink-0">
           {/* 헤더 (작성자, 투표, 시간, 삭제 버튼) */}
-          <div className="content-stretch flex gap-[15px] items-center justify-start relative shrink-0 w-full">
-            <div className="content-stretch flex gap-[5px] items-center justify-start relative shrink-0">
+          <div className="flex gap-[15px] items-center justify-start relative w-full">
+            <div className="flex gap-[5px] items-center justify-start relative flex-shrink-0">
               {/* 작성자명 */}
-              <div className="justify-start text-black text-base font-semibold font-['Pretendard'] leading-snug">
+              <div className="justify-start text-black text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">
                 {author}
               </div>
               
@@ -92,13 +92,13 @@ const Reply: React.FC<ReplyProps> = ({
             </div>
             
             {/* 시간 */}
-            <div className="justify-start text-gray-400 text-xs font-normal font-['Pretendard'] leading-snug shrink-0">
+            <div className="justify-start text-gray-400 text-xs font-normal font-['Pretendard'] leading-snug whitespace-nowrap flex-shrink-0">
               {formatTimeAgo(timestamp)}
             </div>
             
             {/* 삭제 버튼 */}
             {canDeleteThis && (
-              <div className="flex-1 flex justify-end items-center h-[22px]">
+              <div className="flex items-center justify-end h-[22px] ml-auto">
                 <button 
                   onClick={() => onDelete?.(replyId)}
                   className="overflow-clip relative shrink-0 size-[17px] hover:opacity-70 transition-opacity cursor-pointer"

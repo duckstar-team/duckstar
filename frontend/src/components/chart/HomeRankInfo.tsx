@@ -44,7 +44,6 @@ export default function HomeRankInfo({
     if (typeof window !== 'undefined') {
       const currentScrollY = window.scrollY || 0;
       
-      console.log('🏠 HomeRankInfo: 스크롤 위치 저장:', currentScrollY);
       
       // 스크롤 위치 저장
       sessionStorage.setItem('home-scroll', currentScrollY.toString());
@@ -53,7 +52,6 @@ export default function HomeRankInfo({
       // 홈 상태 저장 플래그 설정
       sessionStorage.setItem('home-state-save', 'true');
       
-      console.log('🏠 HomeRankInfo: 홈 상태 저장 플래그 설정');
     }
     
     // Next.js 클라이언트 사이드 라우팅 사용 (간단한 라우터)

@@ -145,7 +145,7 @@ export function getLoginState(): { isNewUser: boolean; isMigrated: boolean } | n
       isMigrated: parsed.isMigrated === true
     };
   } catch (error) {
-    console.error('LOGIN_STATE 파싱 오류:', error);
+console.error('LOGIN_STATE 파싱 오류:', error);
     return null;
   }
 }

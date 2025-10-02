@@ -18,17 +18,32 @@ interface DaySelectionProps {
   onEmptyMessageChange?: (day: DayOfWeek | null) => void; // 메시지 상태 변경 콜백
 }
 
-const DAYS: DayOfWeek[] = [
-  '곧 시작',
-  '일',
-  '월',
-  '화',
-  '수',
-  '목',
-  '금',
-  '토',
-  '특별편성 및 극장판'
-];
+const getDays = (isThisWeek: boolean): DayOfWeek[] => {
+  if (isThisWeek) {
+    return [
+      '곧 시작',
+      '일',
+      '월',
+      '화',
+      '수',
+      '목',
+      '금',
+      '토',
+      '특별편성 및 극장판'
+    ];
+  } else {
+    return [
+      '일',
+      '월',
+      '화',
+      '수',
+      '목',
+      '금',
+      '토',
+      '특별편성 및 극장판'
+    ];
+  }
+};
 
 const getDayWidth = (day: DayOfWeek): string => {
   switch (day) {
@@ -371,7 +386,7 @@ export default function DaySelection({
           }}
         />
 
-        {DAYS.map((day) => {
+        {getDays(isThisWeek).map((day) => {
           const isSelected = selectedDay === day;
           const isHovered = hoveredDay === day;
           const isEmpty = emptyDays.has(day);

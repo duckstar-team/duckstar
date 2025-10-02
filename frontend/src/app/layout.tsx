@@ -8,6 +8,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import QueryProvider from '@/components/providers/QueryProvider';
 import MigrationToast from '@/components/common/MigrationToast';
 import ClientAppContainer from '@/components/ClientAppContainer';
+import { ToastContainer } from '@/components/common/Toast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,6 +63,8 @@ export default function RootLayout({
         {/* 투표 이미지 프리로딩 */}
         <link rel="preload" href="/voted-normal.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/voted-bonus.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/voted-normal-2025-autumn.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/voted-bonus-2025-autumn.svg" as="image" type="image/svg+xml" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${pretendard.variable} antialiased`}
@@ -76,6 +79,9 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <MigrationToast />
             </Suspense>
+            
+            {/* 토스트 컨테이너 - 모든 페이지에서 작동 */}
+            <ToastContainer />
           </AuthProvider>
         </QueryProvider>
       </body>

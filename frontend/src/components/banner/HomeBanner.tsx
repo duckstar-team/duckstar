@@ -56,13 +56,7 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
       const currentScrollY = window.scrollY || 0;
       const documentScrollTop = document.documentElement.scrollTop || 0;
       const bodyScrollTop = document.body.scrollTop || 0;
-      
-      console.log('🏠 HomeBanner: 스크롤 위치 디버깅');
-      console.log('  - window.scrollY:', window.scrollY);
-      console.log('  - document.documentElement.scrollTop:', document.documentElement.scrollTop);
-      console.log('  - document.body.scrollTop:', document.body.scrollTop);
-      console.log('  - 최종 저장값:', currentScrollY);
-      
+           
       sessionStorage.setItem('home-scroll', currentScrollY.toString());
       sessionStorage.setItem('navigation-type', 'from-anime-detail');
     }

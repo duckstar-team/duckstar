@@ -104,10 +104,10 @@ const Comment: React.FC<CommentProps> = ({
           {/* 삭제된 댓글 내용 */}
           <div className="basis-0 box-border content-stretch flex flex-col gap-2.5 grow items-start justify-start min-h-px min-w-px pb-0 pt-[3px] px-0 relative shrink-0">
             {/* 헤더 (작성자, 에피소드, 시간) */}
-            <div className="content-stretch flex gap-[15px] items-center justify-start relative shrink-0 w-full">
-              <div className="content-stretch flex gap-[5px] items-center justify-start relative shrink-0">
+            <div className="flex gap-[15px] items-center justify-start relative w-full">
+              <div className="flex gap-[5px] items-center justify-start relative flex-shrink-0">
                 {/* 작성자명 */}
-                <div className="justify-start text-gray-400 text-base font-semibold font-['Pretendard'] leading-snug">
+                <div className="justify-start text-gray-400 text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">
                   {deletedInfo.nickname}
                 </div>
                 
@@ -132,7 +132,7 @@ const Comment: React.FC<CommentProps> = ({
               </div>
               
               {/* 시간 */}
-              <div className="flex items-center justify-start text-gray-400 text-xs font-normal font-['Pretendard'] leading-snug">
+              <div className="flex items-center justify-start text-gray-400 text-xs font-normal font-['Pretendard'] leading-snug whitespace-nowrap flex-shrink-0">
                 {formatTimeAgo(timestamp)}
               </div>
             </div>
@@ -166,10 +166,10 @@ const Comment: React.FC<CommentProps> = ({
         {/* 댓글 내용 */}
         <div className="basis-0 box-border content-stretch flex flex-col gap-2.5 grow items-start justify-start min-h-px min-w-px pb-0 pt-[3px] px-0 relative shrink-0">
           {/* 헤더 (작성자, 에피소드, 시간, 삭제 버튼) */}
-          <div className="content-stretch flex gap-[15px] items-center justify-start relative shrink-0 w-full">
-            <div className="content-stretch flex gap-[5px] items-center justify-start relative shrink-0">
+          <div className="flex gap-[15px] items-center justify-start relative w-full">
+            <div className="flex gap-[5px] items-center justify-start relative flex-shrink-0">
               {/* 작성자명 */}
-              <div className="justify-start text-black text-base font-semibold font-['Pretendard'] leading-snug">
+              <div className="justify-start text-black text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">
                 {author}
               </div>
               
@@ -194,13 +194,13 @@ const Comment: React.FC<CommentProps> = ({
             </div>
             
             {/* 시간 */}
-            <div className="flex items-center justify-start text-gray-400 text-xs font-normal font-['Pretendard'] leading-snug">
+            <div className="flex items-center justify-start text-gray-400 text-xs font-normal font-['Pretendard'] leading-snug whitespace-nowrap flex-shrink-0">
               {formatTimeAgo(timestamp)}
             </div>
             
             {/* 삭제 버튼 */}
             {canDeleteThis && (
-              <div className="basis-0 box-border content-stretch flex gap-2.5 grow h-[22px] items-center justify-end min-h-px min-w-px pl-[267px] pr-0 py-0 relative shrink-0">
+              <div className="flex items-center justify-end h-[22px] ml-auto">
                 <button 
                   onClick={() => onDelete?.(commentId)}
                   className="overflow-clip relative shrink-0 size-[17px] hover:opacity-70 transition-opacity cursor-pointer"

@@ -111,17 +111,27 @@ export default function CommentPostForm({
       // onSubmit 호출 (Promise 기반으로 완료 감지)
       Promise.resolve(onSubmit(commentText, imageFiles))
         .then(() => {
-          // 성공 시 업로드 완료 처리
-          finishUpload(true);
-        })
-        .catch(() => {
-          // 실패 시 업로드 실패 처리
-          finishUpload(false);
-        })
-        .finally(() => {
-          // 상태 초기화 (텍스트와 이미지 모두)
+          // 성공 시에만 상태 초기화
           setComment('');
           setUploadedImages([]);
+          finishUpload(true);
+        })
+        .catch((error) => {
+          // 유효성 검사 실패인지 확인 (에러 메시지로 구분)
+          const errorMessage = error?.message || '';
+          const isValidationError = errorMessage.includes('로그인') || 
+                                   errorMessage.includes('에피소드') || 
+                                   errorMessage.includes('댓글 내용');
+          
+          if (isValidationError) {
+            // 유효성 검사 실패: 상태 유지, 업로드 상태만 리셋
+            finishUpload(false);
+          } else {
+            // 실제 API 실패: 상태 유지, 업로드 실패 처리
+            finishUpload(false);
+          }
+        })
+        .finally(() => {
           // 제출 완료 후 플래그 리셋
           isSubmittingRef.current = false;
           setIsSubmitting(false);
