@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getCurrentVoteStampImagePath } from "@/utils/voteStampUtils";
 
 type VoteToggleProps = {
@@ -34,6 +34,15 @@ export default function VoteToggle({
 }: VoteToggleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hoverSide, setHoverSide] = useState<'left' | 'right' | null>(null);
+
+  // 투표 도장 이미지 프리로딩
+  useEffect(() => {
+    if (weekDto) {
+      const stampImagePath = getCurrentVoteStampImagePath(weekDto, isBonusVote);
+      const img = new Image();
+      img.src = stampImagePath;
+    }
+  }, [weekDto, isBonusVote]);
 
   // 보너스 모드에서 10표 미만일 때는 영역 구분, 10표 이상일 때는 전체 영역
   const isHybridMode = isBonusMode && currentVotes < maxVotes;

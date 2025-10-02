@@ -8,6 +8,7 @@ interface GenderSelectionProps {
   onBackClick: () => void;
   onSubmitClick: () => void;
   isSubmitting?: boolean;
+  isRevoteMode?: boolean;
 }
 
 interface GenderToggleProps {
@@ -132,12 +133,14 @@ const ActionButtons = ({
   onBackClick, 
   onSubmitClick, 
   selectedGender,
-  isSubmitting = false
+  isSubmitting = false,
+  isRevoteMode = false
 }: {
   onBackClick: () => void;
   onSubmitClick: () => void;
   selectedGender: 'male' | 'female' | null;
   isSubmitting?: boolean;
+  isRevoteMode?: boolean;
 }) => (
   <div className={STYLES.actionButtonsContainer}>
     <ActionButton variant="back" onClick={onBackClick} disabled={isSubmitting}>
@@ -155,7 +158,7 @@ const ActionButtons = ({
           <span>제출 중...</span>
         </>
       ) : (
-        '제출하기'
+        isRevoteMode ? '재투표하기' : '제출하기'
       )}
     </ActionButton>
   </div>
@@ -167,7 +170,8 @@ export default function GenderSelection({
   onGenderSelect,
   onBackClick,
   onSubmitClick,
-  isSubmitting = false
+  isSubmitting = false,
+  isRevoteMode = false
 }: GenderSelectionProps) {
   return (
     <div className={STYLES.container}>
@@ -180,6 +184,7 @@ export default function GenderSelection({
         onSubmitClick={onSubmitClick}
         selectedGender={selectedGender}
         isSubmitting={isSubmitting}
+        isRevoteMode={isRevoteMode}
       />
     </div>
   );

@@ -130,7 +130,7 @@ export default function EpisodeSection({
       // 페이지 새로고침으로 최신 데이터 반영
       window.location.reload();
     } catch (error) {
-      console.error('Failed to update total episodes:', error);
+console.error('Failed to update total episodes:', error);
       alert('총 화수 업데이트에 실패했습니다.');
     } finally {
       setIsUpdating(false);
@@ -158,7 +158,7 @@ export default function EpisodeSection({
       // 페이지 새로고침으로 최신 데이터 반영
       window.location.reload();
     } catch (error) {
-      console.error('Failed to set total episodes as unknown:', error);
+console.error('Failed to set total episodes as unknown:', error);
       alert('총 화수를 "모름"으로 설정하는데 실패했습니다.');
     } finally {
       setIsUpdating(false);

@@ -41,6 +41,51 @@ html {
   scroll-behavior: auto !important;
 }
 
+/* 스크롤 성능 최적화 - 애니메이션 요소만 타겟팅 */
+[data-bonus-stamp],
+[data-max-votes-button],
+[data-vote-button],
+.motion-element {
+  /* GPU 가속을 위한 기본 설정 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 애니메이션 요소에 대한 추가 최적화 */
+[data-bonus-stamp],
+[data-max-votes-button],
+[data-vote-button] {
+  will-change: transform, opacity;
+}
+
+/* 스크롤 중 성능 최적화 */
+.scrolling {
+  pointer-events: none;
+}
+
+.scrolling [data-bonus-stamp],
+.scrolling [data-max-votes-button],
+.scrolling [data-vote-button] {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* 스티키 요소 최적화 */
+[data-day-selection],
+[data-vote-section],
+[data-sorting-menu] {
+  z-index: 10;
+}
+
+/* VoteSection 스티키 최적화 */
+[data-vote-section-sticky] {
+  z-index: 40;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
 /* Line Clamp Utilities */
 .line-clamp-1 {
   overflow: hidden;

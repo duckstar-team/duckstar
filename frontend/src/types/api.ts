@@ -141,10 +141,12 @@ export interface AnimeVoteHistoryDto {
 // Vote History Ballot DTO (실제 API 응답에서 사용되는 구조)
 export interface VoteHistoryBallotDto {
   animeId: number;
+  animeCandidateId: number;
   mainThumbnailUrl: string;
   titleKor: string;
   medium: "TVA" | "MOVIE";
   ballotType: "NORMAL" | "BONUS";
+  totalEpisodes?: number;
 }
 
 // Vote History Response DTO

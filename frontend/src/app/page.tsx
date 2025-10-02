@@ -129,15 +129,13 @@ export default function Home() {
       try {
         const weekData = JSON.parse(savedWeek);
         setSelectedWeek(weekData);
-        console.log('🏠 복원된 주차:', weekData);
       } catch (error) {
-        console.error('🏠 주차 복원 실패:', error);
+console.error('🏠 주차 복원 실패:', error);
       }
     }
     
     if (savedTab && (savedTab === 'anilab' || savedTab === 'anime-trending')) {
       setSelectedRightTab(savedTab);
-      console.log('🏠 복원된 탭:', savedTab);
     }
   };
 
@@ -151,17 +149,11 @@ export default function Home() {
   // React Query 데이터 처리
   useEffect(() => {
     if (homeData?.result) {
-      console.log('🏠 홈 데이터 로드됨:', homeData.result);
-      console.log('🏠 배너 데이터:', homeData.result.homeBannerDtos);
-      console.log('🏠 Anilab 데이터:', homeData.result.weeklyTopDto.anilabRankPreviews);
-      console.log('🏠 Anime Trending 데이터:', homeData.result.weeklyTopDto.animeTrendingRankPreviews);
       
       // 초기 데이터 설정
       const initialAnilabData = homeData.result.weeklyTopDto.anilabRankPreviews || [];
       const initialAnimeTrendingData = homeData.result.weeklyTopDto.animeTrendingRankPreviews || [];
       
-      console.log('🏠 초기 Anilab 데이터:', initialAnilabData);
-      console.log('🏠 초기 Anime Trending 데이터:', initialAnimeTrendingData);
       
       setAnilabData(initialAnilabData); // Anilab 데이터 별도 저장
       setAnimeTrendingData(initialAnimeTrendingData); // Anime Trending 데이터 별도 저장
@@ -173,13 +165,9 @@ export default function Home() {
       setLeftPanelData(initialDuckstarData); // Left Panel 초기값 설정
       setIsLeftPanelPrepared(initialIsPrepared); // Left Panel 준비 상태 초기값 설정
       
-      console.log('🏠 초기 Left Panel 데이터 설정:', initialDuckstarData);
-      console.log('🏠 초기 Left Panel 준비 상태:', initialIsPrepared);
       
       // 초기 Right Panel 데이터 설정 (기본적으로 Anilab)
       setRightPanelData(initialAnilabData);
-      console.log('🏠 초기 Right Panel 데이터 설정 (Anilab):', initialAnilabData);
-      console.log('🏠 초기 Anime Trending 데이터 저장:', initialAnimeTrendingData);
       
       // 홈 상태 복원 시도
       restoreHomeState();
@@ -192,17 +180,14 @@ export default function Home() {
         const closedWeeks = homeData.result.weekDtos.filter(week => week.voteStatus === 'CLOSED');
         if (closedWeeks.length > 0) {
           setSelectedWeek(closedWeeks[0]);
-          console.log('🏠 기본 선택 주차:', closedWeeks[0]);
         }
       }
       
       // 상태 복원 후 현재 선택된 탭에 따라 데이터 표시
       setTimeout(() => {
         const currentTab = selectedRightTab;
-        console.log('🏠 상태 복원 후 탭 확인:', currentTab);
         if (currentTab === 'anime-trending') {
           // 복원된 탭이 anime-trending인 경우 초기 데이터가 아닌 복원된 주차 데이터 사용
-          console.log('🏠 상태 복원 후 Anime Trending 탭 감지 - 복원된 주차 데이터 로드 필요');
         }
       }, 100);
       
@@ -217,7 +202,6 @@ export default function Home() {
       const isHomeScrollTop = sessionStorage.getItem('home-scroll-top') === 'true';
       
       if (isHomeScrollTop) {
-        console.log('🚨 비상대책: 홈 스크롤 탑으로 강제 이동');
         scrollToTop();
         // 모든 플래그 정리
         sessionStorage.clear();
@@ -230,7 +214,6 @@ export default function Home() {
       
       if (savedY && isFromAnimeDetail) {
         const y = parseInt(savedY);
-        console.log('🏠 애니 상세화면에서 돌아온 스크롤 복원:', y);
         
         // 페이지 로드 즉시 복원 (애니메이션 없이)
         window.scrollTo({
@@ -262,7 +245,6 @@ export default function Home() {
       const isHomeScrollTop = sessionStorage.getItem('home-scroll-top') === 'true';
       
       if (isHomeScrollTop) {
-        console.log('🚨 비상대책: 홈 스크롤 탑으로 강제 이동 (데이터 로드 후)');
         scrollToTop();
         // 모든 플래그 정리
         sessionStorage.clear();
@@ -275,7 +257,6 @@ export default function Home() {
       
       if (savedY && isFromAnimeDetail) {
         const y = parseInt(savedY);
-        console.log('🏠 애니 상세화면에서 돌아온 스크롤 복원 (데이터 로드 후):', y);
         
         // 실제 스크롤 컨테이너에 복원
         const mainElement = document.querySelector('main');
@@ -288,8 +269,6 @@ export default function Home() {
         
         // 애니 상세화면에서 돌아온 경우 현재 주차의 데이터 다시 로드
         if (selectedWeek) {
-          console.log('🏠 애니 상세화면에서 돌아옴 - 현재 주차 데이터 다시 로드:', selectedWeek);
-          console.log('🏠 현재 선택된 탭:', selectedRightTab);
           
           // 현재 주차의 데이터를 다시 로드하여 모든 패널 업데이트
           handleLeftPanelWeekChange(selectedWeek);
@@ -310,13 +289,12 @@ export default function Home() {
       if (savedWeek) {
         try {
           const weekData = JSON.parse(savedWeek);
-          console.log('🏠 복원된 주차 데이터 로드:', weekData);
           
           // 복원된 주차 데이터 로드
           handleLeftPanelWeekChange(weekData);
           
         } catch (error) {
-          console.error('🏠 복원된 주차 데이터 로드 실패:', error);
+console.error('🏠 복원된 주차 데이터 로드 실패:', error);
         }
       }
     }
@@ -335,13 +313,10 @@ export default function Home() {
     
     if (tab === 'anilab') {
       setRightPanelData(currentAnilabData);
-      console.log('🏠 AniLab 표시:', currentAnilabData.length, '개');
     } else if (tab === 'anime-trending') {
       setRightPanelData(currentAnimeTrendingData);
-      console.log('🏠 Anime Trending 표시:', currentAnimeTrendingData.length, '개');
-      
       if (currentAnimeTrendingData.length === 0) {
-        console.log('🏠 Anime Trending 데이터 없음');
+        // Anime Trending 데이터 없음
       }
     }
   };
@@ -364,7 +339,6 @@ export default function Home() {
         currentTab: selectedRightTab
       };
       
-      console.log('🏠 주차별 데이터 관리:', dataConsistency);
       
       // 데이터 일관성 검증
       const isConsistent = leftPanelData.length > 0 && anilabData.length > 0;
@@ -377,7 +351,6 @@ export default function Home() {
   // 주차 변경 핸들러 (모든 패널 데이터를 함께 로드)
   const handleLeftPanelWeekChange = async (week: WeekDto) => {
     // 주차 변경 시에는 스크롤 복원하지 않음 (주차 변경은 스크롤 복원 불필요)
-    console.log('🏠 주차 변경 시작:', week.year, week.quarter, week.week);
     
     setSelectedWeek(week);
     
@@ -390,10 +363,7 @@ export default function Home() {
       
       if (response.isSuccess) {
         await updateAllPanelData(response.result, week);
-        console.log('🏠 ✅ 주차 변경 완료 - 모든 패널이 주차', week.year, week.quarter, week.week, '로 통일됨');
-        
         // 주차 변경 시에는 스크롤 복원하지 않음
-        console.log('🏠 주차 변경 완료 - 스크롤 복원 없음');
       } else {
         handleWeekChangeError(`데이터 로딩 실패: ${response.message}`);
       }
@@ -409,7 +379,6 @@ export default function Home() {
     const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
     if (currentScrollY > 0) {
       sessionStorage.setItem(`scroll-${scrollKey}`, currentScrollY.toString());
-      console.log('💾 현재 주차 스크롤 저장:', { scrollKey, scrollY: currentScrollY });
     }
   };
 
@@ -437,24 +406,17 @@ export default function Home() {
     
     // 상태 업데이트 확인
     setTimeout(() => {
-      console.log('🏠 주차 변경 완료 - 모든 패널 데이터 업데이트됨');
-      console.log('🏠 - Left Panel (Duckstar):', newDuckstarData.length, '개');
-      console.log('🏠 - Right 1 (AniLab):', newAnilabData.length, '개');
-      console.log('🏠 - Right 2 (Anime Trending):', newAnimeTrendingData.length, '개');
     }, 100);
   };
 
   // 주차 변경 에러 처리 (개선)
   const handleWeekChangeError = (errorMessage: string) => {
-    console.error('🏠 주차 변경 실패:', errorMessage);
     setLeftPanelError(errorMessage);
-    console.log('🏠 기존 데이터 유지 - 사용자 경험 보장');
   };
 
   // 에러 상태 초기화 (개선)
   const clearErrorState = () => {
     setLeftPanelError(null);
-    console.log('🏠 에러 상태 초기화 완료');
   };
 
   if (isLoading) {

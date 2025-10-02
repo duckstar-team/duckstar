@@ -51,7 +51,7 @@ export function useImageUpload() {
     img.onload = () => {
     };
     img.onerror = () => {
-      console.error('이미지 로드 실패 - 파일이 손상되었거나 유효하지 않은 이미지입니다.');
+console.error('이미지 로드 실패 - 파일이 손상되었거나 유효하지 않은 이미지입니다.');
       alert('파일이 손상되었거나 유효하지 않은 이미지입니다. 다른 이미지를 시도해주세요.');
       return;
     };

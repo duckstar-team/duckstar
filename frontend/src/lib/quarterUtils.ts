@@ -81,10 +81,19 @@ function getWeekNumberOf(weekStartDate: Date): number {
  * 백엔드의 getThisWeekRecord와 동일한 로직
  */
 export function getThisWeekRecord(time: Date): YQWRecord {
-  // 주 시작(일요일)과 종료(토요일)
-  const weekStartDate = new Date(time);
-  weekStartDate.setDate(time.getDate() - time.getDay());
+  let weekStartDate: Date;
   
+  // 비즈니스 규칙: 일요일 22시 전이라면 계산 편의를 위해 토요일로 간주 (아직 주차 변경 안 됨)
+  if (time.getDay() === 0 && time.getHours() < 22) {
+    // 일요일 22시 전 → 토요일로 간주
+    weekStartDate = new Date(time);
+    weekStartDate.setDate(time.getDate() - 1);
+  } else {
+    // 그 외의 경우 → 현재 날짜 사용
+    weekStartDate = new Date(time);
+  }
+  
+  // 여기서는 '분기 변경 여부' 계산을 위해 종료일을 토요일로 간주
   const weekEndDate = new Date(weekStartDate);
   weekEndDate.setDate(weekStartDate.getDate() + 6);
 

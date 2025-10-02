@@ -3,22 +3,23 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import VoteCard from "@/components/vote/VoteCard";
+import VoteResultCardLoggedIn from "@/components/vote/VoteResultCardLoggedIn";
 import VoteBanner from "@/components/vote/VoteBanner";
 import VoteSection from "@/components/vote/VoteSection";
 import VoteStamp from "@/components/vote/VoteStamp";
+import VoteCard from "@/components/vote/VoteCard";
 import ConfettiEffect from "@/components/vote/ConfettiEffect";
 import ConfirmDialog from "@/components/vote/ConfirmDialog";
 import VoteDisabledState from "@/components/vote/VoteDisabledState";
 import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVoteStatusDto, AnimeVoteStatusDto, VoteHistoryBallotDto, VoteStatus } from '@/types/api';
 import useSWR, { mutate } from 'swr';
 import { getSeasonFromDate } from '@/lib/utils';
-import { fetcher, submitVote } from '@/api/client';
-import { scrollToTop, scrollToPosition, clearStorageFlags } from '@/utils/scrollUtils';
+import { fetcher, submitVote, revoteAnime } from '@/api/client';
 import { searchMatch } from '@/lib/searchUtils';
 import { hasVoteCookieId, hasVotedThisWeek } from '@/lib/cookieUtils';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/AppContainer';
+import { scrollUtils } from '@/hooks/useAdvancedScrollRestoration';
 
 interface Anime {
   id: number;
@@ -32,60 +33,12 @@ function VotePageContent() {
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
   
+  // 재투표 모드 상태 (URL 파라미터 대신 내부 상태로 관리)
+  const [isRevoteMode, setIsRevoteMode] = useState(false);
+  
 
-  // 스티키 요소 초기화를 위한 useEffect
-  useEffect(() => {
-    // 컴포넌트 마운트 후 스티키 요소 강제 재계산
-    const timer = setTimeout(() => {
-      const stickySection = document.querySelector('[data-sticky-section]');
-      if (stickySection) {
-        // 강제 리플로우로 스티키 위치 재계산
-        void (stickySection as HTMLElement).offsetHeight;
-      }
-    }, 100);
 
-    return () => clearTimeout(timer);
-  }, []);
 
-  // 투표 결과 화면 스크롤 복원 로직
-  useEffect(() => {
-    const sidebarNav = sessionStorage.getItem('sidebar-navigation');
-    const logoNav = sessionStorage.getItem('logo-navigation');
-    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-    const toVoteResult = sessionStorage.getItem('to-vote-result');
-    const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
-
-    // 스크롤 복원 상태 확인
-
-    const isSidebarNavigation = sidebarNav === 'true';
-    const isLogoNavigation = logoNav === 'true';
-    const isFromAnimeDetail = fromAnimeDetail === 'true' && toVoteResult === 'true';
-
-    if (isSidebarNavigation) {
-      // 모든 관련 플래그 정리
-      clearStorageFlags('sidebar-navigation', 'vote-result-scroll', 'from-anime-detail', 'to-vote-result');
-      scrollToTop();
-    } else if (isLogoNavigation) {
-      // 모든 관련 플래그 정리
-      clearStorageFlags('logo-navigation', 'vote-result-scroll', 'from-anime-detail', 'to-vote-result');
-      scrollToTop();
-    } else if (isFromAnimeDetail) {
-      if (voteResultScroll) {
-        const y = parseInt(voteResultScroll);
-        scrollToPosition(y);
-        // 플래그는 두 번째 useEffect에서 정리하도록 유지
-      } else {
-        clearStorageFlags('from-anime-detail', 'to-vote-result');
-      }
-    } else {
-      // 애니메이션 상세화면에서 돌아온 경우가 아닐 때만 플래그 정리
-      // 투표 결과 화면에서 직접 접근한 경우에만 스크롤 탑으로 이동
-      if (!fromAnimeDetail && !toVoteResult) {
-        clearStorageFlags('sidebar-navigation', 'logo-navigation');
-        scrollToTop();
-      }
-    }
-  }, []);
 
   
   const [selected, setSelected] = useState<number[]>([]);
@@ -223,6 +176,12 @@ function VotePageContent() {
   const [shouldFetchCandidates, setShouldFetchCandidates] = useState<boolean | null>(null);
   
   useEffect(() => {
+    // 재투표 모드인 경우 항상 후보 목록 조회
+    if (isRevoteMode) {
+      setShouldFetchCandidates(true);
+      return;
+    }
+    
     // 로그인한 경우: voteStatusData 결과에 따라 결정
     if (voteStatusData !== undefined) {
       const result = !voteStatusData?.result?.hasVoted;
@@ -233,7 +192,7 @@ function VotePageContent() {
     // 로그인하지 않은 경우: voted_this_week 쿠키가 없으면 API 호출
     const result = !hasVotedThisWeek();
     setShouldFetchCandidates(result);
-  }, [voteStatusData]);
+  }, [voteStatusData, isRevoteMode]);
   
   const { data, error, isLoading } = useSWR<ApiResponseAnimeCandidateListDto>(
     shouldFetchCandidates === true ? '/api/v1/vote/anime' : null,
@@ -258,6 +217,35 @@ function VotePageContent() {
       preloadImages(animes);
     }
   }, [data, preloadImages]);
+
+  // 재투표 모드에서 스티키 강제 활성화 (데이터 로딩 완료 후)
+  useEffect(() => {
+    if (isRevoteMode && voteStatusData?.result?.hasVoted && data?.result?.animeCandidates) {
+      console.log('재투표 모드 + 데이터 로딩 완료 - 스티키 강제 활성화');
+      
+      // 데이터 로딩 완료 후 스티키 강제 활성화
+      const timer = setTimeout(() => {
+        const stickySection = document.querySelector('[data-sticky-section]');
+        if (stickySection) {
+          // 스티키 강제 재계산
+          (stickySection as HTMLElement).style.position = 'sticky';
+          (stickySection as HTMLElement).style.top = '60px';
+          (stickySection as HTMLElement).style.zIndex = '50';
+          (stickySection as HTMLElement).style.transform = 'translateZ(0)';
+          (stickySection as HTMLElement).style.backfaceVisibility = 'hidden';
+          
+          // 강제 리플로우
+          void (stickySection as HTMLElement).offsetHeight;
+          
+          console.log('재투표 모드 스티키 강제 활성화 완료');
+        }
+      }, 1000); // 데이터 로딩 완료 후 1초 대기
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isRevoteMode, voteStatusData, data]);
+
+
 
   // 로그인한 사용자의 성별 정보로 성별 선택란 미리 선택
   useEffect(() => {
@@ -342,42 +330,8 @@ function VotePageContent() {
     // 검색 쿼리 초기화 (상태 4로 넘어갈 때 검색 필터 해제)
     setSearchQuery('');
     
-    // 즉시 스크롤 탑으로 이동 (애니메이션 없이)
-    scrollToTop();
-    
-    // 추가적인 즉시 스크롤 탑 이동 보장
+    // 스크롤을 맨 위로 이동
     window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-    
-    // 2단계: 투명해지는 애니메이션 완료 후 다시 한번 스크롤 탑으로 이동
-    setTimeout(() => {
-      // 여러 방법으로 스크롤을 맨 위로 강제 이동
-      scrollToTop();
-      
-      // 추가적인 스크롤 탑 이동 보장
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-      
-      // 상태 4로 이동 - 스크롤을 맨 위로 이동
-    }, 500); // 투명해지는 시간 (0.5초)
-    
-    // 3단계: 추가 보장을 위한 지연 실행
-    setTimeout(() => {
-      scrollToTop();
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-    }, 100);
-    
-    // 4단계: 최종 보장을 위한 지연 실행
-    setTimeout(() => {
-      scrollToTop();
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-    }, 200);
     
     // 3단계: 선택한 후보들이 나타남 (0.8초 동안 선명해짐)
     setTimeout(() => {
@@ -420,43 +374,112 @@ function VotePageContent() {
     setIsSubmitting(true);
     
     try {
-      const ballotRequests = [
-        ...selected.map(id => ({ candidateId: id, ballotType: "NORMAL" as const })),
-        ...bonusSelected.map(id => ({ candidateId: id, ballotType: "BONUS" as const }))
-      ];
-
-      const requestBody = {
-        weekId: data?.result?.weekId,
-        gender: selectedGender === 'male' ? 'MALE' : 'FEMALE',
-        ballotRequests
-      };
-      
-      const result = await submitVote(requestBody);
-      
-      // 성공 시 SWR 캐시 업데이트
-      if (result.isSuccess) {
-        // 투표 상태 데이터 캐시 업데이트
-        await mutate('/api/v1/vote/anime/status');
+      if (isRevoteMode && voteStatusData?.result?.submissionId) {
+        // 재투표 모드: 기존 투표 수정
+        const currentVotes = voteStatusData.result.animeBallotDtos || [];
+        const currentNormalVotes = currentVotes
+          .filter(ballot => ballot.ballotType === 'NORMAL')
+          .map(ballot => ballot.animeCandidateId);
+        const currentBonusVotes = currentVotes
+          .filter(ballot => ballot.ballotType === 'BONUS')
+          .map(ballot => ballot.animeCandidateId);
         
-        // 빵빠레 효과 시작 (투표 제출 시에만)
-        setShowConfetti(true);
+        // 추가된 투표
+        const added = [
+          ...selected.filter(id => !currentNormalVotes.includes(id)).map(id => ({ candidateId: id, ballotType: "NORMAL" as const })),
+          ...bonusSelected.filter(id => !currentBonusVotes.includes(id)).map(id => ({ candidateId: id, ballotType: "BONUS" as const }))
+        ];
         
-        // 투표 결과 화면으로 전환
-        setShowVoteResult(true);
+        // 제거된 투표
+        const removed = [
+          ...currentNormalVotes.filter(id => !selected.includes(id)).map(id => ({ candidateId: id, ballotType: "NORMAL" as const })),
+          ...currentBonusVotes.filter(id => !bonusSelected.includes(id)).map(id => ({ candidateId: id, ballotType: "BONUS" as const }))
+        ];
         
-        // voteStatusData가 업데이트되면 useEffect에서 voteHistory를 설정할 것임
+        // 수정된 투표 (일반 -> 보너스 또는 보너스 -> 일반)
+        const updated = [];
+        for (const id of selected) {
+          if (currentBonusVotes.includes(id)) {
+            updated.push({ candidateId: id, ballotType: "NORMAL" as const });
+          }
+        }
+        for (const id of bonusSelected) {
+          if (currentNormalVotes.includes(id)) {
+            updated.push({ candidateId: id, ballotType: "BONUS" as const });
+          }
+        }
+        
+        const requestBody = {
+          weekId: data?.result?.weekId,
+          gender: selectedGender === 'male' ? 'MALE' : 'FEMALE',
+          added,
+          removed,
+          updated
+        };
+        
+        const result = await revoteAnime(voteStatusData.result.submissionId, requestBody);
+        
+        if (result.isSuccess) {
+          // 투표 상태 데이터 캐시 업데이트
+          const updatedVoteStatus = await mutate('/api/v1/vote/anime/status');
+          
+          // 빵빠레 효과 시작
+          setShowConfetti(true);
+          
+          // 재투표 모드 비활성화
+          setIsRevoteMode(false);
+          
+          // 투표 결과 화면으로 전환
+          setShowVoteResult(true);
+          
+          // 재투표 모드에서 성공 시 투표 결과 화면으로 강제 이동
+          // 업데이트된 투표 상태 데이터를 사용하여 voteHistory 설정
+          if (updatedVoteStatus?.result) {
+            setVoteHistory(updatedVoteStatus.result);
+          } else if (voteStatusData?.result) {
+            // fallback: 기존 데이터 사용
+            setVoteHistory(voteStatusData.result);
+          }
+        } else {
+          alert('재투표 제출에 실패했습니다. 다시 시도해주세요.');
+        }
       } else {
-        alert('투표 제출에 실패했습니다. 다시 시도해주세요.');
+        // 일반 투표 모드
+        const ballotRequests = [
+          ...selected.map(id => ({ candidateId: id, ballotType: "NORMAL" as const })),
+          ...bonusSelected.map(id => ({ candidateId: id, ballotType: "BONUS" as const }))
+        ];
+
+        const requestBody = {
+          weekId: data?.result?.weekId,
+          gender: selectedGender === 'male' ? 'MALE' : 'FEMALE',
+          ballotRequests
+        };
+        
+        const result = await submitVote(requestBody);
+        
+        // 성공 시 SWR 캐시 업데이트
+        if (result.isSuccess) {
+          // 투표 상태 데이터 캐시 업데이트
+          await mutate('/api/v1/vote/anime/status');
+          
+          // 빵빠레 효과 시작 (투표 제출 시에만)
+          setShowConfetti(true);
+          
+          // 투표 결과 화면으로 전환
+          setShowVoteResult(true);
+          
+          // voteStatusData가 업데이트되면 useEffect에서 voteHistory를 설정할 것임
+        } else {
+          alert('투표 제출에 실패했습니다. 다시 시도해주세요.');
+        }
       }
       
       // API 호출 성공 시 바로 TOP으로 이동
-      window.scrollTo({ 
-        top: 0, 
-        behavior: 'auto' 
-      });
+      window.scrollTo(0, 0);
       
     } catch (error) {
-      alert('투표 제출에 실패했습니다. 다시 시도해주세요.');
+      alert(isRevoteMode ? '재투표 제출에 실패했습니다. 다시 시도해주세요.' : '투표 제출에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -498,6 +521,50 @@ function VotePageContent() {
     return `${quarter}분기 ${week}주차 덕스타 결과는 일요일 22시에 공개됩니다.`;
   };
 
+  // 재투표 모드 처리
+  useEffect(() => {
+    if (isRevoteMode && voteStatusData?.result?.hasVoted) {
+      // 재투표 모드에서는 성별 선택 화면을 표시하지 않음 (초기 모드 유지)
+      setShowGenderSelection(false);
+    }
+  }, [isRevoteMode, voteStatusData]);
+
+  // 재투표 모드로 이동할 때 결과 화면 상태 초기화
+  useEffect(() => {
+    if (isRevoteMode) {
+      // 재투표 모드로 이동할 때 결과 화면 관련 상태 초기화
+      setShowVoteResult(false);
+      setVoteHistory(null);
+      setShowConfetti(false);
+      
+      // 재투표 모드에서는 기존 투표 데이터를 기표칸에 미리 채우기
+      if (voteStatusData?.result?.hasVoted && voteStatusData.result.animeBallotDtos) {
+        const normalVotes = voteStatusData.result.animeBallotDtos
+          .filter(ballot => ballot.ballotType === 'NORMAL')
+          .map(ballot => ballot.animeCandidateId);
+        const bonusVotes = voteStatusData.result.animeBallotDtos
+          .filter(ballot => ballot.ballotType === 'BONUS')
+          .map(ballot => ballot.animeCandidateId);
+        
+        // 기존 투표 데이터를 즉시 상태에 설정
+        setSelected(normalVotes);
+        setBonusSelected(bonusVotes);
+        
+        // 보너스 투표가 있으면 보너스 모드 활성화
+        if (bonusVotes.length > 0) {
+          setIsBonusMode(true);
+          setHasClickedBonus(true);
+        }
+        
+        // 성별 정보 설정
+        if (data?.result?.memberGender && data.result.memberGender !== 'UNKNOWN') {
+          const gender = data.result.memberGender === 'MALE' ? 'male' : 'female';
+          setSelectedGender(gender);
+        }
+      }
+    }
+  }, [isRevoteMode, voteStatusData, data]);
+
   // 투표 상태 데이터가 로드되면 상태 업데이트
   useEffect(() => {
     if (voteStatusData?.result && voteStatusData.result.hasVoted) {
@@ -506,60 +573,80 @@ function VotePageContent() {
     }
   }, [voteStatusData]);
 
-  // 페이지 로드 시 즉시 스크롤 복원 (검색 화면과 동일한 방식)
+  // 재투표 모드에서 투표 결과 화면 표시 강제 업데이트
   useEffect(() => {
-    const savedY = sessionStorage.getItem('vote-result-scroll');
-    const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
-    
-    if (savedY && isFromAnimeDetail) {
-      const y = parseInt(savedY);
+    if (isRevoteMode && showVoteResult && voteStatusData?.result) {
+      setVoteHistory(voteStatusData.result);
+    }
+  }, [isRevoteMode, showVoteResult, voteStatusData]);
+
+  // 스크롤 복원 로직 - 상세화면에서 돌아왔을 때
+  useEffect(() => {
+    const navigationType = sessionStorage.getItem('navigation-type');
+    if (navigationType === 'from-vote-result' && showVoteResult) {
+      // 상세화면에서 돌아온 경우 스크롤 복원
+      const savedY = sessionStorage.getItem('scroll-vote-result');
+      if (savedY) {
+        const y = parseInt(savedY);
+        if (!isNaN(y) && y > 0) {
+          // CSS scroll-behavior 강제 무시하여 깜빡임 방지
+          const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = 'auto';
+          document.body.style.scrollBehavior = 'auto';
+          
+          // 즉시 스크롤 복원 (애니메이션 없이)
+          window.scrollTo(0, y);
+          document.body.scrollTop = y;
+          document.documentElement.scrollTop = y;
+          
+          // 추가 즉시 복원 (확실하게)
+          setTimeout(() => {
+            window.scrollTo(0, y);
+            document.body.scrollTop = y;
+            document.documentElement.scrollTop = y;
+          }, 0);
+          
+          // CSS 복원
+          setTimeout(() => {
+            document.documentElement.style.scrollBehavior = originalScrollBehavior;
+            document.body.style.scrollBehavior = originalScrollBehavior;
+          }, 100);
+        }
+      }
       
-      // 페이지 로드 즉시 복원 (애니메이션 없이)
-      window.scrollTo({
-        top: y,
-        left: 0,
-        behavior: 'instant'
-      });
-      document.body.scrollTop = y;
-      document.documentElement.scrollTop = y;
-      
-      // 추가 즉시 복원 (확실하게)
-      setTimeout(() => {
-        window.scrollTo({
-          top: y,
-          left: 0,
-          behavior: 'instant'
-        });
-        document.body.scrollTop = y;
-        document.documentElement.scrollTop = y;
-      }, 0);
+      // 플래그 정리
+      sessionStorage.removeItem('navigation-type');
+    }
+  }, [showVoteResult]);
+
+  // 페이지 로드 시 스크롤 복원 (더 빠른 복원을 위해)
+  useEffect(() => {
+    const navigationType = sessionStorage.getItem('navigation-type');
+    if (navigationType === 'from-vote-result') {
+      const savedY = sessionStorage.getItem('scroll-vote-result');
+      if (savedY) {
+        const y = parseInt(savedY);
+        if (!isNaN(y) && y > 0) {
+          // 페이지 로드 즉시 스크롤 복원
+          const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = 'auto';
+          document.body.style.scrollBehavior = 'auto';
+          
+          window.scrollTo(0, y);
+          document.body.scrollTop = y;
+          document.documentElement.scrollTop = y;
+          
+          // CSS 복원
+          setTimeout(() => {
+            document.documentElement.style.scrollBehavior = originalScrollBehavior;
+            document.body.style.scrollBehavior = originalScrollBehavior;
+          }, 50);
+        }
+      }
     }
   }, []);
 
-  // 투표 결과 데이터 로드 후 스크롤 복원 (검색 화면과 동일한 방식)
-  useEffect(() => {
-    if (voteHistory) {
-      const savedY = sessionStorage.getItem('vote-result-scroll');
-      const isFromAnimeDetail = sessionStorage.getItem('from-anime-detail') === 'true';
-      
-      if (savedY && isFromAnimeDetail) {
-        const y = parseInt(savedY);
-        
-        // 실제 스크롤 컨테이너에 복원
-        const mainElement = document.querySelector('main');
-        if (mainElement) {
-          (mainElement as any).scrollTop = y;
-        } else {
-          // 폴백: window 스크롤
-          scrollToPosition(y);
-        }
-        
-        // 플래그 정리
-        clearStorageFlags('from-anime-detail', 'to-anime-detail');
-      } else {
-      }
-    }
-  }, [voteHistory]);
+
 
   // 전체 애니메이션 리스트 생성 (API 데이터만 사용) - 메모이제이션
   const allAnimeList: Anime[] = useMemo(() => {
@@ -649,8 +736,11 @@ function VotePageContent() {
   }
 
   // 투표한 사람인 경우 바로 투표 결과 화면 표시 (투표 제출 후 또는 기존 투표자)
-  // 로그인 상태이거나 비로그인 투표 기록이 있을 때만 결과 표시
-  if ((voteStatusData?.result?.hasVoted && (isAuthenticated || voteStatusData?.result?.nickName === null)) || showVoteResult) {
+  // 단, 재투표 모드일 때는 투표 화면을 표시
+  // 또한 URL에 revote 파라미터가 있으면 항상 투표 화면을 표시
+  // 재투표 모드에서는 제출 완료 후에만 결과 화면 표시
+  if ((!isRevoteMode && ((voteStatusData?.result?.hasVoted && (isAuthenticated || voteStatusData?.result?.nickName === null)) || showVoteResult)) || 
+      (isRevoteMode && showVoteResult && voteHistory && !isSubmitting)) {
     // 투표 내역이 아직 로드되지 않은 경우 로딩 표시
     if (!voteHistory) {
       return <div className="text-center">투표 기록을 불러오는 중...</div>;
@@ -705,8 +795,31 @@ function VotePageContent() {
                 <div className="bg-[#f8f9fa] box-border content-stretch flex gap-2.5 items-center justify-center lg:justify-end px-3 sm:px-5 py-[5px] relative rounded-lg shrink-0">
                   <div className="flex flex-col font-['Pretendard:Regular',_sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-sm sm:text-base lg:text-[20px] text-nowrap text-center lg:text-right">
                     <p className="leading-[normal] whitespace-pre">제출 시각: {new Date(voteHistory.submittedAt).toLocaleString('ko-KR')}</p>
-        </div>
-      </div>
+                  </div>
+                </div>
+
+                {/* 재투표하기 버튼 */}
+                <div className="flex justify-center lg:justify-end">
+                  <button
+                    onClick={() => {
+                      // 재투표 모드 활성화
+                      setIsRevoteMode(true);
+                    }}
+                    className="text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer flex items-center gap-2"
+                    style={{ backgroundColor: '#FFB310' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#FFC633';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#FFB310';
+                    }}
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    재투표하기
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -759,44 +872,11 @@ function VotePageContent() {
             {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
                   {voteHistory.animeBallotDtos.map((ballot: VoteHistoryBallotDto) => (
-                    <div
-                      key={ballot.animeId}
-                      className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                      onClick={() => {
-                        // 실제 스크롤 컨테이너 찾기
-                        const mainElement = document.querySelector('main');
-                        let scrollY = 0;
-                        
-                        if (mainElement && mainElement.scrollTop > 0) {
-                          scrollY = (mainElement as any).scrollTop;
-                        } else {
-                          // 폴백: window 스크롤
-                          scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-                        }
-                        
-                        sessionStorage.setItem('vote-result-scroll', scrollY.toString());
-                        sessionStorage.setItem('to-anime-detail', 'true');
-                        
-                        router.push(`/animes/${ballot.animeId}`);
-                      }}
-                    >
-                      <div style={{ pointerEvents: 'none' }}>
-                        <VoteCard
-                          thumbnailUrl={ballot.mainThumbnailUrl}
-                          title={ballot.titleKor || '제목 없음'}
-                          checked={true}
-                          onChange={undefined}
-                          showError={false}
-                          currentVotes={voteHistory.normalCount || 0}
-                          maxVotes={10}
-                          isBonusMode={(voteHistory.bonusCount || 0) > 0}
-                          bonusVotesUsed={voteHistory.bonusCount || 0}
-                          isBonusVote={ballot.ballotType === 'BONUS'}
-                          onMouseLeave={() => {}}
-                          weekDto={data?.result?.weekDto}
-                          disabled={true}
-                        />
-                      </div>
+                    <div key={ballot.animeId}>
+                      <VoteResultCardLoggedIn
+                        ballot={ballot}
+                        weekDto={data?.result?.weekDto}
+                      />
                     </div>
                   ))}
                 </div>
@@ -805,9 +885,9 @@ function VotePageContent() {
                   <p className="text-gray-500 text-base sm:text-lg">투표한 {categoryText}이 없습니다.</p>
                 </div>
               )}
-              </div>
             </div>
-      </main>
+          </div>
+        </main>
     );
   }
 
@@ -869,70 +949,66 @@ function VotePageContent() {
 
   // 투표 결과 화면 렌더링
   return (
-    <main className="w-full" ref={containerRef}>
+    <main className="w-full min-h-screen overflow-visible" ref={containerRef} style={{ overflow: 'visible' }}>
       {/* 배너 - 전체 너비, 패딩 없음 */}
-      <section>
+      <section style={{ overflow: 'visible' }}>
         <VoteBanner 
           weekDto={data?.result?.weekDto} 
-          customTitle={`${data?.result?.weekDto?.year || 2025} ${getSeasonFromDate(data?.result?.weekDto?.startDate || '2025-07-13')} ${getCategoryText('ANIME')} 투표`}
+          customTitle={isRevoteMode 
+            ? `${data?.result?.weekDto?.year || 2025} ${getSeasonFromDate(data?.result?.weekDto?.startDate || '2025-07-13')} ${getCategoryText('ANIME')} 재투표` 
+            : `${data?.result?.weekDto?.year || 2025} ${getSeasonFromDate(data?.result?.weekDto?.startDate || '2025-07-13')} ${getCategoryText('ANIME')} 투표`
+          }
         />
       </section>
 
 
-      {/* 알림 섹션 - 고정 */}
-      <section className="w-full max-w-[1240px] mx-auto px-4 pt-6">
-        <div className="bg-white rounded-t-[8px] shadow-sm border border-gray-200 border-b-0">
-          <div className="flex flex-col gap-2.5 pb-[9px] pl-3 pr-3 sm:pl-6 sm:pr-6 pt-3">
-            {!showGenderSelection ? (
-              <div className="bg-[#f1f2f3] flex h-8 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit max-w-full">
-                <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
-                  <div className="relative size-3 sm:size-4 overflow-hidden">
-                    <img
-                      src="/icons/voteSection-notify-icon.svg"
-                      alt="Notification Icon"
-                      className="w-full h-full"
-                    />
+      {/* 투표 섹션 */}
+      <section 
+        className="w-full overflow-visible" 
+        style={{ overflow: 'visible' }}
+      >
+        {/* 알림 섹션 */}
+        <div className="w-full max-w-[1240px] mx-auto px-4 pt-6">
+          <div className="bg-white rounded-t-[8px] shadow-sm border border-gray-200 border-b-0">
+            <div className="flex flex-col gap-2.5 pb-[9px] pl-3 pr-3 sm:pl-6 sm:pr-6 pt-3">
+              {!showGenderSelection ? (
+                <div className="bg-[#f1f2f3] flex h-8 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit max-w-full">
+                  <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                    <div className="relative size-3 sm:size-4 overflow-hidden">
+                      <img
+                        src="/icons/voteSection-notify-icon.svg"
+                        alt="Notification Icon"
+                        className="w-full h-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
+                    <p className="leading-normal break-words">
+                      마음에 든 {categoryText}을 투표해주세요!
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
-                  <p className="leading-normal break-words">
-                    분기 신작 {categoryText}을 투표해주세요!
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-[#f1f2f3] flex h-11 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit ml-auto max-w-full">
-                <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
-                  <div className="relative size-3 sm:size-4 overflow-hidden">
-                    <img
-                      src="/icons/voteSection-notify-icon.svg"
-                      alt="Notification Icon"
-                      className="w-full h-full"
-                    />
+              ) : (
+                <div className="bg-[#f1f2f3] flex h-11 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit ml-auto max-w-full">
+                  <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                    <div className="relative size-3 sm:size-4 overflow-hidden">
+                      <img
+                        src="/icons/voteSection-notify-icon.svg"
+                        alt="Notification Icon"
+                        className="w-full h-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
+                    <p className="leading-normal break-words">
+                      성별은 투표 성향 통계에 꼭 필요한 정보예요.
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
-                  <p className="leading-normal break-words">
-                    성별은 투표 성향 통계에 꼭 필요한 정보예요.
-                  </p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* 투표 섹션 - Sticky */}
-      <section 
-        className="sticky top-[60px] z-50 w-full" 
-        data-sticky-section
-        style={{ 
-          willChange: 'transform',
-          position: 'sticky',
-          top: '60px',
-          zIndex: 50
-        }}
-      >
         <div className="w-full max-w-[1240px] mx-auto px-4">
           <div className="bg-white rounded-b-[8px] shadow-sm border border-gray-200 border-t-0 relative">
             
@@ -1035,7 +1111,7 @@ function VotePageContent() {
                     thumbnailUrl={anime.thumbnailUrl}
                     title={anime.title}
                     checked={selected.includes(anime.id) || bonusSelected.includes(anime.id)}
-                    onChange={showGenderSelection ? undefined : (isBonusVote) => handleSelect(anime.id, isBonusVote)}
+                    onChange={showGenderSelection ? undefined : (isBonusVote?: boolean) => handleSelect(anime.id, isBonusVote)}
                     showError={!isBonusMode && errorCards.has(anime.id)}
                     currentVotes={selected.length}
                     maxVotes={10}
