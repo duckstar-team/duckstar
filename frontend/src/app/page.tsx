@@ -11,7 +11,9 @@ import RightHeaderList from '@/components/header/RightHeaderList';
 import AbroadRankInfo from '@/components/chart/AbroadRankInfo';
 import { homeApi } from '@/api/home';
 import { HomeDto, WeekDto, RankPreviewDto, DuckstarRankPreviewDto } from '@/types/api';
-import { useAdvancedScrollRestoration } from '@/hooks/useAdvancedScrollRestoration';
+import { useSimpleScrollRestoration } from '@/hooks/useSimpleScrollRestoration';
+import { queryConfig } from '@/lib/queryConfig';
+import React from 'react';
 
 // 순위 변동 타입 결정 함수
 function getRankDiffType(rankDiff: number, consecutiveWeeks: number, isAnilab: boolean = false): "new" | "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "Zero" {
@@ -48,60 +50,40 @@ function getMedalType(rank: number): "Gold" | "Silver" | "Bronze" | "None" {
 }
 
 export default function Home() {
+  // 기존 상태 관리 유지 (점진적 최적화)
   const [rightPanelData, setRightPanelData] = useState<RankPreviewDto[]>([]);
   const [rightPanelLoading, setRightPanelLoading] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
-  const [leftPanelData, setLeftPanelData] = useState<DuckstarRankPreviewDto[]>([]); // Left Panel 데이터 추가
-  const [isLeftPanelPrepared, setIsLeftPanelPrepared] = useState<boolean>(true); // Left Panel 준비 상태
-  const [leftPanelLoading, setLeftPanelLoading] = useState(false); // Left Panel 로딩 상태
-  const [leftPanelError, setLeftPanelError] = useState<string | null>(null); // Left Panel 에러 상태
-  const [anilabData, setAnilabData] = useState<RankPreviewDto[]>([]); // Anilab 데이터 별도 저장
-  const [animeCornerData, setAnimeCornerData] = useState<RankPreviewDto[]>([]); // Anime Corner 데이터 별도 저장
-  const [selectedRightTab, setSelectedRightTab] = useState<'anilab' | 'anime-corner'>('anime-corner'); // Right Panel 탭 상태
-  const [isClient, setIsClient] = useState(false); // 클라이언트 렌더링 확인
-  const [isInitialized, setIsInitialized] = useState(false); // 초기화 완료 여부
+  const [leftPanelData, setLeftPanelData] = useState<DuckstarRankPreviewDto[]>([]);
+  const [isLeftPanelPrepared, setIsLeftPanelPrepared] = useState<boolean>(true);
+  const [leftPanelLoading, setLeftPanelLoading] = useState(false);
+  const [leftPanelError, setLeftPanelError] = useState<string | null>(null);
+  const [anilabData, setAnilabData] = useState<RankPreviewDto[]>([]);
+  const [animeCornerData, setAnimeCornerData] = useState<RankPreviewDto[]>([]);
+  const [selectedRightTab, setSelectedRightTab] = useState<'anilab' | 'anime-corner'>('anime-corner');
+  const [isClient, setIsClient] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 홈 화면용 스크롤 키 생성 (주차별로 독립적인 스크롤 관리)
-  const scrollKey = useMemo(() => {
+  const scrollKey = React.useMemo(() => {
     if (selectedWeek) {
       return `home-${selectedWeek.year}-${selectedWeek.quarter}-${selectedWeek.week}`;
     }
     return 'home-default';
   }, [selectedWeek]);
 
-  // 고급 스크롤 복원 훅 사용 (검색화면과 동일한 방식)
+  // 단순화된 스크롤 복원 훅 사용 (성능 최적화)
   const {
     saveScrollPosition,
     restoreScrollPosition,
-    navigateWithScroll,
-    navigateBackWithScroll,
-    findScrollContainer,
-    scrollToPosition,
     scrollToTop
-  } = useAdvancedScrollRestoration({
-    enabled: true,
-    scrollKey: scrollKey,
-    saveDelay: 1000, // 스크롤 저장 지연 시간을 1초로 증가
-    restoreDelay: 10,
-    restoreAfterDataLoad: true,
-    containerSelector: 'main',
-    navigationTypes: {
-      sidebar: 'sidebar-navigation',
-      logo: 'logo-navigation',
-      detail: 'from-anime-detail'
-    }
-  });
+  } = useSimpleScrollRestoration();
 
-  // React Query를 사용한 홈 데이터 페칭 (검색화면처럼 캐싱)
+  // React Query를 사용한 홈 데이터 페칭 (통일된 캐싱 전략)
   const { data: homeData, error, isLoading } = useQuery({
     queryKey: ['home'],
     queryFn: () => homeApi.getHome(10),
-    staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
-    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
-    refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
-    refetchOnReconnect: true, // 네트워크 재연결 시 재요청
-    retry: 3, // 에러 시 3번 재시도
-    retryDelay: 5000, // 재시도 간격 5초
+    ...queryConfig.home, // 통일된 홈 데이터 캐싱 전략 적용
   });
 
   // 클라이언트 렌더링 확인
@@ -110,7 +92,7 @@ export default function Home() {
   }, []);
 
   // 홈 상태 저장 함수
-  const saveHomeState = () => {
+  const saveHomeState = React.useCallback(() => {
     if (selectedWeek) {
       sessionStorage.setItem('home-selected-week', JSON.stringify(selectedWeek));
     }
@@ -118,10 +100,10 @@ export default function Home() {
       sessionStorage.setItem('home-selected-tab', selectedRightTab);
     }
     sessionStorage.setItem('home-state-save', 'true');
-  };
+  }, [selectedWeek, selectedRightTab]);
 
   // 홈 상태 복원 함수
-  const restoreHomeState = () => {
+  const restoreHomeState = React.useCallback(() => {
     const savedWeek = sessionStorage.getItem('home-selected-week');
     const savedTab = sessionStorage.getItem('home-selected-tab');
     
@@ -130,21 +112,21 @@ export default function Home() {
         const weekData = JSON.parse(savedWeek);
         setSelectedWeek(weekData);
       } catch (error) {
-console.error('🏠 주차 복원 실패:', error);
+        console.error('🏠 주차 복원 실패:', error);
       }
     }
     
     if (savedTab && (savedTab === 'anilab' || savedTab === 'anime-corner')) {
       setSelectedRightTab(savedTab);
     }
-  };
+  }, []);
 
   // 상태 변경 시 자동 저장
   useEffect(() => {
     if (isInitialized) {
       saveHomeState();
     }
-  }, [selectedWeek, selectedRightTab, isInitialized]);
+  }, [selectedWeek, selectedRightTab, isInitialized, saveHomeState]);
 
   // React Query 데이터 처리
   useEffect(() => {
@@ -260,7 +242,7 @@ console.error('🏠 주차 복원 실패:', error);
           (mainElement as any).scrollTop = y;
         } else {
           // 폴백: window 스크롤
-          scrollToPosition(y);
+          window.scrollTo(0, y);
         }
         
         // 애니 상세화면에서 돌아온 경우 현재 주차의 데이터 다시 로드

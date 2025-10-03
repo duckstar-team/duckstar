@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
 import "./globals.css";
@@ -10,17 +9,7 @@ import MigrationToast from '@/components/common/MigrationToast';
 import ClientAppContainer from '@/components/ClientAppContainer';
 import { ToastContainer } from '@/components/common/Toast';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Pretendard 폰트 추가
+// Pretendard 폰트만 사용 (성능 최적화)
 const pretendard = localFont({
   src: [
     {
@@ -60,6 +49,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* PC 버전 강제 설정 - 모바일에서도 데스크톱 뷰포트 사용 */}
+        <meta name="viewport" content="width=1200, initial-scale=1.0, user-scalable=no" />
+        
         {/* 투표 이미지 프리로딩 */}
         <link rel="preload" href="/voted-normal.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/voted-bonus.svg" as="image" type="image/svg+xml" />
@@ -67,7 +59,7 @@ export default function RootLayout({
         <link rel="preload" href="/voted-bonus-2025-autumn.svg" as="image" type="image/svg+xml" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${pretendard.variable} antialiased`}
+        className={`${pretendard.variable} antialiased`}
       >
         <QueryProvider>
           <AuthProvider>

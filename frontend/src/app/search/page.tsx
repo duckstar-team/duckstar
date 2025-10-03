@@ -16,6 +16,7 @@ import { extractChosung } from '@/lib/searchUtils';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';
 import { useQuery } from '@tanstack/react-query';
+import { queryConfig } from '@/lib/queryConfig';
 import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
 import PreloadingProgress from '@/components/common/PreloadingProgress';
 
@@ -610,33 +611,20 @@ function SearchPageContent() {
   };
 
 
-  // React Query를 사용한 데이터 페칭 (단순화된 '이번 주' 전용)
+  // React Query를 사용한 데이터 페칭 (통일된 캐싱 전략)
   const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
     queryKey: ['schedule', 'this-week'],
     queryFn: getCurrentSchedule, // 항상 '이번 주' 데이터만 호출
     enabled: isInitialized, // 초기화 완료 후에만 API 호출
-    staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
-    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
-    refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
-    refetchOnReconnect: true, // 네트워크 재연결 시 재요청
-    refetchOnMount: false, // 마운트 시 재요청 비활성화 (캐시 사용)
-    retry: 3, // 에러 시 3번 재시도
-    retryDelay: 5000, // 재시도 간격 5초
-    retryOnMount: false, // 마운트 시 재시도 비활성화
+    ...queryConfig.search, // 통일된 검색 데이터 캐싱 전략 적용
   });
 
-  // 검색 쿼리 - 캐시 없이 항상 최신 데이터 요청
+  // 검색 쿼리 - 통일된 캐싱 전략 적용
   const { data: searchData, error: searchError, isLoading: isSearchLoading } = useQuery<AnimeSearchListDto>({
     queryKey: ['search', searchQuery], // 검색어만으로 키 생성
     queryFn: () => searchAnimes(searchQuery),
     enabled: isInitialized && searchQuery.trim().length > 0, // 검색어가 있을 때만 API 호출
-    staleTime: 0, // 즉시 stale
-    gcTime: 0, // 캐시 사용 안함
-    refetchOnMount: true, // 마운트 시 항상 리페치
-    refetchOnWindowFocus: true, // 포커스 시 리페치
-    refetchOnReconnect: true,
-    retry: 1, // 빠른 실패
-    retryDelay: 2000,
+    ...queryConfig.search, // 통일된 검색 데이터 캐싱 전략 적용
   });
 
 

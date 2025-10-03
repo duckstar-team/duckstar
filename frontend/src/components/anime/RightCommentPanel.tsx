@@ -260,7 +260,50 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   // 스티키 요소들의 ref
   const commentHeaderRef = useRef<HTMLDivElement>(null);
   const sortingMenuRef = useRef<HTMLDivElement>(null);
+  const commentListRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
+  
+  // 스크롤 플래그 상태
+  const [shouldScrollToComments, setShouldScrollToComments] = useState(false);
+  
+  // 댓글 리스트로 스크롤하는 함수
+  const handleScrollToComments = useCallback(() => {
+    if (commentListRef.current) {
+      const commentListRect = commentListRef.current.getBoundingClientRect();
+      const commentListTop = commentListRect.top + window.scrollY;
+      const sortingMenuHeight = 60; // 소팅 메뉴 높이
+      const targetScrollTop = commentListTop - (commentHeaderHeight + sortingMenuHeight + 50); // 댓글헤더 + 소팅메뉴 높이 + 여유공간
+      
+      window.scrollTo({ 
+        top: Math.max(0, targetScrollTop), 
+        behavior: 'smooth' 
+      });
+    }
+  }, [commentHeaderHeight]);
+  
+  // 소팅 메뉴가 스티키되는 지점으로 스크롤하는 함수
+  const handleScrollToSortingMenu = useCallback(() => {
+    if (sortingMenuRef.current) {
+      const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
+      const sortingMenuTop = sortingMenuRect.top + window.scrollY;
+      const targetScrollTop = sortingMenuTop - (60 + commentHeaderHeight + 20); // 헤더 + 댓글헤더 높이 + 여유공간
+      
+      window.scrollTo({ 
+        top: Math.max(0, targetScrollTop), 
+        behavior: 'smooth' 
+      });
+    }
+  }, [commentHeaderHeight]);
+  
+  // 댓글 데이터 로드 후 스크롤 실행
+  useEffect(() => {
+    if (shouldScrollToComments && !commentsLoading && comments.length > 0) {
+      setTimeout(() => {
+        handleScrollToComments(); // 댓글 리스트로 스크롤
+        setShouldScrollToComments(false); // 플래그 리셋
+      }, 100); // 댓글 렌더링 완료 후 스크롤
+    }
+  }, [shouldScrollToComments, commentsLoading, comments.length, handleScrollToComments]);
   
   
   
@@ -403,26 +446,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   // 정렬 변경 핸들러
   const handleSortChange = (sort: SortOption) => {
     setCurrentSort(sort);
-    
-    // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤 (-120 위치) (애니메이션 상세화면에서 돌아오는 경우 제외)
-    setTimeout(() => {
-      const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-      if (fromAnimeDetail !== 'true' && sortingMenuRef.current) {
-        const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
-        const sortingMenuTop = sortingMenuRect.top + window.scrollY;
-        const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
-        
-        // 애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 스크롤 차단
-        const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-        const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
-        if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
-          window.scrollTo({ 
-            top: Math.max(0, stickyStartPoint), 
-            behavior: 'auto' 
-          });
-        }
-      }
-    }, 200);
+    setShouldScrollToComments(true); // 스크롤 플래그 설정
   };
 
   // 에피소드 댓글 제출 핸들러
@@ -607,15 +631,42 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
     };
   }, [activeFilters]); // 필터 상태 변경 시 높이 재측정
 
-  // 스티키 상태 감지 로직
+  // 스티키 상태 감지 로직 - 개선된 버전
   useEffect(() => {
+    let originalHeaderTop = 0;
+    let originalSortingMenuTop = 0;
+    
     const handleStickyScroll = () => {
       if (!commentHeaderRef.current || !sortingMenuRef.current) return;
       
-      const scrollY = window.scrollY;
+      // 댓글 헤더의 원래 위치 저장 (첫 번째 실행 시)
+      if (originalHeaderTop === 0) {
+        const rect = commentHeaderRef.current.getBoundingClientRect();
+        originalHeaderTop = rect.top + window.scrollY;
+      }
+      
+      // 소팅 메뉴의 원래 위치 저장 (첫 번째 실행 시)
+      if (originalSortingMenuTop === 0) {
+        const rect = sortingMenuRef.current.getBoundingClientRect();
+        originalSortingMenuTop = rect.top + window.scrollY;
+      }
       
       // 댓글 헤더 스티키 감지
       const commentHeaderRect = commentHeaderRef.current.getBoundingClientRect();
+      const currentScrollY = window.scrollY;
+      
+      // 스크롤이 원래 위치보다 위에 있으면 스티키 해제
+      if (currentScrollY < originalHeaderTop - 60) {
+        if (isCommentHeaderSticky) {
+          setIsCommentHeaderSticky(false);
+        }
+        if (isSortingMenuSticky) {
+          setIsSortingMenuSticky(false);
+        }
+        return;
+      }
+      
+      // 댓글 헤더가 화면 상단에 도달하면 스티키 활성화
       const shouldCommentHeaderBeSticky = commentHeaderRect.top <= 60;
       
       if (shouldCommentHeaderBeSticky !== isCommentHeaderSticky) {
@@ -647,7 +698,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
     return () => {
       window.removeEventListener('scroll', handleStickyScroll);
     };
-  }, [isCommentHeaderSticky, isSortingMenuSticky]);
+  }, [isCommentHeaderSticky, isSortingMenuSticky, commentHeaderHeight]);
 
   // 댓글 데이터 로드 - mock 데이터 제거됨
 
@@ -696,7 +747,17 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
         }
       });
 
-      return unifiedList;
+      // 중복 제거: commentId 기준으로 중복된 댓글 제거 (더 안전한 방법)
+      const seenIds = new Set<number>();
+      const uniqueList = unifiedList.filter(item => {
+        if (seenIds.has(item.commentId)) {
+          return false;
+        }
+        seenIds.add(item.commentId);
+        return true;
+      });
+      
+      return uniqueList;
     };
 
     const unifiedList = createUnifiedList();
@@ -720,7 +781,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       const commentReplies = replies[comment.commentId] || [];
 
       return (
-        <div key={`comment-${comment.commentId}`} className="w-full">
+        <div key={`comment-${comment.commentId}-${index}`} className="w-full">
           <div className={`w-full mb-1.5 ${index === 0 ? 'pt-7' : ''}`}>
             <Comment
               comment={comment}
@@ -886,28 +947,46 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             />
           </div>
       
-      {/* 애니 댓글 헤더 - 이미지 모달이 열려있으면 숨김 */}
+      {/* 댓글 헤더 - 항상 렌더링하되 스티키 상태에 따라 스타일 변경 */}
       {!isImageModalOpen && (
-        <div 
-          ref={commentHeaderRef}
-          className="bg-white w-full"
-          style={{ width: '608px' }}
-        >
-        <div className="size- flex flex-col justify-start items-start gap-5">
-          <CommentHeader 
-            totalComments={totalCommentCount}
-            variant={activeFilters.length > 0 ? 'withFilters' : 'default'}
-            activeFilters={activeFilters}
-            onClearFilters={handleClearFilters}
-            onRemoveFilter={handleRemoveFilter}
-          />
-        </div>
-        </div>
+        <>
+          {/* 스티키일 때 원래 공간 유지를 위한 플레이스홀더 */}
+          {isCommentHeaderSticky && (
+            <div 
+              style={{ 
+                height: `${commentHeaderHeight}px`, // 댓글 헤더의 실제 높이
+                visibility: 'hidden' // 보이지 않지만 공간은 차지
+              }}
+            />
+          )}
+          <div 
+            ref={commentHeaderRef}
+            className="bg-white z-30 pb-3"
+            style={{ 
+              position: isCommentHeaderSticky ? 'fixed' : 'static',
+              top: isCommentHeaderSticky ? '60px' : 'auto',
+              left: isCommentHeaderSticky ? 'calc(50% + 102px)' : 'auto', // 오른쪽 패널 위치에 맞춤
+              width: '608px',
+              zIndex: 30,
+              transition: 'all 0.3s ease-in-out'
+            }}
+          >
+            <div className="size- flex flex-col justify-start items-start gap-5">
+              <CommentHeader 
+                totalComments={totalCommentCount}
+                variant={activeFilters.length > 0 ? 'withFilters' : 'default'}
+                activeFilters={activeFilters}
+                onClearFilters={handleClearFilters}
+                onRemoveFilter={handleRemoveFilter}
+              />
+            </div>
+          </div>
+        </>
       )}
       
       {/* 댓글 작성 폼 */}
-
-      <div data-comment-form className="w-full flex flex-col justify-center items-center gap-2.5 px-0 pt-5" style={{ width: '610px' }}>
+      {!isImageModalOpen && (
+        <div data-comment-form className="w-full flex flex-col justify-center items-center gap-2.5 px-0 pt-5" style={{ width: '610px' }}>
         <div className="self-stretch px-[11px] pt-[10px] pb-[16px] bg-[#F8F9FA] flex flex-col justify-center items-center gap-[10px] overflow-hidden" style={{ width: '608px' }}>
           {/* First Row - Episode Comment Header */}
           <div className="w-[534px] inline-flex justify-end items-center">
@@ -959,123 +1038,42 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             }}
           />
         </div>
-      </div>
+        </div>
+      )}
       
-      {/* 정렬 메뉴 - 이미지 모달이 열려있으면 숨김 */}
+      {/* 정렬 메뉴 - 항상 렌더링하되 스티키 상태에 따라 스타일 변경 */}
       {!isImageModalOpen && (
-        <div 
-          ref={sortingMenuRef}
-          className="bg-white pl-3.5 pt-5"
-          style={{ width: '608px' }}
-        >
-          <SortingMenu 
-            currentSort={currentSort}
-            onSortChange={handleSortChange}
-            onScrollToTop={() => {
-              setTimeout(() => {
-                // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 제외)
-                const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-                if (fromAnimeDetail !== 'true') {
-                  if (sortingMenuRef.current) {
-                    const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
-                    const sortingMenuTop = sortingMenuRect.top + window.scrollY;
-                    const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
-                    
-                    // 애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 스크롤 차단
-                    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-                    const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
-                    if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
-                      window.scrollTo({ 
-                        top: Math.max(0, stickyStartPoint), 
-                        behavior: 'auto' 
-                      });
-                    }
-                  } else {
-                    // fallback: 상단으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 제외)
-                    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-                    const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
-                    if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
-                      window.scrollTo({ top: 0, behavior: 'auto' });
-                    }
-                  }
-                }
-              }, 100);
-            }}
-          />
-        </div>
-      )}
-      
-      {/* Sticky 댓글 헤더 - 헤더 아래에 고정 */}
-      {isCommentHeaderSticky && !isImageModalOpen && (
-        <div 
-          className="sticky bg-white border-b border-gray-200 z-30 pb-3"
-          style={{ 
-            top: '60px',
-            width: '608px',
-            zIndex: 30,
-            transition: 'all 0.3s ease-in-out'
-          }}
-        >
-          <div className="size- flex flex-col justify-start items-start gap-5">
-            <CommentHeader 
-              totalComments={totalCommentCount}
-              variant={activeFilters.length > 0 ? 'withFilters' : 'default'}
-              activeFilters={activeFilters}
-              onClearFilters={handleClearFilters}
-              onRemoveFilter={handleRemoveFilter}
-            />
-          </div>
-        </div>
-      )}
-      
-      {/* Sticky 정렬 메뉴 - 댓글 헤더 아래에 고정 */}
-      {isSortingMenuSticky && !isImageModalOpen && (
-        <div 
-          className="sticky bg-white border-b border-gray-200 z-30"
-          style={{ 
-            top: `${60 + commentHeaderHeight}px`, // 헤더 + 댓글 헤더 높이
-            width: '608px',
-            zIndex: 30,
-            transition: 'all 0.3s ease-in-out'
-          }}
-        >
-          <div className="pl-3.5 pt-3">
-            <SortingMenu 
-              currentSort={currentSort}
-              onSortChange={handleSortChange}
-              onScrollToTop={() => {
-                setTimeout(() => {
-                  // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 제외)
-                  const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-                  if (fromAnimeDetail !== 'true') {
-                    if (sortingMenuRef.current) {
-                      const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
-                      const sortingMenuTop = sortingMenuRect.top + window.scrollY;
-                      const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
-                      
-                      // 애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 스크롤 차단
-                      const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-                      const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
-                      if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
-                        window.scrollTo({ 
-                          top: Math.max(0, stickyStartPoint), 
-                          behavior: 'auto' 
-                        });
-                      }
-                    } else {
-                      // fallback: 상단으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 제외)
-                      const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
-                      const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
-                      if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
-                        window.scrollTo({ top: 0, behavior: 'auto' });
-                      }
-                    }
-                  }
-                }, 100);
+        <>
+          {/* 스티키일 때 원래 공간 유지를 위한 플레이스홀더 */}
+          {isSortingMenuSticky && (
+            <div 
+              style={{ 
+                height: '60px', // 소팅 메뉴의 실제 높이
+                visibility: 'hidden' // 보이지 않지만 공간은 차지
               }}
             />
+          )}
+          <div 
+            ref={sortingMenuRef}
+            className="bg-white z-30"
+            style={{ 
+              position: isSortingMenuSticky ? 'fixed' : 'static',
+              top: isSortingMenuSticky ? `${60 + commentHeaderHeight}px` : 'auto', // 헤더 + 댓글 헤더 높이
+              left: isSortingMenuSticky ? 'calc(50% + 102px)' : 'auto', // 오른쪽 패널 위치에 맞춤
+              width: '608px',
+              zIndex: 30,
+              transition: 'all 0.3s ease-in-out'
+            }}
+          >
+            <div className="pl-3 pt-3">
+              <SortingMenu 
+                currentSort={currentSort}
+                onSortChange={handleSortChange}
+                onScrollToTop={handleScrollToSortingMenu}
+              />
+            </div>
           </div>
-        </div>
+        </>
       )}
       
         
@@ -1083,7 +1081,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
         <div className="w-full bg-white flex flex-col" style={{ width: '608px' }}>
           
           {/* 댓글 목록 */}
-          <div className="w-full flex flex-col justify-start items-start pb-7" style={{ width: '608px' }}>
+          <div ref={commentListRef} className="w-full flex flex-col justify-start items-start pb-7" style={{ width: '608px' }}>
             {commentsLoading && comments.length === 0 ? (
               <div className="w-full flex flex-col items-center py-8">
                 <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-2"></div>
