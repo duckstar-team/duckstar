@@ -35,11 +35,20 @@ jobs:
 
       - name: Add IP to EC2 Security Group for SSH
         run: |
-          aws ec2 authorize-security-group-ingress \
-            --group-id sg-01655f148522c2cac \
-            --protocol tcp \
-            --port 22 \
-            --cidr ${{ steps.ip.outputs.IP }}/32
+          # 현재 IP가 이미 보안 그룹에 있는지 확인
+          if aws ec2 describe-security-groups \
+            --group-ids sg-01655f148522c2cac \
+            --query "SecurityGroups[0].IpPermissions[?IpRanges[?CidrIp=='${{ steps.ip.outputs.IP }}/32']]" \
+            --output text | grep -q "${{ steps.ip.outputs.IP }}/32"; then
+            echo "IP ${{ steps.ip.outputs.IP }} is already in the security group"
+          else
+            echo "Adding IP ${{ steps.ip.outputs.IP }} to security group"
+            aws ec2 authorize-security-group-ingress \
+              --group-id sg-01655f148522c2cac \
+              --protocol tcp \
+              --port 22 \
+              --cidr ${{ steps.ip.outputs.IP }}/32
+          fi
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
