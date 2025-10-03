@@ -25,7 +25,7 @@ import PreloadingProgress from '@/components/common/PreloadingProgress';
 function SearchPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [selectedDay, setSelectedDay] = useState<DayOfWeek>('일'); // 기본값을 "일"로 설정
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek>('월'); // 기본값을 "월"로 설정
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
   const [isPreloading, setIsPreloading] = useState(false);
@@ -88,7 +88,7 @@ function SearchPageContent() {
   };
   
   const measureDayPositions = (seasonKey: string) => {
-    const dayElements = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+    const dayElements = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
     const positions: { [key: string]: number } = {};
     
     dayElements.forEach(day => {
@@ -112,7 +112,7 @@ function SearchPageContent() {
   const getTargetSection = (fromDay: string, toSeasonData: any, isThisWeek: boolean = false) => {
     // 시즌 메뉴에서 첫 번째 존재하는 섹션 찾기
     if (!isThisWeek) {
-      const dayOrder = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+      const dayOrder = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
       let firstExistingIndex = -1;
       
       // 첫 번째 존재하는 섹션 찾기
@@ -138,7 +138,7 @@ function SearchPageContent() {
     }
     
     // 2. 다음 순서 섹션 찾기
-    const dayOrder = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+    const dayOrder = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
     const currentIndex = dayOrder.indexOf(fromDay);
     
     for (let i = currentIndex + 1; i < dayOrder.length; i++) {
@@ -195,7 +195,7 @@ function SearchPageContent() {
       
       // 시즌 메뉴에서 필터링 상태 변경 시 첫 번째 존재하는 섹션으로 네비게이션 바 업데이트
       if (!isCurrentlyThisWeek) {
-        const dayOrder = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+        const dayOrder = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
         const dayMap: { [key: string]: DayOfWeek } = {
           'upcoming': '곧 시작',
           'sun': '일',
@@ -454,7 +454,7 @@ function SearchPageContent() {
         };
         
         // 첫 번째 존재하는 섹션 찾기
-        const dayOrder = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+        const dayOrder = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
         let firstExistingIndex = -1;
         
         for (let i = 0; i < dayOrder.length; i++) {
@@ -544,7 +544,7 @@ function SearchPageContent() {
         };
         
         // 첫 번째 존재하는 섹션 찾기
-        const dayOrder = ['upcoming', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'special'];
+        const dayOrder = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
         let firstExistingIndex = -1;
         
         for (let i = 0; i < dayOrder.length; i++) {
@@ -648,6 +648,39 @@ function SearchPageContent() {
       }
     }
   }, [scheduleData, searchData, showOnlyAiring, selectedYear, selectedQuarter, isThisWeek]);
+
+  // "이번 주" 데이터 로드 후 첫 번째 존재하는 섹션으로 요일 설정
+  useEffect(() => {
+    if (scheduleData && isThisWeek && !searchQuery.trim()) {
+      // 약간의 지연을 두고 DOM이 완전히 렌더링된 후 실행
+      setTimeout(() => {
+        const dayOrder = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
+        const dayMap: { [key: string]: DayOfWeek } = {
+          'upcoming': '곧 시작',
+          'mon': '월',
+          'tue': '화',
+          'wed': '수',
+          'thu': '목',
+          'fri': '금',
+          'sat': '토',
+          'sun': '일',
+          'special': '특별편성 및 극장판'
+        };
+        
+        // 첫 번째 존재하는 섹션 찾기
+        for (const day of dayOrder) {
+          const element = document.getElementById(day);
+          if (element && element.children.length > 0) {
+            const firstDay = dayMap[day];
+            if (firstDay) {
+              setSelectedDay(firstDay);
+              break;
+            }
+          }
+        }
+      }, 100);
+    }
+  }, [scheduleData, isThisWeek, searchQuery]);
 
   // 데이터 로딩 완료 후 시즌별 스크롤 위치 측정
   useEffect(() => {
@@ -914,7 +947,7 @@ function SearchPageContent() {
     }
     
     const emptyDaysSet = new Set<DayOfWeek>();
-    const dayOrder: (keyof typeof currentData.schedule)[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SPECIAL'];
+    const dayOrder: (keyof typeof currentData.schedule)[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'SPECIAL'];
     
     // 각 요일별로 애니메이션이 있는지 확인
     dayOrder.forEach(day => {
@@ -1064,7 +1097,7 @@ function SearchPageContent() {
       return {};
     }
 
-    const dayOrder: (keyof typeof currentData.schedule)[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SPECIAL'];
+    const dayOrder: (keyof typeof currentData.schedule)[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'SPECIAL'];
     const grouped: { [key: string]: AnimePreviewDto[] } = {};
     
     // 방영 중 필터링 함수
@@ -1305,22 +1338,22 @@ function SearchPageContent() {
 
       const sections = hasUpcomingGroup ? [
         { id: getSectionId('upcoming'), day: '곧 시작' },
-        { id: getSectionId('sun'), day: '일' },
         { id: getSectionId('mon'), day: '월' },
         { id: getSectionId('tue'), day: '화' },
         { id: getSectionId('wed'), day: '수' },
         { id: getSectionId('thu'), day: '목' },
         { id: getSectionId('fri'), day: '금' },
         { id: getSectionId('sat'), day: '토' },
+        { id: getSectionId('sun'), day: '일' },
         { id: getSectionId('special'), day: '특별편성 및 극장판' }
       ] : [
-        { id: getSectionId('sun'), day: '일' },
         { id: getSectionId('mon'), day: '월' },
         { id: getSectionId('tue'), day: '화' },
         { id: getSectionId('wed'), day: '수' },
         { id: getSectionId('thu'), day: '목' },
         { id: getSectionId('fri'), day: '금' },
         { id: getSectionId('sat'), day: '토' },
+        { id: getSectionId('sun'), day: '일' },
         { id: getSectionId('special'), day: '특별편성 및 극장판' }
       ];
 
