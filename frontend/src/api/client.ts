@@ -35,6 +35,9 @@ const ENDPOINTS = {
     candidates: '/api/v1/vote/anime',
     status: '/api/v1/vote/anime/status',
   },
+  admin: {
+    animes: '/api/admin/animes',
+  },
 } as const;
 
 // Default fetch options
@@ -136,7 +139,6 @@ export async function withdraw(): Promise<void> {
       await response.json();
     } catch (error) {
       // JSON 파싱 실패 시 무시 (성공으로 처리)
-      console.log('회원탈퇴 성공 (빈 응답)');
     }
   }
 }
@@ -161,7 +163,6 @@ export async function withdrawKakao(): Promise<void> {
       await response.json();
     } catch (error) {
       // JSON 파싱 실패 시 무시 (성공으로 처리)
-      console.log('카카오 회원탈퇴 성공 (빈 응답)');
     }
   }
 }
@@ -186,7 +187,6 @@ export async function withdrawGoogle(): Promise<void> {
       await response.json();
     } catch (error) {
       // JSON 파싱 실패 시 무시 (성공으로 처리)
-      console.log('구글 회원탈퇴 성공 (빈 응답)');
     }
   }
 }
@@ -211,7 +211,6 @@ export async function withdrawNaver(): Promise<void> {
       await response.json();
     } catch (error) {
       // JSON 파싱 실패 시 무시 (성공으로 처리)
-      console.log('네이버 회원탈퇴 성공 (빈 응답)');
     }
   }
 }
@@ -260,6 +259,49 @@ export async function submitVote(voteData: Record<string, unknown>) {
     method: 'POST',
     body: JSON.stringify(voteData),
   });
+}
+
+export async function revoteAnime(submissionId: number, voteData: Record<string, unknown>) {
+  return apiCall<ApiResponseVoid>(`${ENDPOINTS.vote.candidates}/${submissionId}`, {
+    method: 'POST',
+    body: JSON.stringify(voteData),
+  });
+}
+
+// Admin API functions
+export async function createAnime(animeData: Record<string, unknown>) {
+  return apiCall(ENDPOINTS.admin.animes, {
+    method: 'POST',
+    body: JSON.stringify(animeData),
+  });
+}
+
+export async function updateAnimeImage(animeId: number, imageFile: File) {
+  const formData = new FormData();
+  formData.append('mainImage', imageFile);
+  
+  const headers: Record<string, string> = {};
+  
+  // localStorage에서 accessToken 가져오기
+  if (typeof window !== 'undefined') {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+  }
+  
+  const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.admin.animes}/${animeId}`, {
+    method: 'POST',
+    headers,
+    credentials: API_CONFIG.credentials,
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    throw new Error(`애니메이션 이미지 수정 실패: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
 }
 
 // SWR fetcher function

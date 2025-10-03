@@ -31,6 +31,18 @@ html, body {
   min-height: 100%;
 }
 
+/* PC 버전 강제 설정 - 모바일에서도 데스크톱 레이아웃 사용 */
+@media (max-width: 768px) {
+  body {
+    min-width: 1200px;
+    overflow-x: auto;
+  }
+  
+  html {
+    overflow-x: auto;
+  }
+}
+
 /* 스티키 요소를 위한 스크롤 컨테이너 설정 */
 html {
   scroll-behavior: auto !important;
@@ -39,6 +51,51 @@ html {
 /* 스크롤 애니메이션 완전 차단 */
 * {
   scroll-behavior: auto !important;
+}
+
+/* 스크롤 성능 최적화 - 애니메이션 요소만 타겟팅 */
+[data-bonus-stamp],
+[data-max-votes-button],
+[data-vote-button],
+.motion-element {
+  /* GPU 가속을 위한 기본 설정 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 애니메이션 요소에 대한 추가 최적화 */
+[data-bonus-stamp],
+[data-max-votes-button],
+[data-vote-button] {
+  will-change: transform, opacity;
+}
+
+/* 스크롤 중 성능 최적화 */
+.scrolling {
+  pointer-events: none;
+}
+
+.scrolling [data-bonus-stamp],
+.scrolling [data-max-votes-button],
+.scrolling [data-vote-button] {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* 스티키 요소 최적화 */
+[data-day-selection],
+[data-vote-section],
+[data-sorting-menu] {
+  z-index: 10;
+}
+
+/* VoteSection 스티키 최적화 */
+[data-vote-section-sticky] {
+  z-index: 40;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 /* Line Clamp Utilities */

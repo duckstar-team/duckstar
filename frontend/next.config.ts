@@ -16,9 +16,16 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // 스크롤 복원 비활성화
+  // 성능 최적화 설정
   experimental: {
     scrollRestoration: false,
+    // optimizeCss: true, // CSS 최적화 (critters 의존성 문제로 임시 비활성화)
+    optimizePackageImports: ['@tanstack/react-query', 'framer-motion'], // 패키지 임포트 최적화
+  },
+
+  // 컴파일러 최적화
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production', // 프로덕션에서 console 제거
   },
   
   // API 프록시 설정

@@ -21,6 +21,12 @@ interface TabOptionConfig {
 interface LeftInfoPanelProps {
   onBack: () => void;
   onImageModalToggle?: (isOpen: boolean) => void; // 이미지 모달 상태 전달
+  isAdmin?: boolean; // 관리자 여부
+  onImageEdit?: () => void; // 이미지 편집 핸들러
+  isEditingImage?: boolean; // 이미지 편집 중 여부
+  imageFile?: File | null; // 선택된 이미지 파일
+  onImageUpdate?: () => void; // 이미지 업데이트 핸들러
+  onImageEditCancel?: () => void; // 이미지 편집 취소 핸들러
   anime: {
     animeId: number;
     mainThumbnailUrl: string;
@@ -61,7 +67,18 @@ const getSeasonInKorean = (seasonType: string): string => {
   return seasonMap[seasonType] || seasonType;
 };
 
-export default function LeftInfoPanel({ anime, onBack, characters, onImageModalToggle }: LeftInfoPanelProps) {
+export default function LeftInfoPanel({ 
+  anime, 
+  onBack, 
+  characters, 
+  onImageModalToggle,
+  isAdmin = false,
+  onImageEdit,
+  isEditingImage = false,
+  imageFile,
+  onImageUpdate,
+  onImageEditCancel
+}: LeftInfoPanelProps) {
   // 이미지 캐시 훅 사용
   const { isImageLoaded, isImageError } = useImageCache();
   
@@ -219,24 +236,34 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
     setHoveredBarStyle(prev => ({ ...prev, opacity: 0 }));
   };
 
+  // anime 객체가 null인 경우 early return
+  if (!anime) {
+    return (
+      <div className="w-[612px] h-[1144px] bg-white rounded-xl border border-[#D1D1D6] flex items-center justify-center">
+        <div className="text-gray-500">애니메이션 정보를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // anime 객체가 null일 경우를 대비한 기본값 설정
   const {
-    mainThumbnailUrl,
-    mainImageUrl,
-    thumbnailImageUrl,
-    thumbnailPosterUrl,
-    titleKor,
-    titleJpn,
-    status,
-    dayOfWeek,
-    scheduledAt,
-    genre,
-    medium,
+    mainThumbnailUrl = '',
+    mainImageUrl = '',
+    thumbnailImageUrl = '',
+    thumbnailPosterUrl = '',
+    titleKor = '',
+    titleJpn = '',
+    status = '',
+    dayOfWeek = '',
+    scheduledAt = '',
+    genre = '',
+    medium = '',
     year = 2025,
     quarter = 2,
-              studio = '',
-          director = '',
-          source = '',
-          startDate = '',
+    studio = '',
+    director = '',
+    source = '',
+    startDate = '',
           rating = '',
           synopsis = '',
     officialSite,
@@ -425,13 +452,24 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
       // 임시로 전체 텍스트를 표시하여 높이 측정
       element.style.webkitLineClamp = 'unset';
       element.style.display = 'block';
+      element.style.whiteSpace = 'pre-wrap'; // 줄바꿈 고려
       const fullHeight = element.scrollHeight;
       
       // 2줄 제한 적용
       element.style.webkitLineClamp = '2';
       element.style.display = '-webkit-box';
+      element.style.whiteSpace = 'pre-wrap'; // 줄바꿈 유지
       
-      if (fullHeight > maxHeight) {
+      // 더 정확한 높이 계산을 위해 실제 줄 수 확인
+      const actualLines = Math.ceil(fullHeight / lineHeight);
+      
+      // 텍스트 길이도 함께 고려 (문자 수 기준)
+      const textLength = synopsis.length;
+      const isLongText = textLength > 100; // 100자 이상
+      const isManyLines = actualLines > 3; // 3줄 이상
+      
+      // 텍스트가 길거나 줄 수가 많을 때만 펼치기 버튼 표시
+      if (isLongText || isManyLines) {
         setShowExpandButton(true);
       } else {
         setShowExpandButton(false);
@@ -592,6 +630,57 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
             opacity: isMainImageLoaded || isCachedImage ? 1 : 0.9
           }} 
         />
+        
+        {/* 관리자 편집 버튼 */}
+        {isAdmin && (
+          <div className="absolute top-4 right-4 z-10">
+            {!isEditingImage ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onImageEdit?.();
+                }}
+                className="bg-black/50 hover:bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                이미지 편집
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onImageUpdate?.();
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onImageEditCancel?.();
+                  }}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                >
+                  취소
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* 편집 중일 때 선택된 파일 정보 표시 */}
+        {isEditingImage && imageFile && (
+          <div className="absolute bottom-4 left-4 right-4 bg-black/70 text-white p-3 rounded-lg">
+            <div className="text-sm font-medium">선택된 파일: {imageFile.name}</div>
+            <div className="text-xs text-gray-300 mt-1">
+              크기: {(imageFile.size / 1024 / 1024).toFixed(2)} MB
+            </div>
+          </div>
+        )}
       </div>
       
       {/* 제목 및 정보 오버레이 */}
@@ -1004,7 +1093,8 @@ export default function LeftInfoPanel({ anime, onBack, characters, onImageModalT
                    display: !isSynopsisExpanded && showExpandButton ? '-webkit-box' : 'block',
                    WebkitLineClamp: !isSynopsisExpanded && showExpandButton ? 2 : 'unset',
                    WebkitBoxOrient: 'vertical',
-                   overflow: 'hidden'
+                   overflow: 'hidden',
+                   whiteSpace: 'pre-wrap' // 줄바꿈 문자(\n)를 실제 줄바꿈으로 표시
                  }}
                >
                  <p className="text-justify">{synopsis}</p>

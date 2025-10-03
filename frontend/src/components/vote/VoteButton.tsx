@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useScrollOptimization } from '../../hooks/useScrollOptimization';
 
 export type VoteButtonVariant = 'next' | 'bonus' | 'submit';
 
@@ -9,6 +10,7 @@ interface VoteButtonProps {
   onClick: () => void;
   disabled?: boolean;
   showError?: boolean;
+  isRevoteMode?: boolean;
 }
 
 const BUTTON_CONFIG = {
@@ -33,8 +35,10 @@ export default function VoteButton({
   type, 
   onClick, 
   disabled = false, 
-  showError = false 
+  showError = false,
+  isRevoteMode = false
 }: VoteButtonProps) {
+  const { isScrolling } = useScrollOptimization();
   const config = BUTTON_CONFIG[type];
   const baseClasses = "flex items-center justify-center pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 h-8 sm:h-10 rounded-lg font-['Pretendard',_sans-serif] font-bold text-sm sm:text-base text-white transition-all duration-200 hover:brightness-110 text-center";
   
@@ -51,11 +55,17 @@ export default function VoteButton({
         />
       );
     }
+    
+    if (type === 'submit' && isRevoteMode) {
+      return '재투표하기';
+    }
+    
     return config.text;
   };
 
   return (
     <button
+      data-vote-button
       onClick={onClick}
       disabled={disabled}
       className={`${buttonClasses} ${disabledClasses}`}
@@ -64,8 +74,14 @@ export default function VoteButton({
         key={showError ? 'error' : 'normal'}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2 }}
+        transition={{ 
+          duration: isScrolling ? 0.1 : 0.2 // 스크롤 중일 때 더 빠르게
+        }}
         className="flex items-center justify-center w-full text-center"
+        style={{
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)', // GPU 가속 강제 활성화
+        }}
       >
         {getButtonContent()}
       </motion.span>

@@ -20,17 +20,18 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
   // 덕스타 로고 클릭 시 스크롤 탑으로 이동
   const handleLogoClick = () => {
     sessionStorage.setItem('logo-navigation', 'true');
+    sessionStorage.setItem('home-scroll-top', 'true');
     scrollToTop();
   };
 
   // 검색 실행
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (searchQuery.trim()) {
-      // 헤더 검색 플래그 설정
-      sessionStorage.setItem('from-header-search', 'true');
-      // 검색 결과 페이지로 이동하면서 검색어 전달
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      // 검색 페이지로 이동 (keyword 파라미터 사용)
+      router.push(`/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
+      
       // 검색 후 검색창 비우기
       setSearchQuery('');
     }
@@ -84,7 +85,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="제목으로 애니 찾기..."
+              placeholder="제목, 초성으로 애니 찾기"
               className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
             />
           </div>

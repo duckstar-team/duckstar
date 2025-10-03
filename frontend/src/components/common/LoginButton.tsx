@@ -31,6 +31,11 @@ export default function LoginButton({
     setIsDropdownOpen(false);
   };
 
+  const handleAdminMenuClick = () => {
+    router.push('/admin');
+    setIsDropdownOpen(false);
+  };
+
   const handleLogoutClick = () => {
     logout();
     setIsDropdownOpen(false);
@@ -101,6 +106,18 @@ export default function LoginButton({
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
           <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-fit">
+            {/* 관리자 메뉴 - ADMIN 권한이 있는 경우에만 표시 */}
+            {user.role === 'ADMIN' && (
+              <>
+                <button
+                  onClick={handleAdminMenuClick}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  관리자 메뉴
+                </button>
+                <div className="border-t border-gray-200 my-1"></div>
+              </>
+            )}
             <button
               onClick={handleProfileEditClick}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer"

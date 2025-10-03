@@ -141,10 +141,12 @@ export interface AnimeVoteHistoryDto {
 // Vote History Ballot DTO (실제 API 응답에서 사용되는 구조)
 export interface VoteHistoryBallotDto {
   animeId: number;
+  animeCandidateId: number;
   mainThumbnailUrl: string;
   titleKor: string;
   medium: "TVA" | "MOVIE";
   ballotType: "NORMAL" | "BONUS";
+  totalEpisodes?: number;
 }
 
 // Vote History Response DTO
@@ -202,7 +204,8 @@ export interface AnimePreviewDto {
 
 // Anime Preview List DTO
 export interface AnimePreviewListDto {
-  weekDto: WeekDto;
+  year: number;
+  quarter: number;
   schedule: {
     [key: string]: AnimePreviewDto[];
   };
@@ -258,7 +261,7 @@ export interface WeeklyTopDto {
   isPrepared: boolean;
   duckstarRankPreviews: DuckstarRankPreviewDto[];
   anilabRankPreviews: RankPreviewDto[];
-  animeTrendingRankPreviews: RankPreviewDto[];
+  animeCornerRankPreviews: RankPreviewDto[];
 }
 
 // Home Banner DTO
@@ -276,7 +279,8 @@ export interface HomeBannerDto {
 export interface HomeDto {
   weeklyTopDto: WeeklyTopDto;
   homeBannerDtos: HomeBannerDto[];
-  weekDtos: WeekDto[];
+  currentWeekDto: WeekDto;
+  pastWeekDtos: WeekDto[];
 }
 
 export type ApiResponseHomeDto = ApiResponse<HomeDto>;

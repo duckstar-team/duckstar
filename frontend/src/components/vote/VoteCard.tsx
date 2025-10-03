@@ -20,6 +20,7 @@ interface VoteCardProps {
   onMouseLeave?: () => void;
   disabled?: boolean;
   showGenderSelection?: boolean;
+  showDropdown?: boolean;
 }
 
 const VoteCard = memo(function VoteCard({
@@ -38,6 +39,7 @@ const VoteCard = memo(function VoteCard({
   onMouseLeave,
   disabled = false,
   showGenderSelection = false,
+  showDropdown = false,
 }: VoteCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [justDeselected, setJustDeselected] = useState(false);
@@ -117,12 +119,12 @@ const VoteCard = memo(function VoteCard({
     if (weekDto) {
       const year = weekDto.year;
       const season = getSeasonFromDate(weekDto.startDate);
-      const seasonKorean = getSeasonInKorean(season);
-      const mediumText = medium === "MOVIE" ? "극장판" : "TVA";
-      return `${year} ${seasonKorean} ${mediumText}`;
+      const seasonText = getSeasonInKorean(season);
+      const week = weekDto.week;
+      return `${year} ${seasonText} ${week}주차`;
     }
     return ""; // 폴백으로 빈 문자열 반환
-  }, [weekDto, medium]);
+  }, [weekDto]);
 
   return (
     <div className="relative">
@@ -130,7 +132,7 @@ const VoteCard = memo(function VoteCard({
         className={`
           w-full bg-white rounded-xl shadow border-2
           transition-all duration-200 ease-in-out
-          ${disabled ? 'cursor-default' : 'cursor-pointer hover:shadow-lg'}
+          ${disabled ? 'cursor-pointer' : 'cursor-pointer hover:shadow-lg'}
           ${showError 
             ? 'border-[#CB285E]/80 shadow-red-200/50' 
             : 'border-gray-200'
@@ -166,7 +168,7 @@ const VoteCard = memo(function VoteCard({
           </div>
 
           {/* 제목 + 시즌 */}
-          <div className="flex flex-col flex-1">
+          <div className={`flex flex-col ${showDropdown ? 'flex-1 mr-4' : 'flex-1'}`}>
             <div className="text-lg font-semibold text-gray-900 break-words leading-tight">
               {title}
             </div>
@@ -174,24 +176,26 @@ const VoteCard = memo(function VoteCard({
           </div>
 
           {/* 투표 토글 */}
-          <VoteToggle
-            selected={checked}
-            isCardHovered={isHovered}
-            justDeselected={justDeselected}
-            currentVotes={currentVotes}
-            maxVotes={maxVotes}
-            isBonusMode={isBonusMode}
-            bonusVotesUsed={bonusVotesUsed}
-            isBonusVote={isBonusVote}
-            onClick={(isBonusVote) => {
-              if (!onChange) return; // disabled 상태에서는 클릭 무시
-              // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
-              onChange(isBonusVote);
-            }}
-            disabled={disabled}
-            cardHoverSide={hoverSide}
-            weekDto={weekDto}
-          />
+          <div className={`${showDropdown ? 'mr-12' : ''}`}>
+            <VoteToggle
+              selected={checked}
+              isCardHovered={isHovered}
+              justDeselected={justDeselected}
+              currentVotes={currentVotes}
+              maxVotes={maxVotes}
+              isBonusMode={isBonusMode}
+              bonusVotesUsed={bonusVotesUsed}
+              isBonusVote={isBonusVote}
+              onClick={(isBonusVote) => {
+                if (!onChange) return; // disabled 상태에서는 클릭 무시
+                // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
+                onChange(isBonusVote);
+              }}
+              disabled={disabled}
+              cardHoverSide={hoverSide}
+              weekDto={weekDto}
+            />
+          </div>
         </div>
 
         {/* 모바일/태블릿 레이아웃 (lg 미만) */}

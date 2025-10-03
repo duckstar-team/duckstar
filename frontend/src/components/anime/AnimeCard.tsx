@@ -2,9 +2,9 @@
 
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useAdvancedScrollRestoration } from '@/hooks/useAdvancedScrollRestoration';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { AnimePreviewDto } from '@/components/search/types';
+import { useNavigation } from '@/hooks/useNavigation';
 
 interface AnimeCardProps {
   anime: AnimePreviewDto;
@@ -15,31 +15,13 @@ interface AnimeCardProps {
 export default function AnimeCard({ anime, className, isCurrentSeason = true }: AnimeCardProps) {
   const { animeId, mainThumbnailUrl, status, isBreak, titleKor, dayOfWeek, scheduledAt, isRescheduled, genre, medium, ottDtos } = anime;
   const [imageError, setImageError] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
-  // 고급 스크롤 복원 훅 사용
-  const { navigateWithScroll } = useAdvancedScrollRestoration({
-    enabled: true,
-    scrollKey: pathname === '/search' ? 'search' : 'home',
-    navigationTypes: {
-      detail: 'from-anime-detail'
-    }
-  });
+  const { navigateToDetail } = useNavigation();
   
   // 애니메이션 카드 클릭 핸들러
   const handleCardClick = () => {
-    // 홈페이지에서 상세화면으로 이동할 때 스크롤 저장
-    if (pathname === '/' && typeof window !== 'undefined') {
-      const currentScrollY = window.scrollY || 0;
-      sessionStorage.setItem('home-scroll', currentScrollY.toString());
-      sessionStorage.setItem('navigation-type', 'from-anime-detail');
-      console.log('🎬 AnimeCard: 홈페이지 스크롤 저장:', currentScrollY);
-    }
-    
-    // 모든 페이지에서 Next.js 클라이언트 사이드 라우팅 사용
-    navigateWithScroll(`/animes/${animeId}`);
+    navigateToDetail(animeId);
   };
   
   // 디데이 계산 함수 (8/22 형식에서 현재 시간까지의 차이)
@@ -53,9 +35,9 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
     // 올해의 해당 날짜 생성
     const airDate = new Date(currentYear, month - 1, day);
     
-    // 이미 지난 경우 내년으로 설정
+    // 이미 지난 경우 D-DAY로 표시 (내년으로 설정하지 않음)
     if (airDate < now) {
-      airDate.setFullYear(currentYear + 1);
+      return 0; // D-DAY로 표시
     }
     
     const diffTime = airDate.getTime() - now.getTime();
@@ -84,6 +66,8 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
       const daysUntil = calculateDaysUntilAir(airTime);
       if (daysUntil > 0) {
         return `D-${daysUntil}`;
+      } else if (daysUntil === 0) {
+        return 'D-DAY';
       }
     }
     
@@ -286,7 +270,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
           return '예정';
         }
       case 'NOW_SHOWING':
-        return '방영중';
+        return medium === 'MOVIE' ? '상영중' : '방영중';
       case 'COOLING':
         return '휴방';
       case 'ENDED':
@@ -323,6 +307,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
   
   return (
     <div 
+      data-anime-item
       className={cn(
         "bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02]",
         "flex flex-col h-full",
@@ -464,6 +449,15 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
                 
                 if (isUpcomingCountdown) {
                   // UPCOMING 상태의 "D-" 텍스트에 검정 바탕에 흰 글씨 스타일 적용
+                  // scheduledAt에서 시간 추출
+                  const getTimeFromScheduledAt = (scheduledAt: string) => {
+                    if (!scheduledAt) return '';
+                    const date = new Date(scheduledAt);
+                    const hours = date.getHours().toString().padStart(2, '0');
+                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                    return `${hours}:${minutes}`;
+                  };
+                  
                   return (
                     <div className="flex items-center gap-2">
                       <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
@@ -476,6 +470,9 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
                       </span>
                       <span className="bg-black text-white px-2 py-1 rounded text-[13px] font-bold font-['Pretendard']">
                         {airTimeText}
+                      </span>
+                      <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
+                        {getTimeFromScheduledAt(scheduledAt)}
                       </span>
                     </div>
                   );
@@ -525,12 +522,12 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
         {/* Genres and Medium Type */}
         <div className="flex items-center justify-between mt-[5px]">
           {/* Genres */}
-          <span className="text-[13px] font-medium text-[#868E96] font-['Pretendard']">
+          <span className="text-[13px] font-medium text-[#868E96] font-['Pretendard'] pr-2">
             {genre}
           </span>
           
                       {/* Medium Type */}
-            <span className="text-[13px] font-normal text-[#868E96] font-['Pretendard']">
+            <span className="text-[13px] font-normal text-[#868E96] font-['Pretendard'] whitespace-nowrap">
               {getMediumInKorean(medium)}
             </span>
         </div>

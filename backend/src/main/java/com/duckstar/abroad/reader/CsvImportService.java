@@ -4,8 +4,8 @@ import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.WeekHandler;
 import com.duckstar.abroad.aniLab.Anilab;
 import com.duckstar.abroad.aniLab.AnilabRepository;
-import com.duckstar.abroad.animeTrend.AnimeTrending;
-import com.duckstar.abroad.animeTrend.AnimeTrendingRepository;
+import com.duckstar.abroad.animeCorner.AnimeCorner;
+import com.duckstar.abroad.animeCorner.AnimeCornerRepository;
 import com.duckstar.domain.*;
 import com.duckstar.domain.Character;
 import com.duckstar.domain.enums.*;
@@ -67,7 +67,7 @@ public class CsvImportService {
     private final SeasonRepository seasonRepository;
     private final AnimeSeasonRepository animeSeasonRepository;
     private final WeekRepository weekRepository;
-    private final AnimeTrendingRepository animeTrendingRepository;
+    private final AnimeCornerRepository animeCornerRepository;
     private final AnilabRepository anilabRepository;
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -82,16 +82,16 @@ public class CsvImportService {
         Week week = weekRepository.findWeekById(weekId)
                 .orElseThrow(() -> new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
 
-        importAnimeTrending(week, request.getAnimeTrendingCsv());
+        importAnimeCorner(week, request.getAnimeCornerCsv());
         importAnilab(week, request.getAnilabCsv());
     }
 
-    private void importAnimeTrending(Week week, MultipartFile animeTrendingCsv) throws IOException {
-        if (animeTrendingCsv == null || animeTrendingCsv.isEmpty()) {
+    private void importAnimeCorner(Week week, MultipartFile animeCornerCsv) throws IOException {
+        if (animeCornerCsv == null || animeCornerCsv.isEmpty()) {
             return;
         }
 
-        Reader reader = new InputStreamReader(animeTrendingCsv.getInputStream(), StandardCharsets.UTF_8);
+        Reader reader = new InputStreamReader(animeCornerCsv.getInputStream(), StandardCharsets.UTF_8);
         CSVFormat format = CSVFormat.Builder
                 .create()
                 .setHeader()
@@ -108,14 +108,14 @@ public class CsvImportService {
                 ));
 
         for (CSVRecord record : parser) {
-            String titleEng = record.get("title");
+            String titleEng = record.get("title_eng");
             Anime anime = idToTitleMap.getOrDefault(titleEng, null);
             String mainThumbnailUrl;
-            if (anime == null) {
-                mainThumbnailUrl = record.get("mainThumbnailUrl");
-            } else {
-                mainThumbnailUrl = anime.getMainThumbnailUrl();
-            }
+//            if (anime == null) {
+//                mainThumbnailUrl = record.get("mainThumbnailUrl");
+//            } else {
+//                mainThumbnailUrl = anime.getMainThumbnailUrl();
+//            }
 
             Integer rank;
             try {
@@ -126,31 +126,29 @@ public class CsvImportService {
 
             Integer rankDiff;
             try {
-                rankDiff = Integer.parseInt(record.get("rankDiff"));
+                rankDiff = Integer.parseInt(record.get("rank_diff"));
             } catch (NumberFormatException e) {
                 rankDiff = null;
             }
 
             Integer consecutiveWeeksAtSameRank;
             try {
-                consecutiveWeeksAtSameRank = Integer.parseInt(record.get("consecutiveWeeksAtSameRank"));
+                consecutiveWeeksAtSameRank = Integer.parseInt(record.get("consecutive_weeks_at_same_rank"));
             } catch (NumberFormatException e) {
                 consecutiveWeeksAtSameRank = null;
             }
 
-            AnimeTrending animeTrending = AnimeTrending.builder()
+            AnimeCorner animeCorner = AnimeCorner.builder()
                     .week(week)
                     .anime(anime)
-                    .mainThumbnailUrl(mainThumbnailUrl)
                     .title(titleEng)
-                    .corp(record.get("corp"))
                     .rank(rank)
                     .rankDiff(rankDiff == null ? 0 : rankDiff)
                     .consecutiveWeeksAtSameRank(
                             consecutiveWeeksAtSameRank == null ? 0 : consecutiveWeeksAtSameRank)
                     .build();
 
-            animeTrendingRepository.save(animeTrending);
+            animeCornerRepository.save(animeCorner);
         }
     }
 
@@ -240,7 +238,7 @@ public class CsvImportService {
 
     public void importNewSeason(Integer year, Integer quarter, NewSeasonRequestDto request) throws IOException {
         Quarter savedQuarter = quarterRepository.save(Quarter.create(year, quarter));
-        Season savedSeason = seasonRepository.save(Season.create(savedQuarter, year));
+        Season savedSeason = seasonRepository.save(Season.create(year, savedQuarter));
 
         Map<Integer, Long> animeIdMap = importAnimes(savedSeason, request.getAnimeCsv());
         Map<Integer, Long> characterIdMap = importCharacters(request.getCharactersCsv());
@@ -454,16 +452,27 @@ public class CsvImportService {
             Files.copy(in, original.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
 
-        // 4. WebP 변환
-        ImmutableImage image = ImmutableImage.loader().fromFile(original);
-        File webpFile = new File(tempDir, name + ".webp");
-        WebpWriter writer = WebpWriter.DEFAULT.withQ(80);  // 품질 80%
-        image.output(writer, webpFile);
-
+        // 4. WebP 변환,
         // 5. 원본 삭제
-        original.delete();
+        return convertToWebpAndGet(tempDir, name, original);
+    }
 
-        return webpFile;
+    private static File convertToWebpAndGet(File tempDir, String name, File original) throws IOException {
+        try {
+            ImmutableImage image = ImmutableImage.loader().fromFile(original);
+            File webpFile = new File(tempDir, name + ".webp");
+            WebpWriter writer = WebpWriter.DEFAULT.withQ(80);  // 품질 80%
+            image.output(writer, webpFile);
+            return webpFile;
+        } finally {
+            original.delete();
+        }
+    }
+
+    public static File convertToWebpAndGet(File tempDir, String name, InputStream in) throws IOException {
+        File original = new File(tempDir, name + ".tmp");
+        Files.copy(in, original.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        return convertToWebpAndGet(tempDir, name, original);
     }
 
     public Map<Integer, Long> importAnimes(Season season, MultipartFile animeCsv) throws IOException {
@@ -559,7 +568,7 @@ public class CsvImportService {
 
                 try {
                     // S3 업로드 & image 필드 업데이트
-                    Long newId = uploadAndUpdateAnime(imageUrl, saved);
+                    Long newId = uploadAnimeMain(imageUrl, saved);
                     idMap.put(oldId, newId);
 
                 } catch (Exception e) {
@@ -574,31 +583,70 @@ public class CsvImportService {
         return idMap;
     }
 
-    private Long uploadAndUpdateAnime(String image, Anime anime) throws IOException {
+    private Long uploadAnimeMain(String imageUrl, Anime anime) throws IOException {
         File tempDir = Files.createTempDirectory("anime").toFile();
         try {
-            File mainWebp = downloadAndConvertToWebp(image, tempDir, "main");
+            // 메인 webp 변환
+            File mainWebp = downloadAndConvertToWebp(imageUrl, tempDir, "main");
 
-            // 3. 썸네일 생성 (320x350 박스 안, 비율 유지)
+            // 썸네일 생성 (320x350 박스 안, 비율 유지)
             File thumbWebp = s3Uploader.createThumbnail(mainWebp, 320, 350);
 
-            // 4. S3 업로드
-            Long newId = anime.getId();
-
-            String mainS3Key = "animes/" + newId + "/main.webp";
-            String thumbS3Key = "animes/" + newId + "/thumb.webp";
-
-            String mainUrl = s3Uploader.uploadWithKey(mainWebp, mainS3Key);
-            String thumbUrl = s3Uploader.uploadWithKey(thumbWebp, thumbS3Key);
-
-            anime.updateImage(mainUrl, thumbUrl);
-
-            return newId;
+            return uploadAnimeImages(anime, mainWebp, thumbWebp, 1);
 
         } catch (CertificateException | KeyStoreException | NoSuchAlgorithmException | KeyManagementException e) {
             throw new RuntimeException(e);
         } finally {
             FileSystemUtils.deleteRecursively(tempDir);
         }
+    }
+
+    public void uploadAnimeMain(MultipartFile main, Anime anime) throws IOException {
+        File tempDir = Files.createTempDirectory("anime").toFile();
+        try {
+            // 메인 webp 변환
+            File mainWebp = convertToWebpAndGet(tempDir, "main", main.getInputStream());
+
+            // 썸네일 생성 (320x350 박스 안, 비율 유지)
+            File thumbWebp = s3Uploader.createThumbnail(mainWebp, 320, 350);
+
+            uploadAnimeImages(anime, mainWebp, thumbWebp, 1);
+
+        } finally {
+            FileSystemUtils.deleteRecursively(tempDir);
+        }
+    }
+
+    public void updateAnimeMain(MultipartFile main, int version, Anime anime) throws IOException {
+        File tempDir = Files.createTempDirectory("anime").toFile();
+        try {
+            // 메인 webp 변환
+            File mainWebp = convertToWebpAndGet(tempDir, "main", main.getInputStream());
+
+            // 썸네일 생성 (320x350 박스 안, 비율 유지)
+            File thumbWebp = s3Uploader.createThumbnail(mainWebp, 320, 350);
+
+            uploadAnimeImages(anime, mainWebp, thumbWebp, version);
+
+        } finally {
+            FileSystemUtils.deleteRecursively(tempDir);
+        }
+    }
+
+    private Long uploadAnimeImages(Anime anime, File mainWebp, File thumbWebp, int version) {
+        // S3 업로드
+        Long newId = anime.getId();
+
+        String tail = version >= 2 ? "_v" + version + ".webp" : ".webp";
+
+        String mainS3Key = "animes/" + newId + "/main" + tail;
+        String thumbS3Key = "animes/" + newId + "/thumb" + tail;
+
+        String mainUrl = s3Uploader.uploadWithKey(mainWebp, mainS3Key);
+        String thumbUrl = s3Uploader.uploadWithKey(thumbWebp, thumbS3Key);
+
+        anime.updateImage(mainUrl, thumbUrl);
+
+        return newId;
     }
 }

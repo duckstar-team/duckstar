@@ -150,6 +150,37 @@ export async function searchAnimes(query: string): Promise<AnimeSearchListDto> {
 }
 
 /**
+ * 애니메이션 에피소드 목록 조회 API
+ * @param animeId 애니메이션 ID
+ * @returns 에피소드 목록
+ */
+export async function getAnimeEpisodes(animeId: number): Promise<EpisodeDto[]> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/animes/${animeId}/episodes`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: ApiResponse<EpisodeDto[]> = await response.json();
+    
+    if (!apiResponse.isSuccess) {
+      throw new Error(apiResponse.message);
+    }
+
+    return apiResponse.result;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
  * 관리자용 애니메이션 총 화수 업데이트 API
  * @param animeId 애니메이션 ID
  * @param totalEpisodes 총 화수

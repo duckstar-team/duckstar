@@ -142,7 +142,7 @@ duckstar/
 **검색 페이지 준비 완료 ✅**
 
 <div align="center">
-  <img src="screenshots/8.png" alt="검색 페이지" width="900"/>
+  <img src="screenshots/5.png" alt="검색 페이지" width="900"/>
 </div>
 
 <br/>
@@ -150,7 +150,7 @@ duckstar/
 **애니메이션 홈 준비 완료 ✅**
 
 <div align="center">
-  <img src="screenshots/9.png" alt="애니메이션 홈" width="900"/>
+  <img src="screenshots/6.png" alt="애니메이션 홈" width="900"/>
 </div>
 
 <br/>

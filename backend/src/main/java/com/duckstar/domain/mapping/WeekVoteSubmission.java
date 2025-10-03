@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         indexes = {
-                @Index(name = "idx_submission_p",
-                        columnList = "principal_key"),
-                @Index(name = "idx_submission_w",
-                        columnList = "week_id")
+                @Index(name = "idx_submission_wp",
+                        columnList = "week_id, principal_key"),
+                @Index(name = "idx_submission_wm",
+                        columnList = "week_id, member_id")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_submission_wpc",
@@ -40,6 +40,9 @@ public class WeekVoteSubmission extends BaseEntity {
     private Member member;
 
     @Column(length = 64)
+    private String ipHash;
+
+    @Column(length = 64)
     private String cookieId;
 
     // 인덱스
@@ -58,6 +61,7 @@ public class WeekVoteSubmission extends BaseEntity {
             Week week,
             Member member,
             String cookieId,
+            String ipHash,
             String principalKey,
             Gender gender,
             VoteCategory category
@@ -65,6 +69,7 @@ public class WeekVoteSubmission extends BaseEntity {
         this.week = week;
         this.member = member;
         this.cookieId = cookieId;
+        this.ipHash = ipHash;
         this.principalKey = principalKey;
         this.gender = gender;
         this.category = category;
@@ -74,6 +79,7 @@ public class WeekVoteSubmission extends BaseEntity {
             Week week,
             Member member,
             String cookieId,
+            String ipHash,
             String principalKey,
             Gender gender,
             VoteCategory category
@@ -82,6 +88,7 @@ public class WeekVoteSubmission extends BaseEntity {
                 week,
                 member,
                 cookieId,
+                ipHash,
                 principalKey,
                 gender,
                 category

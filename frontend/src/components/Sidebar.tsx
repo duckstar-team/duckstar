@@ -129,28 +129,18 @@ function NavButton({
   // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
   
-  // 네비게이션 메뉴 클릭 시 스크롤을 맨 위로 이동
+  // 단순화된 네비게이션 클릭 핸들러
   const handleNavigationClick = () => {
     // 네비게이션 시작
     startNavigation();
     
-    // search 화면으로 이동할 때는 사이드바 네비게이션임을 표시
-    if (href === '/search') {
-      // 사이드바 네비게이션임을 표시하는 플래그 설정
-      sessionStorage.setItem('sidebar-navigation', 'true');
-      
-      // 현재 페이지가 이미 /search인 경우 강제로 검색 상태 초기화
-      if (pathname === '/search') {
-        // 검색 상태 초기화를 위한 강제 새로고침
-        window.location.reload();
-        return;
-      }
+    // 홈으로 이동할 때만 스크롤 탑으로 이동
+    if (href === '/') {
+      scrollToTop();
     }
-    // vote 화면으로 이동할 때도 사이드바 네비게이션임을 표시
-    if (href === '/vote') {
-      sessionStorage.setItem('sidebar-navigation', 'true');
-    }
-    scrollToTop();
+    
+    // 강제 새로고침 제거 - React 상태 관리로 해결
+    // search 화면에서의 상태 초기화는 컴포넌트 내부에서 처리
   };
 
   return (
@@ -263,7 +253,11 @@ export default function Sidebar() {
               activeIcon={item.activeIcon}
               iconSize={item.iconSize}
               iconClass={item.iconClass}
-              isActive={pathname === item.href}
+              isActive={
+                item.href === '/search' 
+                  ? pathname === item.href || pathname.startsWith('/search/')
+                  : pathname === item.href
+              }
               isHovered={hoveredItem === item.href && pathname !== item.href}
               isBeta={item.isBeta}
               badgeText={item.badgeText}

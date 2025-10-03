@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(user as User);
         setIsAuthenticated(true);
       } catch (error) {
-        console.error('사용자 정보 가져오기 실패:', error);
+console.error('사용자 정보 가져오기 실패:', error);
         resetAuthState();
       } finally {
         setIsLoading(false);
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         credentials: 'include',
       });
     } catch (error) {
-      console.error('로그아웃 API 호출 실패:', error);
+console.error('로그아웃 API 호출 실패:', error);
     } finally {
       // localStorage에서 토큰 제거
       if (typeof window !== 'undefined') {
@@ -119,7 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await withdraw();
       }
     } catch (error) {
-      console.error('회원탈퇴 실패:', error);
+console.error('회원탈퇴 실패:', error);
       throw error; // 에러를 다시 던져서 UI에서 처리할 수 있도록 함
     } finally {
       // localStorage에서 토큰 제거
@@ -173,19 +173,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const decoded = atob(encoded);
           const loginState = JSON.parse(decoded);
           
-          console.log('OAuth 로그인 상태:', loginState);
           
-          // 새 사용자인 경우 프로필 설정 페이지로 리다이렉트
-          if (loginState.isNewUser) {
-            window.location.href = '/profile-setup';
+          // returnUrl이 있으면 해당 페이지로 리다이렉트 (새 사용자와 기존 사용자 모두)
+          const returnUrl = sessionStorage.getItem('returnUrl');
+          
+          if (returnUrl) {
+            // 새 사용자인 경우 returnUrl을 보존하고 프로필 설정 페이지로 리다이렉트
+            if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
+              window.location.href = '/profile-setup';
+              return;
+            }
+            // 기존 사용자인 경우 returnUrl로 리다이렉트
+            
+            // 기존 사용자도 마이그레이션이 일어났으면 토스트 설정
+            if (loginState.isMigrated) {
+              sessionStorage.setItem('migration_completed', 'true');
+            }
+            
+            sessionStorage.removeItem('returnUrl');
+            window.location.href = returnUrl;
             return;
           }
           
-          // 기존 사용자인 경우 원래 페이지로 리다이렉트
-          const returnUrl = sessionStorage.getItem('returnUrl');
-          if (returnUrl) {
-            sessionStorage.removeItem('returnUrl');
-            window.location.href = returnUrl;
+          // 마이그레이션이 일어났는지 확인 (returnUrl 처리 후)
+          if (loginState.isMigrated) {
+            sessionStorage.setItem('migration_completed', 'true');
+          }
+          
+          // returnUrl이 없는 경우 새 사용자는 프로필 설정 페이지로 리다이렉트
+          if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
+            window.location.href = '/profile-setup';
+            return;
           }
           
         } catch (error) {

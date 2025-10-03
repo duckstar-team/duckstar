@@ -11,25 +11,28 @@ interface HomeChartProps {
 }
 
 // RankDiff 타입 변환 헬퍼 함수
-function getRankDiffType(rankDiff: number, consecutiveWeeks: number): "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero" {
-  // consecutiveWeeks가 2 이상일 때만 same-rank 우선 적용
-  if (consecutiveWeeks >= 2) {
-    return "same-rank";
-  }
-  
-  // consecutiveWeeks가 0이고 rankDiff가 0일 때 NEW
-  if (consecutiveWeeks === 0 && rankDiff === 0) {
-    return "new";
-  }
-  
-  // rankDiff에 따른 처리
+function getRankDiffType(rankDiff: number, consecutiveWeeks: number, isAnilab: boolean = false): "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero" {
+  // rankDiff가 0이 아니면 up/down 우선 처리
   if (rankDiff > 0) {
     return rankDiff >= 5 ? "up-greater-equal-than-5" : "up-less-than-5";
   }
   if (rankDiff < 0) {
     return rankDiff <= -5 ? "down-greater-equal-than-5" : "down-less-than-5";
   }
-  if (rankDiff === 0) return "same-rank";
+  
+  // 그 외의 경우 Zero, NEW, consecutive 판단
+  
+  // consecutiveWeeks가 2 이상일 때 same-rank
+  if (consecutiveWeeks >= 2) {
+    return "same-rank";
+  }
+  
+  // consecutiveWeeks가 1일 때 NEW (anilab이 아닌 경우에만)
+  if (consecutiveWeeks === 1 && !isAnilab) {
+    return "new";
+  }
+  
+  // anilab이거나 consecutiveWeeks가 0일 때 Zero
   return "Zero";
 }
 
@@ -90,8 +93,8 @@ export default function HomeChart({ duckstarRankPreviews, isPrepared = true, cla
               <HomeRankInfo 
                 key={contentId || `rank-${index}`}
                 rank={rank}
-                rankDiff={getRankDiffType(safeRankDiff, safeConsecutiveWeeks)}
-                rankDiffValue={getRankDiffType(safeRankDiff, safeConsecutiveWeeks) === "same-rank" ? safeConsecutiveWeeks.toString() : safeRankDiff.toString()}
+                rankDiff={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false)}
+                rankDiffValue={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false) === "same-rank" ? safeConsecutiveWeeks.toString() : safeRankDiff.toString()}
                 title={title}
                 studio={subTitle}
                 image={mainThumbnailUrl}
