@@ -56,8 +56,8 @@ export default function Home() {
   const [leftPanelLoading, setLeftPanelLoading] = useState(false); // Left Panel 로딩 상태
   const [leftPanelError, setLeftPanelError] = useState<string | null>(null); // Left Panel 에러 상태
   const [anilabData, setAnilabData] = useState<RankPreviewDto[]>([]); // Anilab 데이터 별도 저장
-  const [animeTrendingData, setAnimeTrendingData] = useState<RankPreviewDto[]>([]); // Anime Trending 데이터 별도 저장
-  const [selectedRightTab, setSelectedRightTab] = useState<'anilab' | 'anime-trending'>('anilab'); // Right Panel 탭 상태
+  const [animeCornerData, setAnimeCornerData] = useState<RankPreviewDto[]>([]); // Anime Corner 데이터 별도 저장
+  const [selectedRightTab, setSelectedRightTab] = useState<'anilab' | 'anime-corner'>('anime-corner'); // Right Panel 탭 상태
   const [isClient, setIsClient] = useState(false); // 클라이언트 렌더링 확인
   const [isInitialized, setIsInitialized] = useState(false); // 초기화 완료 여부
 
@@ -134,7 +134,7 @@ console.error('🏠 주차 복원 실패:', error);
       }
     }
     
-    if (savedTab && (savedTab === 'anilab' || savedTab === 'anime-trending')) {
+    if (savedTab && (savedTab === 'anilab' || savedTab === 'anime-corner')) {
       setSelectedRightTab(savedTab);
     }
   };
@@ -152,11 +152,13 @@ console.error('🏠 주차 복원 실패:', error);
       
       // 초기 데이터 설정
       const initialAnilabData = homeData.result.weeklyTopDto.anilabRankPreviews || [];
-      const initialAnimeTrendingData = homeData.result.weeklyTopDto.animeTrendingRankPreviews || [];
+      const initialAnimeCornerData = homeData.result.weeklyTopDto.animeCornerRankPreviews || [];
       
       
       setAnilabData(initialAnilabData); // Anilab 데이터 별도 저장
-      setAnimeTrendingData(initialAnimeTrendingData); // Anime Trending 데이터 별도 저장
+      setAnimeCornerData(initialAnimeCornerData); // Anime Corner 데이터 별도 저장
+      
+      // 근본적 해결: 데이터 설정은 useEffect에서 자동 처리
       
       // Left Panel 초기 데이터 설정
       const initialDuckstarData = homeData.result.weeklyTopDto.duckstarRankPreviews || [];
@@ -176,20 +178,14 @@ console.error('🏠 주차 복원 실패:', error);
       const shouldRestore = sessionStorage.getItem('home-state-save') === 'true';
       const hasRestoredWeek = sessionStorage.getItem('home-selected-week');
       
-      if (!shouldRestore && !hasRestoredWeek && !selectedWeek) {
-        const closedWeeks = homeData.result.weekDtos.filter(week => week.voteStatus === 'CLOSED');
-        if (closedWeeks.length > 0) {
-          setSelectedWeek(closedWeeks[0]);
+        if (!shouldRestore && !hasRestoredWeek && !selectedWeek) {
+          const pastWeeks = homeData.result.pastWeekDtos;
+          if (pastWeeks.length > 0) {
+            setSelectedWeek(pastWeeks[0]);
+          }
         }
-      }
       
-      // 상태 복원 후 현재 선택된 탭에 따라 데이터 표시
-      setTimeout(() => {
-        const currentTab = selectedRightTab;
-        if (currentTab === 'anime-trending') {
-          // 복원된 탭이 anime-trending인 경우 초기 데이터가 아닌 복원된 주차 데이터 사용
-        }
-      }, 100);
+      // 근본적 해결: 상태 복원은 useEffect에서 자동 처리
       
       setIsInitialized(true);
     }
@@ -301,32 +297,38 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
   }, [isInitialized, homeData]);
 
   // 탭 변경 핸들러 (로딩 없이 즉시 표시)
-  const handleRightPanelTabChange = (tab: 'anilab' | 'anime-trending') => {
+  const handleRightPanelTabChange = (tab: 'anilab' | 'anime-corner') => {
     setSelectedRightTab(tab);
     updateRightPanelData(tab);
   };
 
   // Right Panel 데이터 업데이트 함수 (리팩토링)
-  const updateRightPanelData = (tab: 'anilab' | 'anime-trending', newAnilabData?: any[], newAnimeTrendingData?: any[]) => {
+  const updateRightPanelData = (tab: 'anilab' | 'anime-corner', newAnilabData?: any[], newAnimeCornerData?: any[]) => {
     const currentAnilabData = newAnilabData || anilabData;
-    const currentAnimeTrendingData = newAnimeTrendingData || animeTrendingData;
+    const currentAnimeCornerData = newAnimeCornerData || animeCornerData;
     
     if (tab === 'anilab') {
       setRightPanelData(currentAnilabData);
-    } else if (tab === 'anime-trending') {
-      setRightPanelData(currentAnimeTrendingData);
-      if (currentAnimeTrendingData.length === 0) {
-        // Anime Trending 데이터 없음
+    } else if (tab === 'anime-corner') {
+      setRightPanelData(currentAnimeCornerData);
+      if (currentAnimeCornerData.length === 0) {
+        // Anime Corner 데이터 없음
       }
     }
   };
 
-  // 탭 상태 변경 시 Right Panel 데이터 업데이트
+  // 탭 상태 변경 시 Right Panel 데이터 업데이트 - 근본적 해결
   useEffect(() => {
-    if (selectedRightTab) {
-      updateRightPanelData(selectedRightTab);
+    if (!selectedRightTab) return;
+    
+    // 현재 탭에 맞는 데이터를 직접 설정
+    const targetData = selectedRightTab === 'anime-corner' ? animeCornerData : anilabData;
+    
+    // 데이터가 있고 현재 표시된 데이터와 다르면 업데이트
+    if (targetData.length > 0 && JSON.stringify(rightPanelData) !== JSON.stringify(targetData)) {
+      setRightPanelData(targetData);
     }
-  }, [selectedRightTab, anilabData, animeTrendingData]);
+  }, [selectedRightTab, anilabData, animeCornerData, rightPanelData]);
 
   // 주차별 데이터 일관성 모니터링
   useEffect(() => {
@@ -335,7 +337,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
         week: selectedWeek,
         leftPanel: leftPanelData.length,
         right1: anilabData.length,
-        right2: animeTrendingData.length,
+        right2: animeCornerData.length,
         currentTab: selectedRightTab
       };
       
@@ -346,7 +348,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
         console.warn('🏠 ⚠️ 패널 데이터 불일치 감지');
       }
     }
-  }, [selectedWeek, leftPanelData, anilabData, animeTrendingData, selectedRightTab, isInitialized]);
+  }, [selectedWeek, leftPanelData, anilabData, animeCornerData, selectedRightTab, isInitialized]);
 
   // 주차 변경 핸들러 (모든 패널 데이터를 함께 로드)
   const handleLeftPanelWeekChange = async (week: WeekDto) => {
@@ -393,16 +395,16 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
     const newDuckstarData = weeklyTopData.duckstarRankPreviews || [];
     const newIsPrepared = weeklyTopData.isPrepared;
     const newAnilabData = weeklyTopData.anilabRankPreviews || [];
-    const newAnimeTrendingData = weeklyTopData.animeTrendingRankPreviews || [];
+    const newAnimeCornerData = weeklyTopData.animeCornerRankPreviews || [];
     
     // 모든 패널 데이터 업데이트
     setLeftPanelData(newDuckstarData);
     setIsLeftPanelPrepared(newIsPrepared);
     setAnilabData(newAnilabData);
-    setAnimeTrendingData(newAnimeTrendingData);
+    setAnimeCornerData(newAnimeCornerData);
     
     // 현재 탭에 따라 Right Panel 표시 데이터 업데이트
-    updateRightPanelData(selectedRightTab, newAnilabData, newAnimeTrendingData);
+    updateRightPanelData(selectedRightTab, newAnilabData, newAnimeCornerData);
     
     // 상태 업데이트 확인
     setTimeout(() => {
@@ -470,7 +472,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
         {/* 텍스트 오버레이 */}
         <div className="absolute inset-0 flex items-center justify-center px-4">
           <div className="text-white font-bold text-[33.83px] leading-tight text-left" style={{ fontFamily: 'Pretendard' }}>
-          분기 신작 애니 차트와<br />
+          분기 신작 애니메이션 투표,<br />
           시간표 서비스 ✨ 한국에서 런칭 !
           </div>
         </div>
@@ -487,7 +489,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
           
           {/* ButtonVote 컴포넌트 */}
           <ButtonVote 
-            weekDtos={homeData.result.weekDtos}
+            weekDtos={[homeData.result.currentWeekDto, ...homeData.result.pastWeekDtos]}
           />
         </div>
       </div>
@@ -497,13 +499,13 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
         <div className="flex justify-center gap-[57px]">
           {/* Left Panel 헤더 */}
           <HeaderList 
-            weekDtos={homeData.result.weekDtos} 
+            weekDtos={homeData.result.pastWeekDtos} 
             selectedWeek={selectedWeek}
             onWeekChange={handleLeftPanelWeekChange}
           />
           {/* Right Panel 헤더 */}
           <RightHeaderList 
-            weekDtos={homeData.result.weekDtos} 
+            weekDtos={homeData.result.pastWeekDtos} 
             selectedTab={selectedRightTab}
             onTabChange={handleRightPanelTabChange}
           />
@@ -556,7 +558,35 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
                 </div>
               ) : rightPanelData.length > 0 ? (
                 // Right Panel 데이터 표시 - 스크롤 제거, 자연스러운 높이
-                <div className="pl-6.5 py-4 space-y-4">
+                <div className="pl-6.5 pt-2">
+                  {/* 정보 아이콘 */}
+                  <div className="mb-1 flex items-center justify-end gap-2 pr-3">
+                    <div className="relative group">
+                      <a 
+                        href={selectedRightTab === 'anilab' 
+                          ? 'https://anilabb.com/rate/anime' 
+                          : 'https://animecorner.me/category/anime-corner/rankings/anime-of-the-week/'
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-4 h-4 flex-shrink-0 cursor-pointer block"
+                      >
+                        <img 
+                          src="/icons/info.svg" 
+                          alt="정보" 
+                          className="w-full h-full object-contain"
+                        />
+                      </a>
+                      {/* 툴팁 */}
+                      <div className="absolute top-full -right-10 -mt-10 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-pre text-right z-[9999]">
+                          {selectedRightTab === 'anilab' 
+                            ? 'Anilab은 일본의 투표 사이트입니다.\n(결과 공개: 일 22시) '
+                            : 'Anime Corner은 미국의 투표 사이트입니다.\n(결과 공개: 금 22시) '
+                          }
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
                   {rightPanelData.map((rankPreview, index) => {
                     // null/undefined 체크
                     const safeRankDiff = rankPreview.rankDiff ?? 0;
@@ -580,6 +610,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
                       />
                     );
                   })}
+                  </div>
                 </div>
               ) : (
                 // 빈 상태 UI - 스켈레톤 UI + 블러 처리 + 로딩 메시지
@@ -587,13 +618,13 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
                   {/* 스켈레톤 UI (뒷배경) */}
                   <div className="absolute inset-0 p-4 space-y-4">
                     {[...Array(8)].map((_, index) => (
-                      <div key={index} className="w-full h-24 bg-gray-100 rounded-xl animate-pulse">
+                      <div key={index} className="w-full h-24 bg-gray-10 rounded-xl opacity-50">
                         <div className="flex items-center justify-center h-full p-4 space-x-4">
-                          <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                          <div className="w-14 h-20 bg-gray-200 rounded-lg"></div>
+                          <div className="w-5 h-5 bg-gray-100 rounded"></div>
+                          <div className="w-14 h-20 bg-gray-100 rounded-lg"></div>
                           <div className="flex-1 space-y-2">
-                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-100 rounded w-1/2"></div>
                           </div>
                         </div>
                       </div>
@@ -601,16 +632,28 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
                   </div>
                   
                   {/* 블러 처리 레이어 */}
-                  <div className="absolute inset-0 backdrop-blur-sm rounded-xl"></div>
+                  <div className="absolute inset-0 rounded-xl"></div>
                   
                   {/* 로딩 메시지 (앞배경) */}
                   <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                    <div className="text-gray-400 text-6xl mb-4 opacity-60">🌍</div>
-                    <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
-                    <p className="text-sm text-gray-500 text-center">
-                      해당 주차의 해외 순위 데이터가<br />
-                      아직 준비되지 않았습니다.
-                    </p>
+                    {selectedRightTab === 'anilab' ? (
+                      <>
+                        <div className="text-gray-400 text-6xl mb-4 opacity-90">🇯🇵</div>
+                        <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
+                        <p className="text-sm text-gray-500 text-center">
+                          Anilab 순위는 일 22:00 공개
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-gray-400 text-6xl mb-4 opacity-90">🌍</div>
+                        <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
+                        <p className="text-sm text-gray-500 text-center">
+                          해당 주차의 해외 순위 데이터가<br />
+                          아직 준비되지 않았습니다.
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

@@ -204,7 +204,8 @@ export interface AnimePreviewDto {
 
 // Anime Preview List DTO
 export interface AnimePreviewListDto {
-  weekDto: WeekDto;
+  year: number;
+  quarter: number;
   schedule: {
     [key: string]: AnimePreviewDto[];
   };
@@ -260,7 +261,7 @@ export interface WeeklyTopDto {
   isPrepared: boolean;
   duckstarRankPreviews: DuckstarRankPreviewDto[];
   anilabRankPreviews: RankPreviewDto[];
-  animeTrendingRankPreviews: RankPreviewDto[];
+  animeCornerRankPreviews: RankPreviewDto[];
 }
 
 // Home Banner DTO
@@ -278,7 +279,8 @@ export interface HomeBannerDto {
 export interface HomeDto {
   weeklyTopDto: WeeklyTopDto;
   homeBannerDtos: HomeBannerDto[];
-  weekDtos: WeekDto[];
+  currentWeekDto: WeekDto;
+  pastWeekDtos: WeekDto[];
 }
 
 export type ApiResponseHomeDto = ApiResponse<HomeDto>;

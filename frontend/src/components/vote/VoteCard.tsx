@@ -119,12 +119,12 @@ const VoteCard = memo(function VoteCard({
     if (weekDto) {
       const year = weekDto.year;
       const season = getSeasonFromDate(weekDto.startDate);
-      const seasonKorean = getSeasonInKorean(season);
-      const mediumText = medium === "MOVIE" ? "극장판" : "TVA";
-      return `${year} ${seasonKorean} ${mediumText}`;
+      const seasonText = getSeasonInKorean(season);
+      const week = weekDto.week;
+      return `${year} ${seasonText} ${week}주차`;
     }
     return ""; // 폴백으로 빈 문자열 반환
-  }, [weekDto, medium]);
+  }, [weekDto]);
 
   return (
     <div className="relative">

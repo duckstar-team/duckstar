@@ -1,6 +1,6 @@
 /**
  * 분기 계산 유틸리티
- * 백엔드의 QuarterUtil과 동일한 로직을 구현
+ * 백엔드의 QuarterUtil과 정확히 동일한 로직을 구현
  */
 
 export interface YQWRecord {
@@ -9,115 +9,95 @@ export interface YQWRecord {
   weekValue: number;
 }
 
+export interface AnchorInfo {
+  year: number;
+  quarter: number;
+  anchorStart: Date;
+}
+
+// ---- helpers ----
 /**
- * 특정 날짜의 분기 시작일을 계산합니다.
+ * 달력 분기 계산 (1~4)
  */
-function getStartDateOfQuarter(date: Date): Date {
-  const monthValue = date.getMonth() + 1; // getMonth()는 0부터 시작
-  let month = 1;
-  
-  switch (monthValue) {
-    case 1:
-    case 2:
-    case 3:
-      month = 1;
-      break;
-    case 4:
-    case 5:
-    case 6:
-      month = 4;
-      break;
-    case 7:
-    case 8:
-    case 9:
-      month = 7;
-      break;
-    case 10:
-    case 11:
-    case 12:
-      month = 10;
-      break;
+function calendarQuarter(month: number): number {
+  return Math.floor((month - 1) / 3) + 1;
+}
+
+/**
+ * 분기 첫날 계산
+ */
+function firstDayOfQuarter(year: number, quarter: number): Date {
+  const month = (quarter - 1) * 3 + 1; // 1,4,7,10
+  return new Date(year, month - 1, 1);
+}
+
+/**
+ * 분기 앵커: 첫날이 토 → 이전 금 19:00, 그 외 → 다음(또는 같은) 금 19:00
+ */
+function anchorForQuarter(year: number, quarter: number): Date {
+  const first = firstDayOfQuarter(year, quarter);
+  const dow = first.getDay(); // 0=일요일, 6=토요일
+
+  let anchorDate: Date;
+  if (dow === 6) { // 토요일
+    // 이전 금요일
+    anchorDate = new Date(first);
+    anchorDate.setDate(first.getDate() - 1);
+  } else {
+    // 다음 또는 같은 금요일
+    const daysToFriday = (5 - dow + 7) % 7; // 금요일까지의 일수
+    anchorDate = new Date(first);
+    anchorDate.setDate(first.getDate() + daysToFriday);
   }
-  
-  return new Date(date.getFullYear(), month - 1, 1);
+
+  // 19:00으로 설정
+  anchorDate.setHours(19, 0, 0, 0);
+  return anchorDate;
 }
 
 /**
- * 특정 날짜의 분기 값 (1~4)을 계산합니다.
+ * time 이 속한 "비즈니스 분기"의 (연도, 분기, 앵커 시작시각)을 판정
+ * 구간 정의: [anchor(y,q), anchor(y',q'))  (좌측 포함, 우측 배타)
  */
-function getQuarterValue(date: Date): number {
-  const quarterStart = getStartDateOfQuarter(date);
-  return Math.floor((quarterStart.getMonth()) / 3) + 1;
+function resolveAnchor(time: Date): AnchorInfo {
+  const y = time.getFullYear();
+  const q = calendarQuarter(time.getMonth() + 1);
+
+  const currAnchor = anchorForQuarter(y, q);
+  const nextQ = q === 4 ? 1 : q + 1;
+  const nextY = q === 4 ? y + 1 : y;
+  const nextAnchor = anchorForQuarter(nextY, nextQ);
+
+  if (time.getTime() >= nextAnchor.getTime()) { // time >= nextAnchor → 다음 분기
+    return { year: nextY, quarter: nextQ, anchorStart: nextAnchor };
+  }
+  if (time.getTime() < currAnchor.getTime()) { // time < 현재 분기 앵커 → 이전 분기
+    const prevQ = q === 1 ? 4 : q - 1;
+    const prevY = q === 1 ? y - 1 : y;
+    const prevAnchor = anchorForQuarter(prevY, prevQ);
+    return { year: prevY, quarter: prevQ, anchorStart: prevAnchor };
+  }
+  return { year: y, quarter: q, anchorStart: currAnchor }; // currAnchor ≤ time < nextAnchor
 }
 
 /**
- * 주의 초반인지 확인합니다 (일요일, 월요일, 화요일, 수요일)
+ * 분기 주차: 앵커 기준 7일 단위, 1부터 시작
  */
-function isEarlyInWeek(dayOfWeek: number): boolean {
-  return dayOfWeek === 0 || dayOfWeek === 1 || dayOfWeek === 2 || dayOfWeek === 3;
+function weekOfQuarter(time: Date, anchor: Date): number {
+  const days = Math.floor((time.getTime() - anchor.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor(days / 7) + 1;
 }
 
+// ---- Public API ----
 /**
- * 특정 날짜의 주차 번호를 계산합니다.
- */
-function getWeekNumberOf(weekStartDate: Date): number {
-  const quarterStartDate = getStartDateOfQuarter(weekStartDate);
-  
-  // 분기 시작일의 이전 또는 같은 일요일 찾기
-  const quarterStartDay = quarterStartDate.getDay();
-  const daysToSubtract = quarterStartDay === 0 ? 0 : quarterStartDay;
-  const lastSunday = new Date(quarterStartDate);
-  lastSunday.setDate(quarterStartDate.getDate() - daysToSubtract);
-  
-  // 주차 계산
-  const timeDiff = weekStartDate.getTime() - lastSunday.getTime();
-  const weeks = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7));
-  
-  return isEarlyInWeek(quarterStartDate.getDay()) ? weeks + 1 : weeks;
-}
-
-/**
- * 비즈니스 규칙에 맞는 연도, 분기, 주차 계산
- * 백엔드의 getThisWeekRecord와 동일한 로직
+ * 백엔드의 getThisWeekRecord와 정확히 동일한 로직
  */
 export function getThisWeekRecord(time: Date): YQWRecord {
-  let weekStartDate: Date;
-  
-  // 비즈니스 규칙: 일요일 22시 전이라면 계산 편의를 위해 토요일로 간주 (아직 주차 변경 안 됨)
-  if (time.getDay() === 0 && time.getHours() < 22) {
-    // 일요일 22시 전 → 토요일로 간주
-    weekStartDate = new Date(time);
-    weekStartDate.setDate(time.getDate() - 1);
-  } else {
-    // 그 외의 경우 → 현재 날짜 사용
-    weekStartDate = new Date(time);
-  }
-  
-  // 여기서는 '분기 변경 여부' 계산을 위해 종료일을 토요일로 간주
-  const weekEndDate = new Date(weekStartDate);
-  weekEndDate.setDate(weekStartDate.getDate() + 6);
-
-  const startQuarterValue = getQuarterValue(weekStartDate);
-  const endQuarterValue = getQuarterValue(weekEndDate);
-
-  // 분기 변경 주
-  if (startQuarterValue !== endQuarterValue) {
-    // 경계일 요일 판단
-    const borderDate = getStartDateOfQuarter(weekEndDate);
-    if (isEarlyInWeek(borderDate.getDay())) {
-      return {
-        yearValue: weekEndDate.getFullYear(),
-        quarterValue: endQuarterValue,
-        weekValue: 1
-      };
-    }
-  }
-
-  return {
-    yearValue: weekStartDate.getFullYear(),
-    quarterValue: startQuarterValue,
-    weekValue: getWeekNumberOf(weekStartDate)
-  };
+  const ai = resolveAnchor(time);
+  const week = weekOfQuarter(time, ai.anchorStart);
+  // 분기 "연도"는 항상 firstDayOfQuarter의 연도로 정의 (앵커가 전월일 수 있으므로 주의)
+  const quarterYear = firstDayOfQuarter(ai.year, ai.quarter).getFullYear();
+  return { yearValue: quarterYear, quarterValue: ai.quarter, weekValue: week };
 }
 
 /**

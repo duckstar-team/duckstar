@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import RankDiff from './RankDiff';
+import ImagePlaceholder from '../common/ImagePlaceholder';
 
 interface AbroadRankInfoProps {
   rank?: number;
@@ -72,7 +73,28 @@ export default function AbroadRankInfo({
         
         {/* 애니메이션 이미지 */}
         <div className="w-14 h-20 relative">
-          <img className="w-14 h-20 left-0 top-0 absolute rounded-lg" src={image} alt={title} />
+          {image && image.trim() !== '' ? (
+            <img 
+              className="w-14 h-20 left-0 top-0 absolute rounded-lg object-cover" 
+              src={image} 
+              alt={title}
+              onError={(e) => {
+                // 이미지 로드 실패 시 플레이스홀더로 대체
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const placeholder = target.nextElementSibling as HTMLElement;
+                if (placeholder) {
+                  placeholder.style.display = 'flex';
+                }
+              }}
+            />
+          ) : null}
+          <div 
+            className="w-14 h-20 left-0 top-0 absolute rounded-lg"
+            style={{ display: !image || image.trim() === '' ? 'flex' : 'none' }}
+          >
+            <ImagePlaceholder type="anime" />
+          </div>
         </div>
         
         {/* 제목과 스튜디오 */}

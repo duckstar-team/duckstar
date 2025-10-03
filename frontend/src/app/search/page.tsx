@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AnimeSearchBar from '@/components/search/ui/AnimeSearchBar';
@@ -36,6 +37,11 @@ function SearchPageContent() {
   const [isThisWeek, setIsThisWeek] = useState(true); // 기본값을 "이번 주"로 설정
   
   const [isInitialized, setIsInitialized] = useState(false); // 초기화 완료 여부
+  
+  // 검색 관련 상태
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   
   // 스티키 요소들을 위한 상태와 ref
   const [isDaySelectionSticky, setIsDaySelectionSticky] = useState(false);
@@ -154,7 +160,6 @@ function SearchPageContent() {
   };
 
   const [showOnlyAiring, setShowOnlyAiring] = useState(false); // 방영 중 애니만 보기
-  const [showEmptyMessage, setShowEmptyMessage] = useState<DayOfWeek | null>(null); // 메시지 상태 관리
   
   // 체크박스 변경 핸들러
   const handleShowOnlyAiringChange = (checked: boolean) => {
@@ -223,11 +228,26 @@ function SearchPageContent() {
   // URL 쿼리 파라미터 처리 (검색 상태 복원 후에 실행)
   useEffect(() => {
     const queryParam = searchParams.get('q');
+    const keywordParam = searchParams.get('keyword');
     const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
     const fromHeaderSearch = sessionStorage.getItem('from-header-search');
     
-    // 헤더 검색에서 온 경우 또는 애니메이션 상세화면에서 돌아온 경우가 아닐 때만 URL 파라미터 처리
-    if (queryParam && (fromHeaderSearch === 'true' || fromAnimeDetail !== 'true')) {
+    // keyword 파라미터 우선 처리 (애니메이션 상세화면에서 돌아와도 유지)
+    if (keywordParam) {
+      setSearchQuery(keywordParam);
+      setSearchInput(keywordParam);
+      setIsSearching(true);
+      
+      // 애니메이션 상세화면에서 돌아온 경우 플래그 정리
+      if (fromAnimeDetail === 'true') {
+        sessionStorage.removeItem('from-anime-detail');
+      }
+      if (fromHeaderSearch === 'true') {
+        sessionStorage.removeItem('from-header-search');
+      }
+    }
+    // 기존 q 파라미터 처리 (하위 호환성)
+    else if (queryParam && (fromHeaderSearch === 'true' || fromAnimeDetail !== 'true')) {
       setSearchQuery(queryParam);
       setSearchInput(queryParam);
       setIsSearching(true);
@@ -239,7 +259,14 @@ function SearchPageContent() {
     }
   }, [searchParams]);
 
-
+  // 검색 상태 변경 시 스티키 상태 초기화
+  useEffect(() => {
+    if (isSearching) {
+      // 검색 중일 때 스티키 상태 초기화
+      setIsDaySelectionSticky(false);
+      setIsSeasonSelectorSticky(false);
+    }
+  }, [isSearching]);
 
   // 페이지 로드 시 시즌 선택 상태 복원
   useEffect(() => {
@@ -248,6 +275,38 @@ function SearchPageContent() {
     
     const selectedSeason = sessionStorage.getItem('selected-season');
     const seasonChange = sessionStorage.getItem('navigation-type');
+    
+    // 저장된 요일 상태 복원 (시즌 메뉴에서 "이번 주"로 이동할 때)
+    const savedDay = sessionStorage.getItem('selected-day');
+    if (savedDay) {
+      setSelectedDay(savedDay as DayOfWeek);
+      // 복원 후 저장된 상태 제거
+      sessionStorage.removeItem('selected-day');
+      
+      // 데이터 로딩 후 스크롤 복원 또는 빈 섹션 알림
+      setTimeout(() => {
+        const dayKey = getDayKey(savedDay as DayOfWeek);
+        const element = document.getElementById(dayKey);
+        
+        if (element && element.children.length > 0) {
+          // 해당 섹션이 존재하면 스크롤 이동
+          const headerHeight = 60;
+          const daySelectionHeight = 44;
+          const margin = 74;
+          const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+          window.scrollTo({ top: Math.max(0, targetY), behavior: 'instant' });
+        } else {
+          // 해당 섹션이 없으면 스크롤 탑으로 이동하고 알림 표시
+          window.scrollTo({ top: 0, behavior: 'instant' });
+          
+          // 빈 섹션 알림을 위한 커스텀 이벤트 발생
+          const event = new CustomEvent('showEmptySectionMessage', {
+            detail: { day: savedDay }
+          });
+          window.dispatchEvent(event);
+        }
+      }, 100);
+    }
     
     
     // 시즌 변경 중이거나 상세화면에서 돌아온 경우 복원하지 않음
@@ -280,17 +339,6 @@ function SearchPageContent() {
       }
     }
     
-    // 사이드바 네비게이션 감지 시 즉시 검색 상태 초기화
-    const sidebarNav = sessionStorage.getItem('sidebar-navigation');
-    if (sidebarNav === 'true') {
-      setSearchQuery('');
-      setSearchInput('');
-      setIsSearching(false);
-      // 검색 관련 sessionStorage 정리
-      sessionStorage.removeItem('search-query');
-      sessionStorage.removeItem('search-input');
-      sessionStorage.removeItem('is-searching');
-    }
     
     // 초기화 완료 표시
     setIsInitialized(true);
@@ -312,6 +360,14 @@ function SearchPageContent() {
     // "이번 주" 선택인지 확인
     const isThisWeekSelected = year === 0 && quarter === 0;
     
+    // 동일한 시즌 클릭 시 아무 반응하지 않음
+    if (isThisWeekSelected && isThisWeek) {
+      return; // 이미 "이번 주"인 경우
+    }
+    if (!isThisWeekSelected && selectedYear === year && selectedQuarter === quarter) {
+      return; // 이미 해당 시즌인 경우
+    }
+    
     // 현재 시즌 키와 목표 시즌 키
     const currentSeasonKey = getSeasonKey(selectedYear, selectedQuarter);
     const targetSeasonKey = getSeasonKey(
@@ -328,9 +384,25 @@ function SearchPageContent() {
       setSelectedYear(null);
       setSelectedQuarter(null);
     } else {
-      setIsThisWeek(false);
-      setSelectedYear(year);
-      setSelectedQuarter(quarter);
+      // 시즌 메뉴로 이동
+      const dayToSave = selectedDay === '곧 시작' ? '월' : selectedDay;
+      sessionStorage.setItem('selected-day', dayToSave);
+      
+      // 애니메이션 아이템들에 페이드 아웃 효과
+      const animeItems = document.querySelectorAll('[data-anime-item]');
+      animeItems.forEach(item => {
+        (item as HTMLElement).style.transition = 'opacity 0.2s ease-out';
+        (item as HTMLElement).style.opacity = '0';
+      });
+      
+      // 페이드 아웃과 동시에 스크롤 탑으로 이동 (번쩍임 방지)
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      
+      // 페이드 아웃 완료 후 페이지 이동
+      setTimeout(() => {
+        router.push(`/search/${year}/${quarter}`);
+      }, 200);
+      return;
     }
     
     // 필터링 상태 처리
@@ -368,7 +440,6 @@ function SearchPageContent() {
         // 스티키 요소들 강제 해제
         setIsDaySelectionSticky(false);
         setIsSeasonSelectorSticky(false);
-('🚀 일 → 스크롤 탑 (시즌 메뉴)');
         return;
       }
       
@@ -399,7 +470,6 @@ function SearchPageContent() {
             window.scrollTo({ top: 0, behavior: 'instant' });
             setIsDaySelectionSticky(false);
             setIsSeasonSelectorSticky(false);
-('🚀 첫 번째 섹션 이전 또는 첫 번째 섹션: 스크롤 탑');
             return;
           }
         }
@@ -423,7 +493,6 @@ function SearchPageContent() {
         window.scrollTo({ top: 0, behavior: 'instant' });
         setIsDaySelectionSticky(false);
         setIsSeasonSelectorSticky(false);
-('🚀 모든 섹션 없음: 스크롤 탑');
       }, 50);
     } else {
       // 최초 방문 시 스크롤 탑
@@ -431,7 +500,6 @@ function SearchPageContent() {
       // 스티키 요소들 강제 해제
       setIsDaySelectionSticky(false);
       setIsSeasonSelectorSticky(false);
-('🚀 최초 방문: 스크롤 탑');
     }
   };
 
@@ -443,13 +511,24 @@ function SearchPageContent() {
     const dayKey = getDayKey(day);
     const scrollMap = getStoredScrollMap();
     
+    // "이번 주"에서 빈 섹션 클릭 시 스크롤 이동하지 않음
+    if (isThisWeek) {
+      const checkSectionExists = (dayKey: string) => {
+        const element = document.getElementById(dayKey);
+        return element && element.children.length > 0;
+      };
+      
+      if (!checkSectionExists(dayKey)) {
+        return; // 빈 섹션이면 스크롤 이동하지 않음
+      }
+    }
+    
     // 예외 규칙: '일'은 시즌 메뉴에서만 스크롤 탑
     if (day === '일' && !isThisWeek) {
       window.scrollTo({ top: 0, behavior: 'instant' });
       // 스티키 요소들 강제 해제
       setIsDaySelectionSticky(false);
       setIsSeasonSelectorSticky(false);
-('🚀 일 → 스크롤 탑 (시즌 메뉴)');
       return;
     }
     
@@ -481,7 +560,6 @@ function SearchPageContent() {
             window.scrollTo({ top: 0, behavior: 'instant' });
             setIsDaySelectionSticky(false);
             setIsSeasonSelectorSticky(false);
-('🚀 첫 번째 섹션 이전 또는 첫 번째 섹션: 스크롤 탑');
             return;
           }
         }
@@ -505,22 +583,12 @@ function SearchPageContent() {
         window.scrollTo({ top: 0, behavior: 'instant' });
         setIsDaySelectionSticky(false);
         setIsSeasonSelectorSticky(false);
-('🚀 모든 섹션 없음: 스크롤 탑');
       }, 50);
     } else {
       // 저장된 위치가 없으면 DOM에서 직접 찾아서 스크롤
       setTimeout(() => {
         const sectionId = isThisWeek ? dayKey : `${dayKey}-${selectedYear}-${selectedQuarter}`;
         const element = document.getElementById(sectionId);
-('🔍 스크롤 대상 찾기:', {
-          day,
-          dayKey,
-          sectionId,
-          isThisWeek,
-          selectedYear,
-          selectedQuarter,
-          element: !!element
-        });
         
         if (element) {
           const headerHeight = 60;
@@ -528,9 +596,7 @@ function SearchPageContent() {
           const margin = 50;
           const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
           window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
-('🚀 자연스러운 스크롤:', sectionId, targetY);
         } else {
-('❌ 섹션을 찾을 수 없음:', sectionId);
           // DOM에서 실제 존재하는 섹션들 확인
           const allSections = document.querySelectorAll('[id]');
           const sectionIds = Array.from(allSections).map(el => el.id).filter(id => 
@@ -538,51 +604,39 @@ function SearchPageContent() {
             id.includes('tue') || id.includes('wed') || id.includes('thu') || 
             id.includes('fri') || id.includes('sat') || id.includes('special')
           );
-('📋 실제 존재하는 섹션들:', sectionIds);
         }
       }, 100);
     }
   };
 
-  // 검색 쿼리 상태
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchInput, setSearchInput] = useState(''); // 입력 중인 검색어
-  const [isSearching, setIsSearching] = useState(false);
 
-  // React Query를 사용한 데이터 페칭 (개선된 캐싱 설정)
+  // React Query를 사용한 데이터 페칭 (단순화된 '이번 주' 전용)
   const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
-    queryKey: isThisWeek 
-      ? ['schedule', 'this-week']
-      : selectedYear && selectedQuarter 
-        ? ['schedule', selectedYear, selectedQuarter]
-        : ['schedule', 'this-week'],
-    queryFn: isThisWeek
-      ? getCurrentSchedule // "이번 주"일 때는 /api/v1/search 호출
-      : selectedYear && selectedQuarter
-        ? () => getScheduleByYearAndQuarter(selectedYear, selectedQuarter)
-        : getCurrentSchedule, // 기본값은 "이번 주"
-    enabled: isInitialized && !searchQuery.trim(), // 검색 중이 아닐 때만 API 호출
+    queryKey: ['schedule', 'this-week'],
+    queryFn: getCurrentSchedule, // 항상 '이번 주' 데이터만 호출
+    enabled: isInitialized, // 초기화 완료 후에만 API 호출
     staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
     gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
     refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
     refetchOnReconnect: true, // 네트워크 재연결 시 재요청
-    refetchOnMount: true, // 컴포넌트 마운트 시 재요청
+    refetchOnMount: false, // 마운트 시 재요청 비활성화 (캐시 사용)
     retry: 3, // 에러 시 3번 재시도
     retryDelay: 5000, // 재시도 간격 5초
-    retryOnMount: true, // 마운트 시 재시도
+    retryOnMount: false, // 마운트 시 재시도 비활성화
   });
 
-  // 검색 쿼리
+  // 검색 쿼리 - 캐시 없이 항상 최신 데이터 요청
   const { data: searchData, error: searchError, isLoading: isSearchLoading } = useQuery<AnimeSearchListDto>({
-    queryKey: ['search', searchQuery],
+    queryKey: ['search', searchQuery], // 검색어만으로 키 생성
     queryFn: () => searchAnimes(searchQuery),
     enabled: isInitialized && searchQuery.trim().length > 0, // 검색어가 있을 때만 API 호출
-    staleTime: 2 * 60 * 1000, // 2분간 fresh 상태 유지
-    gcTime: 5 * 60 * 1000, // 5분간 캐시 유지
-    refetchOnWindowFocus: false,
+    staleTime: 0, // 즉시 stale
+    gcTime: 0, // 캐시 사용 안함
+    refetchOnMount: true, // 마운트 시 항상 리페치
+    refetchOnWindowFocus: true, // 포커스 시 리페치
     refetchOnReconnect: true,
-    retry: 3,
-    retryDelay: 5000,
+    retry: 1, // 빠른 실패
+    retryDelay: 2000,
   });
 
 
@@ -597,44 +651,12 @@ function SearchPageContent() {
         setShowOnlyAiring(false);
       }
       
-      // 애니메이션 상세화면에서 돌아온 경우에만 스크롤 복원
+      // 브라우저의 기본 스크롤 복원 사용 (커스텀 로직 제거)
       const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
       if (fromAnimeDetail === 'true') {
-        const savedY = sessionStorage.getItem('scroll-search-return');
-        if (savedY) {
-          const y = parseInt(savedY);
-          if (!isNaN(y) && y > 0) {
-('🔄 스크롤 복원 시작:', y);
-            
-            // CSS scroll-behavior 강제 무시
-            const originalScrollBehavior = document.documentElement.style.scrollBehavior;
-            document.documentElement.style.scrollBehavior = 'auto';
-            document.body.style.scrollBehavior = 'auto';
-            
-            // 페이지 로드 즉시 복원 (애니메이션 없이)
-            window.scrollTo(0, y);
-            document.body.scrollTop = y;
-            document.documentElement.scrollTop = y;
-            
-            // 추가 즉시 복원 (확실하게)
-            setTimeout(() => {
-              window.scrollTo(0, y);
-              document.body.scrollTop = y;
-              document.documentElement.scrollTop = y;
-('🔄 스크롤 복원 완료:', y);
-            }, 0);
-            
-            // CSS 복원
-            setTimeout(() => {
-              document.documentElement.style.scrollBehavior = originalScrollBehavior;
-              document.body.style.scrollBehavior = originalScrollBehavior;
-            }, 100);
-            
-            // 플래그 정리
-            sessionStorage.removeItem('from-anime-detail');
-            sessionStorage.removeItem('scroll-search-return');
-          }
-        }
+        // 플래그만 정리하고 브라우저 기본 동작 사용
+        sessionStorage.removeItem('from-anime-detail');
+        sessionStorage.removeItem('scroll-search-return');
       }
     }
   }, [scheduleData, searchData, showOnlyAiring, selectedYear, selectedQuarter, isThisWeek]);
@@ -1393,12 +1415,39 @@ function SearchPageContent() {
   };
 
   const handleSearch = () => {
-    setSearchQuery(searchInput);
-    setIsSearching(searchInput.trim().length > 0);
+    const query = searchInput.trim();
+    if (query) {
+      // 검색 시 스티키 상태 초기화 (이전 스티키와 기본 요소 중복 방지)
+      setIsDaySelectionSticky(false);
+      setIsSeasonSelectorSticky(false);
+      
+      setSearchQuery(query);
+      setIsSearching(true);
+      // URL 업데이트
+      router.push(`/search?keyword=${encodeURIComponent(query)}`);
+    } else {
+      setSearchQuery('');
+      setIsSearching(false);
+      // 검색 초기화 시 URL에서 keyword 파라미터 제거
+      router.push('/search');
+    }
   };
 
   const handleSearchChange = (query: string) => {
     setSearchInput(query);
+  };
+
+  // 검색 초기화 핸들러
+  const handleSearchReset = () => {
+    // 검색 초기화 시 스티키 상태 초기화
+    setIsDaySelectionSticky(false);
+    setIsSeasonSelectorSticky(false);
+    
+    setSearchQuery('');
+    setSearchInput('');
+    setIsSearching(false);
+    // URL에서 keyword 파라미터 제거
+    router.push('/search');
   };
 
   // 데이터 로딩 중이거나 (새로운 데이터를 가져오면서) 프리로딩 중일 때만 스켈레톤 UI 표시
@@ -1469,15 +1518,7 @@ function SearchPageContent() {
               {searchQuery.trim() ? (
                 <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
                   <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSearchInput('');
-                      setIsSearching(false);
-                      // 검색 상태 정리
-                      sessionStorage.removeItem('search-query');
-                      sessionStorage.removeItem('search-input');
-                      sessionStorage.removeItem('is-searching');
-                    }}
+                    onClick={handleSearchReset}
                     className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1526,14 +1567,12 @@ function SearchPageContent() {
           {/* Day Selection 또는 OTT 필터 큐 */}
           {selectedOttServices.length === 0 && !searchQuery.trim() ? (
             <div ref={daySelectionRef} className="mb-[40px] flex justify-center">
-              <DaySelection
-                selectedDay={selectedDay}
-                onDaySelect={handleDaySelect}
-                emptyDays={emptyDays}
-                isThisWeek={isThisWeek}
-                showEmptyMessage={showEmptyMessage}
-                onEmptyMessageChange={setShowEmptyMessage}
-              />
+                 <DaySelection
+                   selectedDay={selectedDay}
+                   onDaySelect={handleDaySelect}
+                   emptyDays={emptyDays}
+                   isThisWeek={isThisWeek}
+                 />
             </div>
           ) : selectedOttServices.length > 0 ? (
             <div className="mb-[40px] flex justify-start">
@@ -1653,13 +1692,6 @@ function SearchPageContent() {
                                 const koreanDay = dayToKorean[day as keyof typeof dayToKorean];
                                 if (koreanDay) {
                                   setSelectedDay(koreanDay as DayOfWeek);
-('📅 요일 헤더 클릭:', {
-                                    day,
-                                    baseSectionId,
-                                    isThisWeek,
-                                    selectedYear,
-                                    selectedQuarter
-                                  });
                                 }
                               }}
                             >
@@ -1841,8 +1873,6 @@ function SearchPageContent() {
                   initialPosition={true}
                   emptyDays={emptyDays}
                   isThisWeek={isThisWeek}
-                  showEmptyMessage={showEmptyMessage}
-                  onEmptyMessageChange={setShowEmptyMessage}
                 />
               </div>
             </div>

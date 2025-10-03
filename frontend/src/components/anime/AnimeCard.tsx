@@ -2,8 +2,9 @@
 
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { AnimePreviewDto } from '@/components/search/types';
+import { useNavigation } from '@/hooks/useNavigation';
 
 interface AnimeCardProps {
   anime: AnimePreviewDto;
@@ -14,30 +15,13 @@ interface AnimeCardProps {
 export default function AnimeCard({ anime, className, isCurrentSeason = true }: AnimeCardProps) {
   const { animeId, mainThumbnailUrl, status, isBreak, titleKor, dayOfWeek, scheduledAt, isRescheduled, genre, medium, ottDtos } = anime;
   const [imageError, setImageError] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { navigateToDetail } = useNavigation();
   
   // 애니메이션 카드 클릭 핸들러
   const handleCardClick = () => {
-    // 검색 페이지에서 상세화면으로 이동할 때 스크롤 저장
-    if (pathname === '/search' && typeof window !== 'undefined') {
-      const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      if (currentScrollY > 0) {
-        sessionStorage.setItem('scroll-search-return', currentScrollY.toString());
-        sessionStorage.setItem('to-anime-detail', 'true');
-      }
-    }
-    
-    // 홈페이지에서 상세화면으로 이동할 때 스크롤 저장
-    if (pathname === '/' && typeof window !== 'undefined') {
-      const currentScrollY = window.scrollY || 0;
-      sessionStorage.setItem('home-scroll', currentScrollY.toString());
-      sessionStorage.setItem('navigation-type', 'from-anime-detail');
-    }
-    
-    // Next.js 클라이언트 사이드 라우팅 사용
-    router.push(`/animes/${animeId}`);
+    navigateToDetail(animeId);
   };
   
   // 디데이 계산 함수 (8/22 형식에서 현재 시간까지의 차이)
@@ -323,6 +307,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
   
   return (
     <div 
+      data-anime-item
       className={cn(
         "bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02]",
         "flex flex-col h-full",

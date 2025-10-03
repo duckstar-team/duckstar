@@ -276,6 +276,34 @@ export async function createAnime(animeData: Record<string, unknown>) {
   });
 }
 
+export async function updateAnimeImage(animeId: number, imageFile: File) {
+  const formData = new FormData();
+  formData.append('mainImage', imageFile);
+  
+  const headers: Record<string, string> = {};
+  
+  // localStorage에서 accessToken 가져오기
+  if (typeof window !== 'undefined') {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+  }
+  
+  const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.admin.animes}/${animeId}`, {
+    method: 'POST',
+    headers,
+    credentials: API_CONFIG.credentials,
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    throw new Error(`애니메이션 이미지 수정 실패: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
 // SWR fetcher function
 export const fetcher = <T>(url: string): Promise<T> => {
   return apiCall<T>(url);

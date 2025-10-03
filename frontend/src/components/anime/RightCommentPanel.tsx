@@ -43,6 +43,30 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
   
+  // 검색 페이지에서는 아예 렌더링하지 않음
+  const [isSearchPage, setIsSearchPage] = useState(false);
+  
+  useEffect(() => {
+    const checkPath = () => {
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/search')) {
+        setIsSearchPage(true);
+      } else {
+        setIsSearchPage(false);
+      }
+    };
+    
+    checkPath();
+    
+    // 경로 변경 감지
+    const interval = setInterval(checkPath, 100);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  if (isSearchPage) {
+    return null;
+  }
+  
   // 상태 관리
   // 애니메이션 데이터는 부모 컴포넌트에서 전달받음
   const [loading, setLoading] = useState(false); // 애니메이션 데이터는 부모에서 전달받으므로 로딩 불필요
@@ -187,9 +211,13 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       // 필터 변경 시에는 로딩 상태를 표시하지 않고 댓글만 새로고침
       loadComments(0, true, true, true);
       
-      // 댓글 로딩 완료 후 스크롤 위치 복원 (적절한 지연시간)
+      // 댓글 로딩 완료 후 스크롤 위치 복원 (애니메이션 상세화면에서 돌아오는 경우 제외, 검색 페이지에서도 제외)
       setTimeout(() => {
-        window.scrollTo({ top: currentScrollTop, behavior: 'auto' });
+        const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+        const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
+        if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
+          window.scrollTo({ top: currentScrollTop, behavior: 'auto' });
+        }
       }, 200);
     }
   }, [selectedEpisodeIds, animeId]);
@@ -376,17 +404,23 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   const handleSortChange = (sort: SortOption) => {
     setCurrentSort(sort);
     
-    // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤 (-120 위치)
+    // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤 (-120 위치) (애니메이션 상세화면에서 돌아오는 경우 제외)
     setTimeout(() => {
-      if (sortingMenuRef.current) {
+      const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+      if (fromAnimeDetail !== 'true' && sortingMenuRef.current) {
         const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
         const sortingMenuTop = sortingMenuRect.top + window.scrollY;
         const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
         
-        window.scrollTo({ 
-          top: Math.max(0, stickyStartPoint), 
-          behavior: 'auto' 
-        });
+        // 애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 스크롤 차단
+        const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+        const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
+        if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
+          window.scrollTo({ 
+            top: Math.max(0, stickyStartPoint), 
+            behavior: 'auto' 
+          });
+        }
       }
     }, 200);
   };
@@ -582,8 +616,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       
       // 댓글 헤더 스티키 감지
       const commentHeaderRect = commentHeaderRef.current.getBoundingClientRect();
-      const commentHeaderTop = commentHeaderRect.top + scrollY;
-      const shouldCommentHeaderBeSticky = scrollY >= commentHeaderTop - 60;
+      const shouldCommentHeaderBeSticky = commentHeaderRect.top <= 60;
       
       if (shouldCommentHeaderBeSticky !== isCommentHeaderSticky) {
         setIsCommentHeaderSticky(shouldCommentHeaderBeSticky);
@@ -592,8 +625,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       // 정렬 메뉴 스티키 감지 (댓글 헤더가 스티키일 때만)
       if (shouldCommentHeaderBeSticky) {
         const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
-        const sortingMenuTop = sortingMenuRect.top + scrollY;
-        const shouldSortingMenuBeSticky = scrollY >= sortingMenuTop - 60;
+        const shouldSortingMenuBeSticky = sortingMenuRect.top <= (60 + commentHeaderHeight);
         
         if (shouldSortingMenuBeSticky !== isSortingMenuSticky) {
           setIsSortingMenuSticky(shouldSortingMenuBeSticky);
@@ -941,19 +973,31 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             onSortChange={handleSortChange}
             onScrollToTop={() => {
               setTimeout(() => {
-                // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤
-                if (sortingMenuRef.current) {
-                  const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
-                  const sortingMenuTop = sortingMenuRect.top + window.scrollY;
-                  const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
-                  
-                  window.scrollTo({ 
-                    top: Math.max(0, stickyStartPoint), 
-                    behavior: 'auto' 
-                  });
-                } else {
-                  // fallback: 상단으로 스크롤
-                  window.scrollTo({ top: 0, behavior: 'auto' });
+                // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 제외)
+                const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+                if (fromAnimeDetail !== 'true') {
+                  if (sortingMenuRef.current) {
+                    const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
+                    const sortingMenuTop = sortingMenuRect.top + window.scrollY;
+                    const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
+                    
+                    // 애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 스크롤 차단
+                    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+                    const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
+                    if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
+                      window.scrollTo({ 
+                        top: Math.max(0, stickyStartPoint), 
+                        behavior: 'auto' 
+                      });
+                    }
+                  } else {
+                    // fallback: 상단으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 제외)
+                    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+                    const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
+                    if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
+                      window.scrollTo({ top: 0, behavior: 'auto' });
+                    }
+                  }
                 }
               }, 100);
             }}
@@ -964,10 +1008,9 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       {/* Sticky 댓글 헤더 - 헤더 아래에 고정 */}
       {isCommentHeaderSticky && !isImageModalOpen && (
         <div 
-          className="fixed bg-white border-b border-gray-200 z-30 pb-3"
+          className="sticky bg-white border-b border-gray-200 z-30 pb-3"
           style={{ 
             top: '60px',
-            left: `${rightPanelLeft - 6}px`,
             width: '608px',
             zIndex: 30,
             transition: 'all 0.3s ease-in-out'
@@ -988,10 +1031,9 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       {/* Sticky 정렬 메뉴 - 댓글 헤더 아래에 고정 */}
       {isSortingMenuSticky && !isImageModalOpen && (
         <div 
-          className="fixed bg-white border-b border-gray-200 z-30"
+          className="sticky bg-white border-b border-gray-200 z-30"
           style={{ 
             top: `${60 + commentHeaderHeight}px`, // 헤더 + 댓글 헤더 높이
-            left: `${rightPanelLeft - 6}px`,
             width: '608px',
             zIndex: 30,
             transition: 'all 0.3s ease-in-out'
@@ -1003,19 +1045,31 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
               onSortChange={handleSortChange}
               onScrollToTop={() => {
                 setTimeout(() => {
-                  // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤
-                  if (sortingMenuRef.current) {
-                    const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
-                    const sortingMenuTop = sortingMenuRect.top + window.scrollY;
-                    const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
-                    
-                    window.scrollTo({ 
-                      top: Math.max(0, stickyStartPoint), 
-                      behavior: 'auto' 
-                    });
-                  } else {
-                    // fallback: 상단으로 스크롤
-                    window.scrollTo({ top: 0, behavior: 'auto' });
+                  // 소팅 메뉴가 스티키되기 시작하는 지점으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 제외)
+                  const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+                  if (fromAnimeDetail !== 'true') {
+                    if (sortingMenuRef.current) {
+                      const sortingMenuRect = sortingMenuRef.current.getBoundingClientRect();
+                      const sortingMenuTop = sortingMenuRect.top + window.scrollY;
+                      const stickyStartPoint = sortingMenuTop - 120; // -120 위치로 고정
+                      
+                      // 애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 스크롤 차단
+                      const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+                      const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
+                      if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
+                        window.scrollTo({ 
+                          top: Math.max(0, stickyStartPoint), 
+                          behavior: 'auto' 
+                        });
+                      }
+                    } else {
+                      // fallback: 상단으로 스크롤 (애니메이션 상세화면에서 돌아오는 경우 및 검색 페이지에서 제외)
+                      const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+                      const isAnimeDetailPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/animes/');
+                      if (fromAnimeDetail !== 'true' && isAnimeDetailPage) {
+                        window.scrollTo({ top: 0, behavior: 'auto' });
+                      }
+                    }
                   }
                 }, 100);
               }}

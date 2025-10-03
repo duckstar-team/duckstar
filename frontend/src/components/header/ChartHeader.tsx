@@ -1,7 +1,7 @@
 'use client';
 
 interface ChartHeaderProps {
-  property1?: "Selected-Default" | "Selected-Anilab" | "Selected-AnimeTrending" | "UnSelected-AnimeTrending" | "UnSelected-Anilab";
+  property1?: "Selected-Default" | "Selected-Anilab" | "Selected-AnimeCorner" | "UnSelected-AnimeCorner" | "UnSelected-Anilab";
   className?: string;
 }
 
@@ -9,9 +9,9 @@ export default function ChartHeader({
   property1 = "Selected-Default",
   className = ""
 }: ChartHeaderProps) {
-  if (property1 === "Selected-AnimeTrending") {
+  if (property1 === "Selected-AnimeCorner") {
     return (
-      <div className={`relative size-full ${className}`} data-name="Property 1=Selected-AnimeTrending">
+      <div className={`relative size-full ${className}`} data-name="Property 1=Selected-AnimeCorner">
         <div className="relative size-full">
           <p className="absolute font-['Pretendard'] font-semibold leading-[22px] not-italic text-[#990033] text-[20px] text-center text-nowrap translate-x-[-50%] whitespace-pre" style={{ top: "calc(50% - 11px)", left: "calc(50% + 0.5px)" }}>
             Anime Trend 🇺🇸
@@ -21,9 +21,9 @@ export default function ChartHeader({
       </div>
     );
   }
-  if (property1 === "UnSelected-AnimeTrending") {
+  if (property1 === "UnSelected-AnimeCorner") {
     return (
-      <div className={`relative size-full ${className}`} data-name="Property 1=UnSelected-AnimeTrending">
+      <div className={`relative size-full ${className}`} data-name="Property 1=UnSelected-AnimeCorner">
         <p className="absolute font-['Pretendard:Regular',_sans-serif] leading-[22px] not-italic text-[#adb5bd] text-[20px] text-center text-nowrap translate-x-[-50%] whitespace-pre" style={{ top: "calc(50% - 11px)", left: "calc(50% + 0.5px)" }}>
           Anime Trend
         </p>

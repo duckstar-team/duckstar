@@ -55,7 +55,6 @@ export function useAdvancedScrollRestoration(
     restoreAfterDataLoad = true,
     containerSelector = 'main',
     navigationTypes = {
-      sidebar: 'sidebar-navigation',
       logo: 'logo-navigation',
       detail: 'from-anime-detail'
     }
@@ -220,17 +219,15 @@ export function useAdvancedScrollRestoration(
   const handleNavigationScroll = useCallback(() => {
     if (typeof window === 'undefined') return;
     
-    const sidebarNav = sessionStorage.getItem(navigationTypes.sidebar || 'sidebar-navigation');
     const logoNav = sessionStorage.getItem(navigationTypes.logo || 'logo-navigation');
     const fromDetail = sessionStorage.getItem(navigationTypes.detail || 'from-anime-detail');
     const seasonChange = sessionStorage.getItem('navigation-type');
     
-    // 사이드바 또는 로고 네비게이션인 경우 맨 위로 이동
-    if (sidebarNav === 'true' || logoNav === 'true') {
+    // 로고 네비게이션인 경우 맨 위로 이동
+    if (logoNav === 'true') {
       scrollToTop();
       // 관련 플래그 정리
       const flagsToClear = [
-        navigationTypes.sidebar,
         navigationTypes.logo,
         `scroll-${scrollKey}`,
         'shouldRestoreScroll'

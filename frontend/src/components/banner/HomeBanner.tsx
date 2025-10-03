@@ -95,8 +95,8 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
             <BannerContent 
               header={`🔥 ${banner.bannerType === 'HOT' ? 'HOT 급상승' : banner.bannerType} ${banner.contentType === 'ANIME' ? '애니메이션' : '캐릭터'}`}
               title={banner.mainTitle}
-              source="Anilab"
-              date="9/21 기준"
+              source={banner.subTitle}
+              date=""
               className="left-[20px] top-[16px] absolute" 
             />
           </div>
