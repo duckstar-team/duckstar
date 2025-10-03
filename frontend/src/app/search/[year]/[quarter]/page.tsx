@@ -14,6 +14,7 @@ import { extractChosung } from '@/lib/searchUtils';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';
 import { useQuery } from '@tanstack/react-query';
+import { queryConfig } from '@/lib/queryConfig';
 import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
 import PreloadingProgress from '@/components/common/PreloadingProgress';
 
@@ -50,19 +51,12 @@ function SeasonPageContent() {
     setIsInitialized(true);
   }, []);
 
-  // React Query를 사용한 데이터 페칭
+  // React Query를 사용한 데이터 페칭 (통일된 캐싱 전략)
   const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
     queryKey: ['schedule', year, quarter],
     queryFn: () => getScheduleByYearAndQuarter(year, quarter),
     enabled: isInitialized,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    refetchOnMount: true,
-    retry: 3,
-    retryDelay: 5000,
-    retryOnMount: true,
+    ...queryConfig.search, // 통일된 검색 데이터 캐싱 전략 적용
   });
 
   // 데이터 로드 후 요일 상태 복원
@@ -349,10 +343,8 @@ function SeasonPageContent() {
       // 페이드 아웃과 동시에 스크롤 탑으로 이동 (번쩍임 방지)
       window.scrollTo({ top: 0, behavior: 'instant' });
       
-      // 페이드 아웃 완료 후 페이지 이동
-      setTimeout(() => {
-        router.push('/search');
-      }, 200);
+      // 즉시 페이지 이동 (setTimeout 제거)
+      router.push('/search');
     } else {
       // 다른 시즌으로 이동 시 현재 요일 저장
       sessionStorage.setItem('selected-day', selectedDay);
@@ -367,10 +359,8 @@ function SeasonPageContent() {
       // 페이드 아웃과 동시에 스크롤 탑으로 이동 (번쩍임 방지)
       window.scrollTo({ top: 0, behavior: 'instant' });
       
-      // 페이드 아웃 완료 후 페이지 이동
-      setTimeout(() => {
-        router.push(`/search/${year}/${quarter}`);
-      }, 200);
+      // 즉시 페이지 이동 (setTimeout 제거)
+      router.push(`/search/${year}/${quarter}`);
     }
   };
 

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "analyze": "node scripts/analyze-bundle.js",
+    "build:analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@tailwindcss/line-clamp": "^0.4.4",

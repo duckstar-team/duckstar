@@ -129,33 +129,18 @@ function NavButton({
   // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
   
-  // 네비게이션 메뉴 클릭 시 스크롤을 맨 위로 이동
+  // 단순화된 네비게이션 클릭 핸들러
   const handleNavigationClick = () => {
     // 네비게이션 시작
     startNavigation();
     
-    // 홈으로 이동할 때는 스크롤 탑으로 이동
+    // 홈으로 이동할 때만 스크롤 탑으로 이동
     if (href === '/') {
-      sessionStorage.setItem('home-scroll-top', 'true');
       scrollToTop();
-      return;
     }
     
-    // 다른 메뉴로 이동할 때는 홈 스크롤 탑 플래그를 제거하고 스크롤 탑 실행하지 않음
-    sessionStorage.removeItem('home-scroll-top');
-    
-    // search 화면으로 이동할 때
-    if (href === '/search') {
-      // 현재 페이지가 이미 /search인 경우 강제로 검색 상태 초기화
-      if (pathname === '/search') {
-        // 검색 상태 초기화를 위한 강제 새로고침
-        window.location.reload();
-        return;
-      }
-    }
-    
-    // 다른 메뉴로 이동할 때는 스크롤 탑 실행하지 않음 (번쩍 이동 방지)
-    // scrollToTop(); // 제거!
+    // 강제 새로고침 제거 - React 상태 관리로 해결
+    // search 화면에서의 상태 초기화는 컴포넌트 내부에서 처리
   };
 
   return (

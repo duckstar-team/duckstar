@@ -12,9 +12,11 @@ import ConfettiEffect from "@/components/vote/ConfettiEffect";
 import ConfirmDialog from "@/components/vote/ConfirmDialog";
 import VoteDisabledState from "@/components/vote/VoteDisabledState";
 import { ApiResponseAnimeCandidateListDto, AnimeCandidateDto, ApiResponseAnimeVoteStatusDto, AnimeVoteStatusDto, VoteHistoryBallotDto, VoteStatus } from '@/types/api';
-import useSWR, { mutate } from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryConfig } from '@/lib/queryConfig';
+import { useUnifiedImagePreloading } from '@/hooks/useUnifiedImagePreloading';
 import { getSeasonFromDate } from '@/lib/utils';
-import { fetcher, submitVote, revoteAnime } from '@/api/client';
+import { submitVote, revoteAnime } from '@/api/client';
 import { searchMatch } from '@/lib/searchUtils';
 import { hasVoteCookieId, hasVotedThisWeek } from '@/lib/cookieUtils';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +31,7 @@ interface Anime {
 
 function VotePageContent() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
@@ -64,25 +67,8 @@ function VotePageContent() {
   // 이미지 프리로딩을 위한 ref
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 이미지 프리로딩 함수 - 성능 최적화
-  const preloadImages = useCallback((animes: Anime[]) => {
-    if (!animes || animes.length === 0) return;
-    
-    // 우선순위 기반 이미지 로딩
-    const priorityImages = animes.slice(0, 6); // 첫 6개만 우선 로드
-    
-    // 우선순위 이미지들을 병렬로 로드
-    priorityImages.forEach((anime) => {
-      const img = new Image();
-      img.onload = () => {
-        // 이미지 로드 완료
-      };
-      img.onerror = () => {
-        // 에러 발생해도 계속 진행
-      };
-      img.src = anime.thumbnailUrl;
-    });
-  }, []);
+  // 통합된 이미지 프리로딩 훅 사용
+  const { smartPreload } = useUnifiedImagePreloading();
 
   // 에러 카드 관리 헬퍼 함수
   const updateErrorCards = (animeId: number, shouldAdd: boolean) => {
@@ -97,16 +83,16 @@ function VotePageContent() {
     });
   };
 
-  // 투표 상태 조회 (통합 API) - 로그인 상태 또는 vote_cookie_id가 있을 때 호출
-  const { data: voteStatusData, isLoading: isVoteStatusLoading } = useSWR(
-    '/api/v1/vote/anime/status', // 항상 호출 (백엔드에서 쿠키 자동 인식)
-    fetcher<ApiResponseAnimeVoteStatusDto>,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 30000, // 30초 동안 중복 요청 방지
-    }
-  );
+  // 투표 상태 조회 (통일된 캐싱 전략)
+  const { data: voteStatusData, isLoading: isVoteStatusLoading } = useQuery({
+    queryKey: ['vote-status'],
+    queryFn: async () => {
+      const response = await fetch('/api/v1/vote/anime/status');
+      if (!response.ok) throw new Error('투표 상태 조회 실패');
+      return response.json() as Promise<ApiResponseAnimeVoteStatusDto>;
+    },
+    ...queryConfig.vote, // 통일된 투표 데이터 캐싱 전략 적용
+  });
 
   // voted_this_week 쿠키 체크 - 클라이언트에서만 체크 (Hydration 에러 방지)
   useEffect(() => {
@@ -127,7 +113,7 @@ function VotePageContent() {
       setShowVoteResult(false);
       setVoteHistory(null);
       // SWR 캐시 무효화 - 로그아웃 시 투표 상태 데이터 새로고침
-      mutate('/api/v1/vote/anime/status');
+        queryClient.invalidateQueries({ queryKey: ['vote-status'] });
     } else if (isAuthenticated) {
       // 로그인한 상태이면 메시지 숨김
       setShowVotedThisWeekMessage(false);
@@ -194,29 +180,28 @@ function VotePageContent() {
     setShouldFetchCandidates(result);
   }, [voteStatusData, isRevoteMode]);
   
-  const { data, error, isLoading } = useSWR<ApiResponseAnimeCandidateListDto>(
-    shouldFetchCandidates === true ? '/api/v1/vote/anime' : null,
-    fetcher<ApiResponseAnimeCandidateListDto>,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 60000, // 1분 동안 중복 요청 방지
-    }
-  );
+  const { data, error, isLoading } = useQuery<ApiResponseAnimeCandidateListDto>({
+    queryKey: ['anime-candidates'],
+    queryFn: async () => {
+      const response = await fetch('/api/v1/vote/anime');
+      if (!response.ok) throw new Error('애니메이션 후보 조회 실패');
+      return response.json() as Promise<ApiResponseAnimeCandidateListDto>;
+    },
+    enabled: shouldFetchCandidates === true, // 조건부 실행
+    ...queryConfig.vote, // 통일된 투표 데이터 캐싱 전략 적용
+  });
 
-  // 데이터 로드 시 이미지 프리로딩 실행 - 성능 최적화
+  // 데이터 로드 시 통합된 이미지 프리로딩 실행
   useEffect(() => {
     if (data?.result?.animeCandidates) {
-      const animes = data.result.animeCandidates.map(anime => ({
-        id: anime.animeCandidateId,
-        title: anime.titleKor,
-        thumbnailUrl: anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png',
-      }));
+      const urls = data.result.animeCandidates.map(anime => 
+        anime.mainThumbnailUrl || '/imagemainthumbnail@2x.png'
+      );
       
-      // 우선순위 기반 프리로딩으로 초기 로딩 시간 단축
-      preloadImages(animes);
+      // 스마트 프리로딩 (네트워크 상태 고려)
+      smartPreload(urls);
     }
-  }, [data, preloadImages]);
+  }, [data, smartPreload]);
 
   // 재투표 모드에서 스티키 강제 활성화 (데이터 로딩 완료 후)
   useEffect(() => {
@@ -419,7 +404,8 @@ function VotePageContent() {
         
         if (result.isSuccess) {
           // 투표 상태 데이터 캐시 업데이트
-          const updatedVoteStatus = await mutate('/api/v1/vote/anime/status');
+          // React Query 캐시 무효화
+          await queryClient.invalidateQueries({ queryKey: ['vote-status'] });
           
           // 빵빠레 효과 시작
           setShowConfetti(true);
@@ -431,10 +417,8 @@ function VotePageContent() {
           setShowVoteResult(true);
           
           // 재투표 모드에서 성공 시 투표 결과 화면으로 강제 이동
-          // 업데이트된 투표 상태 데이터를 사용하여 voteHistory 설정
-          if (updatedVoteStatus?.result) {
-            setVoteHistory(updatedVoteStatus.result);
-          } else if (voteStatusData?.result) {
+          // 기존 투표 상태 데이터를 사용하여 voteHistory 설정
+          if (voteStatusData?.result) {
             // fallback: 기존 데이터 사용
             setVoteHistory(voteStatusData.result);
           }
@@ -459,7 +443,7 @@ function VotePageContent() {
         // 성공 시 SWR 캐시 업데이트
         if (result.isSuccess) {
           // 투표 상태 데이터 캐시 업데이트
-          await mutate('/api/v1/vote/anime/status');
+          await queryClient.invalidateQueries({ queryKey: ['vote-status'] });
           
           // 빵빠레 효과 시작 (투표 제출 시에만)
           setShowConfetti(true);
@@ -578,42 +562,22 @@ function VotePageContent() {
     }
   }, [isRevoteMode, showVoteResult, voteStatusData]);
 
-  // 스크롤 복원 로직 - 상세화면에서 돌아왔을 때
+  // 단순화된 스크롤 복원 로직
   useEffect(() => {
     const navigationType = sessionStorage.getItem('navigation-type');
     if (navigationType === 'from-vote-result' && showVoteResult) {
-      // 상세화면에서 돌아온 경우 스크롤 복원
       const savedY = sessionStorage.getItem('scroll-vote-result');
       if (savedY) {
         const y = parseInt(savedY);
         if (!isNaN(y) && y > 0) {
-          // CSS scroll-behavior 강제 무시하여 깜빡임 방지
-          const originalScrollBehavior = document.documentElement.style.scrollBehavior;
-          document.documentElement.style.scrollBehavior = 'auto';
-          document.body.style.scrollBehavior = 'auto';
-          
           // 즉시 스크롤 복원 (애니메이션 없이)
           window.scrollTo(0, y);
-          document.body.scrollTop = y;
-          document.documentElement.scrollTop = y;
-          
-          // 추가 즉시 복원 (확실하게)
-          setTimeout(() => {
-            window.scrollTo(0, y);
-            document.body.scrollTop = y;
-            document.documentElement.scrollTop = y;
-          }, 0);
-          
-          // CSS 복원
-          setTimeout(() => {
-            document.documentElement.style.scrollBehavior = originalScrollBehavior;
-            document.body.style.scrollBehavior = originalScrollBehavior;
-          }, 100);
         }
       }
       
       // 플래그 정리
       sessionStorage.removeItem('navigation-type');
+      sessionStorage.removeItem('scroll-vote-result');
     }
   }, [showVoteResult]);
 
