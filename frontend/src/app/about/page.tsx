@@ -86,7 +86,7 @@ export default function AboutPage() {
 
             <Section title="문의 및 피드백">
               <p className="leading-relaxed">
-                문의 및 피드백은 이메일(bae0821@gmail.com)로 보내주세요. <br />
+                문의 및 피드백은 이메일(bright_aid@naver.com)로 보내주세요. <br />
                 서비스 이용 중 궁금한 점이나 개선사항이 있으시면 언제든 연락해 주세요.
                 여러분의 소중한 의견이 덕스타를 더 좋은 서비스로 만들어갑니다.
               </p>
