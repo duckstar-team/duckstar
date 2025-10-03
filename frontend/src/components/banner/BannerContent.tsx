@@ -41,7 +41,7 @@ export default function BannerContent({
         {/* 소스 */}
         <div>
           <div className="justify-start text-gray-400 text-base font-normal font-['Pretendard']">
-            {source}, {date}
+            {source}{date && `, ${date}`}
           </div>
         </div>
       </div>

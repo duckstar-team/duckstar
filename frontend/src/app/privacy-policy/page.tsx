@@ -21,7 +21,8 @@ const PrivacyList: React.FC<{ items: string[] }> = ({ items }) => (
 export default function PrivacyPage() {
   const collectedInfo = [
     "쿠키 ID: 투표 중복 방지를 위한 식별자",
-    "투표 데이터: 성별 정보",
+    "IP 주소 해시: 중복 투표 방지를 위한 암호화된 식별자",
+    "개인 투표 데이터: 성별 정보",
   ];
 
   const collectionPurposes = [
@@ -31,14 +32,13 @@ export default function PrivacyPage() {
   ];
 
   const retentionPeriods = [
-    "쿠키: 브라우저 세션 종료 시까지 (또는 사용자가 직접 삭제할 때까지)",
-    "투표 데이터: 투표 주차 종료 후 1년간 보관 후 자동 삭제",
+    "IP 주소 해시: 투표 주차 종료 후 1년간 보관 후 자동 삭제",
+    "개인 투표 데이터: 투표 주차 종료 후 1년간 보관 후 자동 삭제",
   ];
 
   const protectionMeasures = [
     "개인정보는 암호화하여 안전하게 저장됩니다.",
-    "접근 권한이 있는 직원만 개인정보에 접근할 수 있습니다.",
-    "정기적인 보안 점검을 통해 개인정보 보호를 강화합니다.",
+    "IP 주소는 해시화하여 개인 식별이 불가능한 형태로 저장됩니다."
   ];
 
   const userRights = [

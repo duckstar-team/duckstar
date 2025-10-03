@@ -7,6 +7,8 @@ import RightCommentPanel from '@/components/anime/RightCommentPanel';
 import { getAnimeDetail } from '@/api/search';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { CharacterData } from '@/components/anime/CharacterCard';
+import { useAuth } from '@/context/AuthContext';
+import { updateAnimeImage } from '@/api/client';
 
 // 타입 정의
 interface OttDto {
@@ -54,55 +56,73 @@ export default function AnimeDetailClient() {
   const isLoadingRef = useRef(false); // 중복 호출 방지용
   const prevAnimeIdRef = useRef<string | null>(null); // 이전 animeId 추적
   
+  // 관리자 인증 및 이미지 수정 관련 상태
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditingImage, setIsEditingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   // 캐시된 데이터 확인
   const [cachedData, setCachedData] = useState<{ anime: AnimeDetailDto; characters: CharacterData[] } | null>(null);
   
   // 이미지 프리로딩 훅
   const { preloadAnimeDetails } = useImagePreloading();
   
-  // 이전 화면으로 돌아가기 (스크롤 복원)
-  const navigateBackToSearch = () => {
-    // 스크롤 복원을 위한 네비게이션
-    
-    // to-anime-detail 플래그가 있으면 from-anime-detail 플래그 설정
-    const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
-    if (toAnimeDetail === 'true') {
-      sessionStorage.setItem('from-anime-detail', 'true');
-      sessionStorage.removeItem('to-anime-detail');
-      
-      // 검색 페이지의 스크롤 위치 확인
-      const savedScrollY = sessionStorage.getItem('scroll-search-return');
-      if (savedScrollY) {
-      } else {
-      }
-      
-      // vote-result-scroll이 있으면 투표 결과 화면에서 온 것으로 판단
-      const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
-      if (voteResultScroll) {
-        sessionStorage.setItem('to-vote-result', 'true');
-      }
+  // 브라우저 기본 동작 사용 (커스텀 플래그 제거)
+  
+  // 관리자 권한 체크
+  useEffect(() => {
+    if (user && user.role === 'ADMIN') {
+      setIsAdmin(true);
     }
-    
-    // 브라우저 히스토리를 고려하여 이전 페이지로 이동
-    // 히스토리가 있으면 router.back() 사용, 없으면 기본 페이지로 이동
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/search');
+  }, [user]);
+  
+  // 이미지 수정 핸들러
+  const handleImageEdit = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
   
-  // 컴포넌트 언마운트 시 from-anime-detail 플래그 설정
-  useEffect(() => {
-    return () => {
-      const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
-      if (toAnimeDetail === 'true') {
-        sessionStorage.setItem('from-anime-detail', 'true');
-        sessionStorage.setItem('detail-restore-done', 'true'); // 즉시 설정
-        sessionStorage.removeItem('to-anime-detail');
+  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setIsEditingImage(true);
+    }
+  };
+  
+  const handleImageUpdate = async () => {
+    if (!imageFile || !anime) return;
+    
+    try {
+      await updateAnimeImage(parseInt(animeId), imageFile);
+      
+      // 성공 시 애니메이션 데이터 새로고침
+      const updatedData = await getAnimeDetail(parseInt(animeId));
+      if (updatedData?.animeInfoDto) {
+        setAnime(updatedData.animeInfoDto);
+        setRawAnimeData(updatedData);
       }
-    };
-  }, []);
+      
+      setIsEditingImage(false);
+      setImageFile(null);
+      alert('이미지가 성공적으로 업데이트되었습니다!');
+    } catch (error) {
+      console.error('이미지 업데이트 실패:', error);
+      alert('이미지 업데이트에 실패했습니다.');
+    }
+  };
+  
+  const handleImageEditCancel = () => {
+    setIsEditingImage(false);
+    setImageFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
   
   const [error, setError] = useState<string | null>(null);
   
@@ -122,7 +142,10 @@ export default function AnimeDetailClient() {
   useEffect(() => {
     // to-anime-detail 플래그가 있으면 상세화면 진입으로 판단
     const toAnimeDetail = sessionStorage.getItem('to-anime-detail');
-    if (toAnimeDetail === 'true') {
+    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+    
+    // 애니메이션 상세화면에서 돌아오는 경우가 아닐 때만 스크롤 탑으로 이동
+    if (toAnimeDetail === 'true' && fromAnimeDetail !== 'true') {
       
       // 여러 방법으로 스크롤을 맨 위로 강제 이동
       window.scrollTo(0, 0);
@@ -145,18 +168,27 @@ export default function AnimeDetailClient() {
       // from-anime-detail 플래그 미리 설정
       sessionStorage.setItem('from-anime-detail', 'true');
       
+      // to-anime-detail 플래그 정리
+      sessionStorage.removeItem('to-anime-detail');
+      
       // vote-result-scroll이 있으면 투표 결과 화면에서 온 것으로 판단
       const voteResultScroll = sessionStorage.getItem('vote-result-scroll');
       if (voteResultScroll) {
         sessionStorage.setItem('to-vote-result', 'true');
       }
     } else {
+      // to-anime-detail 플래그가 없어도 정리
+      sessionStorage.removeItem('to-anime-detail');
     }
   }, []);
 
   useEffect(() => {
-    // 애니메이션 상세화면 진입 시 스크롤을 맨 위로 강제 이동
-    window.scrollTo(0, 0);
+    // 애니메이션 상세화면에서 돌아오는 경우가 아닐 때만 스크롤 탑으로 이동
+    const fromAnimeDetail = sessionStorage.getItem('from-anime-detail');
+    if (fromAnimeDetail !== 'true') {
+      // 애니메이션 상세화면 진입 시 스크롤을 맨 위로 강제 이동
+      window.scrollTo(0, 0);
+    }
     
     const fetchAnimeData = async () => {
       // 중복 호출 방지
@@ -410,13 +442,26 @@ export default function AnimeDetailClient() {
     );
   }
 
-  // 뒤로가기 핸들러 (search 화면으로만 스크롤 복원)
+  // 뒤로가기 핸들러 - 브라우저 뒤로가기와 정확히 일치
   const handleBack = () => {
-    navigateBackToSearch();
+    // 브라우저의 뒤로가기와 정확히 동일한 동작
+    // 커스텀 스크롤 복원 로직을 비활성화하고 브라우저 기본 동작 사용
+    sessionStorage.removeItem('from-anime-detail');
+    sessionStorage.removeItem('scroll-search-return');
+    router.back();
   };
 
   return (
     <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
+      {/* 숨겨진 파일 입력 필드 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageFileChange}
+        className="hidden"
+      />
+      
       <div className="w-full flex justify-center">
         <div className="max-w-7xl w-auto flex">
           {/* 왼쪽 영역: fixed 고정 */}
@@ -427,6 +472,12 @@ export default function AnimeDetailClient() {
               onBack={handleBack} 
               characters={characters}
               onImageModalToggle={setIsImageModalOpen}
+              isAdmin={isAdmin}
+              onImageEdit={handleImageEdit}
+              isEditingImage={isEditingImage}
+              imageFile={imageFile}
+              onImageUpdate={handleImageUpdate}
+              onImageEditCancel={handleImageEditCancel}
             />
           </div>
           

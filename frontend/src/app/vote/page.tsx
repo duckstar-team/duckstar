@@ -221,7 +221,6 @@ function VotePageContent() {
   // 재투표 모드에서 스티키 강제 활성화 (데이터 로딩 완료 후)
   useEffect(() => {
     if (isRevoteMode && voteStatusData?.result?.hasVoted && data?.result?.animeCandidates) {
-      console.log('재투표 모드 + 데이터 로딩 완료 - 스티키 강제 활성화');
       
       // 데이터 로딩 완료 후 스티키 강제 활성화
       const timer = setTimeout(() => {
@@ -237,7 +236,6 @@ function VotePageContent() {
           // 강제 리플로우
           void (stickySection as HTMLElement).offsetHeight;
           
-          console.log('재투표 모드 스티키 강제 활성화 완료');
         }
       }, 1000); // 데이터 로딩 완료 후 1초 대기
       
@@ -798,28 +796,30 @@ function VotePageContent() {
                   </div>
                 </div>
 
-                {/* 재투표하기 버튼 */}
-                <div className="flex justify-center lg:justify-end">
-                  <button
-                    onClick={() => {
-                      // 재투표 모드 활성화
-                      setIsRevoteMode(true);
-                    }}
-                    className="text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer flex items-center gap-2"
-                    style={{ backgroundColor: '#FFB310' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#FFC633';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#FFB310';
-                    }}
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    재투표하기
-                  </button>
-                </div>
+                {/* 재투표하기 버튼 - 로그인한 사용자만 표시 */}
+                {isAuthenticated && (
+                  <div className="flex justify-center lg:justify-end">
+                    <button
+                      onClick={() => {
+                        // 재투표 모드 활성화
+                        setIsRevoteMode(true);
+                      }}
+                      className="text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer flex items-center gap-2"
+                      style={{ backgroundColor: '#FFB310' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#FFC633';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#FFB310';
+                      }}
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      재투표하기
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -844,29 +844,40 @@ function VotePageContent() {
               
               {/* 비로그인 투표 시 로그인 안내 문구 */}
               {(!isAuthenticated && (!voteHistory.nickName || hasVoteCookieId())) && (
-                <button 
-                  onClick={openLoginModal}
-                  className="text-gray-500 text-base hover:text-gray-700 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
-                  style={{ 
-                    borderBottom: '1px solid #c4c7cc',
-                    lineHeight: '1.1'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderBottomColor = '#374151';
-                    const svg = e.currentTarget.querySelector('svg');
-                    if (svg) svg.style.stroke = '#374151';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderBottomColor = '#c4c7cc';
-                    const svg = e.currentTarget.querySelector('svg');
-                    if (svg) svg.style.stroke = '#9ca3af';
-                  }}
-                >
-                  로그인으로 투표 내역 저장하기
-                  <svg className="w-4 h-4" fill="none" stroke="#9ca3af" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                <div className="relative group">
+                  <button 
+                    onClick={openLoginModal}
+                    className="text-gray-500 text-base hover:text-gray-700 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+                    style={{ 
+                      borderBottom: '1px solid #c4c7cc',
+                      lineHeight: '1.1'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#374151';
+                      const svg = e.currentTarget.querySelector('svg');
+                      if (svg) svg.style.stroke = '#374151';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#c4c7cc';
+                      const svg = e.currentTarget.querySelector('svg');
+                      if (svg) svg.style.stroke = '#9ca3af';
+                    }}
+                  >
+                    로그인으로 투표 내역 저장하기
+                    <svg className="w-4 h-4" fill="none" stroke="#9ca3af" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  
+                  {/* 툴팁 */}
+                  <div className="absolute bottom-full left-2/3 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                    <div className="bg-gray-800 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap relative">
+                      언제든 재투표 가능!
+                      {/* 툴팁 화살표 */}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
             {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (

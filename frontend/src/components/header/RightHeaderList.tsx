@@ -4,13 +4,13 @@ import { WeekDto } from '@/types/api';
 
 interface RightHeaderListProps {
   weekDtos: WeekDto[];
-  selectedTab?: 'anilab' | 'anime-trending';
-  onTabChange?: (tab: 'anilab' | 'anime-trending') => void;
+  selectedTab?: 'anilab' | 'anime-corner';
+  onTabChange?: (tab: 'anilab' | 'anime-corner') => void;
   className?: string;
 }
 
 export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, className = "" }: RightHeaderListProps) {
-  const [activeTab, setActiveTab] = useState<'anilab' | 'anime-trending'>('anilab');
+  const [activeTab, setActiveTab] = useState<'anilab' | 'anime-corner'>('anime-corner');
   
   // 현재 주차 찾기 (OPEN 상태인 주차)
   const currentWeek = weekDtos.find(week => week.voteStatus === 'OPEN');
@@ -28,8 +28,8 @@ export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, cl
   // 탭 상태 저장 및 복원
   useEffect(() => {
     const savedTab = sessionStorage.getItem('home-right-tab');
-    if (savedTab === 'anime-trending') {
-      setActiveTab('anime-trending');
+    if (savedTab === 'anime-corner') {
+      setActiveTab('anime-corner');
       // 복원 후 플래그 제거
       sessionStorage.removeItem('home-right-tab');
     }
@@ -37,20 +37,38 @@ export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, cl
 
   // 탭 상태 변경 시 저장
   useEffect(() => {
-    if (activeTab === 'anime-trending') {
-      sessionStorage.setItem('home-right-tab', 'anime-trending');
+    if (activeTab === 'anime-corner') {
+      sessionStorage.setItem('home-right-tab', 'anime-corner');
     } else {
       sessionStorage.removeItem('home-right-tab');
     }
   }, [activeTab]);
 
-  const handleTabClick = (tab: 'anilab' | 'anime-trending') => {
+  const handleTabClick = (tab: 'anilab' | 'anime-corner') => {
     setActiveTab(tab);
     onTabChange?.(tab);
   };
   return (
     <div className={`self-stretch h-12 inline-flex justify-center items-center ${className}`}>
-      {/* AniLab 탭 (첫 번째) */}
+      {/* Anime Corner 탭 (첫 번째) */}
+      <button 
+        onClick={() => handleTabClick('anime-corner')}
+        className={`w-44 px-2.5 py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
+          activeTab === 'anime-corner' 
+            ? 'border-b-2 border-rose-800' 
+            : ''
+        }`}
+      >
+        <div className={`self-stretch justify-start text-xl font-['Pretendard'] leading-snug ${
+          activeTab === 'anime-corner' 
+            ? 'text-rose-800 font-semibold' 
+            : 'text-gray-400 font-normal'
+        }`}>
+          Anime Corner 🇺🇸
+        </div>
+      </button>
+      
+      {/* AniLab 탭 (두 번째) */}
       <button 
         onClick={() => handleTabClick('anilab')}
         className={`w-44 px-9 py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
@@ -65,24 +83,6 @@ export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, cl
             : 'text-gray-400 font-normal'
         }`}>
           AniLab 🇯🇵
-        </div>
-      </button>
-      
-      {/* Anime Trending 탭 (두 번째) */}
-      <button 
-        onClick={() => handleTabClick('anime-trending')}
-        className={`w-44 px-2.5 py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
-          activeTab === 'anime-trending' 
-            ? 'border-b-2 border-rose-800' 
-            : ''
-        }`}
-      >
-        <div className={`self-stretch justify-start text-xl font-['Pretendard'] leading-snug ${
-          activeTab === 'anime-trending' 
-            ? 'text-rose-800 font-semibold' 
-            : 'text-gray-400 font-normal'
-        }`}>
-          Anime Trend 🇺🇸
         </div>
       </button>
     </div>

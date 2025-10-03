@@ -134,9 +134,8 @@ function NavButton({
     // 네비게이션 시작
     startNavigation();
     
-    // 홈으로 이동할 때는 사이드바 네비게이션임을 표시하고 스크롤 탑으로 이동
+    // 홈으로 이동할 때는 스크롤 탑으로 이동
     if (href === '/') {
-      sessionStorage.setItem('sidebar-navigation', 'true');
       sessionStorage.setItem('home-scroll-top', 'true');
       scrollToTop();
       return;
@@ -145,21 +144,14 @@ function NavButton({
     // 다른 메뉴로 이동할 때는 홈 스크롤 탑 플래그를 제거하고 스크롤 탑 실행하지 않음
     sessionStorage.removeItem('home-scroll-top');
     
-    // search 화면으로 이동할 때는 사이드바 네비게이션임을 표시
+    // search 화면으로 이동할 때
     if (href === '/search') {
-      // 사이드바 네비게이션임을 표시하는 플래그 설정
-      sessionStorage.setItem('sidebar-navigation', 'true');
-      
       // 현재 페이지가 이미 /search인 경우 강제로 검색 상태 초기화
       if (pathname === '/search') {
         // 검색 상태 초기화를 위한 강제 새로고침
         window.location.reload();
         return;
       }
-    }
-    // vote 화면으로 이동할 때도 사이드바 네비게이션임을 표시
-    if (href === '/vote') {
-      sessionStorage.setItem('sidebar-navigation', 'true');
     }
     
     // 다른 메뉴로 이동할 때는 스크롤 탑 실행하지 않음 (번쩍 이동 방지)
@@ -276,7 +268,11 @@ export default function Sidebar() {
               activeIcon={item.activeIcon}
               iconSize={item.iconSize}
               iconClass={item.iconClass}
-              isActive={pathname === item.href}
+              isActive={
+                item.href === '/search' 
+                  ? pathname === item.href || pathname.startsWith('/search/')
+                  : pathname === item.href
+              }
               isHovered={hoveredItem === item.href && pathname !== item.href}
               isBeta={item.isBeta}
               badgeText={item.badgeText}

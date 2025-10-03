@@ -158,7 +158,7 @@ const VoteResultCardLoggedIn = memo(function VoteResultCardLoggedIn({
               {ballot.titleKor || '제목 없음'}
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              {weekDto ? `${weekDto.year} ${weekDto.season}` : ''}
+              {weekDto ? `${weekDto.year} ${weekDto.season} ${weekDto.week}주차` : ''}
             </div>
           </div>
 
