@@ -122,7 +122,7 @@ export default function HomeChart({ duckstarRankPreviews, isPrepared = true, cla
                 </div>
                 <h3 className="text-xl font-bold mb-2" style={{ color: '#990033' }}>4분기 첫 투표 개시!</h3>
                 <p className="text-sm text-gray-600 text-center mb-4">
-                  이번 주 일요일부터<br />
+                  10/10 (금) 부터<br />
                   덕스타 차트 제공이 시작됩니다. <br />
                 </p>
                 <div 
