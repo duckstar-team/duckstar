@@ -157,7 +157,9 @@ function SearchPageContent() {
     
     if (position !== undefined) {
       window.scrollTo({ top: position, behavior: 'instant' });
+      return true; // 저장된 위치로 스크롤 성공
     }
+    return false; // 저장된 위치가 없음
   };
 
   const [showOnlyAiring, setShowOnlyAiring] = useState(false); // 방영 중 애니만 보기
@@ -384,6 +386,13 @@ function SearchPageContent() {
       setIsThisWeek(true);
       setSelectedYear(null);
       setSelectedQuarter(null);
+      
+      // "이번 주"로 이동할 때 초기화 상태 리셋 및 데이터 강제 새로고침
+      setIsInitialized(false);
+      setTimeout(() => {
+        setIsInitialized(true);
+        refetch();
+      }, 100);
     } else {
       // 시즌 메뉴로 이동
       const dayToSave = selectedDay === '곧 시작' ? '월' : selectedDay;
@@ -477,7 +486,19 @@ function SearchPageContent() {
         
         // 동일 섹션 확인
         if (checkSectionExists(currentDayKey)) {
-          scrollToSavedPosition(targetSeasonKey, currentDayKey);
+          const scrollSuccess = scrollToSavedPosition(targetSeasonKey, currentDayKey);
+          if (!scrollSuccess) {
+            // 저장된 위치가 없으면 직접 스크롤
+            const sectionId = isThisWeekSelected ? currentDayKey : `${currentDayKey}-${year}-${quarter}`;
+            const element = document.getElementById(sectionId);
+            if (element) {
+              const headerHeight = 60;
+              const daySelectionHeight = 44;
+              const margin = 50;
+              const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+              window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+            }
+          }
           return;
         }
         
@@ -485,7 +506,19 @@ function SearchPageContent() {
         const currentIndex = dayOrder.indexOf(currentDayKey);
         for (let i = currentIndex + 1; i < dayOrder.length; i++) {
           if (checkSectionExists(dayOrder[i])) {
-            scrollToSavedPosition(targetSeasonKey, dayOrder[i]);
+            const scrollSuccess = scrollToSavedPosition(targetSeasonKey, dayOrder[i]);
+            if (!scrollSuccess) {
+              // 저장된 위치가 없으면 직접 스크롤
+              const sectionId = isThisWeekSelected ? dayOrder[i] : `${dayOrder[i]}-${year}-${quarter}`;
+              const element = document.getElementById(sectionId);
+              if (element) {
+                const headerHeight = 60;
+                const daySelectionHeight = 44;
+                const margin = 50;
+                const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+                window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+              }
+            }
             return;
           }
         }
@@ -554,6 +587,24 @@ function SearchPageContent() {
           }
         }
         
+        // 동일 섹션 확인 - 저장된 위치가 있으면 사용, 없으면 직접 스크롤
+        if (checkSectionExists(dayKey)) {
+          const scrollSuccess = scrollToSavedPosition(currentSeasonKey, dayKey);
+          if (!scrollSuccess) {
+            // 저장된 위치가 없으면 직접 스크롤
+            const sectionId = isThisWeek ? dayKey : `${dayKey}-${selectedYear}-${selectedQuarter}`;
+            const element = document.getElementById(sectionId);
+            if (element) {
+              const headerHeight = 60;
+              const daySelectionHeight = 44;
+              const margin = 50;
+              const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+              window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+            }
+          }
+          return;
+        }
+        
         // 첫 번째 존재하는 섹션 이전의 모든 요일은 스크롤 탑
         if (firstExistingIndex !== -1) {
           const currentIndex = dayOrder.indexOf(dayKey);
@@ -565,17 +616,23 @@ function SearchPageContent() {
           }
         }
         
-        // 동일 섹션 확인
-        if (checkSectionExists(dayKey)) {
-          scrollToSavedPosition(currentSeasonKey, dayKey);
-          return;
-        }
-        
         // 다음 순서 섹션 찾기
         const currentIndex = dayOrder.indexOf(dayKey);
         for (let i = currentIndex + 1; i < dayOrder.length; i++) {
           if (checkSectionExists(dayOrder[i])) {
-            scrollToSavedPosition(currentSeasonKey, dayOrder[i]);
+            const scrollSuccess = scrollToSavedPosition(currentSeasonKey, dayOrder[i]);
+            if (!scrollSuccess) {
+              // 저장된 위치가 없으면 직접 스크롤
+              const sectionId = isThisWeek ? dayOrder[i] : `${dayOrder[i]}-${selectedYear}-${selectedQuarter}`;
+              const element = document.getElementById(sectionId);
+              if (element) {
+                const headerHeight = 60;
+                const daySelectionHeight = 44;
+                const margin = 50;
+                const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+                window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+              }
+            }
             return;
           }
         }
@@ -612,7 +669,7 @@ function SearchPageContent() {
 
 
   // React Query를 사용한 데이터 페칭 (통일된 캐싱 전략)
-  const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
+  const { data: scheduleData, error, isLoading, isFetching, refetch } = useQuery<AnimePreviewListDto>({
     queryKey: ['schedule', 'this-week'],
     queryFn: getCurrentSchedule, // 항상 '이번 주' 데이터만 호출
     enabled: isInitialized, // 초기화 완료 후에만 API 호출
