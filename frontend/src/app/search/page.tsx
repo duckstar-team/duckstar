@@ -386,6 +386,13 @@ function SearchPageContent() {
       setIsThisWeek(true);
       setSelectedYear(null);
       setSelectedQuarter(null);
+      
+      // "이번 주"로 이동할 때 초기화 상태 리셋 및 데이터 강제 새로고침
+      setIsInitialized(false);
+      setTimeout(() => {
+        setIsInitialized(true);
+        refetch();
+      }, 100);
     } else {
       // 시즌 메뉴로 이동
       const dayToSave = selectedDay === '곧 시작' ? '월' : selectedDay;
@@ -662,7 +669,7 @@ function SearchPageContent() {
 
 
   // React Query를 사용한 데이터 페칭 (통일된 캐싱 전략)
-  const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
+  const { data: scheduleData, error, isLoading, isFetching, refetch } = useQuery<AnimePreviewListDto>({
     queryKey: ['schedule', 'this-week'],
     queryFn: getCurrentSchedule, // 항상 '이번 주' 데이터만 호출
     enabled: isInitialized, // 초기화 완료 후에만 API 호출
