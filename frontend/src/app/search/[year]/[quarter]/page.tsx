@@ -34,6 +34,11 @@ function SeasonPageContent() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showOnlyAiring, setShowOnlyAiring] = useState(false);
   
+  // 검색 관련 상태
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  
   // 스티키 요소들을 위한 상태와 ref
   const [isDaySelectionSticky, setIsDaySelectionSticky] = useState(false);
   const [isSeasonSelectorSticky, setIsSeasonSelectorSticky] = useState(false);
@@ -50,6 +55,22 @@ function SeasonPageContent() {
   useEffect(() => {
     setIsInitialized(true);
   }, []);
+
+  // 검색 결과 표시 시 페이드 인 효과
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      // 검색 결과가 표시될 때 애니메이션 아이템들에 페이드 인 효과
+      const timeout = setTimeout(() => {
+        const animeItems = document.querySelectorAll('[data-anime-item]');
+        animeItems.forEach(item => {
+          (item as HTMLElement).style.transition = 'opacity 0.3s ease-in';
+          (item as HTMLElement).style.opacity = '1';
+        });
+      }, 50);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [searchQuery]);
 
   // React Query를 사용한 데이터 페칭 (통일된 캐싱 전략)
   const { data: scheduleData, error, isLoading, isFetching } = useQuery<AnimePreviewListDto>({
@@ -173,6 +194,22 @@ function SeasonPageContent() {
         );
       });
     };
+
+    // 검색 필터링 함수
+    const filterSearchAnimes = (animes: AnimePreviewDto[]) => {
+      if (!searchQuery.trim()) {
+        return animes;
+      }
+      
+      return animes.filter(anime => {
+        const titleMatch = anime.titleKor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          anime.titleOrigin?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const chosungMatch = extractChosung(anime.titleKor || '').includes(searchQuery.toUpperCase());
+        
+        return titleMatch || chosungMatch;
+      });
+    };
     
     // 각 요일별로 애니메이션 그룹핑
     dayOrder.forEach(day => {
@@ -193,7 +230,7 @@ function SeasonPageContent() {
       }
       
       if (dayAnimes.length > 0) {
-        const filteredAnimes = filterOttAnimes(filterAiringAnimes(dayAnimes));
+        const filteredAnimes = filterSearchAnimes(filterOttAnimes(filterAiringAnimes(dayAnimes)));
         if (filteredAnimes.length > 0) {
           // 정교한 정렬: 방영중/상영중 우선, 시간순 정렬
           filteredAnimes.sort((a, b) => {
@@ -229,7 +266,7 @@ function SeasonPageContent() {
     });
     
     return grouped;
-  }, [currentData, showOnlyAiring, selectedOttServices]);
+  }, [currentData, showOnlyAiring, selectedOttServices, searchQuery]);
 
   // 빈 요일 확인 (기존 /search 페이지와 동일한 로직)
   const emptyDays = useMemo(() => {
@@ -251,11 +288,60 @@ function SeasonPageContent() {
     });
   }, [groupedAnimes]);
 
-  // 검색 핸들러
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      router.push(`/search-results?keyword=${encodeURIComponent(query)}`);
+  // 검색 핸들러들
+  const handleSearchInputChange = (input: string) => {
+    setSearchInput(input);
+  };
+
+  const handleSearch = () => {
+    const query = searchInput.trim();
+    if (query) {
+      // 검색 시 스티키 상태 초기화 (이전 스티키와 기본 요소 중복 방지)
+      setIsDaySelectionSticky(false);
+      setIsSeasonSelectorSticky(false);
+      
+      // 기존 애니메이션 아이템들에 페이드 아웃 효과
+      const animeItems = document.querySelectorAll('[data-anime-item]');
+      animeItems.forEach(item => {
+        (item as HTMLElement).style.transition = 'opacity 0.2s ease-out';
+        (item as HTMLElement).style.opacity = '0';
+      });
+      
+      // 페이드 아웃 후 검색 상태 업데이트
+      setTimeout(() => {
+        setSearchQuery(query);
+        setIsSearching(true);
+      }, 200);
+    } else {
+      setSearchQuery('');
+      setIsSearching(false);
+      // 검색 초기화
     }
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchInput(query);
+  };
+
+  // 검색 초기화 핸들러
+  const handleSearchReset = () => {
+    // 검색 초기화 시 스티키 상태 초기화
+    setIsDaySelectionSticky(false);
+    setIsSeasonSelectorSticky(false);
+    
+    // 기존 애니메이션 아이템들에 페이드 아웃 효과
+    const animeItems = document.querySelectorAll('[data-anime-item]');
+    animeItems.forEach(item => {
+      (item as HTMLElement).style.transition = 'opacity 0.2s ease-out';
+      (item as HTMLElement).style.opacity = '0';
+    });
+    
+    // 페이드 아웃 후 검색 상태 초기화
+    setTimeout(() => {
+      setSearchQuery('');
+      setSearchInput('');
+      setIsSearching(false);
+    }, 200);
   };
 
   // 요일 선택 핸들러 (시즌별 페이지용 간단한 로직)
@@ -625,9 +711,9 @@ function SeasonPageContent() {
             {/* SearchInput과 OTT 필터 큐 */}
             <div className="relative">
               <SearchInput
-                value=""
-                onChange={() => {}}
-                onSearch={() => {}}
+                value={searchInput}
+                onChange={handleSearchInputChange}
+                onSearch={handleSearch}
                 placeholder={randomAnimeTitle || "분기 신작 애니/캐릭터를 검색해보세요..."}
                 className="w-full h-[62px]"
               />
@@ -639,31 +725,48 @@ function SeasonPageContent() {
         <div className="absolute -bottom-6 left-0 w-full z-20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex gap-5 items-center justify-start" ref={seasonSelectorRef}>
-              <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                <SeasonSelector
-                  onSeasonSelect={handleSeasonSelect}
-                  className="w-fit"
-                  currentYear={year}
-                  currentQuarter={quarter}
-                />
-              </div>
+              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+              {searchQuery.trim() ? (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <button
+                    onClick={handleSearchReset}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="font-medium">이전</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <SeasonSelector
+                    onSeasonSelect={handleSeasonSelect}
+                    className="w-fit"
+                    currentYear={year}
+                    currentQuarter={quarter}
+                  />
+                </div>
+              )}
               
-              {/* 방영 중 애니만 보기 체크박스 */}
-              <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                <input
-                  type="checkbox"
-                  id="showOnlyAiring"
-                  checked={showOnlyAiring}
-                  onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
-                  className="w-4 h-4 accent-[#990033]"
-                />
-                <label 
-                  htmlFor="showOnlyAiring" 
-                  className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
-                >
-                  방영 중 애니만 보기
-                </label>
-              </div>
+              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아니고 검색 중이 아닐 때만 표시 */}
+              {!searchQuery.trim() &&
+                <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <input
+                    type="checkbox"
+                    id="showOnlyAiring"
+                    checked={showOnlyAiring}
+                    onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
+                    className="w-4 h-4 accent-[#990033]"
+                  />
+                  <label 
+                    htmlFor="showOnlyAiring" 
+                    className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
+                  >
+                    방영 중 애니만 보기
+                  </label>
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -683,31 +786,48 @@ function SeasonPageContent() {
         >
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex gap-5 items-center justify-start">
-              <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                <SeasonSelector
-                  onSeasonSelect={handleSeasonSelect}
-                  className="w-fit"
-                  currentYear={year}
-                  currentQuarter={quarter}
-                />
-              </div>
+              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+              {searchQuery.trim() ? (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <button
+                    onClick={handleSearchReset}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="font-medium">이전</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <SeasonSelector
+                    onSeasonSelect={handleSeasonSelect}
+                    className="w-fit"
+                    currentYear={year}
+                    currentQuarter={quarter}
+                  />
+                </div>
+              )}
               
-              {/* 방영 중 애니만 보기 체크박스 */}
-              <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                <input
-                  type="checkbox"
-                  id="showOnlyAiringSticky"
-                  checked={showOnlyAiring}
-                  onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
-                  className="w-4 h-4 accent-[#990033]"
-                />
-                <label 
-                  htmlFor="showOnlyAiringSticky" 
-                  className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
-                >
-                  방영 중 애니만 보기
-                </label>
-              </div>
+              {/* 방영 중 애니만 보기 체크박스 - 검색 중이 아닐 때만 표시 */}
+              {!searchQuery.trim() &&
+                <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                  <input
+                    type="checkbox"
+                    id="showOnlyAiringSticky"
+                    checked={showOnlyAiring}
+                    onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
+                    className="w-4 h-4 accent-[#990033]"
+                  />
+                  <label 
+                    htmlFor="showOnlyAiringSticky" 
+                    className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
+                  >
+                    방영 중 애니만 보기
+                  </label>
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -850,8 +970,35 @@ function SeasonPageContent() {
       {/* Anime Grid Section - F8F9FA 배경 */}
       <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
         <div className="max-w-7xl mx-auto px-6 pt-8 pb-8">
-          {/* Anime Grid - OTT 필터링 시 요일 구분 없이 표시 */}
-          {groupedAnimes && Object.keys(groupedAnimes).length > 0 ? (
+          {/* 검색 중일 때 검색 결과 표시 */}
+          {searchQuery.trim() ? (
+            <div className="space-y-4" data-content-loaded>
+              <div className="text-center py-8">
+                <div className="text-sm text-gray-600 mb-4">
+                  "{searchQuery}"에 대한 검색 결과
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px]">
+                  {Object.values(groupedAnimes).flat().map((anime) => (
+                    <AnimeCard
+                      key={anime.animeId}
+                      anime={anime}
+                      isCurrentSeason={false}
+                      data-anime-item
+                    />
+                  ))}
+                </div>
+                {Object.values(groupedAnimes).flat().length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      "{searchQuery}"에 대한 검색 결과가 없습니다.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Anime Grid - OTT 필터링 시 요일 구분 없이 표시 */
+            groupedAnimes && Object.keys(groupedAnimes).length > 0 ? (
             <div className="space-y-0" data-content-loaded>
               {selectedOttServices.length > 0 ? (
                 // OTT 필터링 시: 모든 애니메이션을 하나의 그리드로 표시
@@ -964,6 +1111,7 @@ function SeasonPageContent() {
                 다른 시즌을 선택해보세요
               </p>
             </div>
+          )
           )}
         </div>
       </div>
