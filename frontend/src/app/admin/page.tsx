@@ -36,6 +36,7 @@ interface AnimeData {
   synopsis?: string;
   mainImage?: File;
   ottDtos?: OttData[];
+  otherSites?: string[]; // 기타 사이트 배열 추가
 }
 
 export default function AdminPage() {
@@ -65,7 +66,8 @@ export default function AdminPage() {
     },
     synopsis: '',
     mainImage: undefined,
-    ottDtos: []
+    ottDtos: [],
+    otherSites: [''] // 기타 사이트 배열 초기화
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -97,6 +99,30 @@ export default function AdminPage() {
       ...prev,
       ottDtos: prev.ottDtos?.map((ott, i) => 
         i === index ? { ...ott, [field]: value } : ott
+      ) || []
+    }));
+  };
+
+  // 기타 사이트 관련 함수들
+  const addOtherSite = () => {
+    setAnimeData(prev => ({
+      ...prev,
+      otherSites: [...(prev.otherSites || []), '']
+    }));
+  };
+
+  const removeOtherSite = (index: number) => {
+    setAnimeData(prev => ({
+      ...prev,
+      otherSites: prev.otherSites?.filter((_, i) => i !== index) || []
+    }));
+  };
+
+  const updateOtherSite = (index: number, value: string) => {
+    setAnimeData(prev => ({
+      ...prev,
+      otherSites: prev.otherSites?.map((site, i) => 
+        i === index ? value : site
       ) || []
     }));
   };
@@ -250,6 +276,20 @@ export default function AdminPage() {
             officialSiteMap[siteType] = url;
           }
         });
+        
+        // 기타 사이트들을 OTHERS 필드에 합쳐서 추가
+        if (animeData.otherSites && animeData.otherSites.length > 0) {
+          const validOtherSites = animeData.otherSites.filter(site => site && site.trim());
+          if (validOtherSites.length > 0) {
+            // 기존 OTHERS가 있으면 합치고, 없으면 새로 생성
+            if (officialSiteMap.OTHERS) {
+              officialSiteMap.OTHERS = `${officialSiteMap.OTHERS}, ${validOtherSites.join(', ')}`;
+            } else {
+              officialSiteMap.OTHERS = validOtherSites.join(', ');
+            }
+          }
+        }
+        
         if (Object.keys(officialSiteMap).length > 0) {
           formData.append('officialSiteString', JSON.stringify(officialSiteMap));
         }
@@ -582,6 +622,26 @@ export default function AdminPage() {
                   placeholder="원작을 입력하세요"
                 />
               </div>
+
+              <div>
+                <label htmlFor="minAge" className="block text-sm font-medium text-gray-700 mb-2">
+                  시청 등급
+                </label>
+                <select
+                  id="minAge"
+                  name="minAge"
+                  value={animeData.minAge || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">시청 등급을 선택하세요</option>
+                  <option value="0">전체이용가</option>
+                  <option value="7">7세 이상</option>
+                  <option value="12">12세 이상</option>
+                  <option value="15">15세 이상</option>
+                  <option value="19">19세 이상</option>
+                </select>
+              </div>
             </div>
 
             {/* 공식 사이트 정보 */}
@@ -649,18 +709,38 @@ export default function AdminPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="officialSite.OTHERS" className="block text-sm font-medium text-gray-700 mb-2">
-                    기타 사이트
-                  </label>
-                  <input
-                    type="url"
-                    id="officialSite.OTHERS"
-                    name="officialSite.OTHERS"
-                    value={animeData.officialSite?.OTHERS || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="https://example.com/..."
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      기타 사이트
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addOtherSite}
+                      className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
+                    >
+                      + 추가
+                    </button>
+                  </div>
+                  {animeData.otherSites?.map((site, index) => (
+                    <div key={index} className="flex items-center gap-2 mb-2">
+                      <input
+                        type="url"
+                        value={site}
+                        onChange={(e) => updateOtherSite(index, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="https://example.com/..."
+                      />
+                      {animeData.otherSites && animeData.otherSites.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeOtherSite(index)}
+                          className="text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

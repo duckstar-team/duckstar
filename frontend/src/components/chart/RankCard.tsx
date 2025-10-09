@@ -1,0 +1,57 @@
+'use client';
+
+import MedalSection from './MedalSection';
+import RankContents from './RankContents';
+
+interface MedalData {
+  id: string;
+  type: "Gold" | "Silver" | "Bronze" | "None";
+  title?: string;
+  image?: string;
+  rank?: number;
+  year?: number;
+  quarter?: number;
+  week?: number;
+}
+
+interface RankCardProps {
+  medals: MedalData[];
+  rank: number;
+  rankDiff: number;
+  rankDiffType: "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero";
+  title: string;
+  studio: string;
+  image: string;
+  rating: number;
+  className?: string;
+}
+
+export default function RankCard({
+  medals,
+  rank,
+  rankDiff,
+  rankDiffType,
+  title,
+  studio,
+  image,
+  rating,
+  className = ""
+}: RankCardProps) {
+  return (
+    <div className={`inline-flex items-center pl-5 gap-[26px] border border-[#D1D1D6] rounded-xl h-[140px] w-[768px] ${className}`}>
+      {/* 순위 정보 */}
+      <RankContents
+        rank={rank}
+        rankDiff={rankDiff}
+        rankDiffType={rankDiffType}
+        title={title}
+        studio={studio}
+        image={image}
+        rating={rating}
+      />
+
+      {/* 메달 섹션 */}
+      <MedalSection medals={medals} />
+    </div>
+  );
+}

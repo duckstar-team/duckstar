@@ -1005,68 +1005,92 @@ export default function LeftInfoPanel({
                     </a>
                   ) : (
                     // officialSite가 객체인 경우 모든 사이트 표시
-                    // OTHERS를 맨 앞으로 정렬
+                    // OTHERS를 맨 앞으로 정렬하고, OTHERS가 여러 개일 때 모두 처리
                     Object.entries(officialSite as Record<string, string>)
                       .sort(([a], [b]) => {
                         if (a === 'OTHERS') return -1;
                         if (b === 'OTHERS') return 1;
                         return 0;
                       })
-                      .map(([siteType, url], index) => (
-                      <a 
-                        key={index}
-                        href={url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="relative shrink-0 w-[25px] h-[25px] cursor-pointer hover:opacity-80 transition-opacity"
-                        title={`${siteType} 방문하기`}
-                      >
-                        {/* 사이트 타입에 따른 아이콘 매핑 */}
-                        {siteType === 'X' && (
-                          <img 
-                            src="/icons/aniHome-site-x.svg" 
-                            alt="X (Twitter)" 
-                            className="w-full h-full object-contain" 
-                          />
-                        )}
-                        {siteType === 'INSTAGRAM' && (
-                          <img 
-                            src="/icons/aniHome-site-instagram.svg" 
-                            alt="Instagram" 
-                            className="w-full h-full object-contain" 
-                          />
-                        )}
-                        {siteType === 'YOUTUBE' && (
-                          <img 
-                            src="/icons/aniHome-site-youtube.svg" 
-                            alt="YouTube" 
-                            className="w-full h-full object-contain" 
-                          />
-                        )}
-                        {siteType === 'TIKTOK' && (
-                          <img 
-                            src="/icons/aniHome-site-tiktok.svg" 
-                            alt="TikTok" 
-                            className="w-full h-full object-contain" 
-                          />
-                        )}
-                        {siteType === 'OTHERS' && (
-                          <img 
-                            src="/icons/aniHome-site-others.svg" 
-                            alt="Others" 
-                            className="w-full h-full object-contain" 
-                          />
-                        )}
-                        {/* 매핑되지 않은 사이트 타입은 기본 아이콘 사용 */}
-                        {!['X', 'INSTAGRAM', 'YOUTUBE', 'TIKTOK', 'OTHERS'].includes(siteType) && (
-                          <img 
-                            src="/icons/aniHome-site-others.svg" 
-                            alt={siteType} 
-                            className="w-full h-full object-contain" 
-                          />
-                        )}
-                      </a>
-                    ))
+                      .flatMap(([siteType, url], index) => {
+                        // OTHERS가 여러 URL을 포함한 경우 (쉼표나 세미콜론으로 구분)
+                        if (siteType === 'OTHERS' && (url.includes(',') || url.includes(';'))) {
+                          const urls = url.split(/[,;]/).map(u => u.trim()).filter(u => u);
+                          return urls.map((singleUrl, urlIndex) => (
+                            <a 
+                              key={`${index}-${urlIndex}`}
+                              href={singleUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="relative shrink-0 w-[25px] h-[25px] cursor-pointer hover:opacity-80 transition-opacity"
+                              title={`${siteType} 방문하기`}
+                            >
+                              <img 
+                                src="/icons/aniHome-site-others.svg" 
+                                alt="Others" 
+                                className="w-full h-full object-contain" 
+                              />
+                            </a>
+                          ));
+                        }
+                        
+                        // 일반적인 경우 (단일 URL)
+                        return (
+                          <a 
+                            key={index}
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="relative shrink-0 w-[25px] h-[25px] cursor-pointer hover:opacity-80 transition-opacity"
+                            title={`${siteType} 방문하기`}
+                          >
+                            {/* 사이트 타입에 따른 아이콘 매핑 */}
+                            {siteType === 'X' && (
+                              <img 
+                                src="/icons/aniHome-site-x.svg" 
+                                alt="X (Twitter)" 
+                                className="w-full h-full object-contain" 
+                              />
+                            )}
+                            {siteType === 'INSTAGRAM' && (
+                              <img 
+                                src="/icons/aniHome-site-instagram.svg" 
+                                alt="Instagram" 
+                                className="w-full h-full object-contain" 
+                              />
+                            )}
+                            {siteType === 'YOUTUBE' && (
+                              <img 
+                                src="/icons/aniHome-site-youtube.svg" 
+                                alt="YouTube" 
+                                className="w-full h-full object-contain" 
+                              />
+                            )}
+                            {siteType === 'TIKTOK' && (
+                              <img 
+                                src="/icons/aniHome-site-tiktok.svg" 
+                                alt="TikTok" 
+                                className="w-full h-full object-contain" 
+                              />
+                            )}
+                            {siteType === 'OTHERS' && (
+                              <img 
+                                src="/icons/aniHome-site-others.svg" 
+                                alt="Others" 
+                                className="w-full h-full object-contain" 
+                              />
+                            )}
+                            {/* 매핑되지 않은 사이트 타입은 기본 아이콘 사용 */}
+                            {!['X', 'INSTAGRAM', 'YOUTUBE', 'TIKTOK', 'OTHERS'].includes(siteType) && (
+                              <img 
+                                src="/icons/aniHome-site-others.svg" 
+                                alt={siteType} 
+                                className="w-full h-full object-contain" 
+                              />
+                            )}
+                          </a>
+                        );
+                      })
                   )
                 ) : null}
                 </div>

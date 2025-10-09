@@ -55,7 +55,6 @@ export default function Home() {
   const [rightPanelLoading, setRightPanelLoading] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
   const [leftPanelData, setLeftPanelData] = useState<DuckstarRankPreviewDto[]>([]);
-  const [isLeftPanelPrepared, setIsLeftPanelPrepared] = useState<boolean>(true);
   const [leftPanelLoading, setLeftPanelLoading] = useState(false);
   const [leftPanelError, setLeftPanelError] = useState<string | null>(null);
   const [anilabData, setAnilabData] = useState<RankPreviewDto[]>([]);
@@ -144,14 +143,27 @@ export default function Home() {
       
       // Left Panel 초기 데이터 설정
       const initialDuckstarData = homeData.result.weeklyTopDto.duckstarRankPreviews || [];
-      const initialIsPrepared = homeData.result.weeklyTopDto.isPrepared;
       
       setLeftPanelData(initialDuckstarData); // Left Panel 초기값 설정
-      setIsLeftPanelPrepared(initialIsPrepared); // Left Panel 준비 상태 초기값 설정
       
       
-      // 초기 Right Panel 데이터 설정 (기본적으로 Anilab)
-      setRightPanelData(initialAnilabData);
+      // 초기 Right Panel 데이터 설정 (Anilab만 있으면 Anilab, 둘 다 있으면 Anime Corner 우선)
+      const hasAnilab = initialAnilabData.length > 0;
+      const hasAnimeCorner = initialAnimeCornerData.length > 0;
+      
+      if (hasAnilab && !hasAnimeCorner) {
+        // Anilab만 있는 경우
+        setSelectedRightTab('anilab');
+        setRightPanelData(initialAnilabData);
+      } else if (hasAnimeCorner) {
+        // Anime Corner가 있는 경우 (둘 다 있거나 Anime Corner만 있는 경우)
+        setSelectedRightTab('anime-corner');
+        setRightPanelData(initialAnimeCornerData);
+      } else if (hasAnilab) {
+        // Anilab만 있는 경우 (fallback)
+        setSelectedRightTab('anilab');
+        setRightPanelData(initialAnilabData);
+      }
       
       // 홈 상태 복원 시도
       restoreHomeState();
@@ -375,13 +387,11 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
   // 모든 패널 데이터 업데이트 (리팩토링)
   const updateAllPanelData = async (weeklyTopData: any, week: WeekDto) => {
     const newDuckstarData = weeklyTopData.duckstarRankPreviews || [];
-    const newIsPrepared = weeklyTopData.isPrepared;
     const newAnilabData = weeklyTopData.anilabRankPreviews || [];
     const newAnimeCornerData = weeklyTopData.animeCornerRankPreviews || [];
     
     // 모든 패널 데이터 업데이트
     setLeftPanelData(newDuckstarData);
-    setIsLeftPanelPrepared(newIsPrepared);
     setAnilabData(newAnilabData);
     setAnimeCornerData(newAnimeCornerData);
     
@@ -441,7 +451,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
   }
 
   return (
-    <div className="font-sans bg-white">
+    <div className="font-sans bg-white mobile-page-container mobile-main-content">
       {/* 상단 홈 배너 */}
       <div className="w-full h-[280px] relative overflow-hidden">
         {/* 배경 배너 이미지 */}
@@ -524,7 +534,6 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
               <div className="w-[750px] h-[1144px]">
                 <HomeChart 
                   duckstarRankPreviews={leftPanelData || []}
-                  isPrepared={isLeftPanelPrepared}
                 />
               </div>
             )}

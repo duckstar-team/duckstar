@@ -93,7 +93,7 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
             
             {/* 왼쪽 텍스트 영역 */}
             <BannerContent 
-              header={`🔥 ${banner.bannerType === 'HOT' ? 'HOT 급상승' : banner.bannerType} ${banner.contentType === 'ANIME' ? '애니메이션' : '캐릭터'}`}
+              header={`${banner.bannerType === 'HOT' ? '🔥 HOT 급상승' : banner.bannerType === 'NOTICEABLE' ? '✨ NEW 주목할만한' : banner.bannerType} ${banner.contentType === 'ANIME' ? '애니메이션' : '캐릭터'}`}
               title={banner.mainTitle}
               source={banner.subTitle}
               date=""

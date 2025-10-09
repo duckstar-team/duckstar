@@ -44,6 +44,60 @@ export interface VoteReceiptDto {
 
 export type ApiResponseVoteReceiptDto = ApiResponse<VoteReceiptDto>;
 
+// Star Vote Request DTO
+export interface StarRequestDto {
+  episodeId: number;
+  starScore: number; // 1-10 정수
+}
+
+// Star Info DTO (새로운 구조)
+export interface StarInfoDto {
+  userStarScore?: number; // 사용자가 투표한 별점
+  starAverage: number;
+  voterCount: number;
+  star_0_5: number;
+  star_1_0: number;
+  star_1_5: number;
+  star_2_0: number;
+  star_2_5: number;
+  star_3_0: number;
+  star_3_5: number;
+  star_4_0: number;
+  star_4_5: number;
+  star_5_0: number;
+}
+
+// Star Candidate DTO (새로운 구조)
+export interface StarCandidateDto {
+  year: number;
+  quarter: number;
+  week: number;
+  episodeId: number;
+  mainThumbnailUrl: string;
+  status: "UPCOMING" | "NOW_SHOWING" | "COOLING" | "ENDED";
+  isBreak: boolean;
+  titleKor: string;
+  dayOfWeek: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "SPECIAL" | "NONE";
+  isRescheduled: boolean;
+  scheduledAt: string;
+  airTime: string;
+  genre: string;
+  medium: "TVA" | "MOVIE";
+  info: StarInfoDto;
+  userHistory: StarInfoDto;
+}
+
+export type ApiResponseStarInfoDto = ApiResponse<StarInfoDto>;
+export type ApiResponseListStarCandidateDto = ApiResponse<StarCandidateDto[]>;
+
+// Star Candidate List DTO (새로운 구조)
+export interface StarCandidateListDto {
+  weekDto: WeekDto;
+  starCandidates: StarCandidateDto[];
+}
+
+export type ApiResponseStarCandidateListDto = ApiResponse<StarCandidateListDto>;
+
 // Comment Request DTO
 export interface CommentRequestDto {
   attachedImageUrl?: string;
@@ -189,6 +243,7 @@ export interface OttDto {
 // Anime Preview DTO
 export interface AnimePreviewDto {
   animeId: number;
+  episodeId: number;
   mainThumbnailUrl: string;
   status: "UPCOMING" | "NOW_SHOWING" | "COOLING" | "ENDED";
   isBreak: boolean;
@@ -204,8 +259,7 @@ export interface AnimePreviewDto {
 
 // Anime Preview List DTO
 export interface AnimePreviewListDto {
-  year: number;
-  quarter: number;
+  weekDto: WeekDto;
   schedule: {
     [key: string]: AnimePreviewDto[];
   };
@@ -228,7 +282,7 @@ export interface DuckstarRankPreviewDto {
 
 // Home Banner DTO
 export interface HomeBannerDto {
-  bannerType: "HOT";
+  bannerType: "HOT" | "NOTICEABLE";
   contentType: "ANIME" | "HERO" | "HEROINE";
   mainTitle: string;
   subTitle: string;
@@ -253,12 +307,13 @@ export interface RankPreviewDto {
 // Duckstar Rank Preview DTO
 export interface DuckstarRankPreviewDto {
   votePercent: number;
+  averageRating: number;
+  voterCount: number;
   rankPreviewDto: RankPreviewDto;
 }
 
 // Weekly Top DTO
 export interface WeeklyTopDto {
-  isPrepared: boolean;
   duckstarRankPreviews: DuckstarRankPreviewDto[];
   anilabRankPreviews: RankPreviewDto[];
   animeCornerRankPreviews: RankPreviewDto[];
@@ -266,7 +321,7 @@ export interface WeeklyTopDto {
 
 // Home Banner DTO
 export interface HomeBannerDto {
-  bannerType: "HOT";
+  bannerType: "HOT" | "NOTICEABLE";
   contentType: "ANIME" | "HERO" | "HEROINE";
   mainTitle: string;
   subTitle: string;

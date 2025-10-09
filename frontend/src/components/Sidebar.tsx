@@ -233,7 +233,7 @@ export default function Sidebar() {
       isVeryNarrowDevice ? 'w-[52px]' : 
       isNarrowDevice ? 'w-[56px]' : 
       'w-[60px] md:w-[200px]'
-    } h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]`}>
+    } h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px] hidden md:block`}>
       {/* Navigation items */}
       <div className={`${
         isVeryNarrowDevice ? 'w-[32px] left-[8px]' : 
