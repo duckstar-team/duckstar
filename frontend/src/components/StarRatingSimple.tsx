@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Image from 'next/image';
 
 interface StarRatingSimpleProps {
   maxStars?: number;
@@ -138,13 +137,10 @@ export default function StarRatingSimple({
               willChange: 'transform'
             }}
           >
-            <Image
+            <img
               src={getStarIcon(index)}
               alt={`별 ${index + 1}`}
-              width={size === 'sm' ? 20 : size === 'md' ? 32 : 36}
-              height={size === 'sm' ? 20 : size === 'md' ? 32 : 36}
               className="w-full h-full"
-              priority
             />
           </div>
         </div>

@@ -133,11 +133,12 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // webpack 설정
+  // webpack 설정 - SVG 파일을 일반 정적 파일로 처리
   webpack(config) {
+    // SVG 파일을 React 컴포넌트로 변환하지 않고 일반 정적 파일로 처리
     config.module?.rules?.push({
       test: /\.svg$/,
-      use: ["@svgr/webpack"],
+      type: 'asset/resource',
     });
 
     return config;

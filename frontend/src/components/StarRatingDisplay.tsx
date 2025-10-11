@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 
 interface StarRatingDisplayProps {
   rating: number;
@@ -39,13 +38,10 @@ export default function StarRatingDisplay({
             className={`${sizeClasses[size]} relative`}
           >
             {/* UnSelected SVG (배경) */}
-            <Image
+            <img
               src="/icons/star/star-UnSelected.svg"
               alt="별"
-              width={imageSize[size]}
-              height={imageSize[size]}
               className="w-full h-full"
-              priority
             />
             
             {/* Selected SVG (마스킹) */}
@@ -56,13 +52,10 @@ export default function StarRatingDisplay({
                   clipPath: `inset(0 ${100 - (fillPercentage * 100)}% 0 0)`
                 }}
               >
-                <Image
+                <img
                   src="/icons/star/star-Selected.svg"
                   alt="별"
-                  width={imageSize[size]}
-                  height={imageSize[size]}
                   className="w-full h-full"
-                  priority
                 />
               </div>
             )}

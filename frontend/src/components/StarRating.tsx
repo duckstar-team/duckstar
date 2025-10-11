@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 
 interface StarRatingProps {
   maxStars?: number;
@@ -115,13 +114,10 @@ export default function StarRating({
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            <Image
+            <img
               src={getStarIcon(index)}
               alt={`별 ${index + 1}`}
-              width={size === 'sm' ? 20 : size === 'md' ? 28 : 36}
-              height={size === 'sm' ? 20 : size === 'md' ? 28 : 36}
               className="w-full h-full"
-              priority
             />
           </div>
         </div>
