@@ -57,13 +57,13 @@ export default function AbroadRankInfo({
   };
   return (
     <div 
-      className={`w-80 h-24 relative bg-white rounded-xl outline outline-1 outline-gray-200 overflow-hidden ${contentId ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'} transition-colors ${className}`}
+      className={`w-full xl:w-80 h-24 px-3 sm:px-4 relative bg-white rounded-xl outline outline-1 outline-gray-200 overflow-hidden ${contentId ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'} transition-colors ${className}`}
       onClick={handleClick}
     >
-      <div className="size- left-[16px] top-[8px] absolute inline-flex justify-start items-center gap-5 pl-1">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full h-full">
         {/* 순위와 변화 - HomeRankInfo와 동일한 레이아웃 */}
-        <div className="w-5 self-stretch inline-flex flex-col justify-center items-center pb-1">
-          <div className="text-center justify-start text-gray-500 text-3xl font-bold font-['Pretendard'] leading-snug">
+        <div className="w-5 flex flex-col items-center gap-1">
+          <div className="text-center justify-start text-gray-500 text-xl sm:text-2xl md:text-3xl font-bold font-['Pretendard'] leading-snug">
             {rank}
           </div>
           <div className="self-stretch inline-flex justify-center items-center gap-px">
@@ -72,10 +72,10 @@ export default function AbroadRankInfo({
         </div>
         
         {/* 애니메이션 이미지 */}
-        <div className="w-14 h-20 relative">
+        <div className="w-10 h-14 sm:w-12 sm:h-16 relative">
           {image && image.trim() !== '' ? (
             <img 
-              className="w-14 h-20 left-0 top-0 absolute rounded-lg object-cover" 
+              className="w-full h-full object-cover rounded-lg" 
               src={image} 
               alt={title}
               onError={(e) => {
@@ -90,7 +90,7 @@ export default function AbroadRankInfo({
             />
           ) : null}
           <div 
-            className="w-14 h-20 left-0 top-0 absolute rounded-lg"
+            className="w-10 h-14 sm:w-12 sm:h-16 left-0 top-0 absolute rounded-lg"
             style={{ display: !image || image.trim() === '' ? 'flex' : 'none' }}
           >
             <ImagePlaceholder type="anime" />
@@ -98,11 +98,11 @@ export default function AbroadRankInfo({
         </div>
         
         {/* 제목과 스튜디오 */}
-        <div className="w-40 inline-flex flex-col justify-start items-start">
-          <div className="w-40 justify-start text-black text-lg font-semibold font-['Pretendard'] leading-snug line-clamp-2">
+        <div className="flex-1 inline-flex flex-col justify-start items-start">
+          <div className="w-full justify-start text-black text-sm sm:text-base md:text-lg font-semibold font-['Pretendard'] leading-snug line-clamp-2">
             {title}
           </div>
-          <div className="text-center justify-start text-gray-400 text-sm font-normal font-['Pretendard'] leading-snug truncate">
+          <div className="text-center justify-start text-gray-400 text-xs sm:text-sm font-normal font-['Pretendard'] leading-snug truncate">
             {studio}
           </div>
         </div>

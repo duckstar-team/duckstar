@@ -57,7 +57,7 @@ export default function RightPanel({
   };
 
   return (
-    <div className={`w-[373px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
+    <div className={`w-full xl:w-[373px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
       <div className="p-5 relative">
         {rightPanelLoading ? (
           <div className="flex items-center justify-center h-32">
@@ -123,8 +123,7 @@ export default function RightPanel({
             <div className="flex justify-end mt-4">
               <button 
                 onClick={handleMoreClick}
-                className="text-gray-600 hover:text-gray-800 transition-colors duration-200 cursor-pointer" 
-                style={{ fontFamily: 'Pretendard', fontSize: '20px', fontWeight: '400' }}
+                className="text-gray-600 hover:text-gray-800 transition-colors duration-200 cursor-pointer text-sm sm:text-base md:text-lg font-normal font-['Pretendard']" 
               >
                 더보기
               </button>

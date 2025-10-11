@@ -42,6 +42,24 @@ export default function HeaderList({ weekDtos, selectedWeek: propSelectedWeek, o
   const currentWeekText = selectedWeek 
     ? `${selectedWeek.year}년 ${selectedWeek.quarter}분기 ${selectedWeek.week}주차`
     : '2025년 3분기 12주차';
+  
+  // 425px 이하에서는 년도 제거
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth <= 425);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+  
+  const displayText = isSmallScreen && selectedWeek 
+    ? `${selectedWeek.quarter}분기 ${selectedWeek.week}주차`
+    : currentWeekText;
 
   const handleWeekSelect = (week: WeekDto) => {
     setIsDropdownOpen(false);
@@ -70,10 +88,10 @@ export default function HeaderList({ weekDtos, selectedWeek: propSelectedWeek, o
     };
   }, [isDropdownOpen]);
   return (
-    <div className={`w-[750px] px-5 inline-flex justify-between items-end ${className}`}>
+    <div className={`w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:w-[750px] pl-3 sm:px-4 md:px-5 inline-flex justify-center lg:justify-start lg:gap-100 xl:justify-between items-end gap-17 sm:gap-25 md:gap-40 lg:gap-100 xl:gap-90 ${className}`}>
       {/* 왼쪽 헤더 - ChartHeader 사용 */}
       <div className="size- flex justify-start items-center">
-        <div className="w-44 h-12 relative overflow-hidden">
+        <div className="w-32 sm:w-36 md:w-40 lg:w-44 h-12 relative overflow-hidden">
           <ChartHeader property1="Selected-Default" />
         </div>
       </div>
@@ -82,9 +100,9 @@ export default function HeaderList({ weekDtos, selectedWeek: propSelectedWeek, o
             <div className="size- flex justify-end items-center gap-1.5 relative dropdown-container">
               <button 
                 onClick={handleDropdownToggle}
-                className="flex items-center gap-1.5 text-right justify-start text-gray-400 text-lg font-normal font-['Pretendard'] leading-loose cursor-pointer hover:text-gray-600"
+                className="flex items-center gap-1.5 text-right justify-start text-gray-400 text-sm sm:text-base md:text-lg font-normal font-['Pretendard'] leading-loose cursor-pointer hover:text-gray-600 whitespace-nowrap"
               >
-                <span>{currentWeekText}</span>
+                <span>{displayText}</span>
                 {/* 드롭다운 아이콘 */}
                 <svg className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

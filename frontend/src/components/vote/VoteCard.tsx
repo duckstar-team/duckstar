@@ -199,10 +199,10 @@ const VoteCard = memo(function VoteCard({
         </div>
 
         {/* 모바일/태블릿 레이아웃 (lg 미만) */}
-        <div className="lg:hidden p-4">
-          <div className="flex items-start gap-3">
+        <div className="lg:hidden p-3 sm:p-4">
+          <div className="flex items-start gap-2 sm:gap-3 w-full min-w-0">
             {/* 썸네일 */}
-            <div className="relative w-20 h-24 flex-shrink-0">
+            <div className="relative w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0">
               <img
                 src={thumbnailUrl}
                 alt={title}
@@ -218,12 +218,12 @@ const VoteCard = memo(function VoteCard({
             {/* 오른쪽 열: 제목 + 시즌 + 기표칸 */}
             <div className="flex flex-col flex-1 min-w-0">
               {/* 제목 */}
-              <div className="text-base font-semibold text-gray-900 break-words leading-tight mb-1">
+              <div className="text-sm sm:text-base font-semibold text-gray-900 break-words leading-tight mb-1">
                 {title}
               </div>
               
               {/* 시즌 정보 */}
-              <div className="text-xs text-gray-500 mb-3">
+              <div className="text-xs text-gray-500 mb-2 sm:mb-3">
                 {getSubTitle()}
               </div>
               

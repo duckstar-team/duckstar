@@ -39,9 +39,12 @@ export default function StarDetailPopup({
       className={`w-64 h-28 py-6 left-0 top-0 absolute bg-black rounded-bl-2xl rounded-br-2xl inline-flex flex-col justify-center items-center gap-[2px] ${className}`}
     >
       {/* 닫기 버튼 */}
-      {onCloseClick && (
+      {onClose && (
         <button
-          onClick={onCloseClick}
+          onClick={(e) => {
+            e.stopPropagation(); // 이벤트 버블링 방지
+            onClose(e);
+          }}
           className="absolute -top-[1px] -left-[12px] z-20 w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-white/20 rounded transition-colors duration-200"
           aria-label="닫기"
         >

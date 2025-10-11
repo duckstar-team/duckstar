@@ -40,31 +40,28 @@ export default function SearchFilters({
       "flex items-center justify-between w-full",
       className
     )}>
-      {/* 알림 섹션 - 피그마 디자인에 맞춤 */}
-      <div className="flex items-center justify-start">
-        <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-3 pr-5 py-0 rounded-lg w-[265px]">
-          {/* 메시지 아이콘 */}
-          <div className="flex items-center justify-center w-[34px] h-12">
-            <div className="w-3.5 h-3 relative">
+      {/* 툴팁 - 데스크톱에서만 표시 */}
+      <div className="hidden md:flex items-center">
+        <div className="bg-[#f1f2f3] flex h-9 items-center justify-center pl-2 pr-5 py-0 rounded-[8px]">
+          <div className="flex gap-2.5 items-center justify-start px-2.5 py-0 w-[34px]">
+            <div className="h-3 w-3.5 relative">
               <img
                 src="/icons/searchSection-notify-icon.svg"
-                alt="Message"
+                alt="Notification"
                 className="w-full h-full object-contain"
               />
             </div>
           </div>
-          
-          {/* 텍스트 컨테이너 */}
-          <div className="flex items-center justify-start w-[211px] h-[17px]">
-            <span className="text-[#23272b] text-sm font-semibold leading-[17px] font-['Pretendard']">
-              신작 애니메이션을 검색해보세요...
-            </span>
+          <div className="flex flex-col items-start justify-start ml-2">
+            <div className="flex flex-col font-['Pretendard'] font-semibold justify-center leading-[0] not-italic relative shrink-0 text-[#23272b] text-[14px] text-nowrap">
+              <p className="leading-[normal] whitespace-pre">신작 애니메이션을 검색해보세요...</p>
+            </div>
           </div>
         </div>
       </div>
 
-            {/* OTT 필터 목록 - 선택된 OTT는 대기 리스트에서 숨김 */}
-      <div className="flex gap-[9px] items-center justify-start ml-5">
+      {/* OTT 필터 목록 - 선택된 OTT는 대기 리스트에서 숨김 */}
+      <div className="flex gap-[9px] items-center justify-center ml-8">
         {ottServices.map((ott) => {
           const isSelected = selectedOttServices.includes(ott.name.toLowerCase());
           

@@ -27,8 +27,8 @@ export default function BannerContent({
       {/* 제목과 소스 - 세로 리스트 */}
       <div className="flex flex-col pl-[23px] gap-[8px]">
         {/* 제목 */}
-        <div className="w-80">
-          <div className="justify-start text-black text-2xl font-bold font-['Pretendard']">
+        <div className="w-60 sm:w-80">
+          <div className="justify-start text-black text-xl sm:text-2xl font-bold font-['Pretendard']">
             {title.split(', ').map((line, index) => (
               <span key={index}>
                 {line}

@@ -42,23 +42,23 @@ export default function ButtonVote({
   };
   return (
     <button 
-      className={`h-24 px-7 pt-1.5 pb-2.5 bg-gradient-to-r from-pink-700 to-pink-950 rounded-xl inline-flex justify-start items-center gap-12 overflow-hidden cursor-pointer hover:brightness-110 transition-all ${className}`}
+      className={`h-20 sm:h-24 px-7 pt-1.5 pb-2.5 bg-gradient-to-r from-pink-700 to-pink-950 rounded-xl inline-flex justify-start items-center gap-6 sm:gap-12 overflow-hidden cursor-pointer hover:brightness-110 transition-all ${className}`}
       onClick={handleClick}
     >
       {/* 텍스트 영역 */}
-      <div className="h-24 inline-flex flex-col justify-center items-start">
-        <div className="text-white text-2xl font-semibold font-['Pretendard'] leading-snug">
+      <div className="h-20 sm:h-24 inline-flex flex-col justify-center items-start">
+        <div className="text-white text-md sm:text-2xl font-semibold font-['Pretendard'] leading-snug">
           {voteTitle}
         </div>
-        <div className="text-white text-sm font-medium font-['Pretendard'] leading-snug">
+        <div className="text-white text-xs sm:text-sm font-medium font-['Pretendard'] leading-snug">
           {voteSubtitle}
         </div>
       </div>
       
       {/* 아이콘 영역 */}
-      <div className="size-20 relative">
-        <img className="size-20 left-0 top-0 absolute blur-[2.22px]" src={iconSrc} />
-        <img className="size-20 left-0 top-0 absolute" src={iconSrc} />
+      <div className="size-16 sm:size-20 relative">
+        <img className="size-16 sm:size-20 left-0 top-0 absolute blur-[2.22px]" src={iconSrc} />
+        <img className="size-16 sm:size-20 left-0 top-0 absolute" src={iconSrc} />
       </div>
     </button>
   );

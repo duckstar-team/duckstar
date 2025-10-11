@@ -54,19 +54,87 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
   });
 
   // 별점 패널 표시 상태 관리 (submitted 상태에서 닫기 버튼으로 숨길 수 있음)
-  const [isPanelVisible, setIsPanelVisible] = useState(true);
+  // 이미 투표한 경우(submitted 상태) 패널을 미리 열어둠
+  const [isPanelVisible, setIsPanelVisible] = useState(
+    starInfo && starInfo.userStarScore && starInfo.userStarScore > 0
+  );
 
   // 닫기 버튼 핸들러
-  const handleClosePanel = () => {
+  const handleClosePanel = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 이벤트 버블링 방지
+    console.log('handleClosePanel called');
     setIsPanelVisible(false);
   };
 
-  // 라벨 띠 호버 핸들러 (submitted 상태에서 패널을 다시 표시)
+  // 모바일 감지
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // 라벨 띠 호버 핸들러 (데스크톱에서만 호버 시 패널 표시)
   const handleLabelHover = () => {
-    if (voteState === 'submitted') {
+    if (!isMobile && (voteState === 'submitted' || voteState === 'submitting')) {
       setIsPanelVisible(true);
     }
   };
+
+  // 라벨 띠 호버 아웃 핸들러 (데스크톱에서만 호버 해제 시 패널 숨김)
+  const handleLabelHoverOut = () => {
+    if (!isMobile && voteState !== 'submitted' && voteState !== 'loading') {
+      console.log('handleLabelHoverOut called');
+      setIsPanelVisible(false);
+    }
+  };
+
+  // 라벨 띠 클릭 핸들러 (모바일에서만 클릭 시 패널 토글)
+  const handleLabelClick = () => {
+    if (isMobile && (voteState === 'submitted' || voteState === 'submitting')) {
+      console.log('handleLabelClick called, toggling panel');
+      // 수정 버튼 클릭 후에는 패널을 강제로 열기
+      if (voteState === 'submitting') {
+        console.log('handleLabelClick: voteState is submitting, forcing panel open');
+        setIsPanelVisible(true);
+        return;
+      }
+      // submitted 상태에서도 패널을 강제로 열기
+      if (voteState === 'submitted') {
+        console.log('handleLabelClick: voteState is submitted, forcing panel open');
+        setIsPanelVisible(true);
+        return;
+      }
+      setIsPanelVisible(!isPanelVisible);
+    }
+  };
+
+  // 패널 바깥 클릭 핸들러 (상태1에서만 패널 닫기)
+  const handleClickOutside = (e: React.MouseEvent) => {
+    if (voteState === 'submitting' && isPanelVisible) {
+      console.log('handleClickOutside: closing panel');
+      setIsPanelVisible(false);
+    }
+  };
+
+  // 전역 클릭 이벤트 리스너 (카드 밖 클릭 감지)
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      if (voteState === 'submitting' && isPanelVisible) {
+        // 클릭된 요소가 현재 카드 내부가 아닌 경우에만 패널 닫기
+        const target = e.target as Element;
+        const currentCard = document.querySelector(`[data-anime-item]`);
+        
+        if (currentCard && !currentCard.contains(target)) {
+          console.log('handleGlobalClick: closing panel from outside card');
+          setIsPanelVisible(false);
+        }
+      }
+    };
+
+    if (voteState === 'submitting' && isPanelVisible) {
+      document.addEventListener('click', handleGlobalClick);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [voteState, isPanelVisible]);
 
 
   // API 응답을 별점 분포로 변환하는 함수
@@ -279,6 +347,7 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
         "group", // cursor-pointer와 onClick 제거
         className
       )}
+      onClick={handleClickOutside}
     >
       {/* Thumbnail Image */}
       <div className="relative w-full h-[340px] overflow-hidden bg-gray-300">
@@ -385,8 +454,10 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
 
               {/* 라벨 띠 - 카드 호버 시 디자인 변경, 라벨 띠 호버 시 블랙박스 */}
               <div 
-                className={`h-6 bg-[#F1F3F5] ${voteState === 'submitted' && isPanelVisible ? 'bg-black' : 'group-hover:bg-black hover:bg-black'} relative transition-colors duration-200 group/label`}
+                className={`h-6 bg-[#F1F3F5] ${voteState === 'submitted' && isPanelVisible ? 'bg-black' : 'group-hover:bg-black hover:bg-black'} relative transition-colors duration-200 group/label cursor-pointer`}
                 onMouseEnter={handleLabelHover}
+                onMouseLeave={handleLabelHoverOut}
+                onClick={handleLabelClick}
               >
                 {/* 힌트 디자인 - 카드 호버 시 스타일 변경 (submitted 상태가 아니거나 패널이 숨겨진 경우 표시) */}
                 {(voteState !== 'submitted' || !isPanelVisible) && (
@@ -403,7 +474,7 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                 {/* 라벨 띠 호버 시에만 올라오는 블랙박스 (submitted 상태에서는 항상 표시, 닫기 버튼으로 숨김 가능) */}
                 <div 
                   className={`absolute bottom-0 left-0 right-0 h-[119px] bg-black transition-transform duration-300 ease-out ${
-                    voteState === 'submitted' 
+                    (voteState === 'submitted' || voteState === 'submitting') 
                       ? (isPanelVisible ? 'translate-y-0' : 'translate-y-full')
                       : 'translate-y-full group-hover/label:translate-y-0'
                   }`}
@@ -418,9 +489,12 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                     variant={voteState}
                     voteInfo={voteInfo}
                     onRatingChange={async (rating) => {
+                      console.log('onRatingChange called with rating:', rating);
+                      
                       setCurrentRating(rating);
                       
                       if (rating > 0) {
+                        console.log('Rating > 0, proceeding with vote');
                         // 로딩 상태로 전환
                         setVoteState('loading');
                         
@@ -430,6 +504,9 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                           // 실제 별점 투표 API 호출
                           const response = await submitStarVote(anime.episodeId, starScore);
                           setVoteState('submitted');
+                          
+                          // 데스크톱과 모바일 모두에서 패널 유지
+                          setIsPanelVisible(true);
                           
                           // API 응답으로 별점 분포 업데이트
                           updateStarDistribution(response);
@@ -448,10 +525,22 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                           console.error('투표 중 오류:', error);
                           // TODO: 사용자에게 에러 메시지 표시
                         }
+                      } else {
+                        console.log('Rating = 0, closing panel without submission');
+                        // 0점일 때 패널 닫기 (제출하지 않음)
+                        setIsPanelVisible(false);
+                        setVoteState('submitting'); // 제출 상태로 되돌림
+                        return; // 함수 종료
                       }
                     }}
                     onEditClick={() => {
+                      console.log('onEditClick called, current isPanelVisible:', isPanelVisible);
                       setVoteState('submitting');
+                      // 수정 버튼 클릭 시 패널 강제 유지 (모바일/데스크톱 모두)
+                      setIsPanelVisible(true);
+                      // 수정 시 별점 초기화
+                      setCurrentRating(0);
+                      console.log('onEditClick: setIsPanelVisible(true) called, setCurrentRating(0)');
                     }}
                     onCloseClick={voteState === 'submitted' ? handleClosePanel : undefined}
                   />

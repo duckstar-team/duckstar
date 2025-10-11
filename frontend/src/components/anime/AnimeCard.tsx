@@ -310,7 +310,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
       data-anime-item
       className={cn(
         "bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02]",
-        "flex flex-col h-full",
+        "flex flex-col h-full max-w-[280px] w-full",
         "shadow-[0_1.9px_7.2px_rgba(0,0,0,0.1)]",
         "cursor-pointer",
         isCurrentlyAiring() && "ring-2 ring-[#990033]",

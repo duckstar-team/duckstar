@@ -50,6 +50,49 @@ function getMedalType(rank: number): "Gold" | "Silver" | "Bronze" | "None" {
 }
 
 export default function Home() {
+  // 홈페이지에서 모바일 뷰포트 사용을 위한 설정
+  useEffect(() => {
+    const head = document.head;
+    if (!head) return;
+    
+    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+    const prevContent = existing?.getAttribute('content') || '';
+    
+    // 디바이스 폭으로 설정
+    if (existing) {
+      existing.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+      head.appendChild(meta);
+    }
+    
+    // body의 min-width 오버라이드 (홈페이지에서만)
+    const body = document.body;
+    const originalMinWidth = body.style.minWidth;
+    const originalOverflowX = body.style.overflowX;
+    
+    body.style.minWidth = 'auto';
+    body.style.overflowX = 'auto';
+    
+    return () => {
+      // viewport 설정 복원
+      const current = document.querySelector('meta[name="viewport"]');
+      if (current) {
+        if (prevContent) {
+          current.setAttribute('content', prevContent);
+        } else {
+          current.parentElement?.removeChild(current);
+        }
+      }
+      
+      // body 스타일 복원
+      body.style.minWidth = originalMinWidth;
+      body.style.overflowX = originalOverflowX;
+    }
+  }, []);
+
   // 기존 상태 관리 유지 (점진적 최적화)
   const [rightPanelData, setRightPanelData] = useState<RankPreviewDto[]>([]);
   const [rightPanelLoading, setRightPanelLoading] = useState(false);
@@ -453,17 +496,22 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
   return (
     <div className="font-sans bg-white">
       {/* 상단 홈 배너 */}
-      <div className="w-full h-[280px] relative overflow-hidden">
+        <div className="w-full h-[200px] xl:h-[280px] relative overflow-hidden">
         {/* 배경 배너 이미지 */}
         <img
           src="/banners/home-banner.svg"
           alt="덕스타 홈 배너"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover hidden xl:block"
+        />
+        <img
+          src="/banners/home-banner-mobile.svg"
+          alt="덕스타 홈 배너 모바일"
+          className="absolute inset-0 w-full h-full object-cover xl:hidden"
         />
         
         {/* 텍스트 오버레이 */}
-        <div className="absolute inset-0 flex items-center justify-center px-4">
-          <div className="text-white font-bold text-[33.83px] leading-tight text-left" style={{ fontFamily: 'Pretendard' }}>
+        <div className="absolute inset-0 flex items-center xl:items-center items-end pb-10 xl:pb-0 justify-center px-4">
+          <div className="text-white font-bold text-[20px] sm:text-[24px] md:text-[26px] lg:text-[33.83px] leading-tight text-left drop-shadow-sm" style={{ fontFamily: 'Pretendard' }}>
           분기 신작 애니메이션 투표,<br />
           시간표 서비스 ✨ 한국에서 런칭 !
           </div>
@@ -471,53 +519,61 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="flex items-center justify-center min-h-[300px] bg-[#F8F9FA]">
-        {/* 리스트 아이템들 - 가로 배치 */}
-        <div className="flex justify-center items-center gap-[75px] pr-[20px]">
+      <div className="flex items-center justify-center min-h-[300px] bg-[#F8F9FA] px-4 pt-6 pb-5 xl:py-12">
+        {/* 리스트 아이템들 - 반응형 배치 */}
+        <div className="flex flex-col xl:flex-row justify-center items-center gap-4 xl:gap-[57px] w-full max-w-6xl mx-auto">
           {/* HomeBanner 컴포넌트 */}
-          <HomeBanner 
-            homeBannerDtos={homeData.result.homeBannerDtos}
-          />
+          <div className="flex justify-center xl:justify-start">
+            <HomeBanner 
+              homeBannerDtos={homeData.result.homeBannerDtos}
+            />
+          </div>
           
           {/* ButtonVote 컴포넌트 */}
-          <ButtonVote 
-            weekDtos={[homeData.result.currentWeekDto, ...homeData.result.pastWeekDtos]}
-          />
+          <div className="flex justify-center xl:justify-start">
+            <ButtonVote 
+              weekDtos={[homeData.result.currentWeekDto, ...homeData.result.pastWeekDtos]}
+            />
+          </div>
         </div>
       </div>
 
       {/* 헤더 리스트 영역 */}
-      <div className="w-full bg-white pt-3 sticky top-[60px] z-20">
-        <div className="flex justify-center gap-[57px]">
-          {/* Left Panel 헤더 */}
-          <HeaderList 
-            weekDtos={homeData.result.pastWeekDtos} 
-            selectedWeek={selectedWeek}
-            onWeekChange={handleLeftPanelWeekChange}
-          />
-          {/* Right Panel 헤더 */}
-          <RightHeaderList 
-            weekDtos={homeData.result.pastWeekDtos} 
-            selectedTab={selectedRightTab}
-            onTabChange={handleRightPanelTabChange}
-          />
+      <div className="w-full bg-white pt-2 sm:pt-3 sticky top-[60px] z-20 px-3 sm:px-4">
+        <div className="flex flex-col xl:flex-row justify-center gap-4 xl:gap-[240px] w-full max-w-6xl mx-auto">
+          {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
+          <div className="w-[full] xl:w-auto">
+            <HeaderList 
+              weekDtos={homeData.result.pastWeekDtos} 
+              selectedWeek={selectedWeek}
+              onWeekChange={handleLeftPanelWeekChange}
+            />
+          </div>
+          {/* Right Panel 헤더 - 해외 순위 (데스크톱에서만 같은 줄에 표시) */}
+          <div className="w-full xl:w-auto hidden xl:block">
+            <RightHeaderList 
+              weekDtos={homeData.result.pastWeekDtos} 
+              selectedTab={selectedRightTab}
+              onTabChange={handleRightPanelTabChange}
+            />
+          </div>
         </div>
       </div>
 
       {/* 메인 컨텐츠 영역 - Left Panel + Right Panel */}
-      <div className="w-full bg-[#F8F9FA] py-6">
-        <div className="flex justify-center gap-[57px]">
+      <div className="w-full bg-[#F8F9FA] py-6 px-4">
+        <div className="flex flex-col xl:flex-row justify-center gap-4 xl:gap-[57px] w-full max-w-6xl mx-auto">
           {/* Left Panel */}
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 w-full xl:w-auto">
             {leftPanelLoading ? (
-              <div className="w-[750px] bg-white rounded-xl border border-[#D1D1D6] p-5">
+              <div className="w-full max-w-[750px] bg-white rounded-xl border border-[#D1D1D6] p-5">
                 <div className="flex items-center justify-center h-full">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-800"></div>
                   <span className="ml-3 text-gray-600">Left Panel 데이터 로딩 중...</span>
                 </div>
               </div>
             ) : leftPanelError ? (
-              <div className="w-[750px] bg-white rounded-xl border border-[#D1D1D6] p-5">
+              <div className="w-full max-w-[750px] bg-white rounded-xl border border-[#D1D1D6] p-5">
                 <div className="flex flex-col items-center justify-center h-full">
                   <div className="text-red-500 text-4xl mb-2">⚠️</div>
                   <h3 className="text-lg font-semibold text-red-600 mb-2">데이터 로딩 실패</h3>
@@ -531,7 +587,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
                 </div>
               </div>
             ) : (
-              <div className="w-[750px]">
+              <div className="w-full xl:w-[750px] flex justify-center">
                 <HomeChart 
                   duckstarRankPreviews={leftPanelData || []}
                   selectedWeek={selectedWeek}
@@ -540,13 +596,28 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
             )}
           </div>
           
-          {/* Right Panel */}
-          <RightPanel 
-            rightPanelData={rightPanelData}
-            selectedRightTab={selectedRightTab}
-            rightPanelLoading={rightPanelLoading}
-            selectedWeek={selectedWeek}
-          />
+          {/* 모바일용 해외 순위 헤더 - 한국 순위 패널 아래, 해외 순위 패널 위에 위치 */}
+          <div className="w-full xl:hidden">
+            <div className="w-full mx-auto bg-white py-1 rounded-lg">
+              <div className="flex justify-center mx-auto">
+                <RightHeaderList 
+                  weekDtos={homeData.result.pastWeekDtos} 
+                  selectedTab={selectedRightTab}
+                  onTabChange={handleRightPanelTabChange}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Panel - 해외 순위 */}
+          <div className="w-full xl:w-auto flex justify-center">
+            <RightPanel 
+              rightPanelData={rightPanelData}
+              selectedRightTab={selectedRightTab}
+              rightPanelLoading={rightPanelLoading}
+              selectedWeek={selectedWeek}
+            />
+          </div>
         </div>
       </div>
     </div>

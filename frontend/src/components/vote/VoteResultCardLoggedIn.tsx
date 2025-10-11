@@ -136,24 +136,10 @@ const VoteResultCardLoggedIn = memo(function VoteResultCardLoggedIn({
     <div className="w-full">
       {/* 카드 구조 - 세퍼레이터 기준 두 영역 */}
       <div className="relative bg-white rounded-xl shadow border-2 border-gray-200 overflow-hidden">
-        {/* 카드 내용 - 오른쪽 영역(w-10)을 제외한 나머지 영역 */}
-        <div className="flex items-center gap-4 p-4 pr-12">
-          {/* 썸네일 */}
-          <div className="relative w-28 h-36 flex-shrink-0">
-            <img
-              src={ballot.mainThumbnailUrl}
-              alt={ballot.titleKor}
-              className="w-full h-full object-cover rounded-md"
-              loading="lazy"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/banners/duckstar-logo.svg';
-              }}
-            />
-          </div>
-
-          {/* 제목 + 시즌 */}
-          <div className="flex flex-col flex-1 min-w-0">
+        {/* 카드 내용 - 제목 위, 이미지와 투표결과 가로 배치 */}
+        <div className="flex flex-col gap-3 p-4 pr-12">
+          {/* 제목 + 시즌 - 위쪽 배치, 가운데 정렬 */}
+          <div className="flex flex-col items-center text-center">
             <div className="text-lg font-semibold text-gray-900 break-words leading-tight">
               {ballot.titleKor || '제목 없음'}
             </div>
@@ -162,24 +148,41 @@ const VoteResultCardLoggedIn = memo(function VoteResultCardLoggedIn({
             </div>
           </div>
 
-          {/* 기표칸 */}
-          <div className="flex-shrink-0 mr-2">
-            <div className="relative size-24 rounded-xl border border-gray-300 bg-white flex items-center justify-center overflow-hidden">
+          {/* 애니 이미지 + 투표 결과 - 가로 배치 */}
+          <div className="flex items-center gap-4">
+            {/* 썸네일 */}
+            <div className="relative w-28 h-36 flex-shrink-0">
               <img
-                src={getCurrentVoteStampImagePath(weekDto, ballot.ballotType === 'BONUS')}
-                alt="투표 완료"
-                className={
-                  ballot.ballotType === 'BONUS' 
-                    ? "w-[60px] h-[60px] object-cover rounded-xl" 
-                    : "w-full h-full object-cover rounded-xl"
-                }
+                src={ballot.mainThumbnailUrl}
+                alt={ballot.titleKor}
+                className="w-full h-full object-cover rounded-md"
+                loading="lazy"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/banners/duckstar-logo.svg';
+                }}
               />
+            </div>
+
+            {/* 기표칸 */}
+            <div className="flex-shrink-0 mr-2">
+              <div className="relative size-24 rounded-xl border border-gray-300 bg-white flex items-center justify-center overflow-hidden">
+                <img
+                  src={getCurrentVoteStampImagePath(weekDto, ballot.ballotType === 'BONUS')}
+                  alt="투표 완료"
+                  className={
+                    ballot.ballotType === 'BONUS' 
+                      ? "w-[60px] h-[60px] object-cover rounded-xl" 
+                      : "w-full h-full object-cover rounded-xl"
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 세퍼레이터 라인 */}
-        <div className="absolute top-1/2 right-10 -translate-y-1/2 w-px h-15 bg-gray-200"></div>
+        {/* 세퍼레이터 라인 - 데스크톱에서만 표시 */}
+        <div className="absolute top-1/2 right-10 -translate-y-1/2 w-px h-15 bg-gray-200 hidden md:block"></div>
 
         {/* 왼쪽 영역 - 메인 카드 클릭 */}
         <button

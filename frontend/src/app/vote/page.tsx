@@ -15,6 +15,49 @@ export default function VotePage() {
   const { openLoginModal } = useModal();
   const { isAuthenticated, isLoading, user } = useAuth();
 
+  // 클라이언트에서만 이 페이지에 한해 뷰포트를 디바이스 폭으로 임시 전환
+  useEffect(() => {
+    const head = document.head;
+    if (!head) return;
+    
+    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+    const prevContent = existing?.getAttribute('content') || '';
+    
+    // 디바이스 폭으로 설정
+    if (existing) {
+      existing.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+      head.appendChild(meta);
+    }
+    
+    // body의 min-width 오버라이드 (투표 페이지에서만)
+    const body = document.body;
+    const originalMinWidth = body.style.minWidth;
+    const originalOverflowX = body.style.overflowX;
+    
+    body.style.minWidth = 'auto';
+    body.style.overflowX = 'hidden';
+    
+    return () => {
+      // viewport 설정 복원
+      const current = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+      if (current) {
+        if (prevContent) {
+          current.setAttribute('content', prevContent);
+        } else {
+          current.parentElement?.removeChild(current);
+        }
+      }
+      
+      // body 스타일 복원
+      body.style.minWidth = originalMinWidth;
+      body.style.overflowX = originalOverflowX;
+    };
+  }, []);
+
   // 분기 이름 매핑
   const getQuarterName = (quarter: number) => {
     switch (quarter) {
@@ -24,6 +67,12 @@ export default function VotePage() {
       case 4: return 'AUTUMN';
       default: return 'SPRING';
     }
+  };
+
+  // 창 너비에 따른 동적 컨테이너 너비 계산 (그리드 최적화)
+  const getOptimalContainerWidth = (candidateCount: number) => {
+    // 창 너비에 따라 점진적으로 줄어드는 너비 (큰 화면부터)
+    return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[700px] md:max-w-[700px] sm:max-w-[500px]';
   };
   const [starCandidates, setStarCandidates] = useState<StarCandidateDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +177,7 @@ export default function VotePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+        <div className="w-full max-w-[600px] mx-auto px-2 sm:px-4 py-3 sm:py-6">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p className="text-gray-600 mt-2">투표 후보자를 불러오는 중...</p>
@@ -141,7 +190,7 @@ export default function VotePage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+        <div className="w-full max-w-[600px] mx-auto px-2 sm:px-4 py-3 sm:py-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="text-center">
               <p className="text-red-600">{error}</p>
@@ -160,17 +209,24 @@ export default function VotePage() {
           {/* 배너 */}
           <div className="flex justify-center mb-4">
             <div className="relative w-full h-[99px] overflow-hidden">
+              {/* 모바일/태블릿용 배너 (1000px 너비) */}
+              <img 
+                src="/banners/vote-banner-mobile.svg" 
+                alt="투표 배너" 
+                className="absolute inset-0 w-full h-full object-cover object-center xl:hidden"
+              />
+              {/* 데스크톱용 배너 */}
               <img 
                 src="/banners/vote-banner.svg" 
                 alt="투표 배너" 
-                className="absolute inset-0 w-full h-full object-cover object-center"
+                className="absolute inset-0 w-full h-full object-cover object-center hidden xl:block"
               />
               {/* 배너 텍스트 오버레이 */}
-              <div className="absolute inset-0 inline-flex flex-col justify-center items-center">
-                <div className="justify-center text-white text-4xl font-bold font-['Pretendard'] leading-[50.75px]">
+              <div className="absolute inset-0 inline-flex flex-col justify-center items-center gap-1 sm:gap-0">
+                <div className="justify-center text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-['Pretendard'] leading-tight sm:leading-[1.2] md:leading-[1.3] lg:leading-[50.75px]" style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}>
                   {voteInfo ? `${voteInfo.year} ${getQuarterName(voteInfo.quarter)} 애니메이션 투표` : '애니메이션 투표'}
                 </div>
-                <div className="self-stretch h-6 text-center justify-center text-white text-base font-light font-['Pretendard'] -mt-[5px] tracking-wide">
+                <div className="self-stretch h-6 text-center justify-center text-white text-sm sm:text-sm md:text-base font-light font-['Pretendard'] -mt-[5px] tracking-wide" style={{ textShadow: '0 0 1px rgba(0,0,0,0.8)' }}>
                   {voteInfo ? `${voteInfo.startDate.replace(/-/g, '/')} - ${voteInfo.endDate.replace(/-/g, '/')} (${voteInfo.quarter}분기 ${voteInfo.week}주차)` : ''}
                 </div>
               </div>
@@ -179,7 +235,7 @@ export default function VotePage() {
         </div>
 
         {/* 메인 컨텐츠 */}
-        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+        <div className={`w-full ${getOptimalContainerWidth(starCandidates.length)} mx-auto px-2 sm:px-4 py-3 sm:py-6`}>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="text-center">
               <div className="text-2xl mb-2">😎</div>
@@ -214,17 +270,24 @@ export default function VotePage() {
         {/* 배너 */}
         <div className="flex justify-center mb-4">
           <div className="relative w-full h-[99px] overflow-hidden">
+            {/* 모바일/태블릿용 배너 (1000px 너비) */}
+            <img 
+              src="/banners/vote-banner-mobile.svg" 
+              alt="투표 배너" 
+              className="absolute inset-0 w-full h-full object-cover object-center xl:hidden"
+            />
+            {/* 데스크톱용 배너 */}
             <img 
               src="/banners/vote-banner.svg" 
               alt="투표 배너" 
-              className="absolute inset-0 w-full h-full object-cover object-center"
+              className="absolute inset-0 w-full h-full object-cover object-center hidden xl:block"
             />
             {/* 배너 텍스트 오버레이 */}
-            <div className="absolute inset-0 inline-flex flex-col justify-center items-center">
-              <div className="justify-center text-white text-4xl font-bold font-['Pretendard'] leading-[50.75px]">
+            <div className="absolute inset-0 inline-flex flex-col justify-center items-center gap-1 sm:gap-0">
+              <div className="justify-center text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-['Pretendard'] leading-tight sm:leading-[1.2] md:leading-[1.3] lg:leading-[50.75px]" style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}>
                 {voteInfo ? `${voteInfo.year} ${getQuarterName(voteInfo.quarter)} 애니메이션 투표` : '애니메이션 투표'}
               </div>
-              <div className="self-stretch h-6 text-center justify-center text-white text-base font-light font-['Pretendard'] -mt-[5px] tracking-wide">
+              <div className="self-stretch h-6 text-center justify-center text-white text-sm sm:text-sm md:text-base font-light font-['Pretendard'] -mt-[5px] tracking-wide" style={{ textShadow: '0 0 1px rgba(0,0,0,0.8)' }}>
                 {voteInfo ? `${voteInfo.startDate.replace(/-/g, '/')} - ${voteInfo.endDate.replace(/-/g, '/')} (${voteInfo.quarter}분기 ${voteInfo.week}주차)` : ''}
               </div>
             </div>
@@ -233,7 +296,7 @@ export default function VotePage() {
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="w-full max-w-[1240px] mx-auto px-4 p-6">
+      <div className={`w-full ${getOptimalContainerWidth(starCandidates.length)} mx-auto px-2 sm:px-4 p-3 sm:p-6`}>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 pt-6 pb-2 mb-8">
           <div className="mb-6 flex flex-col items-center">
             {/* 기존 툴팁 컴포넌트 재사용 */}
@@ -255,8 +318,14 @@ export default function VotePage() {
             </div>
             
             <div className="text-gray-700 text-center">
-              <p className="mb-2">모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.</p>
-              <p className="text-sm text-gray-500">*덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가 사용됩니다.</p>
+              <p className="mb-2">
+                <span className="sm:hidden">모든 후보는 방영 이후<br />36시간 이내에 투표할 수 있어요.</span>
+                <span className="hidden sm:inline">모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.</span>
+              </p>
+              <p className="text-sm text-gray-500">
+                <span className="sm:hidden">*덕스타 투표 시 중복 방지를 위해<br />쿠키와 암호화된 IP 정보가 사용됩니다.</span>
+                <span className="hidden sm:inline">*덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가 사용됩니다.</span>
+              </p>
             </div>
             
             {/* 비로그인 투표 시 로그인 안내 버튼 */}
@@ -288,11 +357,11 @@ export default function VotePage() {
                   </button>
                   
                   {/* 툴팁 */}
-                  <div className="absolute bottom-full left-2/3 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50
                     bg-gray-800 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-lg
                     before:content-[''] before:absolute before:top-full before:left-1/2 before:transform before:-translate-x-1/2
                     before:border-4 before:border-transparent before:border-t-gray-800">
-                    로그인하면 투표 내역이 안전하게 저장됩니다
+                    현재까지 투표 내역 저장!
                   </div>
                 </div>
               </div>
@@ -303,7 +372,7 @@ export default function VotePage() {
         {/* 별점 투표 후보자 섹션 */}
         {starCandidates.length > 0 && (
           <div className="mb-8">
-            <div className={`${starCandidates.length <= 3 ? 'flex flex-wrap justify-center items-center gap-[40px]' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[40px] justify-items-center'}`}>
+            <div className={`${starCandidates.length <= 3 ? 'flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-[40px]' : 'grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-[40px] justify-items-center'}`}>
               {starCandidates.map((candidate) => (
                 <BigCandidate
                   key={candidate.episodeId}
