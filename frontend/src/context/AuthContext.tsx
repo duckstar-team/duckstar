@@ -134,11 +134,19 @@ console.error('회원탈퇴 실패:', error);
     setUser(userData);
   };
 
-  // 🔑 핵심: 초기 로드 시 인증 상태 확인 (단순하고 명확한 설계)
+  // 🔑 핵심: 초기 로드 시 인증 상태 확인 (토큰이 있을 때만)
   useEffect(() => {
     const checkAuthStatus = async () => {
       // 로딩 중이 아닐 때만 실행
       if (!isLoading) {
+        // localStorage에서 토큰 확인
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          // 토큰이 없으면 로그인하지 않은 상태로 설정
+          resetAuthState();
+          return;
+        }
+
         setIsLoading(true);
         try {
           const userData = await getUserInfo();

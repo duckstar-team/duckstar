@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import MedalSection from './MedalSection';
 import RankContents from './RankContents';
+import RankStat from './RankStat';
 
 interface MedalData {
   id: string;
@@ -23,6 +25,17 @@ interface RankCardProps {
   studio: string;
   image: string;
   rating: number;
+  // RankStat props
+  debutRank?: number;
+  debutDate?: string;
+  peakRank?: number;
+  peakDate?: string;
+  top10Weeks?: number;
+  week?: string;
+  averageRating?: number;
+  participantCount?: number;
+  distribution?: number[];
+  animeId?: number;
   className?: string;
 }
 
@@ -35,23 +48,61 @@ export default function RankCard({
   studio,
   image,
   rating,
+  debutRank,
+  debutDate,
+  peakRank,
+  peakDate,
+  top10Weeks,
+  week,
+  averageRating,
+  participantCount,
+  distribution,
+  animeId,
   className = ""
 }: RankCardProps) {
-  return (
-    <div className={`inline-flex items-center pl-5 gap-[26px] border border-[#D1D1D6] rounded-xl h-[140px] w-[768px] ${className}`}>
-      {/* 순위 정보 */}
-      <RankContents
-        rank={rank}
-        rankDiff={rankDiff}
-        rankDiffType={rankDiffType}
-        title={title}
-        studio={studio}
-        image={image}
-        rating={rating}
-      />
+  const [isExpanded, setIsExpanded] = useState(false);
 
-      {/* 메달 섹션 */}
-      <MedalSection medals={medals} />
+  return (
+    <div className={`flex flex-col ${className}`}>
+      {/* 메인 카드 */}
+      <div 
+        className={`inline-flex items-center pl-5 gap-[26px] bg-white border border-[#D1D1D6] h-[140px] w-[768px] cursor-pointer hover:bg-gray-50 transition-all duration-200 ${
+          isExpanded ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'
+        }`}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        {/* 순위 정보 */}
+        <RankContents
+          rank={rank}
+          rankDiff={rankDiff}
+          rankDiffType={rankDiffType}
+          title={title}
+          studio={studio}
+          image={image}
+          rating={rating}
+        />
+
+        {/* 메달 섹션 */}
+        <MedalSection medals={medals} isExpanded={isExpanded} />
+      </div>
+
+      {/* RankStat (드롭다운) */}
+      {isExpanded && (
+        <div className="mt-0">
+          <RankStat
+            debutRank={debutRank || 0}
+            debutDate={debutDate || ""}
+            peakRank={peakRank || 0}
+            peakDate={peakDate || ""}
+            top10Weeks={top10Weeks || 0}
+            week={week || ""}
+            averageRating={averageRating || 0}
+            participantCount={participantCount || 0}
+            distribution={distribution || []}
+            animeId={animeId}
+          />
+        </div>
+      )}
     </div>
   );
 }

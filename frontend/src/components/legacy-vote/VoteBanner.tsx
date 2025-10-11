@@ -42,7 +42,7 @@ const TYPOGRAPHY = {
 const STYLES = {
   container: "relative w-full h-24 bg-gradient-to-r from-[#212529] from-[14.927%] to-[#460e06] to-[85.889%] overflow-hidden",
   mainContent: "relative w-full h-full flex flex-col items-center justify-center gap-2.5",
-  textContent: "flex flex-col items-center justify-center text-white text-center relative shrink-0",
+  textContent: "flex flex-col items-center justify-center text-white text-center relative shrink-0 gap-[5px]",
   titleContainer: "flex flex-col justify-center mb-[-5px] relative shrink-0",
   title: "font-[Pretendard] font-bold leading-tight whitespace-pre text-lg sm:text-[33.833px]",
   dateContainer: "flex flex-col justify-center relative shrink-0",

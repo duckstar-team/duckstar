@@ -25,7 +25,7 @@ export default function HomeRankInfo({
   rankDiffValue = "5",
   title = "내가 연인이 될 수 있을 리 없잖아, 무리무리! (※무리가 아니었다?!)",
   studio = "Studio Mother",
-  image = "https://placehold.co/60x80",
+  image = "",
   percentage = "15.18",
   medal = "Gold",
   type = "ANIME",

@@ -19,6 +19,8 @@ interface StarDistributionChartProps {
   maxBarColor?: string;
   /** 일반 막대 색상 (기본값: #FF7B7B with 66% opacity) */
   normalBarColor?: string;
+  /** 1점 단위 모드 (4분기 1-2주차용) */
+  isIntegerMode?: boolean;
   /** 클래스명 */
   className?: string;
 }
@@ -32,17 +34,23 @@ export default function StarDistributionChart({
   barSpacing = 2,
   maxBarColor = '#FF7B7B',
   normalBarColor = 'rgba(255, 123, 123, 0.66)',
+  isIntegerMode = false,
   className = ''
 }: StarDistributionChartProps) {
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
-  // 분산 데이터가 10개(0.5~5.0점)인지 확인
-  if (distribution.length !== 10) {
-    console.warn('StarDistributionChart: distribution 배열은 10개의 요소를 가져야 합니다 (0.5~5.0점)');
+  
+  // 1점 단위 모드인지 확인
+  const expectedLength = isIntegerMode ? 5 : 10;
+  if (distribution.length !== expectedLength) {
     return null;
   }
 
   // 최대값 찾기
   const maxValue = Math.max(...distribution);
+  
+  // 전체 막대 그룹의 너비 계산
+  const totalBarsWidth = distribution.length * barWidth + (distribution.length - 1) * barSpacing;
+  const startX = (width - totalBarsWidth) / 2; // 중앙 정렬을 위한 시작 x 위치
   
   // 막대들의 정보 계산
   const bars = distribution.map((value, index) => {
@@ -51,7 +59,7 @@ export default function StarDistributionChart({
     const calculatedHeight = maxValue > 0 ? (value / maxValue) * (height - 4) : 0;
     const barHeight = value > 0 ? calculatedHeight : minBarHeight;
     
-    const x = index * (barWidth + barSpacing);
+    const x = startX + index * (barWidth + barSpacing);
     const y = height - barHeight - 2; // 하단에서 2px 위
     const isMaxBar = value === maxValue && value > 0;
     
@@ -62,7 +70,7 @@ export default function StarDistributionChart({
       height: barHeight,
       color: isMaxBar ? maxBarColor : normalBarColor,
       value,
-      rating: (index + 1) * 0.5 // 0.5, 1.0, 1.5, ..., 5.0
+      rating: isIntegerMode ? index + 1 : (index + 1) * 0.5 // 1점 단위: 1,2,3,4,5 / 0.5점 단위: 0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0
     };
   });
 

@@ -29,7 +29,7 @@ export default function HomeRankInfo({
   rankDiffValue = "5",
   title = "내가 연인이 될 수 있을 리 없잖아, 무리무리! (※무리가 아니었다?!)",
   studio = "Studio Mother",
-  image = "https://placehold.co/60x80",
+  image = "",
   percentage = "15.18",
   averageRating = 4.5, // 기본값
   voterCount = 0, // 기본값
@@ -42,10 +42,10 @@ export default function HomeRankInfo({
   const [showTooltip, setShowTooltip] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
-  // 평균 별점을 정수 부분과 소수 부분으로 분리 (소수점 두 번째 자리에서 버림)
+  // 평균 별점을 정수 부분과 소수 부분으로 분리 (소수점 첫째 자리에서 버림)
   const integerPart = Math.floor(averageRating);
-  const decimalPart = Math.floor((averageRating - integerPart) * 100) / 100; // 소수점 두 번째 자리에서 버림
-  const decimalString = decimalPart.toFixed(2).substring(1); // ".95" 형태
+  const decimalPart = Math.floor((averageRating - integerPart) * 10) / 10; // 소수점 첫째 자리에서 버림
+  const decimalString = decimalPart.toFixed(1).substring(1); // ".9" 형태
   
   // 컴포넌트 상태 정의
   const isTopThree = rank <= 3;

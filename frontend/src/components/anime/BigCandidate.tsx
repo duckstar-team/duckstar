@@ -15,9 +15,10 @@ interface BigCandidateProps {
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   voteInfo?: {year: number, quarter: number, week: number} | null; // 투표 정보
   starInfo?: StarInfoDto; // 별점 정보 (사용자 투표 이력 포함)
+  onVoteComplete?: () => void; // 투표 완료 시 호출되는 콜백
 }
 
-export default function BigCandidate({ anime, className, isCurrentSeason = true, voteInfo, starInfo }: BigCandidateProps) {
+export default function BigCandidate({ anime, className, isCurrentSeason = true, voteInfo, starInfo, onVoteComplete }: BigCandidateProps) {
   // 별점 제출 상태 관리 - starInfo가 있고 userStarScore가 있으면 초기 상태를 submitted로 설정
   const [voteState, setVoteState] = useState<'submitting' | 'loading' | 'submitted'>(
     starInfo && starInfo.userStarScore && starInfo.userStarScore > 0 ? 'submitted' : 'submitting'
@@ -51,6 +52,21 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
     }
     return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   });
+
+  // 별점 패널 표시 상태 관리 (submitted 상태에서 닫기 버튼으로 숨길 수 있음)
+  const [isPanelVisible, setIsPanelVisible] = useState(true);
+
+  // 닫기 버튼 핸들러
+  const handleClosePanel = () => {
+    setIsPanelVisible(false);
+  };
+
+  // 라벨 띠 호버 핸들러 (submitted 상태에서 패널을 다시 표시)
+  const handleLabelHover = () => {
+    if (voteState === 'submitted') {
+      setIsPanelVisible(true);
+    }
+  };
 
 
   // API 응답을 별점 분포로 변환하는 함수
@@ -191,7 +207,6 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
 
           // 요일을 한국어로 변환 (한 글자)
           const getDayInKorean = (dayOfWeek: string) => {
-            console.log('dayOfWeek 값:', dayOfWeek); // 디버깅용
             const dayMap: { [key: string]: string } = {
               'MONDAY': '월',
               'TUESDAY': '화',
@@ -254,7 +269,11 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
     <div 
       data-anime-item
       className={cn(
-        "bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02]",
+        "bg-white rounded-2xl overflow-hidden transition-all duration-200",
+        // submitted 상태가 아닐 때만 호버 스케일 효과 적용
+        voteState !== 'submitted' ? "hover:scale-[1.02]" : "",
+        // submitted 상태일 때는 약간의 그림자 강화로 투표 완료 상태임을 시각적으로 표현
+        voteState === 'submitted' ? "shadow-[0_4px_12px_rgba(0,0,0,0.15)]" : "",
         "flex flex-col h-full w-[285px]",
         "shadow-[0_1.9px_7.2px_rgba(0,0,0,0.1)]",
         "group", // cursor-pointer와 onClick 제거
@@ -365,20 +384,29 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
       </div>
 
               {/* 라벨 띠 - 카드 호버 시 디자인 변경, 라벨 띠 호버 시 블랙박스 */}
-              <div className="h-6 bg-[#F1F3F5] group-hover:bg-black hover:bg-black relative transition-colors duration-200 group/label">
-                {/* 힌트 디자인 - 카드 호버 시 스타일 변경 */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex items-center space-x-2">
-                    <div className="text-gray-600 group-hover:text-white text-xs font-medium opacity-70 group-hover:opacity-100 transition-all duration-200">
-                      마우스를 올려서 투표
+              <div 
+                className={`h-6 bg-[#F1F3F5] ${voteState === 'submitted' && isPanelVisible ? 'bg-black' : 'group-hover:bg-black hover:bg-black'} relative transition-colors duration-200 group/label`}
+                onMouseEnter={handleLabelHover}
+              >
+                {/* 힌트 디자인 - 카드 호버 시 스타일 변경 (submitted 상태가 아니거나 패널이 숨겨진 경우 표시) */}
+                {(voteState !== 'submitted' || !isPanelVisible) && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="text-gray-600 group-hover:text-white text-xs font-medium opacity-70 group-hover:opacity-100 transition-all duration-200">
+                        마우스를 올려서 투표
+                      </div>
+                      <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[6px] border-transparent border-b-gray-600 group-hover:border-b-white opacity-60 group-hover:opacity-100 transition-all duration-200 animate-bounce"></div>
                     </div>
-                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[6px] border-transparent border-b-gray-600 group-hover:border-b-white opacity-60 group-hover:opacity-100 transition-all duration-200 animate-bounce"></div>
                   </div>
-                </div>
+                )}
                 
-                {/* 라벨 띠 호버 시에만 올라오는 블랙박스 */}
+                {/* 라벨 띠 호버 시에만 올라오는 블랙박스 (submitted 상태에서는 항상 표시, 닫기 버튼으로 숨김 가능) */}
                 <div 
-                  className="absolute bottom-0 left-0 right-0 h-[119px] bg-black transform translate-y-full group-hover/label:translate-y-0 transition-transform duration-300 ease-out"
+                  className={`absolute bottom-0 left-0 right-0 h-[119px] bg-black transition-transform duration-300 ease-out ${
+                    voteState === 'submitted' 
+                      ? (isPanelVisible ? 'translate-y-0' : 'translate-y-full')
+                      : 'translate-y-full group-hover/label:translate-y-0'
+                  }`}
                   style={{ cursor: 'default !important' }}
                 >
                   {/* StarSubmissionBox 사용 */}
@@ -390,7 +418,6 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                     variant={voteState}
                     voteInfo={voteInfo}
                     onRatingChange={async (rating) => {
-                      console.log('선택된 별점:', rating);
                       setCurrentRating(rating);
                       
                       if (rating > 0) {
@@ -410,7 +437,11 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                           // 투표한 episode ID를 브라우저에 저장
                           addVotedEpisode(anime.episodeId);
                           
-                          console.log('투표 성공:', { episodeId: anime.episodeId, starScore, response });
+                          // 투표 완료 콜백 호출
+                          if (onVoteComplete) {
+                            onVoteComplete();
+                          }
+                          
                         } catch (error) {
                           // 에러 시 다시 제출 상태로 돌아감
                           setVoteState('submitting');
@@ -420,9 +451,9 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                       }
                     }}
                     onEditClick={() => {
-                      console.log('수정 버튼 클릭');
                       setVoteState('submitting');
                     }}
+                    onCloseClick={voteState === 'submitted' ? handleClosePanel : undefined}
                   />
                 </div>
               </div>

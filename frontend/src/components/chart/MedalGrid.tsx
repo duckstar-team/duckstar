@@ -31,20 +31,15 @@ export default function MedalGrid({
   const medalsPerPage = 6;
   const totalPages = Math.ceil(medals.length / medalsPerPage);
   
-  // 모든 페이지의 메달 데이터를 미리 준비
+  // 모든 페이지의 메달 데이터를 미리 준비 (실제 메달만)
   const allPages = [];
   for (let i = 0; i < totalPages; i++) {
     const startIndex = i * medalsPerPage;
     const endIndex = startIndex + medalsPerPage;
     const pageMedals = medals.slice(startIndex, endIndex);
     
-    // 빈 슬롯을 채우기 위해 6개까지 패딩
-    const paddedMedals = [...pageMedals];
-    while (paddedMedals.length < medalsPerPage) {
-      paddedMedals.push({ id: `empty-${i}-${paddedMedals.length}`, type: "None" });
-    }
-    
-    allPages.push(paddedMedals);
+    // 실제 메달 데이터만 사용 (None 타입 추가하지 않음)
+    allPages.push(pageMedals);
   }
   
 
@@ -61,10 +56,9 @@ export default function MedalGrid({
   };
 
   const handleMouseEnter = (pageIndex: number, medalIndex: number, event: React.MouseEvent) => {
-    const rect = event.currentTarget.getBoundingClientRect();
     setTooltipPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10
+      x: event.clientX,
+      y: event.clientY
     });
     setHoveredMedal({ pageIndex, medalIndex });
   };
@@ -75,21 +69,23 @@ export default function MedalGrid({
       <div className="w-0 h-[52px] border-l border-gray-300"></div>
       
       {/* 왼쪽 화살표 */}
-      {totalPages > 1 && (
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 0}
-          className={`w-3 h-5.5 flex items-center justify-center cursor-pointer pr-1 ${
-            currentPage === 0 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
-          }`}
-        >
-          <img 
-            src="/icons/episodes-before.svg?v=2" 
-            alt="이전 보기" 
-            className="w-3 h-5.5"
-          />
-        </button>
-      )}
+      <div className="w-3 h-5.5 flex items-center justify-center pr-1">
+        {totalPages > 1 && (
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 0}
+            className={`w-3 h-5.5 flex items-center justify-center cursor-pointer ${
+              currentPage === 0 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
+            }`}
+          >
+            <img 
+              src="/icons/episodes-before.svg?v=2" 
+              alt="이전 보기" 
+              className="w-3 h-5.5"
+            />
+          </button>
+        )}
+      </div>
       
        {/* 메달 그리드 - 슬라이드 애니메이션 */}
        <div className="w-[120px] h-36 inline-flex justify-start items-center overflow-hidden relative">
@@ -98,21 +94,21 @@ export default function MedalGrid({
            style={{ transform: `translateX(${-currentPage * 120}px)` }}
          >
            {allPages.map((pageMedals, pageIndex) => (
-             <div key={pageIndex} className="w-[120px] h-24 inline-flex flex-col justify-start items-center flex-shrink-0 gap-2 px-1">
+             <div key={pageIndex} className="w-[120px] h-24 inline-flex flex-col justify-start items-start flex-shrink-0 gap-2 px-1">
                {/* 첫 번째 행 (3개) */}
                <div className="flex gap-2.5">
                  {pageMedals.slice(0, 3).map((medal, index) => (
-                   <div 
-                     key={medal.id} 
-                     data-property-1={medal.type}
-                     className={`w-7 h-11 inline-flex justify-center items-center gap-2.5 relative cursor-pointer ${
-                       medal.type === "None" ? "bg-gray-100/40 border-2 border-dashed border-gray-400/50 rounded-md hover:bg-gray-200/50 hover:border-gray-500/60 transition-all duration-200" : ""
-                     }`}
-                     onMouseEnter={(e) => handleMouseEnter(pageIndex, index, e)}
-                     onMouseLeave={() => setHoveredMedal(null)}
-                   >
-                     <Medal property1={medal.type} />
-                   </div>
+                  <div 
+                    key={medal.id} 
+                    data-property-1={medal.type}
+                    className={`w-7 h-11 inline-flex justify-center items-center gap-2.5 relative cursor-pointer ${
+                      medal.type === "None" ? "bg-gray-100/40 border-2 border-dashed border-gray-400/50 rounded-md hover:bg-gray-200/50 hover:border-gray-500/60 transition-all duration-200" : ""
+                    }`}
+                    onMouseEnter={(e) => handleMouseEnter(pageIndex, index, e)}
+                    onMouseLeave={() => setHoveredMedal(null)}
+                  >
+                    <Medal property1={medal.type} />
+                  </div>
                  ))}
                </div>
                {/* 두 번째 행 (3개) */}
@@ -137,21 +133,23 @@ export default function MedalGrid({
        </div>
       
       {/* 오른쪽 화살표 */}
-      {totalPages > 1 && (
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages - 1}
-          className={`w-3 h-5.5 flex items-center justify-center cursor-pointer pl-1 ${
-            currentPage === totalPages - 1 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
-          }`}
-        >
-          <img 
-            src="/icons/episodes-after.svg?v=2" 
-            alt="다음 보기" 
-            className="w-3 h-5.5"
-          />
-        </button>
-      )}
+      <div className="w-3 h-5.5 flex items-center justify-center pl-1">
+        {totalPages > 1 && (
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages - 1}
+            className={`w-3 h-5.5 flex items-center justify-center cursor-pointer ${
+              currentPage === totalPages - 1 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
+            }`}
+          >
+            <img 
+              src="/icons/episodes-after.svg?v=2" 
+              alt="다음 보기" 
+              className="w-3 h-5.5"
+            />
+          </button>
+        )}
+      </div>
       
       {/* 오른쪽 세로선 */}
       <div className="w-0 h-[52px] border-l border-gray-300"></div>
@@ -163,8 +161,7 @@ export default function MedalGrid({
           className="fixed px-2 py-1 bg-black text-white text-xs rounded whitespace-nowrap z-50 pointer-events-none"
           style={{
             left: tooltipPosition.x,
-            top: tooltipPosition.y,
-            transform: 'translateX(-50%)'
+            top: tooltipPosition.y
           }}
         >
           {(() => {

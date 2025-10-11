@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import Winner from '@/components/chart/Winner';
 import RankCard from '@/components/chart/RankCard';
 import AbroadRankCard from '@/components/chart/AbroadRankCard';
@@ -70,26 +71,20 @@ function createDistributionArray(starInfo: any, week: string): number[] {
 }
 
 export default function ChartPage() {
-  const { selectedWeek, setSelectedWeek, weeks } = useChart();
+  const params = useParams();
+  const year = parseInt(params.year as string);
+  const quarter = parseInt(params.quarter as string);
+  const week = parseInt(params.week as string);
+  
+  const { setSelectedWeek } = useChart();
   const [selectedTab, setSelectedTab] = useState<'anime-corner' | 'anilab'>('anime-corner');
   
-  // selectedWeek가 없을 때 최신 주차로 설정
+  // URL 파라미터를 기반으로 selectedWeek 설정 (새로고침 시에도 유지)
   useEffect(() => {
-    if (!selectedWeek && weeks && weeks.length > 0) {
-      const latestWeek = weeks.sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
-        if (a.quarter !== b.quarter) return b.quarter - a.quarter;
-        return b.week - a.week;
-      })[0];
-      setSelectedWeek(latestWeek);
+    if (year && quarter && week) {
+      setSelectedWeek({ year, quarter, week });
     }
-  }, [selectedWeek, weeks, setSelectedWeek]);
-
-  // 현재 연도, 분기, 주차 정보 (selectedWeek에서 가져오거나 기본값)
-  const currentYear = selectedWeek?.year || 2025;
-  const currentQuarter = selectedWeek?.quarter || 3;
-  const currentWeek = selectedWeek?.week || 1;
-  
+  }, [year, quarter, week, setSelectedWeek]);
   
   // 분기 이름 매핑
   const getQuarterName = (quarter: number) => {
@@ -111,8 +106,8 @@ export default function ChartPage() {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['chart', 2025, 4, 1],
-    queryFn: ({ pageParam = 0 }) => getChartData(2025, 4, 1, pageParam),
+    queryKey: ['chart', year, quarter, week],
+    queryFn: ({ pageParam = 0 }) => getChartData(year, quarter, week, pageParam),
     getNextPageParam: (lastPage) => {
       if (lastPage.result.pageInfo.hasNext) {
         return lastPage.result.pageInfo.page + 1;
@@ -122,34 +117,7 @@ export default function ChartPage() {
     ...queryConfig.home,
   });
 
-  // API 데이터에서 날짜 정보 가져오기
-  const getDateRangeFromData = () => {
-    if (data?.pages?.[0]?.result?.animeRankDtos?.[0]?.animeStatDto) {
-      const animeStat = data.pages[0].result.animeRankDtos[0].animeStatDto;
-      // debutDate와 peakDate를 사용하여 날짜 범위 계산
-      const startDate = animeStat.debutDate ? new Date(animeStat.debutDate) : new Date('2025-06-29');
-      const endDate = animeStat.peakDate ? new Date(animeStat.peakDate) : new Date('2025-07-06');
-      
-      return {
-        start: startDate.toLocaleDateString('ko-KR', { 
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit' 
-        }).replace(/\./g, '/').replace(/\s/g, '').replace(/\/$/, ''),
-        end: endDate.toLocaleDateString('ko-KR', { 
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit' 
-        }).replace(/\./g, '/').replace(/\s/g, '').replace(/\/$/, '')
-      };
-    }
-    
-    // 기본값
-    return { start: '2025/06/29', end: '2025/07/06' };
-  };
   
-  const quarterName = getQuarterName(currentQuarter);
-  const dateRange = getDateRangeFromData();
 
   // 무한 스크롤 트리거
   const handleScroll = useCallback(() => {
@@ -268,10 +236,10 @@ export default function ChartPage() {
             {/* 배너 텍스트 오버레이 */}
             <div className="absolute inset-0 inline-flex flex-col justify-center items-center">
               <div className="justify-center text-white text-4xl font-bold font-['Pretendard'] leading-[50.75px]">
-                {currentYear} {quarterName} {currentWeek}주차 애니메이션 순위
+                {year} {getQuarterName(quarter)} 애니메이션 차트
               </div>
               <div className="self-stretch h-6 text-center justify-center text-white text-base font-light font-['Pretendard'] -mt-[5px] tracking-wide">
-                {dateRange.start} - {dateRange.end}
+                2025/06/29 - 2025/07/06 ({quarter}분기 {week}주차)
               </div>
             </div>
           </div>

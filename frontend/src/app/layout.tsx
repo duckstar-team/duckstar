@@ -8,7 +8,6 @@ import QueryProvider from '@/components/providers/QueryProvider';
 import MigrationToast from '@/components/common/MigrationToast';
 import ClientAppContainer from '@/components/ClientAppContainer';
 import { ToastContainer } from '@/components/common/Toast';
-import MobileNavigation from '@/components/MobileNavigation';
 
 // Pretendard 폰트만 사용 (성능 최적화)
 const pretendard = localFont({
@@ -50,12 +49,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* 모바일 대응 뷰포트 설정 */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+        {/* PC 버전 강제 설정 - 모바일에서도 데스크톱 뷰포트 사용 */}
+        <meta name="viewport" content="width=1200, initial-scale=1.0, user-scalable=no" />
         
         {/* 투표 이미지 프리로딩 */}
-        <link rel="preload" href="/voted-normal.svg" as="image" type="image/svg+xml" />
-        <link rel="preload" href="/voted-bonus.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/voted-normal-2025-autumn.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/voted-bonus-2025-autumn.svg" as="image" type="image/svg+xml" />
       </head>
@@ -75,9 +72,6 @@ export default function RootLayout({
             
             {/* 토스트 컨테이너 - 모든 페이지에서 작동 */}
             <ToastContainer />
-            
-            {/* 모바일 네비게이션 */}
-            <MobileNavigation />
           </AuthProvider>
         </QueryProvider>
       </body>

@@ -28,8 +28,7 @@ const NAV_ITEMS = [
     activeIcon: "/icons/chart-active.svg",
     iconSize: "size-5",
     iconClass: "flex items-center justify-center size-full",
-    isBeta: true,
-    badgeText: "준비중"
+    isBeta: false
   },
   { 
     label: "투표하기", 
@@ -233,7 +232,7 @@ export default function Sidebar() {
       isVeryNarrowDevice ? 'w-[52px]' : 
       isNarrowDevice ? 'w-[56px]' : 
       'w-[60px] md:w-[200px]'
-    } h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px] hidden md:block`}>
+    } h-screen bg-white border-r border-[#DADCE0] relative transition-all duration-300 ease-in-out group hover:w-[200px]`}>
       {/* Navigation items */}
       <div className={`${
         isVeryNarrowDevice ? 'w-[32px] left-[8px]' : 

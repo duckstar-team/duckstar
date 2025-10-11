@@ -17,6 +17,8 @@ interface StarDetailPopupProps {
   onEditClick?: () => void;
   /** 팝업 닫기 핸들러 */
   onClose?: () => void;
+  /** 닫기 버튼 클릭 핸들러 */
+  onCloseClick?: () => void;
   /** 클래스명 */
   className?: string;
 }
@@ -28,6 +30,7 @@ export default function StarDetailPopup({
   distribution,
   onEditClick,
   onClose,
+  onCloseClick,
   className = ''
 }: StarDetailPopupProps) {
 
@@ -35,6 +38,30 @@ export default function StarDetailPopup({
     <div 
       className={`w-64 h-28 py-6 left-0 top-0 absolute bg-black rounded-bl-2xl rounded-br-2xl inline-flex flex-col justify-center items-center gap-[2px] ${className}`}
     >
+      {/* 닫기 버튼 */}
+      {onCloseClick && (
+        <button
+          onClick={onCloseClick}
+          className="absolute -top-[1px] -left-[12px] z-20 w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-white/20 rounded transition-colors duration-200"
+          aria-label="닫기"
+        >
+          <svg 
+            width="16" 
+            height="16" 
+            viewBox="0 0 16 16" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              d="M12 4L4 12M4 4L12 12" 
+              stroke="currentColor" 
+              strokeWidth="1.7" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
       {/* 상단: 별점 선택 및 수정 버튼 */}
       <div className="size- relative inline-flex justify-center items-center gap-2.5">
         <div className="size- px-[2.96px] pb-1.5 flex justify-end items-center gap-[0.74px] pointer-events-none">

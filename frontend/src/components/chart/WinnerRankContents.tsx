@@ -39,16 +39,18 @@ export default function WinnerRankContents({
       </div>
 
       {/* 애니메이션 포스터 - Winner용 원래 크기 */}
-      <img 
-        className="w-28 h-36 rounded-2xl" 
-        src={image} 
-        alt={title}
-      />
+      <div className="w-28 h-36 rounded-2xl overflow-hidden">
+        <img 
+          className="w-full h-full object-cover" 
+          src={image} 
+          alt={title}
+        />
+      </div>
 
       {/* 제목, 스튜디오, 별점 정보 */}
       <div className="inline-flex flex-col justify-center items-end gap-2.5">
         <div className="w-72 flex flex-col justify-start items-start gap-[5px]">
-          <div className="self-stretch justify-start text-black text-xl font-bold font-['Pretendard'] leading-snug">
+          <div className="self-stretch justify-start text-black text-xl font-bold font-['Pretendard'] leading-snug line-clamp-2">
             {title}
           </div>
           <div className="text-center justify-start text-gray-400 text-sm font-normal font-['Pretendard'] leading-snug">

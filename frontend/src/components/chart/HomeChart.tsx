@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import HomeRankInfo from './HomeRankInfo';
-import { DuckstarRankPreviewDto } from '@/types/api';
+import { DuckstarRankPreviewDto, WeekDto } from '@/types/api';
 
 interface HomeChartProps {
   duckstarRankPreviews: DuckstarRankPreviewDto[];
+  selectedWeek?: WeekDto | null;
   className?: string;
 }
 
@@ -43,11 +44,20 @@ function getMedalType(rank: number): "Gold" | "Silver" | "Bronze" | "None" {
   return "None";
 }
 
-export default function HomeChart({ duckstarRankPreviews, className = "" }: HomeChartProps) {
+export default function HomeChart({ duckstarRankPreviews, selectedWeek, className = "" }: HomeChartProps) {
   const router = useRouter();
 
   const handleScheduleClick = () => {
     router.push('/search');
+  };
+
+  const handleMoreClick = () => {
+    // 현재 선택된 주차 정보를 사용하여 차트 페이지로 이동
+    if (selectedWeek) {
+      router.push(`/chart/${selectedWeek.year}/${selectedWeek.quarter}/${selectedWeek.week}`);
+    } else {
+      router.push('/chart');
+    }
   };
 
   return (
@@ -100,7 +110,7 @@ export default function HomeChart({ duckstarRankPreviews, className = "" }: Home
                 studio={subTitle}
                 image={mainThumbnailUrl}
                 percentage={safeVotePercent.toFixed(2)}
-                averageRating={safeAverageRating} // 백엔드에서 받은 실제 평균 별점
+                averageRating={safeAverageRating * 2} // 5점 만점을 10점 만점으로 변환
                 voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
                 medal={getMedalType(rank)}
                 type={type}
@@ -141,6 +151,17 @@ export default function HomeChart({ duckstarRankPreviews, className = "" }: Home
             )}
           </>
         )}
+        
+        {/* 더보기 버튼 */}
+        <div className="flex justify-end mt-4">
+          <button 
+            onClick={handleMoreClick}
+            className="text-gray-600 hover:text-gray-800 transition-colors duration-200 cursor-pointer" 
+            style={{ fontFamily: 'Pretendard', fontSize: '20px', fontWeight: '400' }}
+          >
+            더보기
+          </button>
+        </div>
       </div>
     </div>
     </>

@@ -53,7 +53,6 @@ function setTTL(): void {
     const ttl = getNextWeekEndTTL();
     const expiryTime = Date.now() + ttl;
     localStorage.setItem(VOTED_EPISODES_TTL_KEY, expiryTime.toString());
-    console.log('TTL 설정됨:', new Date(expiryTime).toLocaleString());
   } catch (error) {
     console.error('TTL 설정 실패:', error);
   }
@@ -93,7 +92,6 @@ export function addVotedEpisode(episodeId: number): void {
         setTTL();
       }
       
-      console.log('투표 저장됨:', updatedVotes);
     }
   } catch (error) {
     console.error('투표 저장 실패:', error);
@@ -115,7 +113,6 @@ export function clearVotedEpisodes(): void {
   try {
     localStorage.removeItem(VOTED_EPISODES_KEY);
     localStorage.removeItem(VOTED_EPISODES_TTL_KEY);
-    console.log('투표 이력 삭제됨');
   } catch (error) {
     console.error('투표 이력 삭제 실패:', error);
   }
