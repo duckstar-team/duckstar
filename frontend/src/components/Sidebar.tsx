@@ -28,8 +28,7 @@ const NAV_ITEMS = [
     activeIcon: "/icons/chart-active.svg",
     iconSize: "size-5",
     iconClass: "flex items-center justify-center size-full",
-    isBeta: true,
-    badgeText: "준비중"
+    isBeta: false
   },
   { 
     label: "투표하기", 

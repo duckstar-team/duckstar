@@ -13,6 +13,12 @@ export default function MigrationToast() {
 
 
   useEffect(() => {
+    // 이미 토스트가 표시되었는지 확인
+    const toastAlreadyShown = sessionStorage.getItem('migration_toast_shown');
+    if (toastAlreadyShown === 'true') {
+      return; // 이미 표시되었으면 더 이상 표시하지 않음
+    }
+    
     // 로그인 시점에서 마이그레이션 정보 확인
     // URL 파라미터나 세션 스토리지에서 마이그레이션 완료 정보 확인
     const migrationCompleted = searchParams.get('migration_completed');
@@ -41,6 +47,9 @@ export default function MigrationToast() {
     
     if (migrationCompleted === 'true' || sessionMigrationCompleted === 'true') {
       setShowToast(true);
+      
+      // 토스트가 표시되었음을 기록
+      sessionStorage.setItem('migration_toast_shown', 'true');
       
       // 6초 후 자동으로 토스트 숨기기
       timerRef.current = setTimeout(() => {

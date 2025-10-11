@@ -22,10 +22,7 @@ export default function BannerImage({
         }}
       >
         <img 
-          className="w-full h-auto object-cover"
-          style={{ 
-            transform: 'translateY(-86px)'
-          }}
+          className="w-full h-full object-cover"
           src={src}
           alt={alt}
         />

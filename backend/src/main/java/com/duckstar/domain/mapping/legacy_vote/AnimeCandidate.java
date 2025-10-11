@@ -1,7 +1,6 @@
-package com.duckstar.domain.mapping;
+package com.duckstar.domain.mapping.legacy_vote;
 
 import com.duckstar.domain.Anime;
-import com.duckstar.domain.vo.RankInfo;
 import com.duckstar.domain.Week;
 import com.duckstar.domain.common.BaseEntity;
 import jakarta.persistence.*;
@@ -34,14 +33,14 @@ public class AnimeCandidate extends BaseEntity {
     @JoinColumn(name = "anime_id", nullable = false)
     private Anime anime;
 
-    @Column(nullable = false)
-    private Integer votes = 0;  // bonus 점수는 소수점 탈락
-
-    private Integer voterCount = 0;
+    private Integer voterCount = 0;  // 투표 수 (또는 투표자 수)
 
     private Integer maleCount = 0;
 
     private Integer femaleCount = 0;
+
+    // [단일 방식]
+    private Integer votes = 0;  // [단일 투표 모드] bonus 점수는 소수점 탈락
 
     @Embedded
     private RankInfo rankInfo;
@@ -65,6 +64,6 @@ public class AnimeCandidate extends BaseEntity {
 
     public void setRankInfo(RankInfo lastRankInfo, RankInfo rankInfo) {
         this.rankInfo = rankInfo;
-        this.anime.updateRankInfo(lastRankInfo, rankInfo);
+        this.anime.updateRankInfo_legacy(lastRankInfo, rankInfo);
     }
 }

@@ -268,6 +268,22 @@ export async function revoteAnime(submissionId: number, voteData: Record<string,
   });
 }
 
+// 별점 투표 API
+export async function submitStarVote(episodeId: number, starScore: number) {
+  return apiCall<ApiResponseStarInfoDto>('/api/v1/vote/star', {
+    method: 'POST',
+    body: JSON.stringify({
+      episodeId,
+      starScore
+    }),
+  });
+}
+
+// 별점 투표 후보자 조회 API
+export async function getStarCandidates() {
+  return apiCall<ApiResponseStarCandidateListDto>('/api/v1/vote/star');
+}
+
 // Admin API functions
 export async function createAnime(animeData: Record<string, unknown>) {
   return apiCall(ENDPOINTS.admin.animes, {

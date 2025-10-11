@@ -51,7 +51,8 @@ export async function getScheduleByQuarter(
  */
 export async function getCurrentSchedule(): Promise<AnimePreviewListDto> {
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/search`, {
+    // '이번 주' 메뉴에서는 offset을 00시 00분으로 설정
+    const response = await fetch(`${BASE_URL}/api/v1/search?hour=0&minute=0`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

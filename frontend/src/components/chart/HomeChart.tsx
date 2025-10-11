@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import HomeRankInfo from './HomeRankInfo';
-import { DuckstarRankPreviewDto } from '@/types/api';
+import { DuckstarRankPreviewDto, WeekDto } from '@/types/api';
 
 interface HomeChartProps {
   duckstarRankPreviews: DuckstarRankPreviewDto[];
-  isPrepared?: boolean;
+  selectedWeek?: WeekDto | null;
   className?: string;
 }
 
@@ -44,11 +44,20 @@ function getMedalType(rank: number): "Gold" | "Silver" | "Bronze" | "None" {
   return "None";
 }
 
-export default function HomeChart({ duckstarRankPreviews, isPrepared = true, className = "" }: HomeChartProps) {
+export default function HomeChart({ duckstarRankPreviews, selectedWeek, className = "" }: HomeChartProps) {
   const router = useRouter();
 
   const handleScheduleClick = () => {
     router.push('/search');
+  };
+
+  const handleMoreClick = () => {
+    // 현재 선택된 주차 정보를 사용하여 차트 페이지로 이동
+    if (selectedWeek) {
+      router.push(`/chart/${selectedWeek.year}/${selectedWeek.quarter}/${selectedWeek.week}`);
+    } else {
+      router.push('/chart');
+    }
   };
 
   return (
@@ -78,16 +87,18 @@ export default function HomeChart({ duckstarRankPreviews, isPrepared = true, cla
           </div>
         ) : (
           <>
-            <div className={`space-y-4 ${!isPrepared ? 'pointer-events-none' : ''}`}>
+            <div className="space-y-4">
               {duckstarRankPreviews.map((duckstarRankPreview, index) => {
-            // API 응답 구조: DuckstarRankPreviewDto는 votePercent와 rankPreviewDto를 포함
-            const { votePercent, rankPreviewDto } = duckstarRankPreview;
+            // API 응답 구조: DuckstarRankPreviewDto는 votePercent, averageRating, voterCount와 rankPreviewDto를 포함
+            const { votePercent, averageRating, voterCount, rankPreviewDto } = duckstarRankPreview;
             const { rank, rankDiff, consecutiveWeeksAtSameRank, title, subTitle, mainThumbnailUrl, type, contentId } = rankPreviewDto;
             
             // null/undefined 체크
             const safeRankDiff = rankDiff ?? 0;
             const safeConsecutiveWeeks = consecutiveWeeksAtSameRank ?? 0;
             const safeVotePercent = votePercent ?? 0;
+            const safeAverageRating = averageRating ?? 0;
+            const safeVoterCount = voterCount ?? 0;
             
             return (
               <HomeRankInfo 
@@ -98,18 +109,20 @@ export default function HomeChart({ duckstarRankPreviews, isPrepared = true, cla
                 title={title}
                 studio={subTitle}
                 image={mainThumbnailUrl}
-                percentage={isPrepared ? safeVotePercent.toFixed(2) : ""}
+                percentage={safeVotePercent.toFixed(2)}
+                averageRating={safeAverageRating * 2} // 5점 만점을 10점 만점으로 변환
+                voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
                 medal={getMedalType(rank)}
                 type={type}
                 contentId={contentId}
-                isPrepared={isPrepared}
+                isPrepared={true}
               />
             );
           })}
             </div>
             
-            {/* 준비되지 않음 오버레이 */}
-            {!isPrepared && (
+            {/* 준비되지 않음 오버레이 - 제거됨 */}
+            {false && (
               <div className="absolute inset-0 flex flex-col items-center justify-start pt-20 bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-[2px] rounded-xl">
                 <div 
                   className="text-6xl mb-4 opacity-100" 
@@ -138,6 +151,17 @@ export default function HomeChart({ duckstarRankPreviews, isPrepared = true, cla
             )}
           </>
         )}
+        
+        {/* 더보기 버튼 */}
+        <div className="flex justify-end mt-4">
+          <button 
+            onClick={handleMoreClick}
+            className="text-gray-600 hover:text-gray-800 transition-colors duration-200 cursor-pointer" 
+            style={{ fontFamily: 'Pretendard', fontSize: '20px', fontWeight: '400' }}
+          >
+            더보기
+          </button>
+        </div>
       </div>
     </div>
     </>

@@ -15,7 +15,7 @@ public interface AnimeCandidateRepositoryCustom {
 
     List<AnimeCandidateDto> getAnimeCandidateDtosByWeekId(Long weekId);
 
-    List<AnimeRankDto> getAnimeRankDtosByWeekId(Long weekId, Pageable pageable);
+    List<AnimeRank_legacyDto> getAnimeRankDtosByWeekId(Long weekId, Pageable pageable);
 
     List<RackUnitDto> getRackUnitDtosByAnimeId(Long animeId);
 }

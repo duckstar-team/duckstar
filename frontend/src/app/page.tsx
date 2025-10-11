@@ -8,7 +8,7 @@ import HeaderList from '@/components/header/HeaderList';
 import HomeChart from '@/components/chart/HomeChart';
 import ChartHeader from '@/components/header/ChartHeader';
 import RightHeaderList from '@/components/header/RightHeaderList';
-import AbroadRankInfo from '@/components/chart/AbroadRankInfo';
+import RightPanel from '@/components/chart/RightPanel';
 import { homeApi } from '@/api/home';
 import { HomeDto, WeekDto, RankPreviewDto, DuckstarRankPreviewDto } from '@/types/api';
 import { useSimpleScrollRestoration } from '@/hooks/useSimpleScrollRestoration';
@@ -55,7 +55,6 @@ export default function Home() {
   const [rightPanelLoading, setRightPanelLoading] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
   const [leftPanelData, setLeftPanelData] = useState<DuckstarRankPreviewDto[]>([]);
-  const [isLeftPanelPrepared, setIsLeftPanelPrepared] = useState<boolean>(true);
   const [leftPanelLoading, setLeftPanelLoading] = useState(false);
   const [leftPanelError, setLeftPanelError] = useState<string | null>(null);
   const [anilabData, setAnilabData] = useState<RankPreviewDto[]>([]);
@@ -144,14 +143,27 @@ export default function Home() {
       
       // Left Panel 초기 데이터 설정
       const initialDuckstarData = homeData.result.weeklyTopDto.duckstarRankPreviews || [];
-      const initialIsPrepared = homeData.result.weeklyTopDto.isPrepared;
       
       setLeftPanelData(initialDuckstarData); // Left Panel 초기값 설정
-      setIsLeftPanelPrepared(initialIsPrepared); // Left Panel 준비 상태 초기값 설정
       
       
-      // 초기 Right Panel 데이터 설정 (기본적으로 Anilab)
-      setRightPanelData(initialAnilabData);
+      // 초기 Right Panel 데이터 설정 (Anilab만 있으면 Anilab, 둘 다 있으면 Anime Corner 우선)
+      const hasAnilab = initialAnilabData.length > 0;
+      const hasAnimeCorner = initialAnimeCornerData.length > 0;
+      
+      if (hasAnilab && !hasAnimeCorner) {
+        // Anilab만 있는 경우
+        setSelectedRightTab('anilab');
+        setRightPanelData(initialAnilabData);
+      } else if (hasAnimeCorner) {
+        // Anime Corner가 있는 경우 (둘 다 있거나 Anime Corner만 있는 경우)
+        setSelectedRightTab('anime-corner');
+        setRightPanelData(initialAnimeCornerData);
+      } else if (hasAnilab) {
+        // Anilab만 있는 경우 (fallback)
+        setSelectedRightTab('anilab');
+        setRightPanelData(initialAnilabData);
+      }
       
       // 홈 상태 복원 시도
       restoreHomeState();
@@ -375,13 +387,11 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
   // 모든 패널 데이터 업데이트 (리팩토링)
   const updateAllPanelData = async (weeklyTopData: any, week: WeekDto) => {
     const newDuckstarData = weeklyTopData.duckstarRankPreviews || [];
-    const newIsPrepared = weeklyTopData.isPrepared;
     const newAnilabData = weeklyTopData.anilabRankPreviews || [];
     const newAnimeCornerData = weeklyTopData.animeCornerRankPreviews || [];
     
     // 모든 패널 데이터 업데이트
     setLeftPanelData(newDuckstarData);
-    setIsLeftPanelPrepared(newIsPrepared);
     setAnilabData(newAnilabData);
     setAnimeCornerData(newAnimeCornerData);
     
@@ -500,14 +510,14 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
           {/* Left Panel */}
           <div className="flex flex-col items-center gap-4">
             {leftPanelLoading ? (
-              <div className="w-[750px] h-[600px] bg-white rounded-xl border border-[#D1D1D6] p-5">
+              <div className="w-[750px] bg-white rounded-xl border border-[#D1D1D6] p-5">
                 <div className="flex items-center justify-center h-full">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-800"></div>
                   <span className="ml-3 text-gray-600">Left Panel 데이터 로딩 중...</span>
                 </div>
               </div>
             ) : leftPanelError ? (
-              <div className="w-[750px] h-[600px] bg-white rounded-xl border border-[#D1D1D6] p-5">
+              <div className="w-[750px] bg-white rounded-xl border border-[#D1D1D6] p-5">
                 <div className="flex flex-col items-center justify-center h-full">
                   <div className="text-red-500 text-4xl mb-2">⚠️</div>
                   <h3 className="text-lg font-semibold text-red-600 mb-2">데이터 로딩 실패</h3>
@@ -521,126 +531,22 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
                 </div>
               </div>
             ) : (
-              <div className="w-[750px] h-[1144px]">
+              <div className="w-[750px]">
                 <HomeChart 
                   duckstarRankPreviews={leftPanelData || []}
-                  isPrepared={isLeftPanelPrepared}
+                  selectedWeek={selectedWeek}
                 />
               </div>
             )}
           </div>
           
           {/* Right Panel */}
-          <div className="w-[373px] h-[1144px] bg-white rounded-xl border border-[#D1D1D6]">
-            {/* Right Panel 컨텐츠 */}
-            <div className="flex flex-col">
-              {rightPanelLoading ? (
-                <div className="flex items-center justify-center h-32 p-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-rose-800"></div>
-                </div>
-              ) : rightPanelData.length > 0 ? (
-                // Right Panel 데이터 표시 - 스크롤 제거, 자연스러운 높이
-                <div className="pl-6.5 pt-2">
-                  {/* 정보 아이콘 */}
-                  <div className="mb-1 flex items-center justify-end gap-2 pr-3">
-                    <div className="relative group">
-                      <a 
-                        href={selectedRightTab === 'anilab' 
-                          ? 'https://anilabb.com/rate/anime' 
-                          : 'https://animecorner.me/category/anime-corner/rankings/anime-of-the-week/'
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-4 h-4 flex-shrink-0 cursor-pointer block"
-                      >
-                        <img 
-                          src="/icons/info.svg" 
-                          alt="정보" 
-                          className="w-full h-full object-contain"
-                        />
-                      </a>
-                      {/* 툴팁 */}
-                      <div className="absolute top-full -right-10 -mt-10 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-pre text-right z-[9999]">
-                          {selectedRightTab === 'anilab' 
-                            ? 'Anilab은 일본의 투표 사이트입니다.\n(결과 공개: 일 22시) '
-                            : 'Anime Corner은 미국의 투표 사이트입니다.\n(결과 공개: 금 22시) '
-                          }
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                  {rightPanelData.map((rankPreview, index) => {
-                    // null/undefined 체크
-                    const safeRankDiff = rankPreview.rankDiff ?? 0;
-                    const safeConsecutiveWeeks = rankPreview.consecutiveWeeksAtSameRank ?? 0;
-                    
-                    // anilab 데이터인지 확인하여 NEW 처리
-                    const isAnilab = selectedRightTab === 'anilab';
-                    const finalRankDiffType = getRankDiffType(safeRankDiff, safeConsecutiveWeeks, isAnilab);
-                    
-                    return (
-                      <AbroadRankInfo 
-                        key={rankPreview.contentId || `abroad-${index}`}
-                        rank={rankPreview.rank}
-                        rankDiff={finalRankDiffType}
-                        rankDiffValue={finalRankDiffType === "same-rank" ? safeConsecutiveWeeks.toString() : safeRankDiff.toString()}
-                        title={rankPreview.title}
-                        studio={rankPreview.subTitle}
-                        image={rankPreview.mainThumbnailUrl}
-                        type={rankPreview.type}
-                        contentId={rankPreview.contentId}
-                      />
-                    );
-                  })}
-                  </div>
-                </div>
-              ) : (
-                // 빈 상태 UI - 스켈레톤 UI + 블러 처리 + 로딩 메시지
-                <div className="relative min-h-[1142px] pt-21">
-                  {/* 스켈레톤 UI (뒷배경) */}
-                  <div className="absolute inset-0 p-4 space-y-4">
-                    {[...Array(8)].map((_, index) => (
-                      <div key={index} className="w-full h-24 bg-gray-10 rounded-xl opacity-50">
-                        <div className="flex items-center justify-center h-full p-4 space-x-4">
-                          <div className="w-5 h-5 bg-gray-100 rounded"></div>
-                          <div className="w-14 h-20 bg-gray-100 rounded-lg"></div>
-                          <div className="flex-1 space-y-2">
-                            <div className="h-4 bg-gray-100 rounded w-3/4"></div>
-                            <div className="h-3 bg-gray-100 rounded w-1/2"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* 블러 처리 레이어 */}
-                  <div className="absolute inset-0 rounded-xl"></div>
-                  
-                  {/* 로딩 메시지 (앞배경) */}
-                  <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                    {selectedRightTab === 'anilab' ? (
-                      <>
-                        <div className="text-gray-400 text-6xl mb-4 opacity-90">🇯🇵</div>
-                        <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
-                        <p className="text-sm text-gray-500 text-center">
-                          Anilab 순위는 일 22:00 공개
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-gray-400 text-6xl mb-4 opacity-90">🌍</div>
-                        <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
-                        <p className="text-sm text-gray-500 text-center">
-                          해당 주차의 해외 순위 데이터가<br />
-                          아직 준비되지 않았습니다.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <RightPanel 
+            rightPanelData={rightPanelData}
+            selectedRightTab={selectedRightTab}
+            rightPanelLoading={rightPanelLoading}
+            selectedWeek={selectedWeek}
+          />
         </div>
       </div>
     </div>

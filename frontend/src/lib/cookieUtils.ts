@@ -24,7 +24,7 @@ function setCookie(name: string, value: string, days: number) {
 }
 
 // 쿠키 읽기 함수
-function getCookie(name: string): string | null {
+export function getCookie(name: string): string | null {
   const nameEQ = name + "=";
   const ca = document.cookie.split(';');
 

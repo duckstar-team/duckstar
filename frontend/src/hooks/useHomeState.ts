@@ -20,12 +20,11 @@ export function useHomeState() {
     data: [] as DuckstarRankPreviewDto[],
     loading: false,
     error: null as string | null,
-    isPrepared: true,
   });
 
   // 탭 상태 그룹
   const [tabState, setTabState] = useState({
-    selectedRightTab: 'anime-corner' as 'anilab' | 'anime-corner',
+    selectedRightTab: 'anilab' as 'anilab' | 'anime-corner', // Anilab을 기본값으로 변경
     selectedWeek: null as WeekDto | null,
   });
 
@@ -52,11 +51,10 @@ export function useHomeState() {
   }, []);
 
   // Left Panel 데이터 업데이트
-  const updateLeftPanelData = useCallback((data: DuckstarRankPreviewDto[], isPrepared: boolean) => {
+  const updateLeftPanelData = useCallback((data: DuckstarRankPreviewDto[]) => {
     setLeftPanelState(prev => ({ 
       ...prev, 
-      data, 
-      isPrepared 
+      data
     }));
   }, []);
 

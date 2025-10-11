@@ -22,7 +22,7 @@ export default function AbroadRankInfo({
   rankDiffValue = "NEW",
   title = "タコピーの原罪",
   studio = "ENISHIYA",
-  image = "https://placehold.co/60x80",
+  image = "",
   type = "ANIME",
   contentId = 1,
   className = ""

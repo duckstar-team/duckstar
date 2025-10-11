@@ -53,8 +53,6 @@ export default function RootLayout({
         <meta name="viewport" content="width=1200, initial-scale=1.0, user-scalable=no" />
         
         {/* 투표 이미지 프리로딩 */}
-        <link rel="preload" href="/voted-normal.svg" as="image" type="image/svg+xml" />
-        <link rel="preload" href="/voted-bonus.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/voted-normal-2025-autumn.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/voted-bonus-2025-autumn.svg" as="image" type="image/svg+xml" />
       </head>
