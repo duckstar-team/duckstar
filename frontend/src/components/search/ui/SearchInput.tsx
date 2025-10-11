@@ -36,7 +36,9 @@ export default function SearchInput({ value, onChange, onSearch, placeholder = "
     
     // 입력 필드의 실제 너비 계산 (패딩, 마진 제외)
     const inputRect = input.getBoundingClientRect();
-    const inputWidth = inputRect.width - 32 - 32; // 좌우 패딩 제외 (ml-8 + pr-px)
+    // 반응형 패딩에 맞게 계산 (pl-3 sm:pl-4 md:pl-[25px] + pr-px)
+    const leftPadding = window.innerWidth >= 768 ? 25 : window.innerWidth >= 640 ? 16 : 12;
+    const inputWidth = inputRect.width - leftPadding - 1; // 좌우 패딩 제외
     
     // 측정용 span에 동일한 스타일 적용
     measure.style.fontSize = window.getComputedStyle(input).fontSize;
@@ -63,14 +65,14 @@ export default function SearchInput({ value, onChange, onSearch, placeholder = "
 
   return (
     <div className={cn("bg-white relative rounded-[8px] size-full", className)}>
-      <div className="box-border content-stretch flex items-center justify-start overflow-clip pl-[25px] pr-px py-[13px] relative size-full">
+      <div className="box-border content-stretch flex items-center justify-start overflow-clip pl-3 sm:pl-4 md:pl-[25px] pr-px py-[13px] relative size-full">
         {/* 돋보기 아이콘 버튼 */}
         <button 
           onClick={handleSearchClick}
-          className="bg-[#fff8e9] box-border content-stretch flex items-center justify-center p-px relative rounded-[8px] shrink-0 size-9 cursor-pointer hover:bg-[#fff0d0] transition-colors"
+          className="bg-[#fff8e9] box-border content-stretch flex items-center justify-center p-px relative rounded-[8px] shrink-0 w-7 h-7 sm:w-8 sm:h-8 md:size-9 cursor-pointer hover:bg-[#fff0d0] transition-colors"
         >
           <div aria-hidden="true" className="absolute border border-[#ffb310] border-solid inset-0 pointer-events-none rounded-[8px]" />
-          <div className="relative shrink-0 size-[17.59px]">
+          <div className="relative shrink-0 w-4 h-4 sm:w-[15px] sm:h-[15px] md:size-[17.59px]">
             {/* 돋보기 아이콘 SVG */}
             <img 
               src="/icons/searchSection-search-icon.svg" 
@@ -88,7 +90,7 @@ export default function SearchInput({ value, onChange, onSearch, placeholder = "
           onChange={(e) => onChange(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder={truncatedPlaceholder}
-          className="flex-1 ml-8 bg-transparent border-none outline-none text-gray-900 placeholder-[#9ca3af] text-base font-['Pretendard'] font-normal"
+          className="flex-1 ml-2 sm:ml-4 md:ml-8 bg-transparent border-none outline-none text-gray-900 placeholder-[#9ca3af] text-sm sm:text-base font-['Pretendard'] font-normal"
           autoComplete="off"
           spellCheck="false"
         />

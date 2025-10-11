@@ -44,14 +44,27 @@ const getDays = (isThisWeek: boolean): DayOfWeek[] => {
   }
 };
 
-const getDayWidth = (day: DayOfWeek): string => {
-  switch (day) {
-    case '곧 시작':
-      return 'w-[120px] md:w-[80px] lg:w-[90px] xl:w-[100px] 2xl:w-[120px]';
-    case '특별편성 및 극장판':
-      return 'w-[175px] md:w-[120px] lg:w-[130px] xl:w-[140px] 2xl:w-[175px]';
-    default:
-      return 'w-[115px] md:w-[70px] lg:w-[80px] xl:w-[90px] xl:w-[90px] 2xl:w-[115px]';
+const getDayWidth = (day: DayOfWeek, isSticky?: boolean): string => {
+  if (isSticky) {
+    // 스티키 메뉴에서는 더 작은 크기 사용
+    switch (day) {
+      case '곧 시작':
+        return 'w-[70px] md:w-[60px] lg:w-[65px] xl:w-[70px] 2xl:w-[75px]';
+      case '특별편성 및 극장판':
+        return 'w-[140px] md:w-[100px] lg:w-[120px] xl:w-[120px] 2xl:w-[140px]';
+      default:
+        return 'w-[60px] md:w-[55px] lg:w-[60px] xl:w-[65px] 2xl:w-[70px]';
+    }
+  } else {
+    // 일반 메뉴에서는 큰 크기 사용
+    switch (day) {
+      case '곧 시작':
+        return 'w-[120px] md:w-[80px] lg:w-[90px] xl:w-[100px] 2xl:w-[120px]';
+      case '특별편성 및 극장판':
+        return 'w-[175px] md:w-[120px] lg:w-[130px] xl:w-[140px] 2xl:w-[175px]';
+      default:
+        return 'w-[115px] md:w-[70px] lg:w-[80px] xl:w-[90px] xl:w-[90px] 2xl:w-[100px]';
+    }
   }
 };
 
@@ -103,6 +116,16 @@ export default function DaySelection({
     };
   }, []);
 
+  // 스티키 상태 변화 감지 및 네비게이션 바 업데이트
+  useEffect(() => {
+    // 스티키 상태가 변경될 때 네비게이션 바 위치 재계산
+    const timer = setTimeout(() => {
+      updateNavigationBar(selectedDay, true);
+    }, 100); // DOM 업데이트 후 실행
+
+    return () => clearTimeout(timer);
+  }, [isSticky, selectedDay]);
+
   // 네비게이션 바 위치 업데이트
   const updateNavigationBar = (day: DayOfWeek | null, immediate = false) => {
     if (!day || !containerRef.current) {
@@ -120,18 +143,22 @@ export default function DaySelection({
 
     const tabElement = tabRefs.current[day];
     const containerElement = containerRef.current;
-
-    const tabRect = tabElement.getBoundingClientRect();
-    const containerRect = containerElement.getBoundingClientRect();
-
-    const left = tabRect.left - containerRect.left;
-    const width = tabRect.width;
     
-    setSelectedBarStyle({
-      width: `${width}px`,
-      left: `${left}px`,
-      opacity: 1,
-      transition: immediate ? 'none' : 'all 0.3s ease-out'
+    // DOM이 완전히 렌더링된 후 위치 계산
+    requestAnimationFrame(() => {
+      const tabRect = tabElement.getBoundingClientRect();
+      const containerRect = containerElement.getBoundingClientRect();
+      
+      // 컨테이너의 왼쪽 경계를 기준으로 한 상대적 위치 계산
+      const left = tabRect.left - containerRect.left;
+      const width = tabRect.width;
+      
+      setSelectedBarStyle({
+        width: `${width}px`,
+        left: `${left}px`,
+        opacity: 1,
+        transition: immediate ? 'none' : 'all 0.3s ease-out'
+      });
     });
   };
 
@@ -145,9 +172,11 @@ export default function DaySelection({
     const tabElement = tabRefs.current[day];
     const containerElement = containerRef.current;
     
+    // getBoundingClientRect를 사용하되, 컨테이너 기준으로 정확히 계산
     const tabRect = tabElement.getBoundingClientRect();
     const containerRect = containerElement.getBoundingClientRect();
     
+    // 컨테이너의 왼쪽 경계를 기준으로 한 상대적 위치 계산
     const left = tabRect.left - containerRect.left;
     const width = tabRect.width;
     
@@ -287,19 +316,24 @@ export default function DaySelection({
 
   return (
     <>
-      {/* 모바일: 드롭다운 */}
+      {/* 모바일: 두 버튼을 같은 줄에 배치 */}
       <div className="md:hidden">
-        <div className="relative flex justify-end" ref={dropdownRef}>
-          <div className="w-64">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#990033] focus:border-transparent transition-all duration-200"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-medium text-gray-900">{selectedDay}</span>
+        <div className="flex gap-2 items-center justify-between w-full max-w-[320px] mx-auto" ref={dropdownRef}>
+          {/* 요일 선택 드롭다운 버튼 */}
+          <div className="relative flex-1">
+            <div className="w-full">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className={`w-full bg-white box-border content-stretch flex gap-2 items-center justify-center pr-[5px] px-[8px] sm:px-[10px] py-1.5 relative rounded-[12px] hover:bg-gray-50 transition-colors duration-200 cursor-pointer`}
+              >
+                <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[16px] sm:text-[18px] text-black flex-1 text-left">
+                  <p className="leading-[20px] sm:leading-[22px] truncate">
+                    {selectedDay}
+                  </p>
+                </div>
                 <svg 
                   className={cn(
-                    "w-5 h-5 text-gray-400 transition-transform duration-200",
+                    `w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ml-1 flex-shrink-0`,
                     isDropdownOpen ? "rotate-180" : ""
                   )} 
                   fill="none" 
@@ -308,45 +342,45 @@ export default function DaySelection({
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              </div>
-            </button>
-            
-            {/* 드롭다운 메뉴 */}
-            {isDropdownOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-64">
-                {getDays(isThisWeek || false).map((day) => (
-                  <button
-                    key={day}
-                                  onClick={() => {
-                onDaySelect(day);
-                setIsDropdownOpen(false);
-                // 스크롤 기능 추가
-                if (onScrollToSection) {
-                  const sectionId = day === '곧 시작' ? 'upcoming' : 
-                                   day === '특별편성 및 극장판' ? 'special' : 
-                                   day === '일' ? 'sun' : 
-                                   day === '월' ? 'mon' : 
-                                   day === '화' ? 'tue' : 
-                                   day === '수' ? 'wed' : 
-                                   day === '목' ? 'thu' : 
-                                   day === '금' ? 'fri' : 
-                                   day === '토' ? 'sat' : 'upcoming';
-                  onScrollToSection(sectionId);
-                }
-              }}
-                    className={cn(
-                      "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer",
-                      "border-b border-gray-100 last:border-b-0",
-                      selectedDay === day
-                        ? "bg-[#990033] text-white font-medium"
-                        : "text-gray-700 hover:text-gray-900"
-                    )}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            )}
+              </button>
+              
+              {/* 드롭다운 메뉴 */}
+              {isDropdownOpen && (
+                <div className={`absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-full ${isSticky ? 'min-w-[160px] max-w-[200px]' : 'min-w-[200px] max-w-[280px] sm:max-w-[320px]'}`}>
+                  {getDays(isThisWeek || false).map((day) => (
+                    <button
+                      key={day}
+                      onClick={() => {
+                        onDaySelect(day);
+                        setIsDropdownOpen(false);
+                        // 스크롤 기능 추가
+                        if (onScrollToSection) {
+                          const sectionId = day === '곧 시작' ? 'upcoming' : 
+                                           day === '특별편성 및 극장판' ? 'special' : 
+                                           day === '일' ? 'sun' : 
+                                           day === '월' ? 'mon' : 
+                                           day === '화' ? 'tue' : 
+                                           day === '수' ? 'wed' : 
+                                           day === '목' ? 'thu' : 
+                                           day === '금' ? 'fri' : 
+                                           day === '토' ? 'sat' : 'upcoming';
+                          onScrollToSection(sectionId);
+                        }
+                      }}
+                      className={cn(
+                        `w-full px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer`,
+                        `border-b border-gray-100 last:border-b-0 text-sm sm:text-base font-['Pretendard']`,
+                        selectedDay === day
+                          ? "bg-[#990033] text-white font-medium"
+                          : "text-gray-700 hover:text-gray-900"
+                      )}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -356,9 +390,14 @@ export default function DaySelection({
         ref={containerRef}
         data-day-selection
         className={cn(
-          "relative hidden md:flex items-center justify-start gap-1",
+          "relative hidden md:flex items-center justify-center gap-1 lg:gap-2 lg:w-[1050px] w-full overflow-x-auto",
           className
         )}
+        style={{ 
+          scrollbarWidth: 'none', 
+          msOverflowStyle: 'none',
+          WebkitScrollbar: { display: 'none' }
+        }}
         onMouseLeave={handleMouseLeave}
       >
 
@@ -389,7 +428,7 @@ export default function DaySelection({
           const isSelected = selectedDay === day;
           const isHovered = hoveredDay === day;
           const isEmpty = emptyDays ? (Array.isArray(emptyDays) ? emptyDays.includes(day) : emptyDays.has(day)) : false;
-          const dayWidth = getDayWidth(day);
+          const dayWidth = getDayWidth(day, isSticky);
           
           return (
             <div key={day} className="relative">

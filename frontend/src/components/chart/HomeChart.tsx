@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import HomeRankInfo from './HomeRankInfo';
+import HomeRankInfoMobile from './HomeRankInfoMobile';
 import { DuckstarRankPreviewDto, WeekDto } from '@/types/api';
 
 interface HomeChartProps {
@@ -72,7 +73,7 @@ export default function HomeChart({ duckstarRankPreviews, selectedWeek, classNam
           }
         }
       `}</style>
-    <div className={`w-[750px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
+    <div className={`w-full xl:w-[750px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
       {/* 차트 컨텐츠 */}
       <div className="p-5 relative">
         {duckstarRankPreviews.length === 0 ? (
@@ -87,7 +88,7 @@ export default function HomeChart({ duckstarRankPreviews, selectedWeek, classNam
           </div>
         ) : (
           <>
-            <div className="space-y-4">
+            <div className="space-y-4 w-full">
               {duckstarRankPreviews.map((duckstarRankPreview, index) => {
             // API 응답 구조: DuckstarRankPreviewDto는 votePercent, averageRating, voterCount와 rankPreviewDto를 포함
             const { votePercent, averageRating, voterCount, rankPreviewDto } = duckstarRankPreview;
@@ -101,22 +102,44 @@ export default function HomeChart({ duckstarRankPreviews, selectedWeek, classNam
             const safeVoterCount = voterCount ?? 0;
             
             return (
-              <HomeRankInfo 
-                key={contentId || `rank-${index}`}
-                rank={rank}
-                rankDiff={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false)}
-                rankDiffValue={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false) === "same-rank" ? safeConsecutiveWeeks.toString() : safeRankDiff.toString()}
-                title={title}
-                studio={subTitle}
-                image={mainThumbnailUrl}
-                percentage={safeVotePercent.toFixed(2)}
-                averageRating={safeAverageRating * 2} // 5점 만점을 10점 만점으로 변환
-                voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
-                medal={getMedalType(rank)}
-                type={type}
-                contentId={contentId}
-                isPrepared={true}
-              />
+              <div key={`rank-${contentId || index}`}>
+                {/* 데스크톱용 (1024px 이상) */}
+                <div className="hidden xl:block">
+                  <HomeRankInfo 
+                    rank={rank}
+                    rankDiff={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false)}
+                    rankDiffValue={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false) === "same-rank" ? safeConsecutiveWeeks.toString() : safeRankDiff.toString()}
+                    title={title}
+                    studio={subTitle}
+                    image={mainThumbnailUrl}
+                    percentage={safeVotePercent.toFixed(2)}
+                    averageRating={safeAverageRating * 2} // 5점 만점을 10점 만점으로 변환
+                    voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
+                    medal={getMedalType(rank)}
+                    type={type}
+                    contentId={contentId}
+                    isPrepared={true}
+                  />
+                </div>
+                
+                {/* 모바일용 (1024px 미만) */}
+                <div className="xl:hidden">
+                  <HomeRankInfoMobile 
+                    rank={rank}
+                    rankDiff={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false)}
+                    rankDiffValue={getRankDiffType(safeRankDiff, safeConsecutiveWeeks, false) === "same-rank" ? safeConsecutiveWeeks.toString() : safeRankDiff.toString()}
+                    title={title}
+                    studio={subTitle}
+                    image={mainThumbnailUrl}
+                    percentage={safeVotePercent.toFixed(2)}
+                    averageRating={safeAverageRating * 2} // 5점 만점을 10점 만점으로 변환
+                    voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
+                    medal={getMedalType(rank)}
+                    type={type}
+                    contentId={contentId}
+                  />
+                </div>
+              </div>
             );
           })}
             </div>
@@ -156,8 +179,7 @@ export default function HomeChart({ duckstarRankPreviews, selectedWeek, classNam
         <div className="flex justify-end mt-4">
           <button 
             onClick={handleMoreClick}
-            className="text-gray-600 hover:text-gray-800 transition-colors duration-200 cursor-pointer" 
-            style={{ fontFamily: 'Pretendard', fontSize: '20px', fontWeight: '400' }}
+            className="text-gray-600 hover:text-gray-800 transition-colors duration-200 cursor-pointer text-sm sm:text-base md:text-lg font-normal font-['Pretendard']" 
           >
             더보기
           </button>

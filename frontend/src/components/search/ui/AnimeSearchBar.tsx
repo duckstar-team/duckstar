@@ -26,8 +26,8 @@ export default function AnimeSearchBar({
       <div className="w-full bg-white border-b border-[#dadce0] relative">
         <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex gap-5 items-center justify-between">
-            {/* 알림 버튼 */}
-            <div className="flex items-center" data-name="notification">
+            {/* 알림 버튼 - 데스크톱에서만 표시 */}
+            <div className="hidden md:flex items-center" data-name="notification">
               <div className="bg-[#f1f2f3] flex h-9 items-center justify-center pl-2 pr-5 py-0 rounded-[8px]" data-name="Background">
                 <div className="flex gap-2.5 items-center justify-start px-2.5 py-0 w-[34px]">
                   <div className="h-3 w-3.5 relative" data-name="mail-chat-bubble-typing-square">

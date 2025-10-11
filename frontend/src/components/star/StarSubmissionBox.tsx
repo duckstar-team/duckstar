@@ -55,7 +55,10 @@ export default function StarSubmissionBox({
       {/* 닫기 버튼 (submitted 상태에서만 표시) */}
       {onCloseClick && (
         <button
-          onClick={onCloseClick}
+          onClick={(e) => {
+            e.stopPropagation(); // 이벤트 버블링 방지
+            onCloseClick(e);
+          }}
           className="absolute -top-[1px] -left-[12px] z-20 w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-white/20 rounded transition-colors duration-200"
           aria-label="닫기"
         >
@@ -118,7 +121,7 @@ export default function StarSubmissionBox({
           participantCount={participantCount}
           distribution={distribution}
           onEditClick={onEditClick}
-          onCloseClick={onCloseClick}
+          onClose={onCloseClick}
         />
       )}
     </div>

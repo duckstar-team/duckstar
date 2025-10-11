@@ -2,8 +2,8 @@
 
 import type { NextPage } from "next";
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
 import LoginButton from './common/LoginButton';
 import { useAuth } from '../context/AuthContext';
 import { scrollToTop } from '../utils/scrollUtils';
@@ -15,13 +15,25 @@ export type HeaderType = {
 const Header: NextPage<HeaderType> = ({ className = "" }) => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
   
   // 덕스타 로고 클릭 시 스크롤 탑으로 이동
-  const handleLogoClick = () => {
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     sessionStorage.setItem('logo-navigation', 'true');
     sessionStorage.setItem('home-scroll-top', 'true');
     scrollToTop();
+    
+    // 모바일에서 홈으로 이동 시 페이지 새로고침으로 레이아웃 전환
+    if (window.innerWidth < 768) {
+      window.location.href = '/';
+    } else {
+      router.push('/');
+    }
   };
 
   // 검색 실행
@@ -44,15 +56,91 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
     }
   };
   
-  return (
-    <header
-      className={`w-full h-[60px] relative border-b border-[#DADCE0] backdrop-blur-[6px] ${className}`}
-    >
-      {/* Background Layer */}
-      <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
+  // 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
       
+      // 사이드바 메뉴 영역 클릭인지 확인 (메뉴 항목, 사이드바 컨테이너, 오버레이 제외)
+      if (target.closest('[data-mobile-sidebar]') || 
+          target.closest('[data-menu-item]') ||
+          target.closest('[data-sidebar-container]')) {
+        return; // 사이드바 관련 클릭이면 무시
+      }
+      
+      if (menuContainerRef.current && !menuContainerRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      closeMenu();
+    } else {
+      setIsMenuOpen(true);
+      setIsClosing(false);
+    }
+  };
+  
+  const closeMenu = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsMenuOpen(false);
+      setIsClosing(false);
+    }, 300); // 애니메이션 시간과 동일
+  };
+  
+  const handleNavClick = (href: string) => {
+    // 메뉴 즉시 닫기
+    setIsMenuOpen(false);
+    setIsClosing(false);
+    // 페이지 이동
+    router.push(href);
+  };
+  
+  return (
+    <>
+
+      <header
+        className={`w-full h-[60px] relative border-b border-[#DADCE0] backdrop-blur-[6px] ${className}`}
+      >
+        {/* Background Layer */}
+        <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
+        
+        {/* Hamburger - vote and search pages mobile only, placed to the left of the logo */}
+        {(pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/')) && (
+          <div
+            ref={menuContainerRef}
+            className="md:hidden absolute top-1/2 -translate-y-1/2 left-1 z-10"
+          >
+            <button
+              type="button"
+              aria-label="Open menu"
+              aria-expanded={isMenuOpen}
+              onClick={toggleMenu}
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/80 backdrop-blur-[12px]"
+            >
+              <img
+                src="/icons/mobile-hamburger.svg"
+                alt="Menu"
+                className="w-5 h-5 object-contain"
+              />
+            </button>
+          </div>
+        )}
+
       {/* Logo */}
-      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-0 md:left-[25px] top-0 absolute z-10 cursor-pointer">
+      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-[50px] sm:left-[58px] md:left-[25px] top-0 absolute z-10 cursor-pointer">
         <img
           src="/logo.svg"
           alt="Duckstar Logo"
@@ -61,7 +149,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       </Link>
       
       {/* Right Section - Search Bar + Login Button */}
-      <div className={`absolute right-0 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
+      <div className={`absolute right-2 sm:right-3 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
         isAuthenticated ? 'gap-7' : 'gap-4'
       }`}>
         {/* Search Bar */}
@@ -100,8 +188,318 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
           />
         </div>
       </div>
-    </header>
-  );
+      
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMenuOpen && (
+        <div 
+          data-mobile-sidebar
+          style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 99999 }}
+        >
+          {/* Overlay background */}
+          <div 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(4px)'
+            }}
+            onClick={closeMenu}
+          />
+          
+          {/* Sidebar menu */}
+          <div 
+            data-sidebar-container
+            suppressHydrationWarning
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '240px',
+              maxWidth: '240px',
+              height: '100%',
+              backgroundColor: '#ffffff',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              transform: isClosing ? 'translateX(-100%)' : 'translateX(0)',
+              transition: 'transform 0.3s ease-out',
+              zIndex: 100000
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '24px', height: '100%' }}>
+              {/* Header with close button */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>메뉴</h2>
+                <button
+                  onClick={closeMenu}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <svg style={{ width: '20px', height: '20px', color: '#6b7280' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Navigation items */}
+              <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  data-menu-item
+                  onClick={() => {
+                    closeMenu();
+                    // 모바일에서 홈으로 이동 시 페이지 새로고침으로 레이아웃 전환
+                    if (window.innerWidth < 768) {
+                      window.location.href = '/';
+                    } else {
+                      router.push('/');
+                    }
+                  }}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: pathname === '/' ? 'linear-gradient(to right, #cb285e, #9c1f49)' : 'transparent',
+                    color: pathname === '/' ? '#ffffff' : '#586672',
+                    fontSize: '16px',
+                    fontWeight: pathname === '/' ? 'bold' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    textDecoration: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/') {
+                      e.currentTarget.style.backgroundColor = '#ffd4e2';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/') {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <img 
+                    src={pathname === '/' ? "/icons/home-active.svg" : "/icons/home-default.svg"}
+                    alt="홈"
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  홈
+                </button>
+                <button 
+                  data-menu-item
+                  onClick={() => {
+                    router.push('/chart');
+                    closeMenu();
+                  }}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: pathname === '/chart' ? 'linear-gradient(to right, #cb285e, #9c1f49)' : 'transparent',
+                    color: pathname === '/chart' ? '#ffffff' : '#586672',
+                    fontSize: '16px',
+                    fontWeight: pathname === '/chart' ? 'bold' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    textDecoration: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/chart') {
+                      e.currentTarget.style.backgroundColor = '#ffd4e2';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/chart') {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <img 
+                    src={pathname === '/chart' ? "/icons/chart-active.svg" : "/icons/chart-default.svg"}
+                    alt="주간 차트"
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  주간 차트
+                </button>
+                <button 
+                  data-menu-item
+                  onClick={() => {
+                    router.push('/vote');
+                    closeMenu();
+                  }}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: pathname === '/vote' ? 'linear-gradient(to right, #cb285e, #9c1f49)' : 'transparent',
+                    color: pathname === '/vote' ? '#ffffff' : '#586672',
+                    fontSize: '16px',
+                    fontWeight: pathname === '/vote' ? 'bold' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    textDecoration: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/vote') {
+                      e.currentTarget.style.backgroundColor = '#ffd4e2';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/vote') {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <img 
+                    src={pathname === '/vote' ? "/icons/vote-active.svg" : "/icons/vote-default.svg"}
+                    alt="투표하기"
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  투표하기
+                </button>
+                <button 
+                  data-menu-item
+                  onClick={() => {
+                    router.push('/search');
+                    closeMenu();
+                  }}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: (pathname === '/search' || pathname.startsWith('/search/')) ? 'linear-gradient(to right, #cb285e, #9c1f49)' : 'transparent',
+                    color: (pathname === '/search' || pathname.startsWith('/search/')) ? '#ffffff' : '#586672',
+                    fontSize: '16px',
+                    fontWeight: (pathname === '/search' || pathname.startsWith('/search/')) ? 'bold' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    textDecoration: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/search' && !pathname.startsWith('/search/')) {
+                      e.currentTarget.style.backgroundColor = '#ffd4e2';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/search' && !pathname.startsWith('/search/')) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <img 
+                    src={(pathname === '/search' || pathname.startsWith('/search/')) ? "/icons/search-active.svg" : "/icons/search-default.svg"}
+                    alt="애니/시간표 검색"
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  <span className="md:hidden">시간표 검색</span>
+                  <span className="hidden md:inline">애니/시간표 검색</span>
+                </button>
+                <button 
+                  data-menu-item
+                  onClick={() => {
+                    router.push('/mypage');
+                    closeMenu();
+                  }}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: pathname === '/mypage' ? 'linear-gradient(to right, #cb285e, #9c1f49)' : 'transparent',
+                    color: pathname === '/mypage' ? '#ffffff' : '#9ca3af',
+                    fontSize: '16px',
+                    fontWeight: pathname === '/mypage' ? 'bold' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    textDecoration: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    textAlign: 'left',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/mypage') {
+                      e.currentTarget.style.backgroundColor = '#ffd4e2';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/mypage') {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <img 
+                    src={pathname === '/mypage' ? "/icons/mypage-active.svg" : "/icons/mypage-default.svg"}
+                    alt="마이페이지"
+                    style={{ 
+                      width: '20px', 
+                      height: '20px',
+                      opacity: pathname === '/mypage' ? '1' : '0.5'
+                    }}
+                  />
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <span>마이페이지</span>
+                    <span style={{
+                      position: 'absolute',
+                      top: '3.5px',
+                      right: '-25px',
+                      fontSize: '10px',
+                      fontWeight: '600',
+                      color: '#6b7280',
+                      backgroundColor: '#f3f4f6',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      zIndex: 1
+                    }}>
+                      준비중
+                    </span>
+                  </div>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
+    );
 };
 
 export default Header;

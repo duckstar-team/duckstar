@@ -53,13 +53,13 @@ export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, cl
       {/* Anime Corner 탭 (첫 번째) */}
       <button 
         onClick={() => handleTabClick('anime-corner')}
-        className={`w-44 px-2.5 py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
+        className={`w-32 sm:w-36 md:w-40 lg:w-44 px-2.5 py-2 sm:py-2 md:py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
           activeTab === 'anime-corner' 
             ? 'border-b-2 border-rose-800' 
             : ''
         }`}
       >
-        <div className={`self-stretch justify-start text-xl font-['Pretendard'] leading-snug ${
+        <div className={`self-stretch justify-start text-sm sm:text-base md:text-xl font-['Pretendard'] leading-[18px] sm:leading-[20px] md:leading-snug whitespace-nowrap ${
           activeTab === 'anime-corner' 
             ? 'text-rose-800 font-semibold' 
             : 'text-gray-400 font-normal'
@@ -71,13 +71,13 @@ export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, cl
       {/* AniLab 탭 (두 번째) */}
       <button 
         onClick={() => handleTabClick('anilab')}
-        className={`w-44 px-9 py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
+        className={`w-32 sm:w-36 md:w-40 lg:w-44 px-9 py-2 sm:py-2 md:py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
           activeTab === 'anilab' 
             ? 'border-b-2 border-rose-800' 
             : ''
         }`}
       >
-        <div className={`self-stretch text-center justify-start text-xl font-['Pretendard'] leading-snug ${
+        <div className={`self-stretch text-center justify-start text-sm sm:text-base md:text-xl font-['Pretendard'] leading-[18px] sm:leading-[20px] md:leading-snug whitespace-nowrap ${
           activeTab === 'anilab' 
             ? 'text-rose-800 font-semibold' 
             : 'text-gray-400 font-normal'

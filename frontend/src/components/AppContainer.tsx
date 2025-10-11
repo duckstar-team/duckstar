@@ -135,7 +135,7 @@ export default function AppContainer({ children }: AppContainerProps) {
         </div>
         
         {/* Fixed Sidebar */}
-        <div className="fixed top-[60px] left-0 bottom-0 z-[9999999]">
+        <div className={`fixed top-[60px] left-0 bottom-0 z-[9999999] ${pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname === '/' ? 'hidden md:block' : ''}`}>
           {isChartPage ? (
             <>
               <ThinNav onHover={setIsThinNavHovered} isExpanded={isThinNavHovered || isThinNavDetailHovered} />
@@ -165,7 +165,9 @@ export default function AppContainer({ children }: AppContainerProps) {
         <main className={`pt-[60px] bg-gray-50 transition-all duration-300 ease-in-out ${
           isChartPage 
             ? 'ml-[200px]' // ThinNav(60px) + ThinNavDetail(143px) - 고정
-            : 'ml-[50px] sm:ml-[55px] md:ml-[200px] group-hover:ml-[200px]'
+            : pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname === '/'
+              ? 'ml-0 md:ml-[200px]' 
+              : 'ml-[50px] sm:ml-[55px] md:ml-[200px] group-hover:ml-[200px]'
         }`}>
           {children}
         </main>

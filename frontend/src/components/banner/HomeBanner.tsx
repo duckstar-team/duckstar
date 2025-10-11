@@ -42,7 +42,7 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
   // 배너 데이터가 없으면 기본값 사용
   if (!homeBannerDtos || homeBannerDtos.length === 0) {
     return (
-      <div className={`w-[750px] h-[215px] relative bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-[#D1D1D6] overflow-hidden ${className}`}>
+      <div className={`w-[750px] h-[215px] md:w-[750px] md:h-[215px] w-full h-auto relative bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-[#D1D1D6] overflow-hidden ${className}`}>
         <div className="flex items-center justify-center h-full text-gray-500">
           배너 데이터가 없습니다
         </div>
@@ -70,35 +70,52 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
   };
 
   return (
-    <div className={`w-[750px] h-[215px] relative bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-[#D1D1D6] overflow-hidden ${className}`}>
+    <div className={`w-[320px] xs:w-[500px] sm:w-[500px] md:w-[550px] lg:w-[750px] max-w-[750px] h-auto md:h-[215px] relative bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-[#D1D1D6] overflow-hidden ${className}`}>
       {/* 모든 배너를 미리 렌더링 - 실무 방식 */}
       <div 
         className="flex transition-transform duration-1000 ease-in-out"
         style={{ 
-          transform: `translateX(-${currentBannerIndex * 750}px)`,
-          width: `${homeBannerDtos.length * 750}px`
+          transform: `translateX(-${currentBannerIndex * (window.innerWidth >= 1024 ? 750 : window.innerWidth >= 768 ? 550 : window.innerWidth >= 640 ? 500 : 320)}px)`,
+          width: `${homeBannerDtos.length * (window.innerWidth >= 1024 ? 750 : window.innerWidth >= 768 ? 550 : window.innerWidth >= 640 ? 500 : 320)}px`
         }}
       >
         {homeBannerDtos.map((banner, index) => (
           <div 
             key={index}
-            className="w-[750px] h-[215px] flex-shrink-0 relative cursor-pointer hover:opacity-95 transition-opacity"
+            className="w-[320px] xs:w-[500px] sm:w-[500px] md:w-[550px] lg:w-[750px] h-auto md:h-[215px] flex-shrink-0 relative cursor-pointer hover:opacity-95 transition-opacity flex flex-row items-center"
             onClick={() => handleBannerClick(banner)}
           >
-            {/* 오른쪽 애니메이션 이미지 */}
-            <BannerImage 
-              src={banner.animeImageUrl}
-              alt={banner.mainTitle}
-            />
+            {/* 왼쪽 텍스트 */}
+            <div className="flex-1 p-4 md:p-0 flex items-center">
+              <BannerContent 
+                header={`${banner.bannerType === 'HOT' ? '🔥 HOT 급상승' : banner.bannerType === 'NOTICEABLE' ? '✨ NEW 주목할만한' : banner.bannerType} ${banner.contentType === 'ANIME' ? '애니메이션' : '캐릭터'}`}
+                title={banner.mainTitle}
+                source={banner.subTitle}
+                date=""
+                className="left-[20px] top-[16px] absolute" 
+              />
+            </div>
             
-            {/* 왼쪽 텍스트 영역 */}
-            <BannerContent 
-              header={`${banner.bannerType === 'HOT' ? '🔥 HOT 급상승' : banner.bannerType === 'NOTICEABLE' ? '✨ NEW 주목할만한' : banner.bannerType} ${banner.contentType === 'ANIME' ? '애니메이션' : '캐릭터'}`}
-              title={banner.mainTitle}
-              source={banner.subTitle}
-              date=""
-              className="left-[20px] top-[16px] absolute" 
-            />
+            {/* 오른쪽 이미지 */}
+            <div className="w-[80px] xs:w-[126px] sm:w-[126px] md:w-[156px] lg:w-[326px] h-[215px] rounded-r-xl relative">
+              {/* 모바일: 원형 이미지 (오른쪽 아래) */}
+              <div className="md:hidden absolute bottom-2 right-5 w-30 h-30 rounded-full overflow-hidden">
+                <img 
+                  className="w-full h-full object-cover"
+                  src={banner.animeImageUrl}
+                  alt={banner.mainTitle}
+                />
+              </div>
+              
+              {/* 데스크톱: 기존 이미지 */}
+              <div className="hidden md:block w-full h-full">
+                <img 
+                  className="w-full h-full object-cover"
+                  src={banner.animeImageUrl}
+                  alt={banner.mainTitle}
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -108,7 +125,7 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
         currentPage={currentBannerIndex}
         totalPages={homeBannerDtos.length}
         onPageChange={setCurrentBannerIndex}
-        className="left-[43px] top-[188px] absolute z-10"
+        className="left-[43px] lg:left-[43px] top-[188px] absolute z-10"
       />
     </div>
   );

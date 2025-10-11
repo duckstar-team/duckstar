@@ -110,7 +110,7 @@ export default function VoteToggle({
   };
 
   return (
-    <div className={`relative ${isMobile ? 'size-12' : 'size-24'}`}>
+    <div className={`relative ${isMobile ? 'size-10' : 'size-24'}`}>
       {/* 기표칸 배경 */}
       <button
         type="button"
@@ -120,7 +120,7 @@ export default function VoteToggle({
         onMouseLeave={!disabled ? handleMouseLeave : undefined}
         onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
         className={`
-          ${isMobile ? 'size-12' : 'size-24'}
+          ${isMobile ? 'size-10' : 'size-24'}
           relative
           rounded-xl
           border border-gray-300
@@ -143,7 +143,7 @@ export default function VoteToggle({
             alt="Selected"
             className={
               isMobile 
-                ? (isBonusVote ? "w-[30px] h-[30px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
+                ? (isBonusVote ? "w-[24px] h-[24px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
                 : (isBonusVote ? "w-[60px] h-[60px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
             }
           />

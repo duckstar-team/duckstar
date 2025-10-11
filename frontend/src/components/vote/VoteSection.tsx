@@ -237,18 +237,11 @@ const VoteSection = memo(function VoteSection({
       {/* Sticky VoteSection - 헤더 60px 아래에 고정, 사이드바 너비 제외 */}
       {isVoteSectionSticky && (
         <div 
-          className="fixed top-[60px] left-0 w-full bg-white border-b border-gray-200 z-40"
+          className="fixed top-[60px] left-0 w-full bg-white border-b border-gray-200 z-40 transition-all duration-300 ease-in-out md:left-[200px] md:w-[calc(100%-200px)]"
           data-vote-section-sticky
-          style={{ 
-            top: '60px',
-            left: '200px', // 사이드바 너비만큼 오른쪽으로 이동
-            width: 'calc(100vw - 200px)', // 사이드바를 제외한 너비
-            zIndex: 40,
-            transition: 'all 0.3s ease-in-out'
-          }}
         >
-          <div className="max-w-[1240px] mx-auto px-4 py-6">
-            <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
+          <div className="w-full mx-auto px-4 py-6">
+            <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-16">
               {/* Vote Status Section - Top on mobile, right on desktop */}
               <div className={`${currentShowGenderSelection ? 'order-2 lg:order-1' : 'order-2 lg:order-2'} w-full lg:w-auto`}>
                 <VoteStatus
@@ -273,8 +266,8 @@ const VoteSection = memo(function VoteSection({
 
               {/* Search Bar Section - Bottom on mobile, right on desktop - Hidden in Gender Selection */}
               {!currentShowGenderSelection && (
-                <div className="order-1 lg:order-1 flex-1 w-full lg:w-auto">
-                  <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <div className="order-1 lg:order-1 flex-1 w-full lg:w-auto min-w-0">
+                  <div className="flex items-center flex-wrap gap-2 sm:gap-4 min-w-0 w-full">
                     <div className="flex-1 min-w-0">
                       <SearchBar
                         value={searchQuery}

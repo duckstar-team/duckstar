@@ -12,14 +12,10 @@ export default function BannerImage({
   className = ""
 }: BannerImageProps) {
   return (
-    <div 
-      className={`w-[326px] h-[215px] right-0 top-0 absolute overflow-hidden rounded-r-xl ${className}`}
-    >
+    <>
+      {/* 모바일용 이미지 */}
       <div 
-        className="w-full h-full overflow-hidden rounded-r-[14px]"
-        style={{
-          clipPath: 'inset(1px 1px 1px 0)' // 위아래 1px씩 더 자르기
-        }}
+        className={`md:hidden w-full h-[200px] overflow-hidden rounded-t-xl ${className}`}
       >
         <img 
           className="w-full h-full object-cover"
@@ -27,6 +23,24 @@ export default function BannerImage({
           alt={alt}
         />
       </div>
-    </div>
+      
+      {/* 데스크톱용 이미지 */}
+      <div 
+        className={`hidden md:block w-[326px] h-[215px] absolute right-0 top-0 overflow-hidden rounded-r-xl ${className}`}
+      >
+        <div 
+          className="w-full h-full overflow-hidden rounded-r-[14px]"
+          style={{
+            clipPath: 'inset(1px 1px 1px 0)' // 위아래 1px씩 더 자르기
+          }}
+        >
+          <img 
+            className="w-full h-full object-cover"
+            src={src}
+            alt={alt}
+          />
+        </div>
+      </div>
+    </>
   );
 }

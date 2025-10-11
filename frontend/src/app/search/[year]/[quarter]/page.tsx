@@ -24,6 +24,49 @@ function SeasonPageContent() {
   const year = parseInt(params.year as string);
   const quarter = parseInt(params.quarter as string);
   
+  // 클라이언트에서만 이 페이지에 한해 뷰포트를 디바이스 폭으로 임시 전환
+  useEffect(() => {
+    const head = document.head;
+    if (!head) return;
+    
+    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+    const prevContent = existing?.getAttribute('content') || '';
+    
+    // 디바이스 폭으로 설정
+    if (existing) {
+      existing.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+      head.appendChild(meta);
+    }
+    
+    // body의 min-width 오버라이드 (검색 페이지에서만)
+    const body = document.body;
+    const originalMinWidth = body.style.minWidth;
+    const originalOverflowX = body.style.overflowX;
+    
+    body.style.minWidth = 'auto';
+    body.style.overflowX = 'hidden';
+    
+    return () => {
+      // viewport 설정 복원
+      const current = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+      if (current) {
+        if (prevContent) {
+          current.setAttribute('content', prevContent);
+        } else {
+          current.parentElement?.removeChild(current);
+        }
+      }
+      
+      // body 스타일 복원
+      body.style.minWidth = originalMinWidth;
+      body.style.overflowX = originalOverflowX;
+    };
+  }, []);
+  
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('월');
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
@@ -44,8 +87,12 @@ function SeasonPageContent() {
   const [isSeasonSelectorSticky, setIsSeasonSelectorSticky] = useState(false);
   const [seasonSelectorHeight, setSeasonSelectorHeight] = useState(0);
   
+  // 모바일 전용 스티키 상태
+  const [isMobileMenuSticky, setIsMobileMenuSticky] = useState(false);
+  
   const daySelectionRef = useRef<HTMLDivElement>(null);
   const seasonSelectorRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // 이미지 프리로딩 훅
   const { preloadAnimeDetails } = useImagePreloading();
@@ -120,13 +167,7 @@ function SeasonPageContent() {
             
             const currentDayKey = dayMapping[savedDay];
             
-            if (firstExistingSection === currentDayKey) {
-              // 첫 번째 섹션으로 이동할 때는 스크롤 탑
-              window.scrollTo({ top: 0, behavior: 'instant' });
-            } else {
-              // 다른 섹션으로 이동할 때는 해당 섹션으로 스크롤
-              scrollToDay(savedDay as DayOfWeek);
-            }
+             // 스크롤 자동 이동 제거 - 요일 선택만으로 변경
           }, 100);
         } else {
           // 유효하지 않은 요일('곧 시작' 등)인 경우 기본값인 '월' 사용
@@ -203,7 +244,7 @@ function SeasonPageContent() {
       
       return animes.filter(anime => {
         const titleMatch = anime.titleKor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          anime.titleOrigin?.toLowerCase().includes(searchQuery.toLowerCase());
+                          (anime as any).titleOrigin?.toLowerCase().includes(searchQuery.toLowerCase());
         
         const chosungMatch = extractChosung(anime.titleKor || '').includes(searchQuery.toUpperCase());
         
@@ -344,50 +385,39 @@ function SeasonPageContent() {
     }, 200);
   };
 
-  // 요일 선택 핸들러 (시즌별 페이지용 간단한 로직)
+  // 요일 선택 핸들러 (이번주 페이지와 동일한 로직)
   const handleDaySelect = (day: DayOfWeek) => {
     setSelectedDay(day);
     
-    // 첫 번째 존재하는 섹션 찾기
-    setTimeout(() => {
-      const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
-      let firstExistingSection = null;
+    const dayKey = getDayKey(day);
+    
+    // 월요일은 "곧 시작"처럼 스크롤 탑으로 이동
+    if (day === '월') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    // 클릭한 요일의 섹션으로 직접 스크롤
+    const sectionId = `${dayKey}-${year}-${quarter}`;
+    const element = document.getElementById(sectionId);
+    
+    if (element) {
+      const headerHeight = 60;
+      const daySelectionHeight = 44;
+      const margin = 50;
+      const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
       
-      for (const dayKey of dayOrder) {
-        const sectionId = `${dayKey}-${year}-${quarter}`;
-        const element = document.getElementById(sectionId);
-        if (element && element.children.length > 0) {
-          firstExistingSection = dayKey;
-          break;
-        }
-      }
+      // 즉시 스크롤 실행
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
       
-      // 현재 선택된 요일의 섹션 ID
-      const dayMapping: Record<string, string> = {
-        '일': 'sun',
-        '월': 'mon', 
-        '화': 'tue',
-        '수': 'wed',
-        '목': 'thu',
-        '금': 'fri',
-        '토': 'sat',
-        '특별편성 및 극장판': 'special'
-      };
-      
-      const currentDayKey = dayMapping[day];
-      const currentSectionId = `${currentDayKey}-${year}-${quarter}`;
-      
-      // 첫 번째 섹션인지 확인
-      if (firstExistingSection === currentDayKey) {
-        // 첫 번째 섹션으로 이동할 때는 스크롤 탑
-        window.scrollTo({ top: 0, behavior: 'instant' });
-        setIsDaySelectionSticky(false);
-        setIsSeasonSelectorSticky(false);
-      } else {
-        // 다른 섹션으로 이동할 때는 해당 섹션으로 스크롤
-        scrollToDay(day);
-      }
-    }, 100);
+      // 혹시 스크롤이 작동하지 않을 경우를 대비한 대체 방법
+      setTimeout(() => {
+        const rect = element.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetScrollTop = scrollTop + rect.top - headerHeight - daySelectionHeight - margin;
+        window.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+      }, 100);
+    }
   };
 
   // 요일 키 매핑 함수
@@ -536,38 +566,35 @@ function SeasonPageContent() {
     };
   }, [isSeasonSelectorSticky]);
 
-  // 요일 네비게이션 스크롤 핸들러 (페이드 효과 포함)
-  const scrollToDay = (day: DayOfWeek) => {
-    const dayMapping: Record<string, string> = {
-      '일': 'sun',
-      '월': 'mon', 
-      '화': 'tue',
-      '수': 'wed',
-      '목': 'thu',
-      '금': 'fri',
-      '토': 'sat',
-      '곧 시작': 'upcoming',
-      '특별편성 및 극장판': 'special'
-    };
-    
-    const dayKey = dayMapping[day];
-    if (dayKey) {
-      const sectionId = `${dayKey}-${year}-${quarter}`;
-      const element = document.getElementById(sectionId);
+  // 4. 모바일 메뉴 스티키 처리
+  useEffect(() => {
+    const handleMobileMenuStickyScroll = () => {
+      if (!mobileMenuRef.current) return;
       
-      if (element) {
-        const headerHeight = 60;
-        const daySelectionHeight = 44;
-        const margin = 74;
-        const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
-        
-        // 메뉴 내부 스크롤은 즉시 이동
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'instant' });
+      const scrollY = window.scrollY;
+      const mobileMenuRect = mobileMenuRef.current.getBoundingClientRect();
+      const mobileMenuTop = mobileMenuRect.top + scrollY;
+      
+      // 모바일 메뉴가 화면 상단에서 60px 지점을 지나면 스티키
+      const shouldBeSticky = scrollY >= mobileMenuTop - 60;
+      
+      if (shouldBeSticky !== isMobileMenuSticky) {
+        setIsMobileMenuSticky(shouldBeSticky);
       }
-    }
-  };
+    };
 
-  // 4. 스크롤-요일 네비게이션 연동
+    // 초기 체크
+    handleMobileMenuStickyScroll();
+    
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', handleMobileMenuStickyScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleMobileMenuStickyScroll);
+    };
+  }, [isMobileMenuSticky]);
+
+  // 5. 스크롤-요일 네비게이션 연동
   useEffect(() => {
     if (!groupedAnimes || Object.keys(groupedAnimes).length === 0) return;
     
@@ -676,7 +703,7 @@ function SeasonPageContent() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
+    <main className="w-full min-h-screen overflow-x-hidden overflow-y-visible" style={{ backgroundColor: '#F8F9FA' }}>
       {/* SearchSection - #F1F3F5 배경, 창 폭 가득, 높이 196px, 레이어 맨 뒤 */}
       <div className="w-full bg-[#F1F3F5] h-[196px] relative">
         {/* SearchFilters 컨테이너 - 하얀색 배경, 위아래 #DADCE0 테두리, 높이 100px, 헤더에서 20px 갭 */}
@@ -686,10 +713,10 @@ function SeasonPageContent() {
         
         {/* SearchFilters와 검색창을 같은 프레임에 배치 */}
         <div className="absolute top-[40px] left-0 w-full px-6 z-10 flex justify-center">
-          <div className="w-[852px]">
+          <div className="w-full max-w-[852px]">
             {/* SearchFilters */}
             <div className="mb-4">
-              <div className="w-[383.98px] h-[36px] flex items-center justify-between">
+              <div className="w-full max-w-[383.98px] h-[36px] flex items-center justify-between">
                 <SearchFilters
                   selectedOttServices={selectedOttServices}
                   onOttFilterChange={(ottService) => {
@@ -721,71 +748,75 @@ function SeasonPageContent() {
           </div>
         </div>
         
-        {/* YearAndSeason 컴포넌트 - 회색 배경을 중앙으로 꿰뚫는 위치 */}
-        <div className="absolute -bottom-6 left-0 w-full z-20">
+        {/* YearAndSeason 컴포넌트와 DaySelection - 회색 배경을 중앙으로 꿰뚫는 위치 (PC 전용) */}
+        <div className="absolute -bottom-6 left-0 w-full z-20 hidden md:block">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="flex gap-5 items-center justify-start" ref={seasonSelectorRef}>
-              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
-              {searchQuery.trim() ? (
-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                  <button
-                    onClick={handleSearchReset}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span className="font-medium">이전</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                  <SeasonSelector
-                    onSeasonSelect={handleSeasonSelect}
-                    className="w-fit"
-                    currentYear={year}
-                    currentQuarter={quarter}
-                  />
-                </div>
-              )}
-              
-              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아니고 검색 중이 아닐 때만 표시 */}
-              {!searchQuery.trim() &&
-                <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
-                  <input
-                    type="checkbox"
-                    id="showOnlyAiring"
-                    checked={showOnlyAiring}
-                    onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
-                    className="w-4 h-4 accent-[#990033]"
-                  />
-                  <label 
-                    htmlFor="showOnlyAiring" 
-                    className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
-                  >
-                    방영 중 애니만 보기
-                  </label>
-                </div>
-              }
+            {/* PC: 가로 배치 */}
+            <div className="flex flex-row gap-5 items-center justify-between" ref={seasonSelectorRef}>
+              {/* 첫 번째 줄: SeasonSelector와 방영 중 애니만 보기 */}
+              <div className="flex flex-row gap-5 items-center">
+                {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+                {searchQuery.trim() ? (
+                  <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                    <button
+                      onClick={handleSearchReset}
+                      className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span className="font-medium">이전</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                    <SeasonSelector
+                      onSeasonSelect={handleSeasonSelect}
+                      className="w-fit"
+                      currentYear={year}
+                      currentQuarter={quarter}
+                    />
+                  </div>
+                )}
+                
+                {/* 방영 중 애니만 보기 체크박스 */}
+                {!searchQuery.trim() && selectedOttServices.length === 0 && (
+                  <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                    <input
+                      type="checkbox"
+                      id="showOnlyAiring"
+                      checked={showOnlyAiring}
+                      onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
+                      className="w-4 h-4 accent-[#990033]"
+                    />
+                    <label 
+                      htmlFor="showOnlyAiring" 
+                      className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
+                    >
+                      방영 중 애니만 보기
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sticky SeasonSelector - 헤더 60px 아래에 고정 */}
-      {isSeasonSelectorSticky && (
+      {/* Sticky Combined Section - 헤더 60px 아래에 고정 (PC 전용) */}
+      {(isSeasonSelectorSticky || isDaySelectionSticky) && (
         <div 
-          className="fixed top-[60px] left-0 w-full bg-white border-b border-gray-200 z-40"
+          className="fixed top-[60px] left-0 md:left-[200px] w-full md:w-[calc(100vw-200px)] backdrop-blur-[6px] z-40 hidden md:block"
           style={{ 
             top: '60px',
-            left: '200px', // 사이드바 너비만큼 오른쪽으로 이동
-            width: 'calc(100vw - 200px)', // 사이드바를 제외한 너비
             zIndex: 40,
             transition: 'all 0.3s ease-in-out'
           }}
         >
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex gap-5 items-center justify-start">
+          {/* Background Layer - 헤더와 동일한 스타일 */}
+          <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
+            <div className="flex gap-5 items-center justify-center">
               {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
               {searchQuery.trim() ? (
                 <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
@@ -810,48 +841,293 @@ function SeasonPageContent() {
                 </div>
               )}
               
-              {/* 방영 중 애니만 보기 체크박스 - 검색 중이 아닐 때만 표시 */}
-              {!searchQuery.trim() &&
-                <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+              {/* DaySelection 또는 OTT 필터 - 같은 레벨에 배치 */}
+              {selectedOttServices.length === 0 ? (
+                <>
+                   {/* 모바일/태블릿: 드롭다운 */}
+                   <div className="lg:hidden">
+                     <div className="bg-white rounded-lg px-3 py-2 border relative">
+                       <select
+                         value={selectedDay}
+                         onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
+                         className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
+                       >
+                         <option value="월">월</option>
+                         <option value="화">화</option>
+                         <option value="수">수</option>
+                         <option value="목">목</option>
+                         <option value="금">금</option>
+                         <option value="토">토</option>
+                         <option value="일">일</option>
+                         <option value="특별편성 및 극장판">특별편성 및 극장판</option>
+                       </select>
+                       <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                         <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                         </svg>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   {/* 데스크톱: DaySelection 컴포넌트 */}
+                   <div className="hidden lg:block">
+                     <DaySelection
+                       selectedDay={selectedDay}
+                       onDaySelect={handleDaySelect}
+                       initialPosition={true}
+                       emptyDays={new Set(emptyDays)}
+                       isThisWeek={false}
+                       isSticky={true}
+                       className="w-fit"
+                     />
+                   </div>
+                </>
+              ) : (
+                <div className="flex gap-3 items-center">
+                  {/* 선택됨 텍스트 */}
+                  <span className="text-sm font-medium text-gray-700 font-['Pretendard']">
+                    선택됨:
+                  </span>
+                  
+                  {/* OTT 필터 아이콘들 */}
+                  <div className="flex gap-2 items-center">
+                    {selectedOttServices.map((ottService, index) => (
+                      <div key={index} className="relative">
+                        <div 
+                          onClick={() => handleOttFilterChange(ottService, false)}
+                          className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+                        >
+                          <img
+                            src={`/icons/${ottService.toLowerCase()}-logo.svg`}
+                            alt={ottService}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <img
+                          src="/icons/remove-filter.svg"
+                          alt="제거"
+                          className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* 필터 초기화 버튼 */}
+                  <button
+                    onClick={() => setSelectedOttServices([])}
+                    className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
+                  >
+                    필터 초기화
+                  </button>
+                </div>
+              )}
+              </div>
+            </div>
+        </div>
+      )}
+
+      {/* 모바일 전용 스티키 메뉴 */}
+      {isMobileMenuSticky && (
+        <div className="fixed top-[60px] left-0 w-full backdrop-blur-[6px] z-40 md:hidden">
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-[12px]"></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-6 py-3">
+            <div className="bg-gray-50 rounded-lg p-3 space-y-3">
+              {/* 첫 번째 줄: 여름 애니메이션 / 요일 */}
+              <div className="flex gap-3 items-center">
+                {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+                {searchQuery.trim() ? (
+                  <button
+                    onClick={handleSearchReset}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer px-3 py-2 rounded-lg hover:bg-white"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="font-medium">이전</span>
+                  </button>
+                ) : (
+                  <div className="flex-1">
+                    <SeasonSelector
+                      onSeasonSelect={handleSeasonSelect}
+                      className="w-full"
+                      currentYear={year}
+                      currentQuarter={quarter}
+                    />
+                  </div>
+                )}
+                
+                {/* 요일 선택 (모바일에서만 표시) */}
+                {!searchQuery.trim() && selectedOttServices.length === 0 && (
+                  <div className="flex-1">
+                    <div className="bg-white rounded-lg px-3 py-2 border relative">
+                      <select
+                        value={selectedDay}
+                        onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
+                        className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
+                      >
+                        <option value="월">월</option>
+                        <option value="화">화</option>
+                        <option value="수">수</option>
+                        <option value="목">목</option>
+                        <option value="금">금</option>
+                        <option value="토">토</option>
+                        <option value="일">일</option>
+                        <option value="특별편성 및 극장판">특별편성 및 극장판</option>
+                      </select>
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* 두 번째 줄: 방영 중 애니만 보기 */}
+              {!searchQuery.trim() && selectedOttServices.length === 0 && (
+                <div className="flex gap-2 items-center">
                   <input
                     type="checkbox"
-                    id="showOnlyAiringSticky"
+                    id="showOnlyAiringMobileSticky"
                     checked={showOnlyAiring}
                     onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
                     className="w-4 h-4 accent-[#990033]"
                   />
                   <label 
-                    htmlFor="showOnlyAiringSticky" 
+                    htmlFor="showOnlyAiringMobileSticky" 
                     className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
                   >
                     방영 중 애니만 보기
                   </label>
                 </div>
-              }
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* DaySelection 또는 OTT 필터 큐 - SearchSection 아래에 배치 */}
-      <div className="w-full h-[95px] bg-white">
+      {/* 모바일 전용 드롭다운 버튼 영역 */}
+      <div className="w-full bg-white md:hidden" ref={mobileMenuRef}>
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            {/* 첫 번째 줄: 여름 애니메이션 / 요일 */}
+            <div className="flex gap-3 items-center">
+              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+              {searchQuery.trim() ? (
+                <button
+                  onClick={handleSearchReset}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer px-3 py-2 rounded-lg hover:bg-white"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span className="font-medium">이전</span>
+                </button>
+              ) : (
+                <div className="flex-1">
+                  <SeasonSelector
+                    onSeasonSelect={handleSeasonSelect}
+                    className="w-full"
+                    currentYear={year}
+                    currentQuarter={quarter}
+                  />
+                </div>
+              )}
+              
+              {/* 요일 선택 (모바일에서만 표시) */}
+              {!searchQuery.trim() && selectedOttServices.length === 0 && (
+                <div className="flex-1">
+                  <div className="bg-white rounded-lg px-3 py-2 border relative">
+                    <select
+                      value={selectedDay}
+                      onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
+                      className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
+                    >
+                      <option value="월">월</option>
+                      <option value="화">화</option>
+                      <option value="수">수</option>
+                      <option value="목">목</option>
+                      <option value="금">금</option>
+                      <option value="토">토</option>
+                      <option value="일">일</option>
+                      <option value="특별편성 및 극장판">특별편성 및 극장판</option>
+                    </select>
+                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* 두 번째 줄: 방영 중 애니만 보기 */}
+            {!searchQuery.trim() && selectedOttServices.length === 0 && (
+              <div className="flex gap-2 items-center">
+                <input
+                  type="checkbox"
+                  id="showOnlyAiringMobile"
+                  checked={showOnlyAiring}
+                  onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
+                  className="w-4 h-4 accent-[#990033]"
+                />
+                <label 
+                  htmlFor="showOnlyAiringMobile" 
+                  className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
+                >
+                  방영 중 애니만 보기
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* DaySelection 또는 OTT 필터 큐 - SearchSection 아래에 배치 (PC용) */}
+      <div className="w-full h-[95px] bg-white hidden md:block">
         <div className="max-w-7xl mx-auto px-6 pt-[50px] pb-8">
-          {selectedOttServices.length === 0 ? (
-            <div ref={daySelectionRef} className="mb-[40px] flex justify-center">
-              <div className="ml-[100px]">
+          {/* Day Selection - 이번주 페이지와 동일한 위치 */}
+          {selectedOttServices.length === 0 && !searchQuery.trim() ? (
+            <div ref={daySelectionRef} className="mb-[40px] flex justify-center w-full max-w-6xl mx-auto">
+              {/* 태블릿: 드롭다운 */}
+              <div className="lg:hidden">
+                <div className="bg-white rounded-lg px-3 py-2 border relative">
+                  <select
+                    value={selectedDay}
+                    onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
+                    className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
+                  >
+                    <option value="월">월</option>
+                    <option value="화">화</option>
+                    <option value="수">수</option>
+                    <option value="목">목</option>
+                    <option value="금">금</option>
+                    <option value="토">토</option>
+                    <option value="일">일</option>
+                    <option value="특별편성 및 극장판">특별편성 및 극장판</option>
+                  </select>
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 데스크톱: DaySelection 컴포넌트 */}
+              <div className="hidden lg:block">
                 <DaySelection
                   selectedDay={selectedDay}
-                  onDaySelect={(day) => {
-                    handleDaySelect(day);
-                    scrollToDay(day);
-                  }}
+                  onDaySelect={handleDaySelect}
                   emptyDays={new Set(emptyDays)}
                   isThisWeek={false}
                   isSticky={isDaySelectionSticky}
                 />
               </div>
             </div>
-          ) : (
+          ) : selectedOttServices.length > 0 ? (
             <div className="mb-[40px] flex justify-start">
               <div className="flex gap-3 items-center">
                 {/* 선택됨 텍스트 */}
@@ -891,81 +1167,10 @@ function SeasonPageContent() {
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {/* Sticky DaySelection 또는 OTT 필터 큐 - SeasonSelector 아래에 고정 */}
-      {isDaySelectionSticky && (
-        <div 
-          className="fixed left-[65px] w-full bg-white border-b border-gray-200 z-30"
-          style={{ 
-            top: isSeasonSelectorSticky ? `${60 + seasonSelectorHeight}px` : '60px',
-            zIndex: 30,
-            transition: 'all 0.3s ease-in-out'
-          }}
-        >
-          <div className="flex justify-center">
-            <div className="ml-[120px] md:ml-[368px] w-full">
-              <div className="max-w-7xl mx-auto px-6">
-                {selectedOttServices.length === 0 ? (
-                  <DaySelection
-                    selectedDay={selectedDay}
-                    onDaySelect={(day) => {
-                      handleDaySelect(day);
-                      scrollToDay(day);
-                    }}
-                    initialPosition={true}
-                    emptyDays={new Set(emptyDays)}
-                    isThisWeek={false}
-                    isSticky={isDaySelectionSticky}
-                  />
-                ) : (
-                  <div className="flex justify-start">
-                    <div className="flex gap-3 items-center">
-                      {/* 선택됨 텍스트 */}
-                      <span className="text-sm font-medium text-gray-700 font-['Pretendard']">
-                        선택됨:
-                      </span>
-                      
-                      {/* OTT 필터 아이콘들 */}
-                      <div className="flex gap-2 items-center">
-                        {selectedOttServices.map((ottService, index) => (
-                          <div key={index} className="relative">
-                            <div 
-                              onClick={() => handleOttFilterChange(ottService, false)}
-                              className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
-                            >
-                              <img
-                                src={`/icons/${ottService.toLowerCase()}-logo.svg`}
-                                alt={ottService}
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                            <img
-                              src="/icons/remove-filter.svg"
-                              alt="제거"
-                              className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* 필터 초기화 버튼 */}
-                      <button
-                        onClick={() => setSelectedOttServices([])}
-                        className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
-                      >
-                        필터 초기화
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Anime Grid Section - F8F9FA 배경 */}
       <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
@@ -977,7 +1182,7 @@ function SeasonPageContent() {
                 <div className="text-sm text-gray-600 mb-4">
                   "{searchQuery}"에 대한 검색 결과
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px] justify-items-center">
                   {Object.values(groupedAnimes).flat().map((anime) => (
                     <AnimeCard
                       key={anime.animeId}
@@ -1011,7 +1216,7 @@ function SeasonPageContent() {
                       {Object.values(groupedAnimes).flat().length}개의 애니메이션
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px] justify-items-center">
                     {Object.values(groupedAnimes).flat().map((anime) => (
                       <AnimeCard
                         key={anime.animeId}
@@ -1048,7 +1253,7 @@ function SeasonPageContent() {
                       <h2 
                         className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
                         onClick={() => {
-                          // 요일 헤더 클릭 시 해당 요일 네비게이션 활성화 및 스크롤 이동
+                           // 요일 헤더 클릭 시 해당 요일 선택만 (스크롤 이동 제거)
                           const dayToKorean = {
                             'UPCOMING': '곧 시작',
                             'SUN': '일',
@@ -1062,10 +1267,9 @@ function SeasonPageContent() {
                           };
                           
                           const koreanDay = dayToKorean[day as keyof typeof dayToKorean];
-                          if (koreanDay) {
-                            setSelectedDay(koreanDay as DayOfWeek);
-                            scrollToDay(koreanDay as DayOfWeek);
-                          }
+                            if (koreanDay) {
+                              setSelectedDay(koreanDay as DayOfWeek);
+                            }
                         }}
                       >
                         {dayInKorean}
@@ -1124,7 +1328,7 @@ function SeasonPageContent() {
           active={preloadingStatus.active}
         />
       )}
-    </div>
+    </main>
   );
 }
 

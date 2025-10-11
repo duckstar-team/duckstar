@@ -124,7 +124,7 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
 
   if (isLoading) {
     return (
-      <div className={cn("w-64 h-12 bg-gray-100 rounded-lg animate-pulse", className)} />
+      <div className={cn("w-fit max-w-[280px] sm:max-w-[320px] h-10 sm:h-12 bg-gray-100 rounded-lg animate-pulse", className)} />
     );
   }
 
@@ -132,16 +132,16 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
     <div className={cn("relative", className)} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-white box-border content-stretch flex gap-2 items-center justify-center pr-[5px] px-[10px] py-1 relative rounded-[12px] w-fit hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+        className="bg-white box-border content-stretch flex gap-2 items-center justify-center pr-[5px] px-[8px] sm:px-[10px] py-1 relative rounded-[12px] w-fit max-w-[280px] sm:max-w-[320px] hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
       >
-        <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[18px] text-black text-nowrap">
-          <p className="leading-[22px] whitespace-pre">
+        <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[16px] sm:text-[18px] text-black">
+          <p className="leading-[20px] sm:leading-[22px] truncate">
             {currentSeasonLabel}
           </p>
         </div>
         <svg 
           className={cn(
-            "w-4 h-4 text-gray-400 transition-transform duration-200 ml-1",
+            "w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ml-1 flex-shrink-0",
             isOpen ? "rotate-180" : ""
           )} 
           fill="none" 
@@ -154,20 +154,21 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
       
       {/* 드롭다운 메뉴 */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto min-w-fit">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-full min-w-[200px] max-w-[280px] sm:max-w-[320px]">
           {seasonOptions.map((option, index) => (
             <button
               key={option.isThisWeek ? 'this-week' : `${option.year}-${option.quarter}`}
               onClick={() => handleSeasonSelect(option)}
               className={cn(
-                "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer whitespace-nowrap",
+                "w-full px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer",
+                "border-b border-gray-100 last:border-b-0 text-sm sm:text-base",
                 (option.isThisWeek && selectedSeason?.isThisWeek) ||
                 (option.year && option.quarter && selectedSeason?.year === option.year && selectedSeason?.quarter === option.quarter)
                   ? "bg-[#990033] text-white hover:bg-[#990033]"
                   : "text-gray-900"
               )}
             >
-              <span className="text-lg font-medium">{option.label}</span>
+              <span className="font-medium truncate block">{option.label}</span>
             </button>
           ))}
         </div>
