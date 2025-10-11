@@ -146,10 +146,10 @@ export default function HomeRankInfoMobile({
             </p>
           </div>
           
-          <div className="w-full pr-8 justify-start text-black text-sm sm:text-base md:text-lg font-semibold font-['Pretendard'] leading-snug line-clamp-2">
+          <div className={`w-full justify-start text-black text-sm sm:text-base md:text-lg font-semibold font-['Pretendard'] leading-snug line-clamp-2 ${isTopThree ? 'pr-8' : ''}`}>
             {title}
           </div>
-          <div className="text-start justify-start text-gray-400 text-xs sm:text-sm font-normal font-['Pretendard'] leading-snug pr-8">
+          <div className={`text-start justify-start text-gray-400 text-xs sm:text-sm font-normal font-['Pretendard'] leading-snug ${isTopThree ? 'pr-8' : ''}`}>
             {studio}
           </div>
         </div>

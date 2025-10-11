@@ -1,0 +1,2692 @@
+diff --git a/next.config.ts b/next.config.ts
+deleted file mode 100644
+index 2150721..0000000
+--- a/next.config.ts
++++ /dev/null
+@@ -1,147 +0,0 @@
+-import type { NextConfig } from "next";
+-
+-const nextConfig: NextConfig = {
+-  // 환경 변수 기본값 설정
+-  env: {
+-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+-  },
+-  
+-  // ESLint 비활성화 (배포용)
+-  eslint: {
+-    ignoreDuringBuilds: true,
+-  },
+-  
+-  // TypeScript 에러 무시 (배포용)
+-  typescript: {
+-    ignoreBuildErrors: true,
+-  },
+-  
+-  // 성능 최적화 설정
+-  experimental: {
+-    scrollRestoration: false,
+-    // optimizeCss: true, // CSS 최적화 (critters 의존성 문제로 임시 비활성화)
+-    optimizePackageImports: ['@tanstack/react-query', 'framer-motion'], // 패키지 임포트 최적화
+-  },
+-
+-  // 컴파일러 최적화
+-  compiler: {
+-    removeConsole: process.env.NODE_ENV === 'production', // 프로덕션에서 console 제거
+-  },
+-  
+-  // API 프록시 설정
+-  async rewrites() {
+-    return [
+-      {
+-        source: "/oauth2/:path*",
+-        destination: "http://localhost:8080/oauth2/:path*",
+-      },
+-      {
+-        source: "/login/:path*",
+-        destination: "http://localhost:8080/login/:path*",
+-      },
+-      {
+-        source: "/api/:path*",
+-        destination: "http://localhost:8080/api/:path*",
+-      },
+-    ];
+-  },
+-
+-  // HTTP 헤더 설정 (브라우저 캐시 TTL + 프록시 설정)
+-  async headers() {
+-    return [
+-      {
+-        source: "/api/:path*",
+-        headers: [
+-          {
+-            key: "Connection",
+-            value: "keep-alive",
+-          },
+-          {
+-            key: "Keep-Alive",
+-            value: "timeout=5, max=1000",
+-          },
+-        ],
+-      },
+-      {
+-        source: "/_next/image(.*)",
+-        headers: [
+-          {
+-            key: "Cache-Control",
+-            value: "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400", // 7일 캐시
+-          },
+-        ],
+-      },
+-      {
+-        source: "/banners/(.*)",
+-        headers: [
+-          {
+-            key: "Cache-Control",
+-            value: "public, max-age=31536000, immutable", // 1년 캐시 (정적 리소스)
+-          },
+-        ],
+-      },
+-    ];
+-  },
+-
+-  // 외부 이미지 설정
+-  images: {
+-    remotePatterns: [
+-      {
+-        protocol: "https",
+-        hostname: "data.onnada.com",
+-        port: "",
+-        pathname: "/**",
+-      },
+-      {
+-        protocol: "https",
+-        hostname: "img.duckstar.kr",
+-        port: "",
+-        pathname: "/**",
+-      },
+-      {
+-        protocol: "http",
+-        hostname: "img1.kakaocdn.net",
+-        port: "",
+-        pathname: "/**",
+-      },
+-      {
+-        protocol: "https",
+-        hostname: "img1.kakaocdn.net",
+-        port: "",
+-        pathname: "/**",
+-      },
+-      {
+-        protocol: "http",
+-        hostname: "t1.kakaocdn.net",
+-        port: "",
+-        pathname: "/**",
+-      },
+-      {
+-        protocol: "https",
+-        hostname: "t1.kakaocdn.net",
+-        port: "",
+-        pathname: "/**",
+-      },
+-    ],
+-    // 이미지 최적화 활성화 (WebP 최적화를 위해)
+-    unoptimized: false,
+-    // 이미지 캐시 TTL 설정 (7일)
+-    minimumCacheTTL: 604800, // 7일 = 7 * 24 * 60 * 60
+-    // 이미지 로딩 실패 시 대체 처리
+-    dangerouslyAllowSVG: true,
+-    contentDispositionType: 'attachment',
+-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+-  },
+-
+-  // webpack 설정
+-  webpack(config) {
+-    config.module?.rules?.push({
+-      test: /\.svg$/,
+-      use: ["@svgr/webpack"],
+-    });
+-
+-    return config;
+-  },
+-};
+-
+-export default nextConfig;
+\ No newline at end of file
+diff --git a/public/index.html b/public/index.html
+deleted file mode 100644
+index 568487e..0000000
+--- a/public/index.html
++++ /dev/null
+@@ -1,20 +0,0 @@
+-<!DOCTYPE html>
+-<html lang="ko">
+-  <head>
+-    <meta charset="utf-8" />
+-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+-    <meta name="theme-color" content="#000000" />
+-    <meta
+-      name="description"
+-      content="Duckstar - Anime Voting Platform"
+-    />
+-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+-    <title>Duckstar</title>
+-  </head>
+-  <body>
+-    <noscript>You need to enable JavaScript to run this app.</noscript>
+-    <div id="root"></div>
+-  </body>
+-</html>
+diff --git a/public/manifest.json b/public/manifest.json
+deleted file mode 100644
+index cc8ff5f..0000000
+--- a/public/manifest.json
++++ /dev/null
+@@ -1,15 +0,0 @@
+-{
+-  "short_name": "Duckstar",
+-  "name": "Duckstar Anime Voting Platform",
+-  "icons": [
+-    {
+-      "src": "favicon.ico",
+-      "sizes": "64x64 32x32 24x24 16x16",
+-      "type": "image/x-icon"
+-    }
+-  ],
+-  "start_url": ".",
+-  "display": "standalone",
+-  "theme_color": "#000000",
+-  "background_color": "#ffffff"
+-}
+diff --git a/src/app/search/[year]/[quarter]/page.tsx b/src/app/search/[year]/[quarter]/page.tsx
+index b188e19..cce92a7 100644
+--- a/src/app/search/[year]/[quarter]/page.tsx
++++ b/src/app/search/[year]/[quarter]/page.tsx
+@@ -24,6 +24,49 @@ function SeasonPageContent() {
+   const year = parseInt(params.year as string);
+   const quarter = parseInt(params.quarter as string);
+   
++  // 클라이언트에서만 이 페이지에 한해 뷰포트를 디바이스 폭으로 임시 전환
++  useEffect(() => {
++    const head = document.head;
++    if (!head) return;
++    
++    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
++    const prevContent = existing?.getAttribute('content') || '';
++    
++    // 디바이스 폭으로 설정
++    if (existing) {
++      existing.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
++    } else {
++      const meta = document.createElement('meta');
++      meta.name = 'viewport';
++      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
++      head.appendChild(meta);
++    }
++    
++    // body의 min-width 오버라이드 (검색 페이지에서만)
++    const body = document.body;
++    const originalMinWidth = body.style.minWidth;
++    const originalOverflowX = body.style.overflowX;
++    
++    body.style.minWidth = 'auto';
++    body.style.overflowX = 'hidden';
++    
++    return () => {
++      // viewport 설정 복원
++      const current = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
++      if (current) {
++        if (prevContent) {
++          current.setAttribute('content', prevContent);
++        } else {
++          current.parentElement?.removeChild(current);
++        }
++      }
++      
++      // body 스타일 복원
++      body.style.minWidth = originalMinWidth;
++      body.style.overflowX = originalOverflowX;
++    };
++  }, []);
++  
+   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('월');
+   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
+   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
+@@ -44,8 +87,12 @@ function SeasonPageContent() {
+   const [isSeasonSelectorSticky, setIsSeasonSelectorSticky] = useState(false);
+   const [seasonSelectorHeight, setSeasonSelectorHeight] = useState(0);
+   
++  // 모바일 전용 스티키 상태
++  const [isMobileMenuSticky, setIsMobileMenuSticky] = useState(false);
++  
+   const daySelectionRef = useRef<HTMLDivElement>(null);
+   const seasonSelectorRef = useRef<HTMLDivElement>(null);
++  const mobileMenuRef = useRef<HTMLDivElement>(null);
+ 
+   // 이미지 프리로딩 훅
+   const { preloadAnimeDetails } = useImagePreloading();
+@@ -120,13 +167,7 @@ function SeasonPageContent() {
+             
+             const currentDayKey = dayMapping[savedDay];
+             
+-            if (firstExistingSection === currentDayKey) {
+-              // 첫 번째 섹션으로 이동할 때는 스크롤 탑
+-              window.scrollTo({ top: 0, behavior: 'instant' });
+-            } else {
+-              // 다른 섹션으로 이동할 때는 해당 섹션으로 스크롤
+-              scrollToDay(savedDay as DayOfWeek);
+-            }
++             // 스크롤 자동 이동 제거 - 요일 선택만으로 변경
+           }, 100);
+         } else {
+           // 유효하지 않은 요일('곧 시작' 등)인 경우 기본값인 '월' 사용
+@@ -203,7 +244,7 @@ function SeasonPageContent() {
+       
+       return animes.filter(anime => {
+         const titleMatch = anime.titleKor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+-                          anime.titleOrigin?.toLowerCase().includes(searchQuery.toLowerCase());
++                          (anime as any).titleOrigin?.toLowerCase().includes(searchQuery.toLowerCase());
+         
+         const chosungMatch = extractChosung(anime.titleKor || '').includes(searchQuery.toUpperCase());
+         
+@@ -344,50 +385,35 @@ function SeasonPageContent() {
+     }, 200);
+   };
+ 
+-  // 요일 선택 핸들러 (시즌별 페이지용 간단한 로직)
++  // 요일 선택 핸들러 (이번주 페이지와 동일한 로직)
+   const handleDaySelect = (day: DayOfWeek) => {
+     setSelectedDay(day);
+     
+-    // 첫 번째 존재하는 섹션 찾기
+-    setTimeout(() => {
+-      const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
+-      let firstExistingSection = null;
+-      
+-      for (const dayKey of dayOrder) {
+-        const sectionId = `${dayKey}-${year}-${quarter}`;
+-        const element = document.getElementById(sectionId);
+-        if (element && element.children.length > 0) {
+-          firstExistingSection = dayKey;
+-          break;
+-        }
+-      }
+-      
+-      // 현재 선택된 요일의 섹션 ID
+-      const dayMapping: Record<string, string> = {
+-        '일': 'sun',
+-        '월': 'mon', 
+-        '화': 'tue',
+-        '수': 'wed',
+-        '목': 'thu',
+-        '금': 'fri',
+-        '토': 'sat',
+-        '특별편성 및 극장판': 'special'
+-      };
++    const dayKey = getDayKey(day);
++    
++    // 일요일도 다른 요일과 동일하게 해당 섹션으로 스크롤
++    
++    // 클릭한 요일의 섹션으로 직접 스크롤
++    const sectionId = `${dayKey}-${year}-${quarter}`;
++    const element = document.getElementById(sectionId);
++    
++    if (element) {
++      const headerHeight = 60;
++      const daySelectionHeight = 44;
++      const margin = 50;
++      const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+       
+-      const currentDayKey = dayMapping[day];
+-      const currentSectionId = `${currentDayKey}-${year}-${quarter}`;
++      // 즉시 스크롤 실행
++      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+       
+-      // 첫 번째 섹션인지 확인
+-      if (firstExistingSection === currentDayKey) {
+-        // 첫 번째 섹션으로 이동할 때는 스크롤 탑
+-        window.scrollTo({ top: 0, behavior: 'instant' });
+-        setIsDaySelectionSticky(false);
+-        setIsSeasonSelectorSticky(false);
+-      } else {
+-        // 다른 섹션으로 이동할 때는 해당 섹션으로 스크롤
+-        scrollToDay(day);
+-      }
+-    }, 100);
++      // 혹시 스크롤이 작동하지 않을 경우를 대비한 대체 방법
++      setTimeout(() => {
++        const rect = element.getBoundingClientRect();
++        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
++        const targetScrollTop = scrollTop + rect.top - headerHeight - daySelectionHeight - margin;
++        window.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
++      }, 100);
++    }
+   };
+ 
+   // 요일 키 매핑 함수
+@@ -536,38 +562,35 @@ function SeasonPageContent() {
+     };
+   }, [isSeasonSelectorSticky]);
+ 
+-  // 요일 네비게이션 스크롤 핸들러 (페이드 효과 포함)
+-  const scrollToDay = (day: DayOfWeek) => {
+-    const dayMapping: Record<string, string> = {
+-      '일': 'sun',
+-      '월': 'mon', 
+-      '화': 'tue',
+-      '수': 'wed',
+-      '목': 'thu',
+-      '금': 'fri',
+-      '토': 'sat',
+-      '곧 시작': 'upcoming',
+-      '특별편성 및 극장판': 'special'
+-    };
+-    
+-    const dayKey = dayMapping[day];
+-    if (dayKey) {
+-      const sectionId = `${dayKey}-${year}-${quarter}`;
+-      const element = document.getElementById(sectionId);
++  // 4. 모바일 메뉴 스티키 처리
++  useEffect(() => {
++    const handleMobileMenuStickyScroll = () => {
++      if (!mobileMenuRef.current) return;
+       
+-      if (element) {
+-        const headerHeight = 60;
+-        const daySelectionHeight = 44;
+-        const margin = 74;
+-        const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+-        
+-        // 메뉴 내부 스크롤은 즉시 이동
+-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'instant' });
++      const scrollY = window.scrollY;
++      const mobileMenuRect = mobileMenuRef.current.getBoundingClientRect();
++      const mobileMenuTop = mobileMenuRect.top + scrollY;
++      
++      // 모바일 메뉴가 화면 상단에서 60px 지점을 지나면 스티키
++      const shouldBeSticky = scrollY >= mobileMenuTop - 60;
++      
++      if (shouldBeSticky !== isMobileMenuSticky) {
++        setIsMobileMenuSticky(shouldBeSticky);
+       }
+-    }
+-  };
++    };
+ 
+-  // 4. 스크롤-요일 네비게이션 연동
++    // 초기 체크
++    handleMobileMenuStickyScroll();
++    
++    // 스크롤 이벤트 리스너
++    window.addEventListener('scroll', handleMobileMenuStickyScroll, { passive: true });
++    
++    return () => {
++      window.removeEventListener('scroll', handleMobileMenuStickyScroll);
++    };
++  }, [isMobileMenuSticky]);
++
++  // 5. 스크롤-요일 네비게이션 연동
+   useEffect(() => {
+     if (!groupedAnimes || Object.keys(groupedAnimes).length === 0) return;
+     
+@@ -676,7 +699,7 @@ function SeasonPageContent() {
+   }
+ 
+   return (
+-    <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
++    <main className="w-full min-h-screen overflow-x-hidden overflow-y-visible" style={{ backgroundColor: '#F8F9FA' }}>
+       {/* SearchSection - #F1F3F5 배경, 창 폭 가득, 높이 196px, 레이어 맨 뒤 */}
+       <div className="w-full bg-[#F1F3F5] h-[196px] relative">
+         {/* SearchFilters 컨테이너 - 하얀색 배경, 위아래 #DADCE0 테두리, 높이 100px, 헤더에서 20px 갭 */}
+@@ -721,10 +744,75 @@ function SeasonPageContent() {
+           </div>
+         </div>
+         
+-        {/* YearAndSeason 컴포넌트 - 회색 배경을 중앙으로 꿰뚫는 위치 */}
+-        <div className="absolute -bottom-6 left-0 w-full z-20">
++        {/* YearAndSeason 컴포넌트와 DaySelection - 회색 배경을 중앙으로 꿰뚫는 위치 (PC 전용) */}
++        <div className="absolute -bottom-6 left-0 w-full z-20 hidden md:block">
+           <div className="max-w-7xl mx-auto px-6">
+-            <div className="flex gap-5 items-center justify-start" ref={seasonSelectorRef}>
++            {/* PC: 가로 배치 */}
++            <div className="flex flex-row gap-5 items-center justify-between" ref={seasonSelectorRef}>
++              {/* 첫 번째 줄: SeasonSelector와 방영 중 애니만 보기 */}
++              <div className="flex flex-row gap-5 items-center">
++                {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++                {searchQuery.trim() ? (
++                  <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                    <button
++                      onClick={handleSearchReset}
++                      className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
++                    >
++                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
++                      </svg>
++                      <span className="font-medium">이전</span>
++                    </button>
++                  </div>
++                ) : (
++                  <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                    <SeasonSelector
++                      onSeasonSelect={handleSeasonSelect}
++                      className="w-fit"
++                      currentYear={year}
++                      currentQuarter={quarter}
++                    />
++                  </div>
++                )}
++                
++                {/* 방영 중 애니만 보기 체크박스 */}
++                {!searchQuery.trim() && selectedOttServices.length === 0 && (
++                  <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                    <input
++                      type="checkbox"
++                      id="showOnlyAiring"
++                      checked={showOnlyAiring}
++                      onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
++                      className="w-4 h-4 accent-[#990033]"
++                    />
++                    <label 
++                      htmlFor="showOnlyAiring" 
++                      className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
++                    >
++                      방영 중 애니만 보기
++                    </label>
++                  </div>
++                )}
++              </div>
++            </div>
++          </div>
++        </div>
++      </div>
++
++      {/* Sticky Combined Section - 헤더 60px 아래에 고정 (PC 전용) */}
++      {(isSeasonSelectorSticky || isDaySelectionSticky) && (
++        <div 
++          className="fixed top-[60px] left-0 md:left-[200px] w-full md:w-[calc(100vw-200px)] backdrop-blur-[6px] z-40 hidden md:block"
++          style={{ 
++            top: '60px',
++            zIndex: 40,
++            transition: 'all 0.3s ease-in-out'
++          }}
++        >
++          {/* Background Layer - 헤더와 동일한 스타일 */}
++          <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
++          <div className="relative z-10 max-w-7xl mx-auto px-6">
++            <div className="flex gap-5 items-center justify-between">
+               {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+               {searchQuery.trim() ? (
+                 <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+@@ -749,109 +837,255 @@ function SeasonPageContent() {
+                 </div>
+               )}
+               
+-              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아니고 검색 중이 아닐 때만 표시 */}
+-              {!searchQuery.trim() &&
+-                <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+-                  <input
+-                    type="checkbox"
+-                    id="showOnlyAiring"
+-                    checked={showOnlyAiring}
+-                    onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
+-                    className="w-4 h-4 accent-[#990033]"
+-                  />
+-                  <label 
+-                    htmlFor="showOnlyAiring" 
+-                    className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
++              {/* DaySelection 또는 OTT 필터 - 이번주 페이지와 동일한 구조 */}
++              {selectedOttServices.length === 0 ? (
++                <>
++                  {/* 모바일: 오른쪽 그룹 */}
++                  <div className="md:hidden flex justify-end">
++                    <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                      <DaySelection
++                        selectedDay={selectedDay}
++                        onDaySelect={handleDaySelect}
++                        initialPosition={true}
++                        emptyDays={new Set(emptyDays)}
++                        isThisWeek={false}
++                        isSticky={true}
++                        className="w-fit"
++                      />
++                    </div>
++                  </div>
++                  
++                  {/* 데스크톱: 중앙에 별도 배치 */}
++                  <div className="hidden md:block absolute left-[55%] transform -translate-x-1/2">
++                    <DaySelection
++                      selectedDay={selectedDay}
++                      onDaySelect={handleDaySelect}
++                      initialPosition={true}
++                      emptyDays={new Set(emptyDays)}
++                      isThisWeek={false}
++                      isSticky={true}
++                      className="w-fit"
++                    />
++                  </div>
++                </>
++              ) : (
++                <div className="flex gap-3 items-center">
++                  {/* 선택됨 텍스트 */}
++                  <span className="text-sm font-medium text-gray-700 font-['Pretendard']">
++                    선택됨:
++                  </span>
++                  
++                  {/* OTT 필터 아이콘들 */}
++                  <div className="flex gap-2 items-center">
++                    {selectedOttServices.map((ottService, index) => (
++                      <div key={index} className="relative">
++                        <div 
++                          onClick={() => handleOttFilterChange(ottService, false)}
++                          className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
++                        >
++                          <img
++                            src={`/icons/${ottService.toLowerCase()}-logo.svg`}
++                            alt={ottService}
++                            className="w-full h-full object-contain"
++                          />
++                        </div>
++                        <img
++                          src="/icons/remove-filter.svg"
++                          alt="제거"
++                          className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
++                        />
++                      </div>
++                    ))}
++                  </div>
++                  
++                  {/* 필터 초기화 버튼 */}
++                  <button
++                    onClick={() => setSelectedOttServices([])}
++                    className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
+                   >
+-                    방영 중 애니만 보기
+-                  </label>
++                    필터 초기화
++                  </button>
+                 </div>
+-              }
++              )}
++              </div>
+             </div>
+-          </div>
+         </div>
+-      </div>
++      )}
+ 
+-      {/* Sticky SeasonSelector - 헤더 60px 아래에 고정 */}
+-      {isSeasonSelectorSticky && (
+-        <div 
+-          className="fixed top-[60px] left-0 w-full bg-white border-b border-gray-200 z-40"
+-          style={{ 
+-            top: '60px',
+-            left: '200px', // 사이드바 너비만큼 오른쪽으로 이동
+-            width: 'calc(100vw - 200px)', // 사이드바를 제외한 너비
+-            zIndex: 40,
+-            transition: 'all 0.3s ease-in-out'
+-          }}
+-        >
+-          <div className="max-w-7xl mx-auto px-6">
+-            <div className="flex gap-5 items-center justify-start">
+-              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+-              {searchQuery.trim() ? (
+-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++      {/* 모바일 전용 스티키 메뉴 */}
++      {isMobileMenuSticky && (
++        <div className="fixed top-[60px] left-0 w-full backdrop-blur-[6px] z-40 md:hidden">
++          <div className="absolute inset-0 bg-white/70 backdrop-blur-[12px]"></div>
++          <div className="relative z-10 max-w-7xl mx-auto px-6 py-3">
++            <div className="bg-gray-50 rounded-lg p-3 space-y-3">
++              {/* 첫 번째 줄: 여름 애니메이션 / 요일 */}
++              <div className="flex gap-3 items-center">
++                {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++                {searchQuery.trim() ? (
+                   <button
+                     onClick={handleSearchReset}
+-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
++                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer px-3 py-2 rounded-lg hover:bg-white"
+                   >
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                     </svg>
+                     <span className="font-medium">이전</span>
+                   </button>
+-                </div>
+-              ) : (
+-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+-                  <SeasonSelector
+-                    onSeasonSelect={handleSeasonSelect}
+-                    className="w-fit"
+-                    currentYear={year}
+-                    currentQuarter={quarter}
+-                  />
+-                </div>
+-              )}
++                ) : (
++                  <div className="flex-1">
++                    <SeasonSelector
++                      onSeasonSelect={handleSeasonSelect}
++                      className="w-full"
++                      currentYear={year}
++                      currentQuarter={quarter}
++                    />
++                  </div>
++                )}
++                
++                {/* 요일 선택 (모바일에서만 표시) */}
++                {!searchQuery.trim() && selectedOttServices.length === 0 && (
++                  <div className="flex-1">
++                    <div className="bg-white rounded-lg px-3 py-2 border relative">
++                      <select
++                        value={selectedDay}
++                        onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
++                        className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
++                      >
++                        <option value="월">월</option>
++                        <option value="화">화</option>
++                        <option value="수">수</option>
++                        <option value="목">목</option>
++                        <option value="금">금</option>
++                        <option value="토">토</option>
++                        <option value="일">일</option>
++                        <option value="특별편성 및 극장판">특별편성 및 극장판</option>
++                      </select>
++                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
++                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
++                        </svg>
++                      </div>
++                    </div>
++                  </div>
++                )}
++              </div>
+               
+-              {/* 방영 중 애니만 보기 체크박스 - 검색 중이 아닐 때만 표시 */}
+-              {!searchQuery.trim() &&
+-                <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++              {/* 두 번째 줄: 방영 중 애니만 보기 */}
++              {!searchQuery.trim() && selectedOttServices.length === 0 && (
++                <div className="flex gap-2 items-center">
+                   <input
+                     type="checkbox"
+-                    id="showOnlyAiringSticky"
++                    id="showOnlyAiringMobileSticky"
+                     checked={showOnlyAiring}
+                     onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
+                     className="w-4 h-4 accent-[#990033]"
+                   />
+                   <label 
+-                    htmlFor="showOnlyAiringSticky" 
++                    htmlFor="showOnlyAiringMobileSticky" 
+                     className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
+                   >
+                     방영 중 애니만 보기
+                   </label>
+                 </div>
+-              }
++              )}
+             </div>
+           </div>
+         </div>
+       )}
+ 
+-      {/* DaySelection 또는 OTT 필터 큐 - SearchSection 아래에 배치 */}
+-      <div className="w-full h-[95px] bg-white">
+-        <div className="max-w-7xl mx-auto px-6 pt-[50px] pb-8">
+-          {selectedOttServices.length === 0 ? (
+-            <div ref={daySelectionRef} className="mb-[40px] flex justify-center">
+-              <div className="ml-[100px]">
+-                <DaySelection
+-                  selectedDay={selectedDay}
+-                  onDaySelect={(day) => {
+-                    handleDaySelect(day);
+-                    scrollToDay(day);
+-                  }}
+-                  emptyDays={new Set(emptyDays)}
+-                  isThisWeek={false}
+-                  isSticky={isDaySelectionSticky}
++      {/* 모바일 전용 드롭다운 버튼 영역 */}
++      <div className="w-full bg-white md:hidden" ref={mobileMenuRef}>
++        <div className="max-w-7xl mx-auto px-6 py-4">
++          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
++            {/* 첫 번째 줄: 여름 애니메이션 / 요일 */}
++            <div className="flex gap-3 items-center">
++              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++              {searchQuery.trim() ? (
++                <button
++                  onClick={handleSearchReset}
++                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer px-3 py-2 rounded-lg hover:bg-white"
++                >
++                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
++                  </svg>
++                  <span className="font-medium">이전</span>
++                </button>
++              ) : (
++                <div className="flex-1">
++                  <SeasonSelector
++                    onSeasonSelect={handleSeasonSelect}
++                    className="w-full"
++                    currentYear={year}
++                    currentQuarter={quarter}
++                  />
++                </div>
++              )}
++              
++              {/* 요일 선택 (모바일에서만 표시) */}
++              {!searchQuery.trim() && selectedOttServices.length === 0 && (
++                <div className="flex-1">
++                  <div className="bg-white rounded-lg px-3 py-2 border relative">
++                    <select
++                      value={selectedDay}
++                      onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
++                      className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
++                    >
++                      <option value="월">월</option>
++                      <option value="화">화</option>
++                      <option value="수">수</option>
++                      <option value="목">목</option>
++                      <option value="금">금</option>
++                      <option value="토">토</option>
++                      <option value="일">일</option>
++                      <option value="특별편성 및 극장판">특별편성 및 극장판</option>
++                    </select>
++                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
++                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
++                      </svg>
++                    </div>
++                  </div>
++                </div>
++              )}
++            </div>
++            
++            {/* 두 번째 줄: 방영 중 애니만 보기 */}
++            {!searchQuery.trim() && selectedOttServices.length === 0 && (
++              <div className="flex gap-2 items-center">
++                <input
++                  type="checkbox"
++                  id="showOnlyAiringMobile"
++                  checked={showOnlyAiring}
++                  onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
++                  className="w-4 h-4 accent-[#990033]"
+                 />
++                <label 
++                  htmlFor="showOnlyAiringMobile" 
++                  className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
++                >
++                  방영 중 애니만 보기
++                </label>
+               </div>
++            )}
++          </div>
++        </div>
++      </div>
++
++      {/* DaySelection 또는 OTT 필터 큐 - SearchSection 아래에 배치 (PC용) */}
++      <div className="w-full h-[95px] bg-white hidden md:block">
++        <div className="max-w-7xl mx-auto px-6 pt-[50px] pb-8">
++          {/* Day Selection - 이번주 페이지와 동일한 위치 */}
++          {selectedOttServices.length === 0 && !searchQuery.trim() ? (
++            <div ref={daySelectionRef} className="mb-[40px] flex justify-center w-full max-w-6xl mx-auto">
++              <DaySelection
++                selectedDay={selectedDay}
++                onDaySelect={handleDaySelect}
++                emptyDays={new Set(emptyDays)}
++                isThisWeek={false}
++                isSticky={isDaySelectionSticky}
++              />
+             </div>
+-          ) : (
++          ) : selectedOttServices.length > 0 ? (
+             <div className="mb-[40px] flex justify-start">
+               <div className="flex gap-3 items-center">
+                 {/* 선택됨 텍스트 */}
+@@ -891,81 +1125,10 @@ function SeasonPageContent() {
+                 </button>
+               </div>
+             </div>
+-          )}
++          ) : null}
+         </div>
+       </div>
+ 
+-      {/* Sticky DaySelection 또는 OTT 필터 큐 - SeasonSelector 아래에 고정 */}
+-      {isDaySelectionSticky && (
+-        <div 
+-          className="fixed left-[65px] w-full bg-white border-b border-gray-200 z-30"
+-          style={{ 
+-            top: isSeasonSelectorSticky ? `${60 + seasonSelectorHeight}px` : '60px',
+-            zIndex: 30,
+-            transition: 'all 0.3s ease-in-out'
+-          }}
+-        >
+-          <div className="flex justify-center">
+-            <div className="ml-[120px] md:ml-[368px] w-full">
+-              <div className="max-w-7xl mx-auto px-6">
+-                {selectedOttServices.length === 0 ? (
+-                  <DaySelection
+-                    selectedDay={selectedDay}
+-                    onDaySelect={(day) => {
+-                      handleDaySelect(day);
+-                      scrollToDay(day);
+-                    }}
+-                    initialPosition={true}
+-                    emptyDays={new Set(emptyDays)}
+-                    isThisWeek={false}
+-                    isSticky={isDaySelectionSticky}
+-                  />
+-                ) : (
+-                  <div className="flex justify-start">
+-                    <div className="flex gap-3 items-center">
+-                      {/* 선택됨 텍스트 */}
+-                      <span className="text-sm font-medium text-gray-700 font-['Pretendard']">
+-                        선택됨:
+-                      </span>
+-                      
+-                      {/* OTT 필터 아이콘들 */}
+-                      <div className="flex gap-2 items-center">
+-                        {selectedOttServices.map((ottService, index) => (
+-                          <div key={index} className="relative">
+-                            <div 
+-                              onClick={() => handleOttFilterChange(ottService, false)}
+-                              className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+-                            >
+-                              <img
+-                                src={`/icons/${ottService.toLowerCase()}-logo.svg`}
+-                                alt={ottService}
+-                                className="w-full h-full object-contain"
+-                              />
+-                            </div>
+-                            <img
+-                              src="/icons/remove-filter.svg"
+-                              alt="제거"
+-                              className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
+-                            />
+-                          </div>
+-                        ))}
+-                      </div>
+-                      
+-                      {/* 필터 초기화 버튼 */}
+-                      <button
+-                        onClick={() => setSelectedOttServices([])}
+-                        className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
+-                      >
+-                        필터 초기화
+-                      </button>
+-                    </div>
+-                  </div>
+-                )}
+-              </div>
+-            </div>
+-          </div>
+-        </div>
+-      )}
+ 
+       {/* Anime Grid Section - F8F9FA 배경 */}
+       <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
+@@ -1048,7 +1211,7 @@ function SeasonPageContent() {
+                       <h2 
+                         className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                         onClick={() => {
+-                          // 요일 헤더 클릭 시 해당 요일 네비게이션 활성화 및 스크롤 이동
++                           // 요일 헤더 클릭 시 해당 요일 선택만 (스크롤 이동 제거)
+                           const dayToKorean = {
+                             'UPCOMING': '곧 시작',
+                             'SUN': '일',
+@@ -1062,10 +1225,9 @@ function SeasonPageContent() {
+                           };
+                           
+                           const koreanDay = dayToKorean[day as keyof typeof dayToKorean];
+-                          if (koreanDay) {
+-                            setSelectedDay(koreanDay as DayOfWeek);
+-                            scrollToDay(koreanDay as DayOfWeek);
+-                          }
++                            if (koreanDay) {
++                              setSelectedDay(koreanDay as DayOfWeek);
++                            }
+                         }}
+                       >
+                         {dayInKorean}
+@@ -1124,7 +1286,7 @@ function SeasonPageContent() {
+           active={preloadingStatus.active}
+         />
+       )}
+-    </div>
++    </main>
+   );
+ }
+ 
+diff --git a/src/app/search/page.tsx b/src/app/search/page.tsx
+index 6616306..d60b9ce 100644
+--- a/src/app/search/page.tsx
++++ b/src/app/search/page.tsx
+@@ -26,6 +26,49 @@ function SearchPageContent() {
+   const searchParams = useSearchParams();
+   const router = useRouter();
+   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('월'); // 기본값을 "월"로 설정
++  
++  // 클라이언트에서만 이 페이지에 한해 뷰포트를 디바이스 폭으로 임시 전환
++  useEffect(() => {
++    const head = document.head;
++    if (!head) return;
++    
++    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
++    const prevContent = existing?.getAttribute('content') || '';
++    
++    // 디바이스 폭으로 설정
++    if (existing) {
++      existing.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
++    } else {
++      const meta = document.createElement('meta');
++      meta.name = 'viewport';
++      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
++      head.appendChild(meta);
++    }
++    
++    // body의 min-width 오버라이드 (검색 페이지에서만)
++    const body = document.body;
++    const originalMinWidth = body.style.minWidth;
++    const originalOverflowX = body.style.overflowX;
++    
++    body.style.minWidth = 'auto';
++    body.style.overflowX = 'hidden';
++    
++    return () => {
++      // viewport 설정 복원
++      const current = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
++      if (current) {
++        if (prevContent) {
++          current.setAttribute('content', prevContent);
++        } else {
++          current.parentElement?.removeChild(current);
++        }
++      }
++      
++      // body 스타일 복원
++      body.style.minWidth = originalMinWidth;
++      body.style.overflowX = originalOverflowX;
++    };
++  }, []);
+   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
+   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
+   const [isPreloading, setIsPreloading] = useState(false);
+@@ -49,8 +92,12 @@ function SearchPageContent() {
+   const [isSeasonSelectorSticky, setIsSeasonSelectorSticky] = useState(false);
+   const [seasonSelectorHeight, setSeasonSelectorHeight] = useState(0);
+   
++  // 모바일 전용 스티키 상태
++  const [isMobileMenuSticky, setIsMobileMenuSticky] = useState(false);
++  
+   const daySelectionRef = useRef<HTMLDivElement>(null);
+   const seasonSelectorRef = useRef<HTMLDivElement>(null);
++  const mobileMenuRef = useRef<HTMLDivElement>(null);
+   
+   // 시즌별 스크롤 위치 매핑 관련 함수들
+   const getSeasonKey = (year: number | null, quarter: number | null) => {
+@@ -545,18 +592,6 @@ function SearchPageContent() {
+     const dayKey = getDayKey(day);
+     const scrollMap = getStoredScrollMap();
+     
+-    // "이번 주"에서 빈 섹션 클릭 시 스크롤 이동하지 않음
+-    if (isThisWeek) {
+-      const checkSectionExists = (dayKey: string) => {
+-        const element = document.getElementById(dayKey);
+-        return element && element.children.length > 0;
+-      };
+-      
+-      if (!checkSectionExists(dayKey)) {
+-        return; // 빈 섹션이면 스크롤 이동하지 않음
+-      }
+-    }
+-    
+     // 예외 규칙: '일'은 시즌 메뉴에서만 스크롤 탑
+     if (day === '일' && !isThisWeek) {
+       window.scrollTo({ top: 0, behavior: 'instant' });
+@@ -566,103 +601,26 @@ function SearchPageContent() {
+       return;
+     }
+     
+-    // 저장된 위치가 있으면 즉시 스크롤 (데이터 없으면 다음 순서 섹션 찾기)
+-    if (scrollMap[currentSeasonKey]) {
+-      setTimeout(() => {
+-        // 실제 데이터 존재 여부를 확인하기 위해 DOM에서 섹션 확인
+-        const checkSectionExists = (dayKey: string) => {
+-          const sectionId = isThisWeek ? dayKey : `${dayKey}-${selectedYear}-${selectedQuarter}`;
+-          const element = document.getElementById(sectionId);
+-          return element && element.children.length > 0;
+-        };
+-        
+-        // 첫 번째 존재하는 섹션 찾기
+-        const dayOrder = ['upcoming', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'special'];
+-        let firstExistingIndex = -1;
+-        
+-        for (let i = 0; i < dayOrder.length; i++) {
+-          if (checkSectionExists(dayOrder[i])) {
+-            firstExistingIndex = i;
+-            break;
+-          }
+-        }
+-        
+-        // 동일 섹션 확인 - 저장된 위치가 있으면 사용, 없으면 직접 스크롤
+-        if (checkSectionExists(dayKey)) {
+-          const scrollSuccess = scrollToSavedPosition(currentSeasonKey, dayKey);
+-          if (!scrollSuccess) {
+-            // 저장된 위치가 없으면 직접 스크롤
+-            const sectionId = isThisWeek ? dayKey : `${dayKey}-${selectedYear}-${selectedQuarter}`;
+-            const element = document.getElementById(sectionId);
+-            if (element) {
+-              const headerHeight = 60;
+-              const daySelectionHeight = 44;
+-              const margin = 50;
+-              const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+-              window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+-            }
+-          }
+-          return;
+-        }
+-        
+-        // 첫 번째 존재하는 섹션 이전의 모든 요일은 스크롤 탑
+-        if (firstExistingIndex !== -1) {
+-          const currentIndex = dayOrder.indexOf(dayKey);
+-          if (currentIndex <= firstExistingIndex) {
+-            window.scrollTo({ top: 0, behavior: 'instant' });
+-            setIsDaySelectionSticky(false);
+-            setIsSeasonSelectorSticky(false);
+-            return;
+-          }
+-        }
+-        
+-        // 다음 순서 섹션 찾기
+-        const currentIndex = dayOrder.indexOf(dayKey);
+-        for (let i = currentIndex + 1; i < dayOrder.length; i++) {
+-          if (checkSectionExists(dayOrder[i])) {
+-            const scrollSuccess = scrollToSavedPosition(currentSeasonKey, dayOrder[i]);
+-            if (!scrollSuccess) {
+-              // 저장된 위치가 없으면 직접 스크롤
+-              const sectionId = isThisWeek ? dayOrder[i] : `${dayOrder[i]}-${selectedYear}-${selectedQuarter}`;
+-              const element = document.getElementById(sectionId);
+-              if (element) {
+-                const headerHeight = 60;
+-                const daySelectionHeight = 44;
+-                const margin = 50;
+-                const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+-                window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+-              }
+-            }
+-            return;
+-          }
+-        }
+-        
+-        // 모든 섹션 없음
+-        window.scrollTo({ top: 0, behavior: 'instant' });
+-        setIsDaySelectionSticky(false);
+-        setIsSeasonSelectorSticky(false);
+-      }, 50);
+-    } else {
+-      // 저장된 위치가 없으면 DOM에서 직접 찾아서 스크롤
++    // 클릭한 요일의 섹션으로 직접 스크롤 (저장된 위치 우회)
++    // 애니메이션 섹션과 동일한 로직으로 섹션 ID 생성
++    const sectionId = isThisWeek ? dayKey : `${dayKey}-${selectedYear}-${selectedQuarter}`;
++    const element = document.getElementById(sectionId);
++    
++    if (element) {
++      const headerHeight = 60;
++      const daySelectionHeight = 44;
++      const margin = 50;
++      const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
++      
++      // 즉시 스크롤 실행
++      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
++      
++      // 혹시 스크롤이 작동하지 않을 경우를 대비한 대체 방법
+       setTimeout(() => {
+-        const sectionId = isThisWeek ? dayKey : `${dayKey}-${selectedYear}-${selectedQuarter}`;
+-        const element = document.getElementById(sectionId);
+-        
+-        if (element) {
+-          const headerHeight = 60;
+-          const daySelectionHeight = 44;
+-          const margin = 50;
+-          const targetY = element.offsetTop - headerHeight - daySelectionHeight - margin;
+-          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+-        } else {
+-          // DOM에서 실제 존재하는 섹션들 확인
+-          const allSections = document.querySelectorAll('[id]');
+-          const sectionIds = Array.from(allSections).map(el => el.id).filter(id => 
+-            id.includes('upcoming') || id.includes('sun') || id.includes('mon') || 
+-            id.includes('tue') || id.includes('wed') || id.includes('thu') || 
+-            id.includes('fri') || id.includes('sat') || id.includes('special')
+-          );
+-        }
++        const rect = element.getBoundingClientRect();
++        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
++        const targetScrollTop = scrollTop + rect.top - headerHeight - daySelectionHeight - margin;
++        window.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+       }, 100);
+     }
+   };
+@@ -760,12 +718,10 @@ function SearchPageContent() {
+     const handleStickyScroll = () => {
+       if (!daySelectionRef.current) return;
+       
+-      const scrollY = window.scrollY;
+       const daySelectionRect = daySelectionRef.current.getBoundingClientRect();
+-      const daySelectionTop = daySelectionRect.top + scrollY;
+       
+-      // DaySelection이 화면 상단에서 60px 지점을 지나면 스티키
+-      const shouldBeSticky = scrollY >= daySelectionTop - 60;
++      // DaySelection이 완전히 화면 밖으로 나가면 스티키
++      const shouldBeSticky = daySelectionRect.bottom < 0;
+       
+       if (shouldBeSticky !== isDaySelectionSticky) {
+         setIsDaySelectionSticky(shouldBeSticky);
+@@ -788,12 +744,10 @@ function SearchPageContent() {
+     const handleSeasonSelectorStickyScroll = () => {
+       if (!seasonSelectorRef.current) return;
+       
+-      const scrollY = window.scrollY;
+       const seasonSelectorRect = seasonSelectorRef.current.getBoundingClientRect();
+-      const seasonSelectorTop = seasonSelectorRect.top + scrollY;
+       
+-      // 시즌 선택기가 화면 상단에서 60px 지점을 지나면 스티키
+-      const shouldBeSticky = scrollY >= seasonSelectorTop - 60;
++      // SeasonSelector가 완전히 화면 밖으로 나가면 스티키
++      const shouldBeSticky = seasonSelectorRect.bottom < 0;
+       
+       if (shouldBeSticky !== isSeasonSelectorSticky) {
+         setIsSeasonSelectorSticky(shouldBeSticky);
+@@ -811,7 +765,35 @@ function SearchPageContent() {
+     };
+   }, [isSeasonSelectorSticky]);
+ 
+-  // 3. 스티키 요소들의 높이 측정
++  // 3. 모바일 메뉴 스티키 처리
++  useEffect(() => {
++    const handleMobileMenuStickyScroll = () => {
++      if (!mobileMenuRef.current) return;
++      
++      const scrollY = window.scrollY;
++      const mobileMenuRect = mobileMenuRef.current.getBoundingClientRect();
++      const mobileMenuTop = mobileMenuRect.top + scrollY;
++      
++      // 모바일 메뉴가 화면 상단에서 60px 지점을 지나면 스티키
++      const shouldBeSticky = scrollY >= mobileMenuTop - 60;
++      
++      if (shouldBeSticky !== isMobileMenuSticky) {
++        setIsMobileMenuSticky(shouldBeSticky);
++      }
++    };
++
++    // 초기 체크
++    handleMobileMenuStickyScroll();
++    
++    // 스크롤 이벤트 리스너
++    window.addEventListener('scroll', handleMobileMenuStickyScroll, { passive: true });
++    
++    return () => {
++      window.removeEventListener('scroll', handleMobileMenuStickyScroll);
++    };
++  }, [isMobileMenuSticky]);
++
++  // 4. 스티키 요소들의 높이 측정
+   useEffect(() => {
+     const updateHeights = () => {
+       if (seasonSelectorRef.current) {
+@@ -1542,7 +1524,7 @@ function SearchPageContent() {
+   }
+ 
+   return (
+-    <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
++    <main className="w-full min-h-screen overflow-x-hidden overflow-y-visible" style={{ backgroundColor: '#F8F9FA' }}>
+       {/* SearchSection - #F1F3F5 배경, 창 폭 가득, 높이 196px, 레이어 맨 뒤 */}
+       <div className="w-full bg-[#F1F3F5] h-[196px] relative">
+         {/* SearchFilters 컨테이너 - 하얀색 배경, 위아래 #DADCE0 테두리, 높이 100px, 헤더에서 20px 갭 */}
+@@ -1588,8 +1570,8 @@ function SearchPageContent() {
+           </div>
+         </div>
+         
+-        {/* YearAndSeason 컴포넌트 - 회색 배경을 중앙으로 꿰뚫는 위치 */}
+-        <div className="absolute -bottom-6 left-0 w-full z-20">
++        {/* YearAndSeason 컴포넌트와 DaySelection - 회색 배경을 중앙으로 꿰뚫는 위치 (PC 전용) */}
++        <div className="absolute -bottom-6 left-0 w-full z-20 hidden md:block">
+           <div className="max-w-7xl mx-auto px-6">
+             <div className="flex gap-5 items-center justify-start" ref={seasonSelectorRef}>
+               {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+@@ -1634,17 +1616,90 @@ function SearchPageContent() {
+                   </label>
+                 </div>
+               )}
++
++              {/* 모바일에서 DaySelection을 SeasonSelector 우측에 위치 */}
++              {!searchQuery.trim() && (
++                <div className="md:hidden flex justify-end pr-4 ml-6">
++                  <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                    <DaySelection
++                      selectedDay={selectedDay}
++                      onDaySelect={handleDaySelect}
++                      emptyDays={emptyDays}
++                      isThisWeek={isThisWeek}
++                      isSticky={true}
++                    />
++                  </div>
++                </div>
++              )}
+             </div>
+           </div>
+         </div>
+       </div>
+ 
+       {/* Search and Content Section */}
+-      <div className="w-full h-[95px] bg-white">
+-        <div className="max-w-7xl mx-auto px-6 pt-[50px] pb-8">
+-          {/* Day Selection 또는 OTT 필터 큐 */}
++      <div className="w-full bg-white md:h-[95px]">
++        <div className="max-w-7xl mx-auto px-6 pt-4 pb-[0.1px]">
++          {/* 모바일 전용 드롭다운 버튼 영역 */}
++          <div className="w-full md:hidden mb-[40px]" ref={mobileMenuRef}>
++            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
++              {/* 첫 번째 줄: 이번주 / 요일 */}
++              <div className="flex gap-3 items-center">
++                {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++                {searchQuery.trim() ? (
++                  <button
++                    onClick={handleSearchReset}
++                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer px-3 py-2 rounded-lg hover:bg-white"
++                  >
++                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
++                    </svg>
++                    <span className="font-medium">이전</span>
++                  </button>
++                ) : (
++                  <div className="flex-1">
++                    <SeasonSelector
++                      onSeasonSelect={handleSeasonSelect}
++                      className="w-full"
++                      currentYear={isThisWeek ? undefined : selectedYear || undefined}
++                      currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
++                    />
++                  </div>
++                )}
++                
++                {/* 요일 선택 (모바일에서만 표시) */}
++                {!searchQuery.trim() && selectedOttServices.length === 0 && (
++                  <div className="flex-1">
++                    <div className="bg-white rounded-lg px-3 py-2 border relative">
++                      <select
++                        value={selectedDay}
++                        onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
++                        className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
++                      >
++                        <option value="곧 시작">곧 시작</option>
++                        <option value="월">월</option>
++                        <option value="화">화</option>
++                        <option value="수">수</option>
++                        <option value="목">목</option>
++                        <option value="금">금</option>
++                        <option value="토">토</option>
++                        <option value="일">일</option>
++                        <option value="특별편성 및 극장판">특별편성 및 극장판</option>
++                      </select>
++                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
++                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
++                        </svg>
++                      </div>
++                    </div>
++                  </div>
++                )}
++              </div>
++            </div>
++          </div>
++
++          {/* Day Selection 또는 OTT 필터 큐 - 데스크톱에서만 표시 */}
+           {selectedOttServices.length === 0 && !searchQuery.trim() ? (
+-            <div ref={daySelectionRef} className="mb-[40px] flex justify-center">
++            <div ref={daySelectionRef} className="mb-[40px] hidden md:flex justify-center">
+                  <DaySelection
+                    selectedDay={selectedDay}
+                    onDaySelect={handleDaySelect}
+@@ -1754,7 +1809,7 @@ function SearchPageContent() {
+                             <h2 
+                               className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                               onClick={() => {
+-                                // 요일 헤더 클릭 시 해당 요일 네비게이션 활성화 및 스크롤 이동
++                                // 요일 헤더 클릭 시 해당 요일 선택만 (스크롤 이동 제거)
+                                 const dayToKorean = {
+                                   'UPCOMING': '곧 시작',
+                                   'SUN': '일',
+@@ -1863,100 +1918,174 @@ function SearchPageContent() {
+       </div>
+       
+       
+-      {/* Sticky SeasonSelector - 헤더 60px 아래에 고정 */}
++      {/* Sticky SeasonSelector - 헤더 60px 아래에 고정 (PC 전용) */}
+       {isSeasonSelectorSticky && (
+         <div 
+-          className="fixed top-[60px] left-0 w-full bg-white border-b border-gray-200 z-40"
++          className="fixed top-[60px] left-0 md:left-[200px] w-full md:w-[calc(100vw-200px)] backdrop-blur-[6px] z-40 hidden md:block"
+           style={{ 
+             top: '60px',
+-            left: '200px', // 사이드바 너비만큼 오른쪽으로 이동
+-            width: 'calc(100vw - 200px)', // 사이드바를 제외한 너비
+             zIndex: 40,
+             transition: 'all 0.3s ease-in-out'
+           }}
+         >
+-          <div className="max-w-7xl mx-auto px-6">
+-            <div className="flex gap-5 items-center justify-start">
+-              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+-              {searchQuery.trim() ? (
+-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++          {/* Background Layer - 헤더와 동일한 스타일 */}
++          <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
++          <div className="relative z-10 max-w-7xl mx-auto px-6">
++            <div className="flex gap-5 items-center md:justify-start justify-between">
++                {/* 왼쪽 그룹: SeasonSelector와 체크박스 */}
++                <div className="flex gap-5 items-center">
++                  {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++                  {searchQuery.trim() ? (
++                    <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                      <button
++                        onClick={() => {
++                          setSearchQuery('');
++                          setSearchInput('');
++                          setIsSearching(false);
++                          // 검색 상태 정리
++                          sessionStorage.removeItem('search-query');
++                          sessionStorage.removeItem('search-input');
++                          sessionStorage.removeItem('is-searching');
++                        }}
++                        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
++                      >
++                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
++                        </svg>
++                        <span className="font-medium">이전</span>
++                      </button>
++                    </div>
++                  ) : (
++                    <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                      <SeasonSelector
++                        onSeasonSelect={handleSeasonSelect}
++                        className="w-fit"
++                        currentYear={isThisWeek ? undefined : selectedYear || undefined}
++                        currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
++                      />
++                    </div>
++                  )}
++                  
++                  {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아니고 검색 중이 아닐 때만 표시 */}
++                  {!isThisWeek && !searchQuery.trim() && (
++                    <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                      <input
++                        type="checkbox"
++                        id="showOnlyAiringSticky"
++                        checked={showOnlyAiring}
++                        onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
++                        className="w-4 h-4 accent-[#990033]"
++                      />
++                      <label 
++                        htmlFor="showOnlyAiringSticky" 
++                        className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
++                      >
++                        방영 중 애니만 보기
++                      </label>
++                    </div>
++                  )}
++                </div>
++                
++                {/* DaySelection - 모바일에서는 오른쪽, 데스크톱에서는 중앙 */}
++                {!searchQuery.trim() && (
++                  <>
++                    {/* 모바일: 오른쪽 그룹 */}
++                    <div className="md:hidden flex justify-end">
++                      <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                        <DaySelection
++                          selectedDay={selectedDay}
++                          onDaySelect={handleDaySelect}
++                          initialPosition={true}
++                          emptyDays={emptyDays}
++                          isThisWeek={isThisWeek}
++                          isSticky={true}
++                          className="w-fit"
++                        />
++                      </div>
++                    </div>
++                    
++                    {/* 데스크톱: 중앙에 별도 배치 */}
++                    <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
++                      <DaySelection
++                        selectedDay={selectedDay}
++                        onDaySelect={handleDaySelect}
++                        initialPosition={true}
++                        emptyDays={emptyDays}
++                        isThisWeek={isThisWeek}
++                        isSticky={true}
++                        className="w-fit"
++                      />
++                    </div>
++                  </>
++                )}
++            </div>
++          </div>
++        </div>
++      )}
++
++      {/* 모바일 전용 스티키 메뉴 */}
++      {isMobileMenuSticky && (
++        <div className="fixed top-[60px] left-0 w-full backdrop-blur-[6px] z-40 md:hidden">
++          <div className="absolute inset-0 bg-white/70 backdrop-blur-[12px]"></div>
++          <div className="relative z-10 max-w-7xl mx-auto px-6 py-3">
++            <div className="bg-gray-50 rounded-lg p-3 space-y-3">
++              {/* 첫 번째 줄: 이번주 / 요일 */}
++              <div className="flex gap-3 items-center">
++                {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++                {searchQuery.trim() ? (
+                   <button
+-                    onClick={() => {
+-                      setSearchQuery('');
+-                      setSearchInput('');
+-                      setIsSearching(false);
+-                      // 검색 상태 정리
+-                      sessionStorage.removeItem('search-query');
+-                      sessionStorage.removeItem('search-input');
+-                      sessionStorage.removeItem('is-searching');
+-                    }}
+-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
++                    onClick={handleSearchReset}
++                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer px-3 py-2 rounded-lg hover:bg-white"
+                   >
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                     </svg>
+                     <span className="font-medium">이전</span>
+                   </button>
+-                </div>
+-              ) : (
+-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+-                  <SeasonSelector
+-                    onSeasonSelect={handleSeasonSelect}
+-                    className="w-fit"
+-                    currentYear={isThisWeek ? undefined : selectedYear || undefined}
+-                    currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
+-                  />
+-                </div>
+-              )}
+-              
+-              {/* 방영 중 애니만 보기 체크박스 - "이번 주"가 아니고 검색 중이 아닐 때만 표시 */}
+-              {!isThisWeek && !searchQuery.trim() && (
+-                <div className="bg-white box-border content-stretch flex gap-2 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+-                  <input
+-                    type="checkbox"
+-                    id="showOnlyAiringSticky"
+-                    checked={showOnlyAiring}
+-                    onChange={(e) => handleShowOnlyAiringChange(e.target.checked)}
+-                    className="w-4 h-4 accent-[#990033]"
+-                  />
+-                  <label 
+-                    htmlFor="showOnlyAiringSticky" 
+-                    className="text-sm font-medium text-gray-700 cursor-pointer font-['Pretendard']"
+-                  >
+-                    방영 중 애니만 보기
+-                  </label>
+-                </div>
+-              )}
+-            </div>
+-          </div>
+-        </div>
+-      )}
+-      
+-      {/* Sticky DaySelection - SeasonSelector 아래에 고정, 검색 중일 때는 숨김 */}
+-      {isDaySelectionSticky && !searchQuery.trim() && (
+-        <div 
+-          className="fixed left-[65px] w-full bg-white border-b border-gray-200 z-30"
+-          style={{ 
+-            top: isSeasonSelectorSticky ? `${60 + seasonSelectorHeight}px` : '60px',
+-            zIndex: 30,
+-            transition: 'all 0.3s ease-in-out'
+-          }}
+-        >
+-          <div className="flex justify-center">
+-            <div className={`${isThisWeek ? 'ml-[120px] md:ml-[340px]' : 'ml-[120px] md:ml-[368px]'} w-full`}>
+-              <div className="max-w-7xl mx-auto px-6">
+-                <DaySelection
+-                  selectedDay={selectedDay}
+-                  onDaySelect={handleDaySelect}
+-                  initialPosition={true}
+-                  emptyDays={emptyDays}
+-                  isThisWeek={isThisWeek}
+-                />
++                ) : (
++                  <div className="flex-1">
++                    <SeasonSelector
++                      onSeasonSelect={handleSeasonSelect}
++                      className="w-full"
++                      currentYear={isThisWeek ? undefined : selectedYear || undefined}
++                      currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
++                    />
++                  </div>
++                )}
++                
++                {/* 요일 선택 (모바일에서만 표시) */}
++                {!searchQuery.trim() && selectedOttServices.length === 0 && (
++                  <div className="flex-1">
++                    <div className="bg-white rounded-lg px-3 py-2 border relative">
++                      <select
++                        value={selectedDay}
++                        onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
++                        className="w-full bg-transparent border-none outline-none text-gray-900 text-sm font-medium cursor-pointer appearance-none pr-6"
++                      >
++                        <option value="곧 시작">곧 시작</option>
++                        <option value="월">월</option>
++                        <option value="화">화</option>
++                        <option value="수">수</option>
++                        <option value="목">목</option>
++                        <option value="금">금</option>
++                        <option value="토">토</option>
++                        <option value="일">일</option>
++                        <option value="특별편성 및 극장판">특별편성 및 극장판</option>
++                      </select>
++                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
++                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
++                        </svg>
++                      </div>
++                    </div>
++                  </div>
++                )}
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
++
+       
+       {/* 프리로딩 진행률 표시 (새로운 데이터를 가져올 때만) */}
+       {isFetching && isPreloading && (
+@@ -1968,7 +2097,7 @@ function SearchPageContent() {
+       )}
+       
+       
+-    </div>
++    </main>
+   );
+ }
+ 
+diff --git a/src/app/vote/page.tsx b/src/app/vote/page.tsx
+index eb79980..aceab13 100644
+--- a/src/app/vote/page.tsx
++++ b/src/app/vote/page.tsx
+@@ -36,6 +36,49 @@ function VotePageContent() {
+   const { isAuthenticated } = useAuth();
+   const { openLoginModal } = useModal();
+   
++  // 클라이언트에서만 이 페이지에 한해 뷰포트를 디바이스 폭으로 임시 전환
++  useEffect(() => {
++    const head = document.head;
++    if (!head) return;
++    
++    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
++    const prevContent = existing?.getAttribute('content') || '';
++    
++    // 디바이스 폭으로 설정
++    if (existing) {
++      existing.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
++    } else {
++      const meta = document.createElement('meta');
++      meta.name = 'viewport';
++      meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
++      head.appendChild(meta);
++    }
++    
++    // body의 min-width 오버라이드 (투표 페이지에서만)
++    const body = document.body;
++    const originalMinWidth = body.style.minWidth;
++    const originalOverflowX = body.style.overflowX;
++    
++    body.style.minWidth = 'auto';
++    body.style.overflowX = 'hidden';
++    
++    return () => {
++      // viewport 설정 복원
++      const current = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
++      if (current) {
++        if (prevContent) {
++          current.setAttribute('content', prevContent);
++        } else {
++          current.parentElement?.removeChild(current);
++        }
++      }
++      
++      // body 스타일 복원
++      body.style.minWidth = originalMinWidth;
++      body.style.overflowX = originalOverflowX;
++    };
++  }, []);
++  
+   // 재투표 모드 상태 (URL 파라미터 대신 내부 상태로 관리)
+   const [isRevoteMode, setIsRevoteMode] = useState(false);
+   
+@@ -656,7 +699,7 @@ function VotePageContent() {
+         <section>
+           <div className="w-full h-24 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
+         </section>
+-        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
++        <div className="w-full mx-auto px-4 py-6">
+           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+             <div className="h-8 bg-gray-200 rounded animate-pulse mb-4" />
+             <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
+@@ -673,8 +716,8 @@ function VotePageContent() {
+         <section>
+           <div className="w-full h-24 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
+         </section>
+-        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
+-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
++        <div className="w-full mx-auto px-4 py-6">
++          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             {Array.from({ length: 6 }).map((_, index) => (
+               <div key={index} className="bg-white rounded-xl shadow border border-gray-200 p-4">
+                 <div className="flex items-center gap-4">
+@@ -723,7 +766,7 @@ function VotePageContent() {
+         </section>
+ 
+         {/* 메인 컨텐츠 */}
+-        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
++        <div className="w-full mx-auto px-4 py-6">
+           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+             {/* 투표 결과 섹션 */}
+             <div className="p-4 sm:p-6">
+@@ -845,7 +888,7 @@ function VotePageContent() {
+               )}
+             </div>
+             {voteHistory.animeBallotDtos && voteHistory.animeBallotDtos.length > 0 ? (
+-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
++                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full">
+                   {voteHistory.animeBallotDtos.map((ballot: VoteHistoryBallotDto) => (
+                     <div key={ballot.animeId}>
+                       <VoteResultCardLoggedIn
+@@ -893,7 +936,7 @@ function VotePageContent() {
+         </section>
+ 
+         {/* 메인 컨텐츠 */}
+-        <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
++        <div className="w-full mx-auto px-4 py-6">
+           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+             <div className="text-center">
+               <div className="text-2xl mb-2">😎</div>
+@@ -924,7 +967,7 @@ function VotePageContent() {
+ 
+   // 투표 결과 화면 렌더링
+   return (
+-    <main className="w-full min-h-screen overflow-visible" ref={containerRef} style={{ overflow: 'visible' }}>
++    <main className="w-full min-h-screen overflow-x-hidden overflow-y-visible" ref={containerRef}>
+       {/* 배너 - 전체 너비, 패딩 없음 */}
+       <section style={{ overflow: 'visible' }}>
+         <VoteBanner 
+@@ -939,11 +982,10 @@ function VotePageContent() {
+ 
+       {/* 투표 섹션 */}
+       <section 
+-        className="w-full overflow-visible" 
+-        style={{ overflow: 'visible' }}
++        className="w-full overflow-x-hidden overflow-y-visible"
+       >
+         {/* 알림 섹션 */}
+-        <div className="w-full max-w-[1240px] mx-auto px-4 pt-6">
++        <div className="w-full mx-auto px-4 pt-6">
+           <div className="bg-white rounded-t-[8px] shadow-sm border border-gray-200 border-b-0">
+             <div className="flex flex-col gap-2.5 pb-[9px] pl-3 pr-3 sm:pl-6 sm:pr-6 pt-3">
+               {!showGenderSelection ? (
+@@ -984,8 +1026,8 @@ function VotePageContent() {
+             </div>
+           </div>
+         </div>
+-        <div className="w-full max-w-[1240px] mx-auto px-4">
+-          <div className="bg-white rounded-b-[8px] shadow-sm border border-gray-200 border-t-0 relative">
++        <div className="w-full mx-auto px-4">
++          <div className="bg-white rounded-b-[8px] shadow-sm border border-gray-200 border-t-0 relative overflow-x-hidden">
+             
+             {/* 투표 섹션 */}
+             <div className="p-6">
+@@ -1016,7 +1058,7 @@ function VotePageContent() {
+       </section>
+ 
+       {/* 컨텐츠 영역 - 중앙 정렬, 패딩 적용 */}
+-      <div className="w-full max-w-[1240px] mx-auto px-4 py-6">
++      <div className="w-full mx-auto px-4 py-6 overflow-x-hidden">
+         {/* 헤더 */}
+         <section className="mb-6">
+           <p className="text-gray-500 text-sm mt-1">
+@@ -1045,7 +1087,7 @@ function VotePageContent() {
+             </div>
+           ) : (
+             <motion.div 
+-              className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full"
++              className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 w-full"
+               initial={{ opacity: 1 }}
+               animate={{ 
+                 opacity: 1
+diff --git a/src/components/AppContainer.tsx b/src/components/AppContainer.tsx
+index 3efa469..3551524 100644
+--- a/src/components/AppContainer.tsx
++++ b/src/components/AppContainer.tsx
+@@ -61,12 +61,12 @@ export default function AppContainer({ children }: AppContainerProps) {
+         </div>
+         
+         {/* Fixed Sidebar */}
+-        <div className="fixed top-[60px] left-0 bottom-0 z-[9999999]">
++        <div className={`fixed top-[60px] left-0 bottom-0 z-[9999999] ${pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') ? 'hidden md:block' : ''}`}>
+           <Sidebar />
+         </div>
+         
+         {/* Main Content */}
+-        <main className="ml-[50px] sm:ml-[55px] md:ml-[200px] pt-[60px] bg-gray-50 transition-all duration-300 ease-in-out group-hover:ml-[200px]">
++        <main className={`${pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') ? 'ml-0 md:ml-[200px]' : 'ml-[50px] sm:ml-[55px] md:ml-[200px]'} pt-[60px] bg-gray-50 transition-all duration-300 ease-in-out group-hover:ml-[200px]`}>
+           {children}
+         </main>
+       </div>
+diff --git a/src/components/Header.tsx b/src/components/Header.tsx
+index e894ae7..f9aa695 100644
+--- a/src/components/Header.tsx
++++ b/src/components/Header.tsx
+@@ -2,8 +2,8 @@
+ 
+ import type { NextPage } from "next";
+ import Link from 'next/link';
+-import { useRouter } from 'next/navigation';
+-import { useState } from 'react';
++import { useRouter, usePathname } from 'next/navigation';
++import { useState, useRef, useEffect } from 'react';
+ import LoginButton from './common/LoginButton';
+ import { useAuth } from '../context/AuthContext';
+ import { scrollToTop } from '../utils/scrollUtils';
+@@ -15,7 +15,11 @@ export type HeaderType = {
+ const Header: NextPage<HeaderType> = ({ className = "" }) => {
+   const { isAuthenticated } = useAuth();
+   const router = useRouter();
++  const pathname = usePathname();
+   const [searchQuery, setSearchQuery] = useState('');
++  const [isMenuOpen, setIsMenuOpen] = useState(false);
++  const [isClosing, setIsClosing] = useState(false);
++  const menuContainerRef = useRef<HTMLDivElement>(null);
+   
+   // 덕스타 로고 클릭 시 스크롤 탑으로 이동
+   const handleLogoClick = () => {
+@@ -44,15 +48,318 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
+     }
+   };
+   
+-  return (
+-    <header
+-      className={`w-full h-[60px] relative border-b border-[#DADCE0] backdrop-blur-[6px] ${className}`}
+-    >
+-      {/* Background Layer */}
+-      <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
++  // 외부 클릭 감지
++  useEffect(() => {
++    const handleClickOutside = (event: MouseEvent) => {
++      const target = event.target as Element;
++      
++      // 사이드바 메뉴 항목 클릭인지 확인
++      if (target.closest('[data-menu-item]')) {
++        return; // 사이드바 메뉴 클릭이면 무시
++      }
++      
++      if (menuContainerRef.current && !menuContainerRef.current.contains(event.target as Node)) {
++        setIsMenuOpen(false);
++      }
++    };
++
++    if (isMenuOpen) {
++      document.addEventListener('mousedown', handleClickOutside);
++    }
++
++    return () => {
++      document.removeEventListener('mousedown', handleClickOutside);
++    };
++  }, [isMenuOpen]);
++
++  // 메뉴 항목 이벤트 바인딩 (클라이언트에서만)
++  useEffect(() => {
++    const handleMenuClick = (e: Event) => {
++      const target = e.target as HTMLElement;
++      const menuText = target.textContent?.trim();
++      
++      // 메뉴 닫기
++      setIsMenuOpen(false);
++      setIsClosing(false);
+       
++      // 페이지 이동
++      setTimeout(() => {
++        switch (menuText) {
++          case '홈':
++            window.location.href = '/';
++            break;
++          case '주간 차트':
++            window.location.href = '/chart';
++            break;
++          case '투표하기':
++            window.location.href = '/vote';
++            break;
++          case '애니/시간표 검색':
++            window.location.href = '/search';
++            break;
++          case '마이페이지':
++            window.location.href = '/mypage';
++            break;
++        }
++      }, 100);
++    };
++
++    // 모든 메뉴 항목에 이벤트 리스너 추가
++    const menuItems = document.querySelectorAll('[data-menu-item]');
++    
++    menuItems.forEach(item => {
++      item.addEventListener('click', handleMenuClick);
++    });
++
++    return () => {
++      // 정리 함수에서 모든 이벤트 리스너 제거
++      menuItems.forEach(item => {
++        item.removeEventListener('click', handleMenuClick);
++      });
++    };
++  }, [isMenuOpen]); // isMenuOpen이 변경될 때마다 재실행
++
++  const toggleMenu = () => {
++    if (isMenuOpen) {
++      closeMenu();
++    } else {
++      setIsMenuOpen(true);
++      setIsClosing(false);
++    }
++  };
++  
++  const closeMenu = () => {
++    setIsClosing(true);
++    setTimeout(() => {
++      setIsMenuOpen(false);
++      setIsClosing(false);
++    }, 300); // 애니메이션 시간과 동일
++  };
++  
++  const handleNavClick = (href: string) => {
++    // 메뉴 즉시 닫기
++    setIsMenuOpen(false);
++    setIsClosing(false);
++    // 페이지 이동
++    router.push(href);
++  };
++  
++  return (
++    <>
++      {/* Sidebar overlay and menu - moved outside header */}
++      {isMenuOpen && (
++        <div 
++          style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 99999 }}
++          onClick={closeMenu}
++        >
++          {/* Overlay background */}
++          <div 
++            style={{
++              position: 'absolute',
++              top: 0,
++              left: 0,
++              width: '100%',
++              height: '100%',
++              backgroundColor: 'rgba(0, 0, 0, 0.5)',
++              backdropFilter: 'blur(4px)'
++            }}
++          />
++          
++          {/* Sidebar menu */}
++          <div 
++            suppressHydrationWarning
++            style={{
++              position: 'absolute',
++              top: 0,
++              left: 0,
++              width: '60%',
++              maxWidth: '400px',
++              height: '100%',
++              backgroundColor: '#ffffff',
++              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
++              transform: isClosing ? 'translateX(-100%)' : 'translateX(0)',
++              transition: 'transform 0.3s ease-out',
++              zIndex: 100000
++            }}
++            onClick={(e) => e.stopPropagation()}
++          >
++            <div style={{ padding: '24px', height: '100%' }}>
++              {/* Header with close button */}
++              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
++                <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>메뉴</h2>
++                <button
++                  onClick={closeMenu}
++                  style={{
++                    width: '32px',
++                    height: '32px',
++                    display: 'flex',
++                    alignItems: 'center',
++                    justifyContent: 'center',
++                    borderRadius: '8px',
++                    border: 'none',
++                    backgroundColor: 'transparent',
++                    cursor: 'pointer'
++                  }}
++                >
++                  <svg style={{ width: '20px', height: '20px', color: '#6b7280' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
++                  </svg>
++                </button>
++              </div>
++              
++              {/* Navigation items */}
++              <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
++                <div 
++                  data-menu-item
++                  style={{
++                    textAlign: 'left',
++                    padding: '12px 16px',
++                    borderRadius: '8px',
++                    border: 'none',
++                    backgroundColor: 'transparent',
++                    color: '#374151',
++                    fontSize: '16px',
++                    fontWeight: '500',
++                    cursor: 'pointer',
++                    transition: 'background-color 0.2s'
++                  }}
++                  onMouseEnter={(e) => {
++                    e.currentTarget.style.backgroundColor = '#f3f4f6';
++                  }}
++                  onMouseLeave={(e) => {
++                    e.currentTarget.style.backgroundColor = 'transparent';
++                  }}
++                >
++                  홈
++                </div>
++                <div 
++                  data-menu-item
++                  style={{
++                    textAlign: 'left',
++                    padding: '12px 16px',
++                    borderRadius: '8px',
++                    border: 'none',
++                    backgroundColor: 'transparent',
++                    color: '#374151',
++                    fontSize: '16px',
++                    fontWeight: '500',
++                    cursor: 'pointer',
++                    transition: 'background-color 0.2s'
++                  }}
++                  onMouseEnter={(e) => {
++                    e.currentTarget.style.backgroundColor = '#f3f4f6';
++                  }}
++                  onMouseLeave={(e) => {
++                    e.currentTarget.style.backgroundColor = 'transparent';
++                  }}
++                >
++                  주간 차트
++                </div>
++                <div 
++                  data-menu-item
++                  style={{
++                    textAlign: 'left',
++                    padding: '12px 16px',
++                    borderRadius: '8px',
++                    border: 'none',
++                    backgroundColor: 'transparent',
++                    color: '#374151',
++                    fontSize: '16px',
++                    fontWeight: '500',
++                    cursor: 'pointer',
++                    transition: 'background-color 0.2s'
++                  }}
++                  onMouseEnter={(e) => {
++                    e.currentTarget.style.backgroundColor = '#f3f4f6';
++                  }}
++                  onMouseLeave={(e) => {
++                    e.currentTarget.style.backgroundColor = 'transparent';
++                  }}
++                >
++                  투표하기
++                </div>
++                <div 
++                  data-menu-item
++                  style={{
++                    textAlign: 'left',
++                    padding: '12px 16px',
++                    borderRadius: '8px',
++                    border: 'none',
++                    backgroundColor: 'transparent',
++                    color: '#374151',
++                    fontSize: '16px',
++                    fontWeight: '500',
++                    cursor: 'pointer',
++                    transition: 'background-color 0.2s'
++                  }}
++                  onMouseEnter={(e) => {
++                    e.currentTarget.style.backgroundColor = '#f3f4f6';
++                  }}
++                  onMouseLeave={(e) => {
++                    e.currentTarget.style.backgroundColor = 'transparent';
++                  }}
++                >
++                  애니/시간표 검색
++                </div>
++                <div 
++                  data-menu-item
++                  style={{
++                    textAlign: 'left',
++                    padding: '12px 16px',
++                    borderRadius: '8px',
++                    border: 'none',
++                    backgroundColor: 'transparent',
++                    color: '#374151',
++                    fontSize: '16px',
++                    fontWeight: '500',
++                    cursor: 'pointer',
++                    transition: 'background-color 0.2s'
++                  }}
++                  onMouseEnter={(e) => {
++                    e.currentTarget.style.backgroundColor = '#f3f4f6';
++                  }}
++                  onMouseLeave={(e) => {
++                    e.currentTarget.style.backgroundColor = 'transparent';
++                  }}
++                >
++                  마이페이지
++                </div>
++              </nav>
++            </div>
++          </div>
++        </div>
++      )}
++
++      <header
++        className={`w-full h-[60px] relative border-b border-[#DADCE0] backdrop-blur-[6px] ${className}`}
++      >
++        {/* Background Layer */}
++        <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
++        
++        {/* Hamburger - vote and search pages mobile only, placed to the left of the logo */}
++        {(pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/')) && (
++          <div
++            ref={menuContainerRef}
++            className="md:hidden absolute top-1/2 -translate-y-1/2 left-1 z-10"
++          >
++            <button
++              type="button"
++              aria-label="Open menu"
++              aria-expanded={isMenuOpen}
++              onClick={toggleMenu}
++              className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/80 backdrop-blur-[12px]"
++            >
++              <img
++                src={isMenuOpen ? '/icons/hamburger-menu-open.svg' : '/icons/hamburger-menu.svg'}
++                alt="Menu"
++                className="w-5 h-5 object-contain"
++              />
++            </button>
++          </div>
++        )}
++
+       {/* Logo */}
+-      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-0 md:left-[25px] top-0 absolute z-10 cursor-pointer">
++      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-[50px] sm:left-[58px] md:left-[25px] top-0 absolute z-10 cursor-pointer">
+         <img
+           src="/logo.svg"
+           alt="Duckstar Logo"
+@@ -61,7 +368,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
+       </Link>
+       
+       {/* Right Section - Search Bar + Login Button */}
+-      <div className={`absolute right-0 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
++      <div className={`absolute right-2 sm:right-3 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
+         isAuthenticated ? 'gap-7' : 'gap-4'
+       }`}>
+         {/* Search Bar */}
+@@ -100,7 +407,9 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
+           />
+         </div>
+       </div>
++      
+     </header>
++    </>
+   );
+ };
+ 
+diff --git a/src/components/search/filters/SearchFilters.tsx b/src/components/search/filters/SearchFilters.tsx
+index 392a75a..2b86d27 100644
+--- a/src/components/search/filters/SearchFilters.tsx
++++ b/src/components/search/filters/SearchFilters.tsx
+@@ -37,34 +37,11 @@ export default function SearchFilters({
+ 
+   return (
+     <div className={cn(
+-      "flex items-center justify-between w-full",
++      "flex items-center justify-center w-full",
+       className
+     )}>
+-      {/* 알림 섹션 - 피그마 디자인에 맞춤 */}
+-      <div className="flex items-center justify-start">
+-        <div className="bg-[#f1f2f3] flex h-9 items-center justify-start pl-3 pr-5 py-0 rounded-lg w-[265px]">
+-          {/* 메시지 아이콘 */}
+-          <div className="flex items-center justify-center w-[34px] h-12">
+-            <div className="w-3.5 h-3 relative">
+-              <img
+-                src="/icons/searchSection-notify-icon.svg"
+-                alt="Message"
+-                className="w-full h-full object-contain"
+-              />
+-            </div>
+-          </div>
+-          
+-          {/* 텍스트 컨테이너 */}
+-          <div className="flex items-center justify-start w-[211px] h-[17px]">
+-            <span className="text-[#23272b] text-sm font-semibold leading-[17px] font-['Pretendard']">
+-              신작 애니메이션을 검색해보세요...
+-            </span>
+-          </div>
+-        </div>
+-      </div>
+-
+-            {/* OTT 필터 목록 - 선택된 OTT는 대기 리스트에서 숨김 */}
+-      <div className="flex gap-[9px] items-center justify-start ml-5">
++      {/* OTT 필터 목록 - 선택된 OTT는 대기 리스트에서 숨김 */}
++      <div className="flex gap-[9px] items-center justify-center">
+         {ottServices.map((ott) => {
+           const isSelected = selectedOttServices.includes(ott.name.toLowerCase());
+           
+diff --git a/src/components/search/ui/DaySelection.tsx b/src/components/search/ui/DaySelection.tsx
+index 7e0611e..3cfaf21 100644
+--- a/src/components/search/ui/DaySelection.tsx
++++ b/src/components/search/ui/DaySelection.tsx
+@@ -44,14 +44,27 @@ const getDays = (isThisWeek: boolean): DayOfWeek[] => {
+   }
+ };
+ 
+-const getDayWidth = (day: DayOfWeek): string => {
+-  switch (day) {
+-    case '곧 시작':
+-      return 'w-[120px] md:w-[80px] lg:w-[90px] xl:w-[100px] 2xl:w-[120px]';
+-    case '특별편성 및 극장판':
+-      return 'w-[175px] md:w-[120px] lg:w-[130px] xl:w-[140px] 2xl:w-[175px]';
+-    default:
+-      return 'w-[115px] md:w-[70px] lg:w-[80px] xl:w-[90px] xl:w-[90px] 2xl:w-[115px]';
++const getDayWidth = (day: DayOfWeek, isSticky?: boolean): string => {
++  if (isSticky) {
++    // 스티키 메뉴에서는 더 작은 크기 사용
++    switch (day) {
++      case '곧 시작':
++        return 'w-[70px] md:w-[60px] lg:w-[65px] xl:w-[70px] 2xl:w-[75px]';
++      case '특별편성 및 극장판':
++        return 'w-[140px] md:w-[100px] lg:w-[120px] xl:w-[120px] 2xl:w-[140px]';
++      default:
++        return 'w-[60px] md:w-[55px] lg:w-[60px] xl:w-[65px] 2xl:w-[70px]';
++    }
++  } else {
++    // 일반 메뉴에서는 큰 크기 사용
++    switch (day) {
++      case '곧 시작':
++        return 'w-[120px] md:w-[80px] lg:w-[90px] xl:w-[100px] 2xl:w-[120px]';
++      case '특별편성 및 극장판':
++        return 'w-[175px] md:w-[120px] lg:w-[130px] xl:w-[140px] 2xl:w-[175px]';
++      default:
++        return 'w-[115px] md:w-[70px] lg:w-[80px] xl:w-[90px] xl:w-[90px] 2xl:w-[100px]';
++    }
+   }
+ };
+ 
+@@ -120,10 +133,12 @@ export default function DaySelection({
+ 
+     const tabElement = tabRefs.current[day];
+     const containerElement = containerRef.current;
+-
++    
++    // getBoundingClientRect를 사용하되, 컨테이너 기준으로 정확히 계산
+     const tabRect = tabElement.getBoundingClientRect();
+     const containerRect = containerElement.getBoundingClientRect();
+-
++    
++    // 컨테이너의 왼쪽 경계를 기준으로 한 상대적 위치 계산
+     const left = tabRect.left - containerRect.left;
+     const width = tabRect.width;
+     
+@@ -145,9 +160,11 @@ export default function DaySelection({
+     const tabElement = tabRefs.current[day];
+     const containerElement = containerRef.current;
+     
++    // getBoundingClientRect를 사용하되, 컨테이너 기준으로 정확히 계산
+     const tabRect = tabElement.getBoundingClientRect();
+     const containerRect = containerElement.getBoundingClientRect();
+     
++    // 컨테이너의 왼쪽 경계를 기준으로 한 상대적 위치 계산
+     const left = tabRect.left - containerRect.left;
+     const width = tabRect.width;
+     
+@@ -287,19 +304,24 @@ export default function DaySelection({
+ 
+   return (
+     <>
+-      {/* 모바일: 드롭다운 */}
++      {/* 모바일: 두 버튼을 같은 줄에 배치 */}
+       <div className="md:hidden">
+-        <div className="relative flex justify-end" ref={dropdownRef}>
+-          <div className="w-64">
+-            <button
+-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#990033] focus:border-transparent transition-all duration-200"
+-            >
+-              <div className="flex items-center justify-between">
+-                <span className="text-lg font-medium text-gray-900">{selectedDay}</span>
++        <div className="flex gap-2 items-center justify-between w-full max-w-[320px] mx-auto" ref={dropdownRef}>
++          {/* 요일 선택 드롭다운 버튼 */}
++          <div className="relative flex-1">
++            <div className="w-full">
++              <button
++                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
++                className={`w-full bg-white box-border content-stretch flex gap-2 items-center justify-center pr-[5px] px-[8px] sm:px-[10px] py-1.5 relative rounded-[12px] hover:bg-gray-50 transition-colors duration-200 cursor-pointer`}
++              >
++                <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[16px] sm:text-[18px] text-black flex-1 text-left">
++                  <p className="leading-[20px] sm:leading-[22px] truncate">
++                    {selectedDay}
++                  </p>
++                </div>
+                 <svg 
+                   className={cn(
+-                    "w-5 h-5 text-gray-400 transition-transform duration-200",
++                    `w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ml-1 flex-shrink-0`,
+                     isDropdownOpen ? "rotate-180" : ""
+                   )} 
+                   fill="none" 
+@@ -308,45 +330,45 @@ export default function DaySelection({
+                 >
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                 </svg>
+-              </div>
+-            </button>
+-            
+-            {/* 드롭다운 메뉴 */}
+-            {isDropdownOpen && (
+-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-64">
+-                {getDays(isThisWeek || false).map((day) => (
+-                  <button
+-                    key={day}
+-                                  onClick={() => {
+-                onDaySelect(day);
+-                setIsDropdownOpen(false);
+-                // 스크롤 기능 추가
+-                if (onScrollToSection) {
+-                  const sectionId = day === '곧 시작' ? 'upcoming' : 
+-                                   day === '특별편성 및 극장판' ? 'special' : 
+-                                   day === '일' ? 'sun' : 
+-                                   day === '월' ? 'mon' : 
+-                                   day === '화' ? 'tue' : 
+-                                   day === '수' ? 'wed' : 
+-                                   day === '목' ? 'thu' : 
+-                                   day === '금' ? 'fri' : 
+-                                   day === '토' ? 'sat' : 'upcoming';
+-                  onScrollToSection(sectionId);
+-                }
+-              }}
+-                    className={cn(
+-                      "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer",
+-                      "border-b border-gray-100 last:border-b-0",
+-                      selectedDay === day
+-                        ? "bg-[#990033] text-white font-medium"
+-                        : "text-gray-700 hover:text-gray-900"
+-                    )}
+-                  >
+-                    {day}
+-                  </button>
+-                ))}
+-              </div>
+-            )}
++              </button>
++              
++              {/* 드롭다운 메뉴 */}
++              {isDropdownOpen && (
++                <div className={`absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-full ${isSticky ? 'min-w-[160px] max-w-[200px]' : 'min-w-[200px] max-w-[280px] sm:max-w-[320px]'}`}>
++                  {getDays(isThisWeek || false).map((day) => (
++                    <button
++                      key={day}
++                      onClick={() => {
++                        onDaySelect(day);
++                        setIsDropdownOpen(false);
++                        // 스크롤 기능 추가
++                        if (onScrollToSection) {
++                          const sectionId = day === '곧 시작' ? 'upcoming' : 
++                                           day === '특별편성 및 극장판' ? 'special' : 
++                                           day === '일' ? 'sun' : 
++                                           day === '월' ? 'mon' : 
++                                           day === '화' ? 'tue' : 
++                                           day === '수' ? 'wed' : 
++                                           day === '목' ? 'thu' : 
++                                           day === '금' ? 'fri' : 
++                                           day === '토' ? 'sat' : 'upcoming';
++                          onScrollToSection(sectionId);
++                        }
++                      }}
++                      className={cn(
++                        `w-full px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer`,
++                        `border-b border-gray-100 last:border-b-0 text-sm sm:text-base font-['Pretendard']`,
++                        selectedDay === day
++                          ? "bg-[#990033] text-white font-medium"
++                          : "text-gray-700 hover:text-gray-900"
++                      )}
++                    >
++                      {day}
++                    </button>
++                  ))}
++                </div>
++              )}
++            </div>
+           </div>
+         </div>
+       </div>
+@@ -356,7 +378,7 @@ export default function DaySelection({
+         ref={containerRef}
+         data-day-selection
+         className={cn(
+-          "relative hidden md:flex items-center justify-start gap-1",
++          "relative hidden md:flex items-center justify-between gap-3 w-full",
+           className
+         )}
+         onMouseLeave={handleMouseLeave}
+@@ -389,7 +411,7 @@ export default function DaySelection({
+           const isSelected = selectedDay === day;
+           const isHovered = hoveredDay === day;
+           const isEmpty = emptyDays ? (Array.isArray(emptyDays) ? emptyDays.includes(day) : emptyDays.has(day)) : false;
+-          const dayWidth = getDayWidth(day);
++          const dayWidth = getDayWidth(day, isSticky);
+           
+           return (
+             <div key={day} className="relative">
+diff --git a/src/components/search/ui/SearchInput.tsx b/src/components/search/ui/SearchInput.tsx
+index 8f0f451..041b01f 100644
+--- a/src/components/search/ui/SearchInput.tsx
++++ b/src/components/search/ui/SearchInput.tsx
+@@ -105,4 +105,4 @@ export default function SearchInput({ value, onChange, onSearch, placeholder = "
+       />
+     </div>
+   );
+-}
++}
+\ No newline at end of file
+diff --git a/src/components/search/ui/SeasonSelector.tsx b/src/components/search/ui/SeasonSelector.tsx
+index e64fcaa..18a4b3b 100644
+--- a/src/components/search/ui/SeasonSelector.tsx
++++ b/src/components/search/ui/SeasonSelector.tsx
+@@ -124,7 +124,7 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
+ 
+   if (isLoading) {
+     return (
+-      <div className={cn("w-64 h-12 bg-gray-100 rounded-lg animate-pulse", className)} />
++      <div className={cn("w-fit max-w-[280px] sm:max-w-[320px] h-10 sm:h-12 bg-gray-100 rounded-lg animate-pulse", className)} />
+     );
+   }
+ 
+@@ -132,16 +132,16 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
+     <div className={cn("relative", className)} ref={dropdownRef}>
+       <button
+         onClick={() => setIsOpen(!isOpen)}
+-        className="bg-white box-border content-stretch flex gap-2 items-center justify-center pr-[5px] px-[10px] py-1 relative rounded-[12px] w-fit hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
++        className="bg-white box-border content-stretch flex gap-2 items-center justify-center pr-[5px] px-[8px] sm:px-[10px] py-1 relative rounded-[12px] w-fit max-w-[280px] sm:max-w-[320px] hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+       >
+-        <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[18px] text-black text-nowrap">
+-          <p className="leading-[22px] whitespace-pre">
++        <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[16px] sm:text-[18px] text-black">
++          <p className="leading-[20px] sm:leading-[22px] truncate">
+             {currentSeasonLabel}
+           </p>
+         </div>
+         <svg 
+           className={cn(
+-            "w-4 h-4 text-gray-400 transition-transform duration-200 ml-1",
++            "w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ml-1 flex-shrink-0",
+             isOpen ? "rotate-180" : ""
+           )} 
+           fill="none" 
+@@ -154,20 +154,21 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
+       
+       {/* 드롭다운 메뉴 */}
+       {isOpen && (
+-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto min-w-fit">
++        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-full min-w-[200px] max-w-[280px] sm:max-w-[320px]">
+           {seasonOptions.map((option, index) => (
+             <button
+               key={option.isThisWeek ? 'this-week' : `${option.year}-${option.quarter}`}
+               onClick={() => handleSeasonSelect(option)}
+               className={cn(
+-                "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer whitespace-nowrap",
++                "w-full px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer",
++                "border-b border-gray-100 last:border-b-0 text-sm sm:text-base",
+                 (option.isThisWeek && selectedSeason?.isThisWeek) ||
+                 (option.year && option.quarter && selectedSeason?.year === option.year && selectedSeason?.quarter === option.quarter)
+                   ? "bg-[#990033] text-white hover:bg-[#990033]"
+                   : "text-gray-900"
+               )}
+             >
+-              <span className="text-lg font-medium">{option.label}</span>
++              <span className="font-medium truncate block">{option.label}</span>
+             </button>
+           ))}
+         </div>
+diff --git a/src/components/vote/VoteCard.tsx b/src/components/vote/VoteCard.tsx
+index eb90480..a7ec30c 100644
+--- a/src/components/vote/VoteCard.tsx
++++ b/src/components/vote/VoteCard.tsx
+@@ -199,10 +199,10 @@ const VoteCard = memo(function VoteCard({
+         </div>
+ 
+         {/* 모바일/태블릿 레이아웃 (lg 미만) */}
+-        <div className="lg:hidden p-4">
+-          <div className="flex items-start gap-3">
++        <div className="lg:hidden p-3 sm:p-4">
++          <div className="flex items-start gap-2 sm:gap-3 w-full min-w-0">
+             {/* 썸네일 */}
+-            <div className="relative w-20 h-24 flex-shrink-0">
++            <div className="relative w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0">
+               <img
+                 src={thumbnailUrl}
+                 alt={title}
+@@ -218,12 +218,12 @@ const VoteCard = memo(function VoteCard({
+             {/* 오른쪽 열: 제목 + 시즌 + 기표칸 */}
+             <div className="flex flex-col flex-1 min-w-0">
+               {/* 제목 */}
+-              <div className="text-base font-semibold text-gray-900 break-words leading-tight mb-1">
++              <div className="text-sm sm:text-base font-semibold text-gray-900 break-words leading-tight mb-1">
+                 {title}
+               </div>
+               
+               {/* 시즌 정보 */}
+-              <div className="text-xs text-gray-500 mb-3">
++              <div className="text-xs text-gray-500 mb-2 sm:mb-3">
+                 {getSubTitle()}
+               </div>
+               
+diff --git a/src/components/vote/VoteResultCardLoggedIn.tsx b/src/components/vote/VoteResultCardLoggedIn.tsx
+index e3773ce..39dab44 100644
+--- a/src/components/vote/VoteResultCardLoggedIn.tsx
++++ b/src/components/vote/VoteResultCardLoggedIn.tsx
+@@ -136,24 +136,10 @@ const VoteResultCardLoggedIn = memo(function VoteResultCardLoggedIn({
+     <div className="w-full">
+       {/* 카드 구조 - 세퍼레이터 기준 두 영역 */}
+       <div className="relative bg-white rounded-xl shadow border-2 border-gray-200 overflow-hidden">
+-        {/* 카드 내용 - 오른쪽 영역(w-10)을 제외한 나머지 영역 */}
+-        <div className="flex items-center gap-4 p-4 pr-12">
+-          {/* 썸네일 */}
+-          <div className="relative w-28 h-36 flex-shrink-0">
+-            <img
+-              src={ballot.mainThumbnailUrl}
+-              alt={ballot.titleKor}
+-              className="w-full h-full object-cover rounded-md"
+-              loading="lazy"
+-              onError={(e) => {
+-                const target = e.target as HTMLImageElement;
+-                target.src = '/banners/duckstar-logo.svg';
+-              }}
+-            />
+-          </div>
+-
+-          {/* 제목 + 시즌 */}
+-          <div className="flex flex-col flex-1 min-w-0">
++        {/* 카드 내용 - 제목 위, 이미지와 투표결과 가로 배치 */}
++        <div className="flex flex-col gap-3 p-4 pr-12">
++          {/* 제목 + 시즌 - 위쪽 배치, 가운데 정렬 */}
++          <div className="flex flex-col items-center text-center">
+             <div className="text-lg font-semibold text-gray-900 break-words leading-tight">
+               {ballot.titleKor || '제목 없음'}
+             </div>
+@@ -162,24 +148,41 @@ const VoteResultCardLoggedIn = memo(function VoteResultCardLoggedIn({
+             </div>
+           </div>
+ 
+-          {/* 기표칸 */}
+-          <div className="flex-shrink-0 mr-2">
+-            <div className="relative size-24 rounded-xl border border-gray-300 bg-white flex items-center justify-center overflow-hidden">
++          {/* 애니 이미지 + 투표 결과 - 가로 배치 */}
++          <div className="flex items-center gap-4">
++            {/* 썸네일 */}
++            <div className="relative w-28 h-36 flex-shrink-0">
+               <img
+-                src={getCurrentVoteStampImagePath(weekDto, ballot.ballotType === 'BONUS')}
+-                alt="투표 완료"
+-                className={
+-                  ballot.ballotType === 'BONUS' 
+-                    ? "w-[60px] h-[60px] object-cover rounded-xl" 
+-                    : "w-full h-full object-cover rounded-xl"
+-                }
++                src={ballot.mainThumbnailUrl}
++                alt={ballot.titleKor}
++                className="w-full h-full object-cover rounded-md"
++                loading="lazy"
++                onError={(e) => {
++                  const target = e.target as HTMLImageElement;
++                  target.src = '/banners/duckstar-logo.svg';
++                }}
+               />
+             </div>
++
++            {/* 기표칸 */}
++            <div className="flex-shrink-0 mr-2">
++              <div className="relative size-24 rounded-xl border border-gray-300 bg-white flex items-center justify-center overflow-hidden">
++                <img
++                  src={getCurrentVoteStampImagePath(weekDto, ballot.ballotType === 'BONUS')}
++                  alt="투표 완료"
++                  className={
++                    ballot.ballotType === 'BONUS' 
++                      ? "w-[60px] h-[60px] object-cover rounded-xl" 
++                      : "w-full h-full object-cover rounded-xl"
++                  }
++                />
++              </div>
++            </div>
+           </div>
+         </div>
+ 
+-        {/* 세퍼레이터 라인 */}
+-        <div className="absolute top-1/2 right-10 -translate-y-1/2 w-px h-15 bg-gray-200"></div>
++        {/* 세퍼레이터 라인 - 데스크톱에서만 표시 */}
++        <div className="absolute top-1/2 right-10 -translate-y-1/2 w-px h-15 bg-gray-200 hidden md:block"></div>
+ 
+         {/* 왼쪽 영역 - 메인 카드 클릭 */}
+         <button
+diff --git a/src/components/vote/VoteSection.tsx b/src/components/vote/VoteSection.tsx
+index 9946165..b6c3186 100644
+--- a/src/components/vote/VoteSection.tsx
++++ b/src/components/vote/VoteSection.tsx
+@@ -237,18 +237,11 @@ const VoteSection = memo(function VoteSection({
+       {/* Sticky VoteSection - 헤더 60px 아래에 고정, 사이드바 너비 제외 */}
+       {isVoteSectionSticky && (
+         <div 
+-          className="fixed top-[60px] left-0 w-full bg-white border-b border-gray-200 z-40"
++          className="fixed top-[60px] left-0 w-full bg-white border-b border-gray-200 z-40 transition-all duration-300 ease-in-out md:left-[200px] md:w-[calc(100%-200px)]"
+           data-vote-section-sticky
+-          style={{ 
+-            top: '60px',
+-            left: '200px', // 사이드바 너비만큼 오른쪽으로 이동
+-            width: 'calc(100vw - 200px)', // 사이드바를 제외한 너비
+-            zIndex: 40,
+-            transition: 'all 0.3s ease-in-out'
+-          }}
+         >
+-          <div className="max-w-[1240px] mx-auto px-4 py-6">
+-            <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
++          <div className="w-full mx-auto px-4 py-6">
++            <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-16">
+               {/* Vote Status Section - Top on mobile, right on desktop */}
+               <div className={`${currentShowGenderSelection ? 'order-2 lg:order-1' : 'order-2 lg:order-2'} w-full lg:w-auto`}>
+                 <VoteStatus
+@@ -273,8 +266,8 @@ const VoteSection = memo(function VoteSection({
+ 
+               {/* Search Bar Section - Bottom on mobile, right on desktop - Hidden in Gender Selection */}
+               {!currentShowGenderSelection && (
+-                <div className="order-1 lg:order-1 flex-1 w-full lg:w-auto">
+-                  <div className="flex items-center gap-2 sm:gap-4 min-w-0">
++                <div className="order-1 lg:order-1 flex-1 w-full lg:w-auto min-w-0">
++                  <div className="flex items-center flex-wrap gap-2 sm:gap-4 min-w-0 w-full">
+                     <div className="flex-1 min-w-0">
+                       <SearchBar
+                         value={searchQuery}
+diff --git a/src/components/vote/VoteToggle.tsx b/src/components/vote/VoteToggle.tsx
+index 923f540..d6de341 100644
+--- a/src/components/vote/VoteToggle.tsx
++++ b/src/components/vote/VoteToggle.tsx
+@@ -110,7 +110,7 @@ export default function VoteToggle({
+   };
+ 
+   return (
+-    <div className={`relative ${isMobile ? 'size-12' : 'size-24'}`}>
++    <div className={`relative ${isMobile ? 'size-10' : 'size-24'}`}>
+       {/* 기표칸 배경 */}
+       <button
+         type="button"
+@@ -120,7 +120,7 @@ export default function VoteToggle({
+         onMouseLeave={!disabled ? handleMouseLeave : undefined}
+         onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
+         className={`
+-          ${isMobile ? 'size-12' : 'size-24'}
++          ${isMobile ? 'size-10' : 'size-24'}
+           relative
+           rounded-xl
+           border border-gray-300
+@@ -143,7 +143,7 @@ export default function VoteToggle({
+             alt="Selected"
+             className={
+               isMobile 
+-                ? (isBonusVote ? "w-[30px] h-[30px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
++                ? (isBonusVote ? "w-[24px] h-[24px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
+                 : (isBonusVote ? "w-[60px] h-[60px] object-cover rounded-xl" : "w-full h-full object-cover rounded-xl")
+             }
+           />
+diff --git a/tailwind.config.ts b/tailwind.config.ts
+index 03196c8..7633b9b 100644
+--- a/tailwind.config.ts
++++ b/tailwind.config.ts
+@@ -37,6 +37,20 @@ const config: Config = {
+         'lg': '1024px', // 기존 데스크톱
+         'xl': '1280px', // 기존 대형 데스크톱
+       },
++      keyframes: {
++        slideIn: {
++          '0%': { transform: 'translateX(-100%)' },
++          '100%': { transform: 'translateX(0)' },
++        },
++        slideOut: {
++          '0%': { transform: 'translateX(0)' },
++          '100%': { transform: 'translateX(-100%)' },
++        },
++      },
++      animation: {
++        'slide-in': 'slideIn 0.3s ease-out forwards',
++        'slide-out': 'slideOut 0.3s ease-out forwards',
++      },
+     },
+   },
+   plugins: [
