@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface StarRatingSimpleProps {
   maxStars?: number;
@@ -27,6 +27,7 @@ export default function StarRatingSimple({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
 
   const sizeClasses = {
     sm: 'size-5',
@@ -97,13 +98,13 @@ export default function StarRatingSimple({
     setIsDragging(true);
   };
 
-  // 터치 종료 핸들러
+
+  // 터치 종료 핸들러 - 화면 어디에 있든 x 좌표로 별점 결정
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (readOnly || !isDragging) return;
     
     const touch = e.changedTouches[0];
     const touchX = touch.clientX;
-    const touchY = touch.clientY;
     
     // 별 컨테이너의 위치 정보 가져오기
     const starContainer = e.currentTarget as HTMLElement;
@@ -111,27 +112,16 @@ export default function StarRatingSimple({
     
     let finalRating = 0;
     
-    // 터치 종료 위치에 따른 별점 결정
-    if (touchX < rect.left) {
-      // 왼쪽 바깥으로 나감 - 0점
-      finalRating = 0;
-      console.log('Touch ended left of container, finalRating = 0');
-    } else if (touchX > rect.right) {
-      // 오른쪽 바깥으로 나감 - 최대 점수
-      finalRating = maxStars;
-      console.log('Touch ended right of container, finalRating =', maxStars);
-    } else if (touchY < rect.top || touchY > rect.bottom) {
-      // 위아래로 벗어남 - 0점
-      finalRating = 0;
-      console.log('Touch ended above/below container, finalRating = 0');
-    } else {
-      // 별 컨테이너 내부에 있을 때 터치 위치로 별점 계산
-      const { index, isHalf } = calculateRatingFromTouch(touchX, rect);
-      finalRating = index + (isHalf ? 0.5 : 1);
-      console.log('Touch ended inside container, finalRating =', finalRating);
-    }
+    // calculateRatingFromTouch 함수를 사용하여 정확한 별점 계산
+    const result = calculateRatingFromTouch(touchX, rect);
+    finalRating = result.index + (result.isHalf ? 0.5 : 1);
     
-    console.log('Final rating check:', finalRating, '> 0?', finalRating > 0);
+    // 별 컨테이너 영역을 벗어난 경우 경계값으로 제한
+    if (touchX < rect.left) {
+      finalRating = 0;
+    } else if (touchX > rect.right) {
+      finalRating = maxStars;
+    }
     
     // 0점이 아닐 때만 별점 제출
     if (finalRating > 0) {
@@ -143,16 +133,16 @@ export default function StarRatingSimple({
     setTouchStartX(null);
   };
 
-  // 터치 위치로 별점 계산
+  // 터치 위치로 별점 계산 (별 컨테이너 영역을 벗어나도 정확한 별점 계산)
   const calculateRatingFromTouch = (touchX: number, rect: DOMRect) => {
-    // 별 컨테이너 내부에서의 상대 위치 계산
+    // 별 컨테이너의 가상적인 확장을 고려한 상대 위치 계산
     const relativeX = touchX - rect.left;
     const containerWidth = rect.width;
     
     // 각 별의 너비 계산 (gap 포함)
     const starWidth = containerWidth / maxStars;
     
-    // 터치 위치가 몇 번째 별에 해당하는지 계산
+    // 터치 위치가 몇 번째 별에 해당하는지 계산 (음수나 maxStars 초과도 허용)
     const starIndex = Math.floor(relativeX / starWidth);
     
     // 별 내부에서의 위치 (0~1)
@@ -166,77 +156,71 @@ export default function StarRatingSimple({
     
     const finalRating = clampedIndex + (isHalf ? 0.5 : 1);
     
-    console.log('calculateRatingFromTouch:', {
-      touchX,
-      rectLeft: rect.left,
-      relativeX,
-      containerWidth,
-      starWidth,
-      starIndex,
-      positionInStar,
-      isHalf,
-      clampedIndex,
-      finalRating
-    });
-    
     return {
       index: clampedIndex,
       isHalf: isHalf
     };
   };
 
-  // 터치 이벤트 핸들러
+
+  // 터치 이벤트 핸들러 - 화면 어디에 있든 x 좌표로 별점 계산
   const handleTouchMove = (e: React.TouchEvent) => {
     if (readOnly || !isDragging) return;
     
+    // passive 이벤트에서는 preventDefault가 작동하지 않으므로 제거
+    // e.preventDefault(); // 스크롤 방지
+    
     const touch = e.touches[0];
     const touchX = touch.clientX;
-    const touchY = touch.clientY;
     
     // 별 컨테이너의 위치 정보 가져오기
     const starContainer = e.currentTarget as HTMLElement;
     const rect = starContainer.getBoundingClientRect();
     
-    // 터치가 별 컨테이너 영역을 벗어났는지 확인
+    // 화면 전체 x 좌표를 기준으로 별점 계산 (별 컨테이너 영역을 벗어나도)
+    let rating = 0;
+    let index = 0;
+    let isHalf = false;
+    
+    // calculateRatingFromTouch 함수를 사용하여 정확한 별점 계산
+    const result = calculateRatingFromTouch(touchX, rect);
+    index = result.index;
+    isHalf = result.isHalf;
+    rating = index + (isHalf ? 0.5 : 1);
+    
+    // 별 컨테이너 영역을 벗어난 경우 경계값으로 제한
     if (touchX < rect.left) {
-      // 왼쪽 바깥으로 나감 - 모든 별 비우기
-      setHoveredStar(null);
-      setHoverRating(0);
-      setRating(0);
-      return;
+      rating = 0;
+      index = 0;
+      isHalf = false;
     } else if (touchX > rect.right) {
-      // 오른쪽 바깥으로 나감 - 모든 별 채우기
-      setHoveredStar(maxStars - 1);
-      setHoverRating(maxStars);
-      setRating(maxStars);
-      return;
-    } else if (touchY < rect.top || touchY > rect.bottom) {
-      // 위아래로 벗어남 - 모든 별 비우기
-      setHoveredStar(null);
-      setHoverRating(0);
-      setRating(0);
-      return;
+      rating = maxStars;
+      index = maxStars - 1;
+      isHalf = false;
     }
     
-    // 별 컨테이너 내부에 있을 때 터치 위치로 별점 계산
-    if (touchX >= rect.left && touchX <= rect.right && 
-        touchY >= rect.top && touchY <= rect.bottom) {
-      const { index, isHalf } = calculateRatingFromTouch(touchX, rect);
-      const rating = index + (isHalf ? 0.5 : 1);
-      
-      console.log('handleTouchMove rating:', rating, '> 0?', rating > 0);
-      
-      // 0점이 아닐 때만 미리보기 표시
-      if (rating > 0) {
-        handleMouseEnter(index, isHalf);
-      }
+    // 별점에 따른 미리보기 표시
+    if (rating > 0) {
+      setHoveredStar(index);
+      setHoverRating(rating);
+      setRating(rating);
+    } else {
+      setHoveredStar(null);
+      setHoverRating(0);
+      setRating(0);
     }
   };
 
   return (
     <div 
       className="flex items-center gap-px" 
-      style={{ cursor: 'default !important', touchAction: 'none' }}
+      style={{ 
+        cursor: 'default !important', 
+        touchAction: 'none',
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
+      }}
+      data-star-container
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
