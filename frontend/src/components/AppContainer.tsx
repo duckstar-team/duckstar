@@ -158,7 +158,7 @@ export default function AppContainer({ children }: AppContainerProps) {
       <MobileMenuContext.Provider value={mobileMenuContextValue}>
       <div className="min-h-screen bg-gray-50">
         {/* Mobile Menu Overlay - 차트 페이지에서는 오버레이 제거 */}
-        {isMobileMenuOpen && (pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/')) && (
+        {isMobileMenuOpen && (pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/profile-setup') && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-20 z-[9999998] lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
@@ -171,7 +171,7 @@ export default function AppContainer({ children }: AppContainerProps) {
         </div>
         
         {/* Fixed Sidebar */}
-        <div className={`fixed top-[60px] left-0 bottom-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') ? 'hidden lg:block' : ''}`}>
+        <div className={`fixed top-[60px] left-0 bottom-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy' ? 'hidden lg:block' : ''}`}>
           {isChartPage ? (
             <>
               <ThinNav 
@@ -204,7 +204,7 @@ export default function AppContainer({ children }: AppContainerProps) {
         <main className={`pt-[60px] bg-gray-50 transition-all duration-300 ease-in-out ${
           isChartPage 
             ? 'ml-0 lg:ml-[200px]' // 모바일에서는 마진 없음, 데스크톱에서만 ThinNav 마진
-            : pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/')
+            : pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy'
               ? 'ml-0 lg:ml-[200px]' 
               : pathname === '/'
                 ? 'ml-0 lg:ml-[200px]'

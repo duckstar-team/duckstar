@@ -52,9 +52,9 @@ export default function RootLayout({
         {/* 반응형 뷰포트 설정 */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
         
-        {/* 투표 이미지 프리로딩 */}
-        <link rel="preload" href="/voted-normal-2025-autumn.svg" as="image" type="image/svg+xml" />
-        <link rel="preload" href="/voted-bonus-2025-autumn.svg" as="image" type="image/svg+xml" />
+        {/* 투표 이미지 프리로딩 - 현재 사용하지 않음 */}
+        {/* <link rel="preload" href="/voted-normal-2025-autumn.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/voted-bonus-2025-autumn.svg" as="image" type="image/svg+xml" /> */}
       </head>
       <body
         className={`${pretendard.variable} antialiased`}

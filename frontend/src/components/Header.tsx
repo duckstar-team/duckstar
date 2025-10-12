@@ -121,8 +121,8 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         {/* Background Layer */}
         <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
         
-        {/* Hamburger - vote, search, anime, and chart pages mobile only, placed to the left of the logo */}
-        {(pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/')) && (
+        {/* Hamburger - vote, search, anime, chart, profile-setup, about, terms, privacy-policy pages mobile only, placed to the left of the logo */}
+        {(pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy') && (
           <div
             ref={menuContainerRef}
             className="lg:hidden absolute top-1/2 -translate-y-1/2 left-1 z-10"
@@ -508,6 +508,136 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                     </span>
                   </div>
                 </button>
+                
+                {/* 푸터 항목들 */}
+                <div style={{ 
+                  marginTop: 'auto', 
+                  paddingTop: '24px', 
+                  borderTop: '1px solid #e5e7eb',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0',
+                  position: 'absolute',
+                  bottom: '0',
+                  left: '0',
+                  right: '0',
+                  paddingBottom: '16px'
+                }}>
+                  <button 
+                    data-menu-item
+                    onClick={() => {
+                      router.push('/about');
+                      closeMenu();
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      background: 'transparent',
+                      color: '#6b7280',
+                      fontSize: '14px',
+                      fontWeight: '400',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      display: 'flex',
+                      alignItems: 'center',
+                      textDecoration: 'none',
+                      border: 'none',
+                      outline: 'none',
+                      width: '100%',
+                      textAlign: 'left'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f3f4f6';
+                      e.currentTarget.style.color = '#374151';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#6b7280';
+                    }}
+                  >
+                    덕스타 소개
+                  </button>
+                  
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    padding: '0 16px',
+                    flexWrap: 'nowrap',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    <button 
+                      data-menu-item
+                      onClick={() => {
+                        router.push('/terms');
+                        closeMenu();
+                      }}
+                      style={{
+                        padding: '8px 0',
+                        background: 'transparent',
+                        color: '#6b7280',
+                        fontSize: '14px',
+                        fontWeight: '400',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        textDecoration: 'none',
+                        border: 'none',
+                        outline: 'none',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#6b7280';
+                      }}
+                    >
+                      이용약관
+                    </button>
+                    <span style={{ color: '#d1d5db', fontSize: '14px', flexShrink: 0 }}>·</span>
+                    <button 
+                      data-menu-item
+                      onClick={() => {
+                        router.push('/privacy-policy');
+                        closeMenu();
+                      }}
+                      style={{
+                        padding: '8px 0',
+                        background: 'transparent',
+                        color: '#6b7280',
+                        fontSize: '14px',
+                        fontWeight: '400',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        textDecoration: 'none',
+                        border: 'none',
+                        outline: 'none',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#6b7280';
+                      }}
+                    >
+                      개인정보처리방침
+                    </button>
+                  </div>
+                  
+                  <div style={{ 
+                    padding: '8px 16px',
+                    color: '#9ca3af',
+                    fontSize: '12px',
+                    textAlign: 'left'
+                  }}>
+                    © 2025 DUCKSTAR
+                  </div>
+                </div>
               </nav>
             </div>
             

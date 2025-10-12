@@ -204,22 +204,22 @@ error('회원탈퇴 실패:', error);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-2 sm:p-4 lg:pl-0">
+      <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 w-full max-w-md lg:max-w-lg">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
             프로필 설정
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             프로필 사진과 닉네임을 설정해주세요
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* 프로필 사진 업로드 */}
           <div className="text-center">
             <div className="relative inline-block">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
@@ -237,9 +237,9 @@ error('회원탈퇴 실패:', error);
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-colors cursor-pointer"
+                className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 sm:p-2 lg:p-2.5 shadow-lg hover:bg-blue-600 transition-colors cursor-pointer"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </button>
@@ -253,11 +253,11 @@ error('회원탈퇴 실패:', error);
               className="hidden"
             />
             
-            <div className="mt-3 space-x-2">
+            <div className="mt-2 sm:mt-3 space-x-2">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
               >
                 사진 변경
               </button>
@@ -265,7 +265,7 @@ error('회원탈퇴 실패:', error);
                 <button
                   type="button"
                   onClick={handleRemoveImage}
-                  className="text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                  className="text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
                 >
                   제거
                 </button>
@@ -275,7 +275,7 @@ error('회원탈퇴 실패:', error);
 
           {/* 닉네임 입력 */}
           <div>
-            <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="nickname" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
               닉네임
             </label>
             <input
@@ -284,7 +284,7 @@ error('회원탈퇴 실패:', error);
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               placeholder="닉네임을 입력해주세요 (2자 이상)"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              className="w-full px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               maxLength={20}
               minLength={2}
             />
@@ -295,17 +295,17 @@ error('회원탈퇴 실패:', error);
 
           {/* 에러 메시지 */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3">
+              <p className="text-xs sm:text-sm text-red-600">{error}</p>
             </div>
           )}
 
           {/* 버튼들 */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <button
               type="submit"
               disabled={isLoading || (!nickname.trim() && !profileImage) || (!!nickname.trim() && nickname.trim().length < 2)}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 text-white py-2.5 sm:py-3 lg:py-4 rounded-lg text-sm sm:text-base lg:text-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -321,7 +321,7 @@ error('회원탈퇴 실패:', error);
               type="button"
               onClick={handleSkip}
               disabled={isLoading}
-              className="w-full text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full text-gray-600 py-2.5 sm:py-3 lg:py-4 rounded-lg text-sm sm:text-base lg:text-lg font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -335,7 +335,7 @@ error('회원탈퇴 실패:', error);
           </div>
         </form>
 
-        <div className="mt-6 flex justify-between items-center">
+        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
           <p className="text-xs text-gray-500">
             프로필은 언제든지 설정에서 변경할 수 있습니다
           </p>
@@ -343,7 +343,7 @@ error('회원탈퇴 실패:', error);
           {user?.isProfileInitialized && (
             <button
               onClick={handleWithdraw}
-              className="text-xs text-red-600 hover:text-red-700 transition-colors cursor-pointer"
+              className="text-xs text-red-600 hover:text-red-700 transition-colors cursor-pointer self-end sm:self-auto"
             >
               회원탈퇴
             </button>

@@ -182,14 +182,14 @@ export default function LeftInfoPanel({
   const tabMenuHeight = 44; // 탭 메뉴 높이
   const panelTopPadding = 15.593; // 상단 패딩
   const gapBetween = 9.653; // 탭과 컨텐츠 간격
-  const panelBottomPadding = 15; // 하단 패딩
+  const panelBottomPadding = 0; // 하단 패딩
   const totalPadding = panelTopPadding + gapBetween + panelBottomPadding;
   
   const infoContentHeight = Math.max(lowerPanelHeight - tabMenuHeight - totalPadding + 5, 125); // 5px 추가, 최소 높이도 5px 증가
   
   // 스크롤 컨테이너 높이 계산 (회색 블록 내부 패딩 제외)
   const grayBlockPadding = 20; // 회색 블록 내부 상하 패딩 (10px + 10px)
-  const scrollContainerHeight = Math.max(infoContentHeight - grayBlockPadding, 90);
+  const scrollContainerHeight = Math.max(infoContentHeight - grayBlockPadding + 10, 100); // 10px 추가 여유 공간
   
   // 등장인물 탭용 스크롤 컨테이너 높이 계산
   const characterScrollContainerHeight = Math.max(infoContentHeight, 90);
@@ -826,7 +826,7 @@ export default function LeftInfoPanel({
       
       {/* 하단 정보 패널 */}
         <div 
-          className={`${isSmallScreen ? 'relative' : 'absolute'} bg-white box-border content-stretch flex flex-col gap-[9.653px] items-center justify-start left-0 overflow-clip pt-[10px] rounded-bl-[12px] rounded-br-[12px] w-full ${isMobile ? 'px-1' : 'px-0'}`}
+          className={`${isSmallScreen ? 'relative' : 'absolute'} bg-white box-border content-stretch flex flex-col gap-[9.653px] items-center justify-start left-0 overflow-clip pb-[10px] rounded-bl-[12px] rounded-br-[12px] w-full ${isMobile ? 'px-1' : 'px-0'}`}
           style={{ 
             top: isSmallScreen ? 'auto' : `${lowerPanelTop}px`,
             height: isSmallScreen ? 'auto' : `${lowerPanelHeight}px`
@@ -1165,7 +1165,7 @@ export default function LeftInfoPanel({
           
           {/* Synopsis 섹션 - 그리드 아래에 배치 */}
           {synopsis && (
-            <div className={`col-span-2 mt-4 pt-3 ${isMobile ? 'px-2' : 'pl-[15px] pr-[50px]'}`}>
+            <div className={`col-span-2 mt-4 pt-3 pb-5 ${isMobile ? 'px-2' : 'pl-[15px] pr-[50px]'}`}>
               {/* 구분선 */}
               <div className="mb-4 border-b border-gray-200"></div>
               
