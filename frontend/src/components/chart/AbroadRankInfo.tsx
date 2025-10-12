@@ -57,7 +57,7 @@ export default function AbroadRankInfo({
   };
   return (
     <div 
-      className={`w-full max-w-80 xl:w-80 h-24 px-3 sm:px-4 relative bg-white rounded-xl outline outline-1 outline-gray-200 overflow-hidden ${contentId ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'} transition-colors ${className}`}
+      className={`w-full xl:w-80 h-24 px-3 sm:px-4 relative bg-white rounded-xl outline outline-1 outline-gray-200 overflow-hidden ${contentId ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'} transition-colors ${className}`}
       onClick={handleClick}
     >
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full h-full">

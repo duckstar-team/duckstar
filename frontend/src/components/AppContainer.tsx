@@ -167,7 +167,9 @@ export default function AppContainer({ children }: AppContainerProps) {
             ? 'ml-[200px]' // ThinNav(60px) + ThinNavDetail(143px) - 고정
             : pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname === '/'
               ? 'ml-0 md:ml-[200px]' 
-              : 'ml-[50px] sm:ml-[55px] md:ml-[200px] group-hover:ml-[200px]'
+              : pathname === '/'
+                ? 'ml-0'
+                : 'ml-[50px] sm:ml-[55px] md:ml-[200px] group-hover:ml-[200px]'
         }`}>
           {children}
         </main>

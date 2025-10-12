@@ -49,8 +49,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* PC 버전 강제 설정 - 모바일에서도 데스크톱 뷰포트 사용 */}
-        <meta name="viewport" content="width=1200, initial-scale=1.0, user-scalable=no" />
+        {/* 반응형 뷰포트 설정 */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
         
         {/* 투표 이미지 프리로딩 */}
         <link rel="preload" href="/voted-normal-2025-autumn.svg" as="image" type="image/svg+xml" />

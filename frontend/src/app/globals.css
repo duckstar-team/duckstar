@@ -30,17 +30,7 @@ html, body {
   min-height: 100%;
 }
 
-/* PC 버전 강제 설정 - 모바일에서도 데스크톱 레이아웃 사용 */
-@media (max-width: 768px) {
-  body {
-    min-width: 1200px;
-    overflow-x: auto;
-  }
-  
-  html {
-    overflow-x: auto;
-  }
-}
+/* 모바일 반응형 설정 - 모바일에서는 자연스러운 반응형 레이아웃 사용 */
 
 /* 스티키 요소를 위한 스크롤 컨테이너 설정 */
 html {
