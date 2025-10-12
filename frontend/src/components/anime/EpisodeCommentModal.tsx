@@ -60,6 +60,15 @@ interface EpisodeCommentModalProps {
   onCommentSubmit?: (episodeIds: number[], content: string, images?: File[]) => void;
 }
 
+// 날짜 포맷팅 함수
+const formatScheduledAt = (scheduledAt: string): string => {
+  const date = new Date(scheduledAt);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+  return `${month}월 ${day}일 (${dayOfWeek})`;
+};
+
 export default function EpisodeCommentModal({
   isOpen,
   onClose,
@@ -68,6 +77,20 @@ export default function EpisodeCommentModal({
   rawAnimeData,
   onCommentSubmit
 }: EpisodeCommentModalProps) {
+  
+  // 화면 크기 감지 (768px 미만에서 드롭다운 사용)
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 768);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
@@ -238,16 +261,47 @@ export default function EpisodeCommentModal({
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-['Pretendard']">
               에피소드 선택
             </h3>
-            <EpisodeSection
-              animeId={animeId}
-              episodes={finalEpisodes}
-              totalEpisodes={animeData?.animeInfoDto?.totalEpisodes}
-              selectedEpisodeIds={selectedEpisodeIds}
-              onEpisodeClick={handleEpisodeClick}
-              disableFutureEpisodes={true}
-              currentPage={episodeCurrentPage}
-              onPageChange={setEpisodeCurrentPage}
-            />
+            {isSmallScreen ? (
+              /* 768px 미만: 드롭다운 메뉴 */
+              <div className="space-y-3">
+                <select
+                  value={selectedEpisodeIds[0] || ''}
+                  onChange={(e) => {
+                    const episodeId = parseInt(e.target.value);
+                    if (episodeId) {
+                      setSelectedEpisodeIds([episodeId]);
+                    } else {
+                      setSelectedEpisodeIds([]);
+                    }
+                  }}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">에피소드를 선택하세요</option>
+                  {finalEpisodes.map((episode) => (
+                    <option key={episode.episodeId} value={episode.episodeId}>
+                      {episode.episodeNumber}화 - {formatScheduledAt(episode.scheduledAt)}
+                    </option>
+                  ))}
+                </select>
+                {selectedEpisodeIds.length > 0 && (
+                  <div className="text-sm text-gray-600">
+                    선택된 에피소드: {selectedEpisodeIds.length}개
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* 768px 이상: 기존 EpisodeSection */
+              <EpisodeSection
+                animeId={animeId}
+                episodes={finalEpisodes}
+                totalEpisodes={animeData?.animeInfoDto?.totalEpisodes}
+                selectedEpisodeIds={selectedEpisodeIds}
+                onEpisodeClick={handleEpisodeClick}
+                disableFutureEpisodes={true}
+                currentPage={episodeCurrentPage}
+                onPageChange={setEpisodeCurrentPage}
+              />
+            )}
           </div>
 
           {/* 댓글 작성 섹션 */}
@@ -285,8 +339,8 @@ export default function EpisodeCommentModal({
               </div>
             )}
             
-            <div className="bg-gray-50 rounded-lg p-4 pr-25 flex justify-center">
-              <div className="w-full max-w-md">
+            <div className="bg-gray-50 rounded-lg p-4 flex justify-center">
+              <div className="w-full max-w-[534px]">
                 <CommentPostForm
                   onSubmit={handleCommentSubmit}
                   onImageUpload={(file) => {

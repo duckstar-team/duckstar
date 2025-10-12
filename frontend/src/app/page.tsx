@@ -74,7 +74,7 @@ export default function Home() {
     const originalOverflowX = body.style.overflowX;
     
     body.style.minWidth = 'auto';
-    body.style.overflowX = 'auto';
+    body.style.overflowX = 'hidden';
     
     return () => {
       // viewport 설정 복원
@@ -511,58 +511,62 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
         
         {/* 텍스트 오버레이 */}
         <div className="absolute inset-0 flex items-center xl:items-center items-end pb-10 xl:pb-0 justify-center px-4">
-          <div className="text-white font-bold text-[20px] sm:text-[24px] md:text-[26px] lg:text-[33.83px] leading-tight text-left drop-shadow-sm" style={{ fontFamily: 'Pretendard' }}>
+          <div className="text-white font-bold text-[20px] sm:text-[24px] md:text-[26px] lg:text-[32px] leading-tight text-left drop-shadow-sm" style={{ fontFamily: 'Pretendard' }}>
           분기 신작 애니메이션 투표,<br />
           시간표 서비스 ✨ 한국에서 런칭 !
           </div>
         </div>
       </div>
 
-      {/* 메인 컨텐츠 영역 */}
-      <div className="flex items-center justify-center min-h-[300px] bg-[#F8F9FA] px-4 pt-6 pb-5 xl:py-12">
-        {/* 리스트 아이템들 - 반응형 배치 */}
-        <div className="flex flex-col xl:flex-row justify-center items-center gap-4 xl:gap-[57px] w-full max-w-6xl mx-auto">
-          {/* HomeBanner 컴포넌트 */}
-          <div className="flex justify-center xl:justify-start">
-            <HomeBanner 
-              homeBannerDtos={homeData.result.homeBannerDtos}
-            />
-          </div>
+      {/* 통합 메인 컨테이너 */}
+      <div className="w-full bg-[#F8F9FA]">
+        {/* 통합 컨테이너 - 모든 섹션을 하나로 묶음 */}
+        <div className="w-full">
           
-          {/* ButtonVote 컴포넌트 */}
-          <div className="flex justify-center xl:justify-start">
-            <ButtonVote 
-              weekDtos={[homeData.result.currentWeekDto, ...homeData.result.pastWeekDtos]}
-            />
+          {/* 홈배너 섹션 */}
+          <div className="flex items-center justify-center min-h-[300px] pt-6 pb-5 xl:py-12">
+            <div className="flex flex-col xl:flex-row justify-center items-center gap-4 xl:gap-[75px] xl:mr-6 w-full">
+              {/* HomeBanner 컴포넌트 */}
+              <div className="flex justify-center xl:justify-start">
+                <HomeBanner 
+                  homeBannerDtos={homeData.result.homeBannerDtos}
+                />
+              </div>
+              
+              {/* ButtonVote 컴포넌트 */}
+              <div className="flex justify-center xl:justify-start">
+                <ButtonVote 
+                  weekDtos={[homeData.result.currentWeekDto, ...homeData.result.pastWeekDtos]}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* 헤더 리스트 영역 */}
-      <div className="w-full bg-white pt-2 sm:pt-3 sticky top-[60px] z-20 px-3 sm:px-4">
-        <div className="flex flex-col xl:flex-row justify-center gap-4 xl:gap-[240px] w-full max-w-6xl mx-auto">
-          {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
-          <div className="w-[full] xl:w-auto">
-            <HeaderList 
-              weekDtos={homeData.result.pastWeekDtos} 
-              selectedWeek={selectedWeek}
-              onWeekChange={handleLeftPanelWeekChange}
-            />
+          {/* 헤더 리스트 영역 */}
+          <div className="w-full bg-white pt-2 sm:pt-3 sticky top-[60px] z-20 px-4 rounded-lg">
+            <div className="flex flex-col xl:flex-row justify-center gap-4 xl:gap-[240px] w-full">
+              {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
+              <div className="w-[full] xl:w-auto">
+                <HeaderList 
+                  weekDtos={homeData.result.pastWeekDtos} 
+                  selectedWeek={selectedWeek}
+                  onWeekChange={handleLeftPanelWeekChange}
+                />
+              </div>
+              {/* Right Panel 헤더 - 해외 순위 (데스크톱에서만 같은 줄에 표시) */}
+              <div className="w-full xl:w-auto hidden xl:block">
+                <RightHeaderList 
+                  weekDtos={homeData.result.pastWeekDtos} 
+                  selectedTab={selectedRightTab}
+                  onTabChange={handleRightPanelTabChange}
+                />
+              </div>
+            </div>
           </div>
-          {/* Right Panel 헤더 - 해외 순위 (데스크톱에서만 같은 줄에 표시) */}
-          <div className="w-full xl:w-auto hidden xl:block">
-            <RightHeaderList 
-              weekDtos={homeData.result.pastWeekDtos} 
-              selectedTab={selectedRightTab}
-              onTabChange={handleRightPanelTabChange}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* 메인 컨텐츠 영역 - Left Panel + Right Panel */}
-      <div className="w-full bg-[#F8F9FA] py-6 px-4">
-        <div className="flex flex-col xl:flex-row justify-center gap-4 xl:gap-[57px] w-full max-w-6xl mx-auto">
+          {/* 메인 컨텐츠 영역 - Left Panel + Right Panel */}
+          <div className="px-4 py-6">
+            <div className="flex flex-col xl:flex-row justify-center gap-4 xl:gap-[57px] w-full">
           {/* Left Panel */}
           <div className="flex flex-col items-center gap-4 w-full xl:w-auto">
             {leftPanelLoading ? (
@@ -587,7 +591,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
                 </div>
               </div>
             ) : (
-              <div className="w-full xl:w-[750px] flex justify-center">
+              <div className="w-full max-w-[750px] xl:w-[750px] flex justify-center">
                 <HomeChart 
                   duckstarRankPreviews={leftPanelData || []}
                   selectedWeek={selectedWeek}
@@ -610,7 +614,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
           </div>
           
           {/* Right Panel - 해외 순위 */}
-          <div className="w-full xl:w-auto flex justify-center">
+          <div className="w-full xl:w-auto flex justify-center xl:justify-start">
             <RightPanel 
               rightPanelData={rightPanelData}
               selectedRightTab={selectedRightTab}
@@ -618,7 +622,9 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
               selectedWeek={selectedWeek}
             />
           </div>
+          </div>
         </div>
+      </div>
       </div>
     </div>
   );

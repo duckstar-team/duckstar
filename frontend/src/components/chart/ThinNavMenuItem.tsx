@@ -105,6 +105,7 @@ interface ThinNavMenuItemProps extends VariantProps<typeof menuItemVariants> {
   icon?: string;
   onClick?: () => void;
   className?: string;
+  hideTextOnMobile?: boolean;
 }
 
 export default function ThinNavMenuItem({
@@ -113,7 +114,8 @@ export default function ThinNavMenuItem({
   label,
   icon,
   onClick,
-  className
+  className,
+  hideTextOnMobile = false
 }: ThinNavMenuItemProps) {
   if (type === "yearHeader") {
     return (
@@ -165,7 +167,8 @@ export default function ThinNavMenuItem({
           {/* 텍스트 */}
           <div className={cn(
             "left-[31px] top-[10px] absolute justify-center",
-            textVariants({ type, state })
+            textVariants({ type, state }),
+            hideTextOnMobile ? "hidden md:block" : ""
           )}>
             {label}
           </div>
@@ -186,7 +189,8 @@ export default function ThinNavMenuItem({
         )}>
           <div className={cn(
             "w-12 left-[10px] top-[5px] absolute justify-center",
-            textVariants({ type, state })
+            textVariants({ type, state }),
+            hideTextOnMobile ? "hidden md:block" : ""
           )}>
             {label}
           </div>

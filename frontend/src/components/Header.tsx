@@ -6,7 +6,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import LoginButton from './common/LoginButton';
 import { useAuth } from '../context/AuthContext';
+import { useMobileMenu, useChart } from './AppContainer';
 import { scrollToTop } from '../utils/scrollUtils';
+import ThinNavDetail from './ThinNavDetail';
 
 export type HeaderType = {
   className?: string;
@@ -14,6 +16,8 @@ export type HeaderType = {
 
 const Header: NextPage<HeaderType> = ({ className = "" }) => {
   const { isAuthenticated } = useAuth();
+  const { isMobileMenuOpen, toggleMobileMenu } = useMobileMenu();
+  const { weeks, selectedWeek } = useChart();
   const router = useRouter();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,11 +121,11 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         {/* Background Layer */}
         <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
         
-        {/* Hamburger - vote and search pages mobile only, placed to the left of the logo */}
-        {(pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/')) && (
+        {/* Hamburger - vote, search, anime, chart, profile-setup, about, terms, privacy-policy pages mobile only, placed to the left of the logo */}
+        {(pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy') && (
           <div
             ref={menuContainerRef}
-            className="md:hidden absolute top-1/2 -translate-y-1/2 left-1 z-10"
+            className="lg:hidden absolute top-1/2 -translate-y-1/2 left-1 z-10"
           >
             <button
               type="button"
@@ -140,7 +144,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         )}
 
       {/* Logo */}
-      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-[50px] sm:left-[58px] md:left-[25px] top-0 absolute z-10 cursor-pointer">
+      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-[50px] sm:left-[58px] lg:left-[25px] top-0 absolute z-10 cursor-pointer">
         <img
           src="/logo.svg"
           alt="Duckstar Logo"
@@ -150,10 +154,10 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       
       {/* Right Section - Search Bar + Login Button */}
       <div className={`absolute right-2 sm:right-3 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
-        isAuthenticated ? 'gap-7' : 'gap-4'
+        isAuthenticated ? 'gap-4 pr-[6px]' : 'gap-4 pr-[18px]'
       }`}>
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 hover:opacity-100 transition-opacity hidden md:flex">
+        <form onSubmit={handleSearch} className="hidden md:flex w-[150px] sm:w-[200px] md:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 hover:opacity-100 transition-opacity">
           {/* Search Icon */}
           <div className="w-5 h-5 relative overflow-hidden">
             <img
@@ -219,39 +223,30 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
               position: 'absolute',
               top: 0,
               left: 0,
-              width: '240px',
-              maxWidth: '240px',
+              width: (pathname === '/chart' || pathname.startsWith('/chart/')) ? '243px' : '240px',
+              maxWidth: (pathname === '/chart' || pathname.startsWith('/chart/')) ? '243px' : '240px',
               height: '100%',
               backgroundColor: '#ffffff',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               transform: isClosing ? 'translateX(-100%)' : 'translateX(0)',
               transition: 'transform 0.3s ease-out',
-              zIndex: 100000
+              zIndex: 100000,
+              display: 'flex'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ padding: '24px', height: '100%' }}>
-              {/* Header with close button */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+            {/* Main Navigation */}
+            <div style={{ 
+              padding: '24px', 
+              height: '100%', 
+              display: 'flex',
+              flexDirection: 'column',
+              width: (pathname === '/chart' || pathname.startsWith('/chart/')) ? '100px' : '240px',
+              flexShrink: 0
+            }}>
+              {/* Header */}
+              <div style={{ marginBottom: '32px' }}>
                 <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>메뉴</h2>
-                <button
-                  onClick={closeMenu}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <svg style={{ width: '20px', height: '20px', color: '#6b7280' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
               </div>
               
               {/* Navigation items */}
@@ -301,7 +296,11 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                     alt="홈"
                     style={{ width: '20px', height: '20px' }}
                   />
-                  홈
+                  <span style={{ 
+                    display: (pathname === '/chart' || pathname.startsWith('/chart/')) ? 'none' : 'inline' 
+                  }}>
+                    홈
+                  </span>
                 </button>
                 <button 
                   data-menu-item
@@ -343,7 +342,11 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                     alt="주간 차트"
                     style={{ width: '20px', height: '20px' }}
                   />
-                  주간 차트
+                  <span style={{ 
+                    display: (pathname === '/chart' || pathname.startsWith('/chart/')) ? 'none' : 'inline' 
+                  }}>
+                    주간 차트
+                  </span>
                 </button>
                 <button 
                   data-menu-item
@@ -385,7 +388,11 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                     alt="투표하기"
                     style={{ width: '20px', height: '20px' }}
                   />
-                  투표하기
+                  <span style={{ 
+                    display: (pathname === '/chart' || pathname.startsWith('/chart/')) ? 'none' : 'inline' 
+                  }}>
+                    투표하기
+                  </span>
                 </button>
                 <button 
                   data-menu-item
@@ -427,8 +434,12 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                     alt="애니/시간표 검색"
                     style={{ width: '20px', height: '20px' }}
                   />
-                  <span className="md:hidden">시간표 검색</span>
-                  <span className="hidden md:inline">애니/시간표 검색</span>
+                  <span style={{ 
+                    display: (pathname === '/chart' || pathname.startsWith('/chart/')) ? 'none' : 'inline' 
+                  }}>
+                    <span className="md:hidden">시간표 검색</span>
+                    <span className="hidden md:inline">애니/시간표 검색</span>
+                  </span>
                 </button>
                 <button 
                   data-menu-item
@@ -475,7 +486,11 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                       opacity: pathname === '/mypage' ? '1' : '0.5'
                     }}
                   />
-                  <div style={{ position: 'relative', flex: 1 }}>
+                  <div style={{ 
+                    position: 'relative', 
+                    flex: 1,
+                    display: (pathname === '/chart' || pathname.startsWith('/chart/')) ? 'none' : 'block'
+                  }}>
                     <span>마이페이지</span>
                     <span style={{
                       position: 'absolute',
@@ -493,8 +508,178 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                     </span>
                   </div>
                 </button>
+                
+                {/* 푸터 항목들 */}
+                <div style={{ 
+                  marginTop: 'auto', 
+                  paddingTop: '24px', 
+                  borderTop: '1px solid #e5e7eb',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0',
+                  position: 'absolute',
+                  bottom: '0',
+                  left: '0',
+                  right: '0',
+                  paddingBottom: '16px'
+                }}>
+                  <button 
+                    data-menu-item
+                    onClick={() => {
+                      router.push('/about');
+                      closeMenu();
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      background: 'transparent',
+                      color: '#6b7280',
+                      fontSize: '14px',
+                      fontWeight: '400',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      display: 'flex',
+                      alignItems: 'center',
+                      textDecoration: 'none',
+                      border: 'none',
+                      outline: 'none',
+                      width: '100%',
+                      textAlign: 'left'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f3f4f6';
+                      e.currentTarget.style.color = '#374151';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#6b7280';
+                    }}
+                  >
+                    덕스타 소개
+                  </button>
+                  
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    padding: '0 16px',
+                    flexWrap: 'nowrap',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    <button 
+                      data-menu-item
+                      onClick={() => {
+                        router.push('/terms');
+                        closeMenu();
+                      }}
+                      style={{
+                        padding: '8px 0',
+                        background: 'transparent',
+                        color: '#6b7280',
+                        fontSize: '14px',
+                        fontWeight: '400',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        textDecoration: 'none',
+                        border: 'none',
+                        outline: 'none',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#6b7280';
+                      }}
+                    >
+                      이용약관
+                    </button>
+                    <span style={{ color: '#d1d5db', fontSize: '14px', flexShrink: 0 }}>·</span>
+                    <button 
+                      data-menu-item
+                      onClick={() => {
+                        router.push('/privacy-policy');
+                        closeMenu();
+                      }}
+                      style={{
+                        padding: '8px 0',
+                        background: 'transparent',
+                        color: '#6b7280',
+                        fontSize: '14px',
+                        fontWeight: '400',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        textDecoration: 'none',
+                        border: 'none',
+                        outline: 'none',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#6b7280';
+                      }}
+                    >
+                      개인정보처리방침
+                    </button>
+                  </div>
+                  
+                  <div style={{ 
+                    padding: '8px 16px',
+                    color: '#9ca3af',
+                    fontSize: '12px',
+                    textAlign: 'left'
+                  }}>
+                    © 2025 DUCKSTAR
+                  </div>
+                </div>
               </nav>
             </div>
+            
+            {/* ThinNavDetail for Chart Pages - integrated within same container */}
+            {(pathname === '/chart' || pathname.startsWith('/chart/')) && (
+              <div style={{ 
+                width: '143px',
+                height: '100%',
+                backgroundColor: '#212529',
+                flexShrink: 0,
+                position: 'relative'
+              }}>
+                {/* Close button positioned at 1 o'clock direction */}
+                <button
+                  onClick={closeMenu}
+                  style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '4px',
+                    border: 'none',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    cursor: 'pointer',
+                    zIndex: 10
+                  }}
+                >
+                  <svg style={{ width: '14px', height: '14px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <ThinNavDetail 
+                  weeks={weeks}
+                  selectedWeek={selectedWeek}
+                  hideTextOnMobile={false}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

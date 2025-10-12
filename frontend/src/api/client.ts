@@ -50,7 +50,7 @@ const getDefaultOptions = (): RequestInit => {
   };
 };
 
-// API call helper function - 성능 최적화
+// API call helper function - 성능 최적화 및 토큰 만료 처리
 async function apiCall<T>(
   endpoint: string, 
   options: RequestInit = {}
@@ -69,6 +69,42 @@ async function apiCall<T>(
   };
 
   const response = await fetch(url, config);
+  
+  // 토큰 만료 감지 (401 Unauthorized)
+  if (response.status === 401) {
+    console.log('토큰 만료 감지, 갱신 시도');
+    
+    // 리프레시 토큰으로 갱신 시도
+    try {
+      const refreshResponse = await fetch('/api/v1/auth/token/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (refreshResponse.ok) {
+        console.log('토큰 갱신 성공, 원래 요청 재시도');
+        // 토큰 갱신 성공, 원래 요청 재시도
+        const retryResponse = await fetch(url, config);
+        if (!retryResponse.ok) {
+          throw new Error(`API 호출 실패: ${retryResponse.status} ${retryResponse.statusText}`);
+        }
+        return retryResponse.json();
+      } else {
+        console.log('토큰 갱신 실패, 로그아웃 필요');
+        // 갱신 실패 시 로그아웃 처리
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
+        throw new Error('토큰 갱신 실패');
+      }
+    } catch (error) {
+      console.error('토큰 갱신 중 오류:', error);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+      throw error;
+    }
+  }
   
   if (!response.ok) {
     throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);

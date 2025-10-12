@@ -5,6 +5,7 @@ interface StarRatingDisplayProps {
   rating: number;
   maxStars?: number;
   size?: 'sm' | 'md' | 'lg';
+  responsiveSize?: boolean;
   className?: string;
 }
 
@@ -12,12 +13,13 @@ export default function StarRatingDisplay({
   rating,
   maxStars = 5,
   size = 'sm',
+  responsiveSize = false,
   className = ''
 }: StarRatingDisplayProps) {
   const sizeClasses = {
-    sm: 'size-4',
-    md: 'size-5',
-    lg: 'size-6'
+    sm: responsiveSize ? 'size-3 xs:size-4 sm:size-4' : 'size-4',
+    md: responsiveSize ? 'size-4 xs:size-5 sm:size-5' : 'size-5',
+    lg: responsiveSize ? 'size-5 xs:size-6 sm:size-6' : 'size-6'
   };
 
   const imageSize = {

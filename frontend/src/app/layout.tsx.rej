@@ -1,0 +1,12 @@
+diff a/frontend/src/app/layout.tsx b/frontend/src/app/layout.tsx	(rejected hunks)
+@@ -49,8 +49,8 @@ export default function RootLayout({
+   return (
+     <html lang="ko">
+       <head>
+-        {/* PC 버전 강제 설정 - 모바일에서도 데스크톱 뷰포트 사용 */}
+-        <meta name="viewport" content="width=1200, initial-scale=1.0, user-scalable=no" />
++        {/* 반응형 뷰포트 설정 */}
++        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+         
+         {/* 투표 이미지 프리로딩 */}
+         <link rel="preload" href="/voted-normal.svg" as="image" type="image/svg+xml" />

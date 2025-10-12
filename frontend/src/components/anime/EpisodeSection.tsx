@@ -24,6 +24,7 @@ interface EpisodeSectionProps {
   animeId: number; // animeId required로 변경
   currentPage: number; // 부모에서 관리하는 페이지 상태
   onPageChange: (page: number) => void; // 페이지 변경 핸들러
+  isMobile?: boolean; // 모바일 여부
 }
 
 // 툴팁 관련 타입
@@ -90,15 +91,42 @@ export default function EpisodeSection({
   disableFutureEpisodes = false,
   animeId,
   currentPage,
-  onPageChange
+  onPageChange,
+  isMobile = false
 }: EpisodeSectionProps) {
+  
+  // 화면 크기 감지 (425px 미만에서 텍스트 크기 조정)
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsVerySmallScreen(window.innerWidth < 425);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(totalEpisodes || 12);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   // 관리자 여부 확인
   const isAdmin = user?.role === 'ADMIN';
+
+  // 드롭다운 핸들러
+  const handleDropdownToggle = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleEpisodeSelect = (episodeId: number) => {
+    onEpisodeClick(episodeId);
+    setDropdownOpen(false);
+  };
 
   // 편집 모드 토글
   const handleEditToggle = () => {
@@ -164,6 +192,22 @@ console.error('Failed to set total episodes as unknown:', error);
       setIsUpdating(false);
     }
   };
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (isMobile) {
+        setIsSmallScreen(window.innerWidth <= 600);
+      } else {
+        setIsSmallScreen(false);
+      }
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, [isMobile]);
+
   const episodesPerPage = 6;
   // totalEpisodes가 0이면 기본값 12로 설정
   const effectiveTotalEpisodes = totalEpisodes > 0 ? totalEpisodes : 12;
@@ -284,10 +328,10 @@ console.error('Failed to set total episodes as unknown:', error);
   }, [onEpisodeClick]);
 
   return (
-    <div className="size- flex flex-col justify-start items-center gap-2.5">
+    <div className="w-full flex flex-col justify-start items-center gap-2.5">
       {/* 에피소드 헤더 */}
-      <div className="w-[580px] h-5 px-6 inline-flex justify-start items-center gap-3.5">
-        <div className="text-center justify-start text-black text-xl font-semibold font-['Pretendard'] leading-snug">
+      <div className={`${isSmallScreen ? 'w-full max-w-[100%]' : 'w-full'} h-5 px-6 inline-flex justify-start items-center gap-3.5`}>
+         <div className={`text-center justify-start text-black font-semibold font-['Pretendard'] leading-snug ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}>
           에피소드 공개
         </div>
         <div className="text-center justify-start flex items-center gap-1">
@@ -369,27 +413,93 @@ console.error('Failed to set total episodes as unknown:', error);
         </div>
       </div>
 
-      {/* 에피소드 프로그레스 바 */}
-      <div className="size- inline-flex justify-center items-center">
-        {/* 이전 버튼 */}
-        <div 
-          className={`w-[33px] h-[116.5px] inline-flex justify-start items-center cursor-pointer ${
-            currentPage === 0 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
-          }`}
-          onClick={handlePreviousPage}
-        >
-          <img 
-            src="/icons/episodes-before.svg?v=2" 
-            alt="이전 보기" 
-            className="w-3 h-5.5"
-          />
+      {/* 에피소드 프로그레스 바 또는 드롭다운 */}
+      {isSmallScreen ? (
+        /* 작은 화면: 드롭다운 */
+        <div className="w-full max-w-[100%] px-6">
+          <div className="relative">
+            <button
+              onClick={handleDropdownToggle}
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-left flex items-center justify-between hover:bg-gray-50"
+            >
+              <span className="text-black text-base font-medium font-['Pretendard']">
+                {selectedEpisodeIds.length > 0 
+                  ? `선택된 에피소드: ${selectedEpisodeIds.length}개`
+                  : '에피소드 선택'
+                }
+              </span>
+              <svg 
+                className={`w-5 h-5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {dropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-10">
+                {episodes.map((episode) => {
+                  const isSelected = selectedEpisodeIds.includes(episode.id);
+                  const status = getEpisodeStatus(episode.scheduledAt);
+                  const isDisabled = disableFutureEpisodes && (status === 'current' || status === 'future');
+                  
+                  return (
+                    <button
+                      key={episode.id}
+                      onClick={() => handleEpisodeSelect(episode.id)}
+                      disabled={isDisabled}
+                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
+                        isSelected ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">
+                            {episode.episodeNumber}화
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {episode.quarter} {episode.week} · {formatScheduledAt(episode.scheduledAt)}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
+      ) : (
+        /* 큰 화면: 기존 슬라이더 */
+        <div className="size- inline-flex justify-center items-center">
+          {/* 이전 버튼 */}
+          <div 
+            className={`w-full max-w-[33px] h-[116.5px] inline-flex justify-start items-center cursor-pointer ${
+              currentPage === 0 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
+            }`}
+            onClick={handlePreviousPage}
+          >
+            <img 
+              src="/icons/episodes-before.svg?v=2" 
+              alt="이전 보기" 
+              className="w-3 h-5.5"
+            />
+          </div>
 
-        {/* 에피소드 슬라이드 컨테이너 */}
-        <div 
-          className="w-[464px] inline-flex flex-col justify-center items-start gap-0 py-4" 
-          style={{ overflowX: 'hidden', overflowY: 'visible', minHeight: '120px' }}
-        >
+          {/* 에피소드 슬라이드 컨테이너 */}
+          <div 
+            className="w-[500px] inline-flex flex-col justify-center items-start gap-0 py-4" 
+            style={{ overflowX: 'hidden', overflowY: 'visible', minHeight: '120px' }}
+          >
           {/* 에피소드 아이콘 슬라이드 */}
           <div className="relative w-full" style={{ overflow: 'visible' }}>
             <div 
@@ -399,7 +509,7 @@ console.error('Failed to set total episodes as unknown:', error);
                 width: `${effectiveTotalEpisodes * 80}px`
               }}
             >
-              <div className="pl-2 ml-2 inline-flex justify-start items-center overflow-visible">
+               <div className="pl-2 ml-2 inline-flex justify-start items-center overflow-visible">
                 {episodes.map((episode, index) => {
                   const isSelected = selectedEpisodeIds.includes(episode.id);
                   const status = getEpisodeStatus(episode.scheduledAt);
@@ -441,7 +551,7 @@ console.error('Failed to set total episodes as unknown:', error);
                 width: `${effectiveTotalEpisodes * 80}px`
               }}
             >
-              <div className="ml-2 inline-flex justify-start items-start">
+               <div className="ml-2 inline-flex justify-center items-start">
                 {episodes.map((episode, index) => {
                   const isSelected = selectedEpisodeIds.includes(episode.id);
                   const status = getEpisodeStatus(episode.scheduledAt);
@@ -474,20 +584,21 @@ console.error('Failed to set total episodes as unknown:', error);
           </div>
         </div>
 
-        {/* 다음 버튼 */}
-        <div 
-          className={`w-[33px] h-[116.5px] inline-flex justify-end items-center cursor-pointer ${
-            currentPage >= totalPages - 1 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
-          }`}
-          onClick={handleNextPage}
-        >
-          <img 
-            src="/icons/episodes-after.svg?v=2" 
-            alt="다음 보기" 
-            className="w-3 h-5.5"
-          />
+          {/* 다음 버튼 */}
+          <div 
+            className={`w-full max-w-[33px] h-[116.5px] inline-flex justify-end items-center cursor-pointer ${
+              currentPage >= totalPages - 1 ? 'opacity-0' : 'opacity-100 hover:opacity-70'
+            }`}
+            onClick={handleNextPage}
+          >
+            <img 
+              src="/icons/episodes-after.svg?v=2" 
+              alt="다음 보기" 
+              className="w-3 h-5.5"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 툴팁 */}
       {tooltipState.showTooltip && tooltipState.hoveredEpisodeId && (

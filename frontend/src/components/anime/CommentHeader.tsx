@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface CommentHeaderProps {
   totalComments?: number;
@@ -17,6 +17,20 @@ export default function CommentHeader({
   onClearFilters,
   onRemoveFilter
 }: CommentHeaderProps) {
+  
+  // 화면 크기 감지 (425px 미만에서 텍스트 크기 조정)
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsVerySmallScreen(window.innerWidth < 425);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   // 필터 배지 컴포넌트
   const FilterBadge = ({ episodeNumber }: { episodeNumber: number }) => (
     <div 
@@ -41,10 +55,10 @@ export default function CommentHeader({
 
 
   return (
-    <div className="w-[580px] pl-6 inline-flex flex-col justify-end items-start gap-3.5">
+    <div className="w-full max-w-[570px] pl-6 inline-flex flex-col justify-end items-start gap-3.5">
       {/* 필터가 없을 때는 기본 헤더만 표시 */}
       {variant === 'default' ? (
-        <div className="w-[580px] h-12 pr-6 pt-5 inline-flex justify-start items-end gap-3.5">
+        <div className="w-full max-w-[570px] h-12 pr-6 pt-5 inline-flex justify-start items-end gap-3.5">
           <div className="size-7 relative overflow-hidden">
             <img
               src="/icons/comment-header-icon.svg"
@@ -52,7 +66,7 @@ export default function CommentHeader({
               className="w-full h-full object-contain"
             />
           </div>
-          <div className="text-center justify-start text-black text-xl font-semibold font-['Pretendard'] leading-snug">애니 댓글</div>
+          <div className={`text-center justify-start text-black font-semibold font-['Pretendard'] leading-snug ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}>애니 댓글</div>
           <div className="text-center justify-start">
             <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span>
             <span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">{totalComments}</span>
@@ -63,7 +77,7 @@ export default function CommentHeader({
         /* 필터가 있을 때 */
         <>
           {/* 첫 번째 줄: 헤더 + 초기화 버튼 */}
-          <div className="self-stretch h-12 pr-6 pt-5 inline-flex justify-start items-end">
+          <div className="self-stretch h-12 pr-6 pt-5 inline-flex justify-start items-end w-full">
             <div className="size-7 relative overflow-hidden">
               <img
                 src="/icons/comment-header-icon.svg"
@@ -71,7 +85,7 @@ export default function CommentHeader({
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="text-center justify-start text-black text-xl font-semibold font-['Pretendard'] leading-snug ml-3.5">애니 댓글</div>
+            <div className={`text-center justify-start text-black font-semibold font-['Pretendard'] leading-snug ml-3.5 ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}>애니 댓글</div>
             <div className="text-center justify-start ml-3.5">
               <span className="text-black text-base font-semibold font-['Pretendard'] leading-snug">총 </span>
               <span className="text-rose-800 text-base font-semibold font-['Pretendard'] leading-snug">{totalComments}</span>

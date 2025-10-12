@@ -1,0 +1,205 @@
+diff a/frontend/src/app/search/[year]/[quarter]/page.tsx b/frontend/src/app/search/[year]/[quarter]/page.tsx	(rejected hunks)
+@@ -812,103 +812,119 @@ function SeasonPageContent() {
+           {/* Background Layer - 헤더와 동일한 스타일 */}
+           <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
+           <div className="relative z-10 max-w-7xl mx-auto px-6">
+-            <div className="flex gap-5 items-center justify-between">
+-              {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
+-              {searchQuery.trim() ? (
+-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+-                  <button
+-                    onClick={handleSearchReset}
+-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+-                  >
+-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+-                    </svg>
+-                    <span className="font-medium">이전</span>
+-                  </button>
+-                </div>
+-              ) : (
+-                <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+-                  <SeasonSelector
+-                    onSeasonSelect={handleSeasonSelect}
+-                    className="w-fit"
+-                    currentYear={year}
+-                    currentQuarter={quarter}
+-                  />
+-                </div>
+-              )}
+-              
+-              {/* DaySelection 또는 OTT 필터 - 이번주 페이지와 동일한 구조 */}
+-              {selectedOttServices.length === 0 ? (
+-                <>
+-                  {/* 모바일: 오른쪽 그룹 */}
+-                  <div className="md:hidden flex justify-end">
++            {/* Quarter 페이지 전용 2줄 레이아웃 - DaySelection이 있을 때만 */}
++            {selectedOttServices.length === 0 && !searchQuery.trim() ? (
++              <div className="space-y-3">
++                {/* 첫 번째 줄: 드롭다운 박스 */}
++                <div className="flex justify-center">
++                  {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++                  {searchQuery.trim() ? (
++                    <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                      <button
++                        onClick={handleSearchReset}
++                        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
++                      >
++                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
++                        </svg>
++                        <span className="font-medium">이전</span>
++                      </button>
++                    </div>
++                  ) : (
+                     <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+-                      <DaySelection
+-                        selectedDay={selectedDay}
+-                        onDaySelect={handleDaySelect}
+-                        initialPosition={true}
+-                        emptyDays={new Set(emptyDays)}
+-                        isThisWeek={false}
+-                        isSticky={true}
++                      <SeasonSelector
++                        onSeasonSelect={handleSeasonSelect}
+                         className="w-fit"
++                        currentYear={year}
++                        currentQuarter={quarter}
+                       />
+                     </div>
++                  )}
++                </div>
++                
++                {/* 두 번째 줄: DaySelection */}
++                <div className="flex justify-center">
++                  <DaySelection
++                    selectedDay={selectedDay}
++                    onDaySelect={handleDaySelect}
++                    initialPosition={true}
++                    emptyDays={new Set(emptyDays)}
++                    isThisWeek={false}
++                    isSticky={true}
++                    className="w-fit"
++                  />
++                </div>
++              </div>
++            ) : (
++              /* OTT 필터가 있거나 검색 중일 때는 기존 1줄 레이아웃 */
++              <div className="flex gap-5 items-center justify-center">
++                {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
++                {searchQuery.trim() ? (
++                  <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                    <button
++                      onClick={handleSearchReset}
++                      className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
++                    >
++                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
++                      </svg>
++                      <span className="font-medium">이전</span>
++                    </button>
+                   </div>
+-                  
+-                  {/* 데스크톱: 중앙에 별도 배치 */}
+-                  <div className="hidden md:block absolute left-[55%] transform -translate-x-1/2">
+-                    <DaySelection
+-                      selectedDay={selectedDay}
+-                      onDaySelect={handleDaySelect}
+-                      initialPosition={true}
+-                      emptyDays={new Set(emptyDays)}
+-                      isThisWeek={false}
+-                      isSticky={true}
++                ) : (
++                  <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
++                    <SeasonSelector
++                      onSeasonSelect={handleSeasonSelect}
+                       className="w-fit"
++                      currentYear={year}
++                      currentQuarter={quarter}
+                     />
+                   </div>
+-                </>
+-              ) : (
+-                <div className="flex gap-3 items-center">
+-                  {/* 선택됨 텍스트 */}
+-                  <span className="text-sm font-medium text-gray-700 font-['Pretendard']">
+-                    선택됨:
+-                  </span>
+-                  
+-                  {/* OTT 필터 아이콘들 */}
+-                  <div className="flex gap-2 items-center">
+-                    {selectedOttServices.map((ottService, index) => (
+-                      <div key={index} className="relative">
+-                        <div 
+-                          onClick={() => handleOttFilterChange(ottService, false)}
+-                          className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+-                        >
++                )}
++                
++                {/* OTT 필터 표시 */}
++                {selectedOttServices.length > 0 && (
++                  <div className="flex gap-3 items-center">
++                    {/* 선택됨 텍스트 */}
++                    <span className="text-sm font-medium text-gray-700 font-['Pretendard']">
++                      선택됨:
++                    </span>
++                    
++                    {/* OTT 필터 아이콘들 */}
++                    <div className="flex gap-2 items-center">
++                      {selectedOttServices.map((ottService, index) => (
++                        <div key={index} className="relative">
++                          <div 
++                            onClick={() => handleOttFilterChange(ottService, false)}
++                            className="w-9 h-9 rounded-full overflow-hidden cursor-pointer hover:scale-105 transition-transform"
++                          >
++                            <img
++                              src={`/icons/${ottService.toLowerCase()}-logo.svg`}
++                              alt={ottService}
++                              className="w-full h-full object-contain"
++                            />
++                          </div>
+                           <img
+-                            src={`/icons/${ottService.toLowerCase()}-logo.svg`}
+-                            alt={ottService}
+-                            className="w-full h-full object-contain"
++                            src="/icons/remove-filter.svg"
++                            alt="제거"
++                            className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
+                           />
+                         </div>
+-                        <img
+-                          src="/icons/remove-filter.svg"
+-                          alt="제거"
+-                          className="absolute -top-1 -right-1 w-[17px] h-[17px] pointer-events-none"
+-                        />
+-                      </div>
+-                    ))}
++                      ))}
++                    </div>
++                    
++                    {/* 필터 초기화 버튼 */}
++                    <button
++                      onClick={() => setSelectedOttServices([])}
++                      className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
++                    >
++                      필터 초기화
++                    </button>
+                   </div>
+-                  
+-                  {/* 필터 초기화 버튼 */}
+-                  <button
+-                    onClick={() => setSelectedOttServices([])}
+-                    className="text-sm text-gray-500 hover:text-gray-700 underline font-['Pretendard'] whitespace-nowrap cursor-pointer"
+-                  >
+-                    필터 초기화
+-                  </button>
+-                </div>
+-              )}
++                )}
+               </div>
+-            </div>
++            )}
++          </div>
+         </div>
+       )}
+ 

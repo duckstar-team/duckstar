@@ -95,9 +95,24 @@ function SearchPageContent() {
   // 모바일 전용 스티키 상태
   const [isMobileMenuSticky, setIsMobileMenuSticky] = useState(false);
   
+  // 화면 크기 감지 (1440px 미만에서 독립 스티키)
+  const [isSmallDesktop, setIsSmallDesktop] = useState(false);
+  
   const daySelectionRef = useRef<HTMLDivElement>(null);
   const seasonSelectorRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallDesktop(window.innerWidth < 1440);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   
   // 시즌별 스크롤 위치 매핑 관련 함수들
   const getSeasonKey = (year: number | null, quarter: number | null) => {
@@ -713,23 +728,32 @@ function SearchPageContent() {
     }
   }, [scheduleData, selectedYear, selectedQuarter, searchQuery]);
 
-  // 1. DaySelection 스티키 처리
+  // 1. DaySelection 스티키 처리 (1440px 미만에서 독립 스티키)
   useEffect(() => {
     const handleStickyScroll = () => {
       if (!daySelectionRef.current) return;
       
       const daySelectionRect = daySelectionRef.current.getBoundingClientRect();
       
-      // DaySelection이 완전히 화면 밖으로 나가면 스티키
-      const shouldBeSticky = daySelectionRect.bottom < 0;
-      
-      if (shouldBeSticky !== isDaySelectionSticky) {
-        setIsDaySelectionSticky(shouldBeSticky);
+      if (isSmallDesktop) {
+        // 1440px 미만: 독립 스티키 (SeasonSelector와 분리)
+        const shouldBeSticky = daySelectionRect.top <= 108 && window.scrollY > 100; // SeasonSelector 바로 아래에 배치
+        
+        if (shouldBeSticky !== isDaySelectionSticky) {
+          setIsDaySelectionSticky(shouldBeSticky);
+        }
+      } else {
+        // 1440px 이상: 기존 로직 (SeasonSelector와 함께)
+        const shouldBeSticky = daySelectionRect.bottom < 0 && window.scrollY > 100;
+        
+        if (shouldBeSticky !== isDaySelectionSticky) {
+          setIsDaySelectionSticky(shouldBeSticky);
+        }
       }
     };
 
-    // 초기 체크
-    handleStickyScroll();
+    // 초기 체크는 제거하고 스크롤 이벤트만 등록
+    // 초기 체크 제거로 인한 스티키 메뉴 자동 출력 방지
     
     // 스크롤 이벤트 리스너
     window.addEventListener('scroll', handleStickyScroll, { passive: true });
@@ -737,25 +761,34 @@ function SearchPageContent() {
     return () => {
       window.removeEventListener('scroll', handleStickyScroll);
     };
-  }, [isDaySelectionSticky]);
+  }, [isDaySelectionSticky, isSmallDesktop]);
 
-  // 2. SeasonSelector 스티키 처리
+  // 2. SeasonSelector 스티키 처리 (1440px 미만에서 독립 스티키)
   useEffect(() => {
     const handleSeasonSelectorStickyScroll = () => {
       if (!seasonSelectorRef.current) return;
       
       const seasonSelectorRect = seasonSelectorRef.current.getBoundingClientRect();
       
-      // SeasonSelector가 완전히 화면 밖으로 나가면 스티키
-      const shouldBeSticky = seasonSelectorRect.bottom < 0;
-      
-      if (shouldBeSticky !== isSeasonSelectorSticky) {
-        setIsSeasonSelectorSticky(shouldBeSticky);
+      if (isSmallDesktop) {
+        // 1440px 미만: 독립 스티키 (요일 셀렉터와 분리)
+        const shouldBeSticky = seasonSelectorRect.top <= 60 && window.scrollY > 50;
+        
+        if (shouldBeSticky !== isSeasonSelectorSticky) {
+          setIsSeasonSelectorSticky(shouldBeSticky);
+        }
+      } else {
+        // 1440px 이상: 기존 로직 (요일 셀렉터와 함께)
+        const shouldBeSticky = seasonSelectorRect.top <= 60 && window.scrollY > 50;
+        
+        if (shouldBeSticky !== isSeasonSelectorSticky) {
+          setIsSeasonSelectorSticky(shouldBeSticky);
+        }
       }
     };
 
-    // 초기 체크
-    handleSeasonSelectorStickyScroll();
+    // 초기 체크는 제거하고 스크롤 이벤트만 등록
+    // 초기 체크 제거로 인한 스티키 메뉴 자동 출력 방지
     
     // 스크롤 이벤트 리스너
     window.addEventListener('scroll', handleSeasonSelectorStickyScroll, { passive: true });
@@ -763,7 +796,7 @@ function SearchPageContent() {
     return () => {
       window.removeEventListener('scroll', handleSeasonSelectorStickyScroll);
     };
-  }, [isSeasonSelectorSticky]);
+  }, [isSeasonSelectorSticky, isSmallDesktop]);
 
   // 3. 모바일 메뉴 스티키 처리
   useEffect(() => {
@@ -1233,8 +1266,9 @@ function SearchPageContent() {
       });
       
         if (upcomingAnimes.length > 0) {
-          // 방영 중 필터링 적용
-          const filteredUpcoming = filterAiringAnimes(upcomingAnimes);
+          // "곧 시작" 그룹에서는 방영중 애니메이션도 포함해야 하므로 필터링을 적용하지 않음
+          // 대신 정렬에서 방영중 애니메이션을 우선으로 처리
+          const filteredUpcoming = upcomingAnimes;
         
         if (filteredUpcoming.length > 0) {
           // 남은 시간 기준으로 정렬 (라이브 중인 것은 반드시 앞에, 그 다음은 남은 시간이 적은 순)
@@ -1918,10 +1952,57 @@ function SearchPageContent() {
       </div>
       
       
-      {/* Sticky SeasonSelector - 헤더 60px 아래에 고정 (PC 전용) */}
-      {isSeasonSelectorSticky && (
+      {/* Sticky SeasonSelector - 1440px 미만에서 독립 스티키 */}
+      {isSeasonSelectorSticky && isSmallDesktop && (
         <div 
-          className="fixed top-[60px] left-0 md:left-[200px] w-full md:w-[calc(100vw-200px)] backdrop-blur-[6px] z-40 hidden md:block"
+          className="fixed top-[60px] left-0 lg:left-[200px] w-full lg:w-[calc(100vw-200px)] backdrop-blur-[6px] z-50 hidden md:block"
+          style={{ 
+            top: '60px',
+            zIndex: 50, // DaySelection보다 높은 z-index
+            transition: 'all 0.3s ease-in-out'
+          }}
+        >
+          {/* Background Layer - 헤더와 동일한 스타일 */}
+          <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
+            <div className="flex justify-center">
+              {/* 독립 스티키: SeasonSelector만 표시 */}
+              <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
+                {searchQuery.trim() ? (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchInput('');
+                      setIsSearching(false);
+                      sessionStorage.removeItem('search-query');
+                      sessionStorage.removeItem('search-input');
+                      sessionStorage.removeItem('is-searching');
+                    }}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="font-medium">이전</span>
+                  </button>
+                ) : (
+                  <SeasonSelector
+                    onSeasonSelect={handleSeasonSelect}
+                    className="w-fit"
+                    currentYear={isThisWeek ? undefined : selectedYear || undefined}
+                    currentQuarter={isThisWeek ? undefined : selectedQuarter || undefined}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky SeasonSelector - 1440px 이상에서 기존 로직 */}
+      {isSeasonSelectorSticky && !isSmallDesktop && (
+        <div 
+          className="fixed top-[60px] left-0 lg:left-[200px] w-full lg:w-[calc(100vw-200px)] backdrop-blur-[6px] z-40 hidden md:block"
           style={{ 
             top: '60px',
             zIndex: 40,
@@ -1931,9 +2012,9 @@ function SearchPageContent() {
           {/* Background Layer - 헤더와 동일한 스타일 */}
           <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
           <div className="relative z-10 max-w-7xl mx-auto px-6">
-            <div className="flex gap-5 items-center md:justify-start justify-between">
+            <div className="flex gap-5 items-center md:justify-start lg:justify-between justify-between max-w-full">
                 {/* 왼쪽 그룹: SeasonSelector와 체크박스 */}
-                <div className="flex gap-5 items-center">
+                <div className="flex gap-5 items-center flex-shrink-0">
                   {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
                   {searchQuery.trim() ? (
                     <div className="bg-white box-border content-stretch flex gap-2.5 items-center justify-center px-[25px] py-2.5 relative rounded-[12px] w-fit">
@@ -2005,7 +2086,7 @@ function SearchPageContent() {
                     </div>
                     
                     {/* 데스크톱: 중앙에 별도 배치 */}
-                    <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
+                    <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 lg:left-1/2 lg:transform lg:-translate-x-1/2">
                       <DaySelection
                         selectedDay={selectedDay}
                         onDaySelect={handleDaySelect}
@@ -2018,6 +2099,35 @@ function SearchPageContent() {
                     </div>
                   </>
                 )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky DaySelection - 1440px 미만에서 독립 스티키 */}
+      {isDaySelectionSticky && isSmallDesktop && (
+        <div 
+          className="fixed top-[120px] left-0 lg:left-[200px] w-full lg:w-[calc(100vw-200px)] backdrop-blur-[6px] z-40 hidden md:block"
+          style={{ 
+            top: '108px', // SeasonSelector 바로 아래에 배치 (공백 제거)
+            zIndex: 40, // SeasonSelector보다 낮은 z-index
+            transition: 'all 0.3s ease-in-out'
+          }}
+        >
+          {/* Background Layer - 헤더와 동일한 스타일 */}
+          <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
+            <div className="flex justify-center">
+              {/* 독립 스티키: DaySelection만 표시 */}
+              <DaySelection
+                selectedDay={selectedDay}
+                onDaySelect={handleDaySelect}
+                initialPosition={true}
+                emptyDays={emptyDays}
+                isThisWeek={isThisWeek}
+                isSticky={true}
+                className="w-fit"
+              />
             </div>
           </div>
         </div>

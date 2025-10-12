@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSeasons } from '@/api/search';
 import { useQuery } from '@tanstack/react-query';
-import { cn } from '@/lib/utils';
+import { cn, getSeasonFromQuarter } from '@/lib/utils';
 
 interface SeasonSelectorProps {
   onSeasonSelect: (year: number, quarter: number) => void;
@@ -99,16 +99,7 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
     return seasonMap[season] || season;
   }
 
-  // 분기를 시즌 타입으로 변환
-  function getSeasonFromQuarter(quarter: number): string {
-    const quarterMap: { [key: number]: string } = {
-      1: 'WINTER',  // 겨울
-      2: 'SPRING',  // 봄
-      3: 'SUMMER',  // 여름
-      4: 'AUTUMN'   // 가을
-    };
-    return quarterMap[quarter] || 'WINTER';
-  }
+  // utils.ts의 getSeasonFromQuarter 함수 사용
 
   // 시즌 선택 핸들러
   const handleSeasonSelect = (option: SeasonOption) => {

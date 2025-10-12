@@ -57,7 +57,7 @@ export default function RightPanel({
   };
 
   return (
-    <div className={`w-full max-w-[373px] xl:w-[373px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
+    <div className={`w-full max-w-[750px] xl:w-[373px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
       <div className="p-5 relative">
         {rightPanelLoading ? (
           <div className="flex items-center justify-center h-32">

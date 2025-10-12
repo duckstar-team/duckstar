@@ -35,13 +35,15 @@ interface CharacterCardProps {
   variant?: 'figma';
   index?: number;
   className?: string;
+  isMobile?: boolean;
 }
 
 export default function CharacterCard({ 
   character, 
   variant = 'figma',
   index = 0,
-  className 
+  className,
+  isMobile = false
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -69,21 +71,23 @@ export default function CharacterCard({
   return (
     <div 
       className={cn(
-        "w-[180px] h-[250px]",
+        isMobile ? "w-[162px] h-[225px]" : "w-[180px] h-[250px]",
+        "overflow-hidden", // 내부 요소가 카드 경계를 벗어나지 않도록
         className
       )}
     >
       {/* Profile 프레임 */}
-      <div className="w-[181px] h-[170px] bg-[#F1F3F5] rounded-tl-[9.76px] rounded-tr-[9.76px] flex justify-center items-center relative">
+      <div className={`${isMobile ? 'w-[163px] h-[153px]' : 'w-[181px] h-[170px]'} bg-[#F1F3F5] rounded-tl-[9.76px] rounded-tr-[9.76px] flex justify-center items-center relative`}>
         {/* 로딩 스켈레톤 */}
         {imageLoading && character.imageUrl && !imageError && (
-          <div className="w-[122px] h-[122px] rounded-[9.76px] bg-gray-200 animate-pulse" />
+          <div className={`${isMobile ? 'w-[110px] h-[110px]' : 'w-[122px] h-[122px]'} rounded-[9.76px] bg-gray-200 animate-pulse`} />
         )}
         
         {/* 실제 이미지 */}
         <img 
           className={cn(
-            "w-[122px] h-[122px] rounded-[9.76px] object-cover transition-opacity duration-200",
+            isMobile ? "w-[110px] h-[110px]" : "w-[122px] h-[122px]",
+            "rounded-[9.76px] object-cover transition-opacity duration-200",
             imageLoading && character.imageUrl && !imageError ? "opacity-0 absolute" : "opacity-100"
           )}
           src={imageUrl}
@@ -95,14 +99,15 @@ export default function CharacterCard({
       
       {/* Info 프레임 */}
       <div className={cn(
-        "w-[181px] h-[69px] p-2.5 rounded-bl-[9.76px] rounded-br-[9.76px] inline-flex justify-start items-center gap-2.5",
+        isMobile ? "w-[163px] h-[62px] p-2.5" : "w-[181px] h-[69px] p-2.5",
+        "rounded-bl-[9.76px] rounded-br-[9.76px] inline-flex justify-start items-center gap-1",
         getBackgroundColor(index)
       )}>
-        <div className="w-[169px] inline-flex flex-col justify-start items-start gap-[3.25px] overflow-hidden">
-          <div className="self-stretch justify-start text-black text-base font-semibold font-['Pretendard'] leading-none">
+        <div className={`${isMobile ? 'w-[151px]' : 'w-[169px]'} inline-flex flex-col justify-start items-start gap-[1px] overflow-hidden`}>
+          <div className={`self-stretch justify-start text-black ${isMobile ? 'text-sm' : 'text-base'} font-semibold font-['Pretendard'] leading-tight`}>
             {character.nameKor}
           </div>
-             <div className="self-stretch justify-start text-black text-sm font-light font-['Pretendard'] leading-none">
+             <div className={`self-stretch justify-start text-black ${isMobile ? 'text-xs' : 'text-sm'} font-light font-['Pretendard'] leading-tight`}>
                성우: {character.voiceActor ? character.voiceActor.replace(/\s*\([^)]*\)/g, '') : '미정'}
              </div>
         </div>

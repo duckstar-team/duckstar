@@ -37,6 +37,7 @@ interface RankCardProps {
   distribution?: number[];
   animeId?: number;
   className?: string;
+  hideMedalsOnMobile?: boolean;
 }
 
 export default function RankCard({
@@ -58,7 +59,8 @@ export default function RankCard({
   participantCount,
   distribution,
   animeId,
-  className = ""
+  className = "",
+  hideMedalsOnMobile = false
 }: RankCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -66,7 +68,7 @@ export default function RankCard({
     <div className={`flex flex-col ${className}`}>
       {/* 메인 카드 */}
       <div 
-        className={`inline-flex items-center pl-5 gap-[26px] bg-white border border-[#D1D1D6] h-[140px] w-[768px] cursor-pointer hover:bg-gray-50 transition-all duration-200 ${
+        className={`inline-flex items-center pl-2 xs:pl-3 sm:pl-5 gap-[12px] xs:gap-[16px] sm:gap-[26px] bg-white border border-[#D1D1D6] h-[140px] w-full max-w-[768px] lg:w-[768px] cursor-pointer hover:bg-gray-50 transition-all duration-200 ${
           isExpanded ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
@@ -83,7 +85,11 @@ export default function RankCard({
         />
 
         {/* 메달 섹션 */}
-        <MedalSection medals={medals} isExpanded={isExpanded} />
+        <MedalSection 
+          medals={medals} 
+          isExpanded={isExpanded} 
+          hideMedalsOnMobile={hideMedalsOnMobile}
+        />
       </div>
 
       {/* RankStat (드롭다운) */}
@@ -100,6 +106,8 @@ export default function RankCard({
             participantCount={participantCount || 0}
             distribution={distribution || []}
             animeId={animeId}
+            medals={medals}
+            isExpanded={isExpanded}
           />
         </div>
       )}

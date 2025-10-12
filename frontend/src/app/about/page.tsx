@@ -30,7 +30,7 @@ export default function AboutPage() {
 
   const mainFeatures = [
     "주간 투표: 주차별 애니메이션 후보에 투표",
-    "투표 결과: 금요일 오후 10시에 주간 투표 결과 공개",
+    "투표 결과: 월요일 저녁에 주간 투표 결과 공개",
     "차트 시스템: 주차별 애니메이션/캐릭터 순위 차트 제공",
     "애니메이션 홈: 애니메이션별 상세 정보, 분기별 성적, 등장인물",
     "커뮤니티: 애니메이션 댓글/답글, 좋아요 시스템",
@@ -48,7 +48,7 @@ export default function AboutPage() {
 
   const versionInfo = [
     "현재 버전: 베타 1.0",
-    "최종 업데이트: 2025년 1월",
+    "최종 업데이트: 2025년 10월",
     "지원 브라우저: Chrome, Firefox, Safari, Edge",
     "모바일 지원: 예정",
   ];

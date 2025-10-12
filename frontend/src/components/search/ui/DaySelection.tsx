@@ -46,7 +46,7 @@ const getDays = (isThisWeek: boolean): DayOfWeek[] => {
 
 const getDayWidth = (day: DayOfWeek, isSticky?: boolean): string => {
   if (isSticky) {
-    // 스티키 메뉴에서는 더 작은 크기 사용
+    // 스티키 메뉴에서는 더 작은 크기 사용 (1024px 기준 반응형)
     switch (day) {
       case '곧 시작':
         return 'w-[70px] md:w-[60px] lg:w-[65px] xl:w-[70px] 2xl:w-[75px]';
@@ -391,12 +391,12 @@ export default function DaySelection({
         data-day-selection
         className={cn(
           "relative hidden md:flex items-center justify-center gap-1 lg:gap-2 lg:w-[1050px] w-full overflow-x-auto",
+          isSticky ? "lg:justify-center" : "",
           className
         )}
         style={{ 
           scrollbarWidth: 'none', 
-          msOverflowStyle: 'none',
-          WebkitScrollbar: { display: 'none' }
+          msOverflowStyle: 'none'
         }}
         onMouseLeave={handleMouseLeave}
       >
