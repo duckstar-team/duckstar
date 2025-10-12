@@ -1266,8 +1266,9 @@ function SearchPageContent() {
       });
       
         if (upcomingAnimes.length > 0) {
-          // 방영 중 필터링 적용
-          const filteredUpcoming = filterAiringAnimes(upcomingAnimes);
+          // "곧 시작" 그룹에서는 방영중 애니메이션도 포함해야 하므로 필터링을 적용하지 않음
+          // 대신 정렬에서 방영중 애니메이션을 우선으로 처리
+          const filteredUpcoming = upcomingAnimes;
         
         if (filteredUpcoming.length > 0) {
           // 남은 시간 기준으로 정렬 (라이브 중인 것은 반드시 앞에, 그 다음은 남은 시간이 적은 순)
