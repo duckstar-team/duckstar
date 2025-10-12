@@ -44,9 +44,10 @@ const THIN_NAV_DETAIL_ITEMS = [
 interface ThinNavDetailProps {
   weeks?: WeekDto[];
   selectedWeek?: WeekDto | null;
+  hideTextOnMobile?: boolean;
 }
 
-export default function ThinNavDetail({ weeks = [], selectedWeek }: ThinNavDetailProps) {
+export default function ThinNavDetail({ weeks = [], selectedWeek, hideTextOnMobile = false }: ThinNavDetailProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -144,9 +145,14 @@ export default function ThinNavDetail({ weeks = [], selectedWeek }: ThinNavDetai
   const menuItems = generateMenuItems();
 
   return (
-    <div className="w-[143px] h-screen bg-[#212529] relative hidden md:block">
+    <div className={`${hideTextOnMobile ? 'w-[60px] md:w-[143px]' : 'w-[143px]'} h-screen bg-[#212529] relative`}>
+      {/* 차트 제목 */}
+      <div className="absolute top-[24px] left-[20px]">
+        <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'white' }}>차트</h2>
+      </div>
+      
       {/* 시간 메뉴 아이템들 */}
-      <div className="w-[123px] left-[10px] pb-[4px] top-[16px] absolute flex flex-col justify-start items-start gap-[4px]">
+      <div className={`${hideTextOnMobile ? 'w-[40px] md:w-[123px]' : 'w-[123px]'} left-[10px] pb-[4px] top-[90px] absolute flex flex-col justify-start items-start gap-[4px]`}>
         {menuItems.map((item, index) => (
           <ThinNavMenuItem
             key={`${item.type}-${index}`}
@@ -154,6 +160,7 @@ export default function ThinNavDetail({ weeks = [], selectedWeek }: ThinNavDetai
             state={item.state}
             label={item.label}
             icon={item.icon}
+            hideTextOnMobile={hideTextOnMobile}
             onClick={() => {
               if (item.type === "week" && item.weekData) {
                 // 주차 클릭 시 동적 라우팅으로 이동

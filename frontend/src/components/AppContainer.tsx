@@ -23,8 +23,16 @@ interface ChartContextType {
   weeks: WeekDto[];
 }
 
+// 모바일 메뉴 상태를 관리하는 Context
+interface MobileMenuContextType {
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: (isOpen: boolean) => void;
+  toggleMobileMenu: () => void;
+}
+
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 const ChartContext = createContext<ChartContextType | undefined>(undefined);
+const MobileMenuContext = createContext<MobileMenuContextType | undefined>(undefined);
 
 export const useModal = () => {
   const context = useContext(ModalContext);
@@ -42,6 +50,14 @@ export const useChart = () => {
   return context;
 };
 
+export const useMobileMenu = () => {
+  const context = useContext(MobileMenuContext);
+  if (context === undefined) {
+    throw new Error('useMobileMenu must be used within a MobileMenuProvider');
+  }
+  return context;
+};
+
 interface AppContainerProps {
   children: ReactNode;
 }
@@ -50,6 +66,7 @@ export default function AppContainer({ children }: AppContainerProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isThinNavHovered, setIsThinNavHovered] = useState(false);
   const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [weeks, setWeeks] = useState<WeekDto[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
   const pathname = usePathname();
@@ -60,6 +77,10 @@ export default function AppContainer({ children }: AppContainerProps) {
 
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   // 페이지 이동 시 모달 자동 닫기 및 사이드바 상태 초기화
@@ -125,20 +146,38 @@ export default function AppContainer({ children }: AppContainerProps) {
     weeks,
   };
 
+  const mobileMenuContextValue = {
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
+    toggleMobileMenu
+  };
+
   return (
     <ModalContext.Provider value={modalContextValue}>
       <ChartContext.Provider value={chartContextValue}>
+      <MobileMenuContext.Provider value={mobileMenuContextValue}>
       <div className="min-h-screen bg-gray-50">
+        {/* Mobile Menu Overlay - 차트 페이지에서는 오버레이 제거 */}
+        {isMobileMenuOpen && (pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/')) && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-20 z-[9999998] lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+        
         {/* Fixed Header */}
         <div className="fixed top-0 left-0 right-0 z-[9999]">
           <Header />
         </div>
         
         {/* Fixed Sidebar */}
-        <div className={`fixed top-[60px] left-0 bottom-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') ? 'hidden lg:block' : ''}`}>
+        <div className={`fixed top-[60px] left-0 bottom-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') ? 'hidden lg:block' : ''}`}>
           {isChartPage ? (
             <>
-              <ThinNav onHover={setIsThinNavHovered} isExpanded={isThinNavHovered || isThinNavDetailHovered} />
+              <ThinNav 
+                onHover={setIsThinNavHovered} 
+                isExpanded={isThinNavHovered || isThinNavDetailHovered} 
+              />
               <div 
                 className={`absolute top-0 transition-all duration-300 ease-in-out ${
                   (isThinNavHovered || isThinNavDetailHovered) ? 'left-[200px]' : 'left-[60px]'
@@ -164,7 +203,7 @@ export default function AppContainer({ children }: AppContainerProps) {
         {/* Main Content */}
         <main className={`pt-[60px] bg-gray-50 transition-all duration-300 ease-in-out ${
           isChartPage 
-            ? 'ml-[200px]' // ThinNav(60px) + ThinNavDetail(143px) - 고정
+            ? 'ml-0 lg:ml-[200px]' // 모바일에서는 마진 없음, 데스크톱에서만 ThinNav 마진
             : pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/')
               ? 'ml-0 lg:ml-[200px]' 
               : pathname === '/'
@@ -181,6 +220,7 @@ export default function AppContainer({ children }: AppContainerProps) {
         onClose={closeLoginModal}
         backdropStyle="blur"
       />
+      </MobileMenuContext.Provider>
       </ChartContext.Provider>
     </ModalContext.Provider>
   );
