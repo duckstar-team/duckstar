@@ -73,7 +73,7 @@ export default function HomeChart({ duckstarRankPreviews, selectedWeek, classNam
           }
         }
       `}</style>
-    <div className={`w-full xl:w-[750px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
+    <div className={`w-full max-w-[750px] xl:w-[750px] bg-white rounded-xl border border-[#D1D1D6] ${className}`}>
       {/* 차트 컨텐츠 */}
       <div className="p-5 relative">
         {duckstarRankPreviews.length === 0 ? (

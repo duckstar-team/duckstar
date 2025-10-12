@@ -8,7 +8,7 @@ import { extractFirstFrameFromGif, isGifFile } from '@/utils/gifFrameExtractor';
 
 export default function ProfileSetupPage() {
   const router = useRouter();
-  const { user, updateUser, isAuthenticated, withdraw: withdrawUser } = useAuth();
+  const { user, updateUser, isAuthenticated, withdraw: withdrawUser, refreshAuthStatus } = useAuth();
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profileImageUrl || null);
@@ -117,23 +117,21 @@ export default function ProfileSetupPage() {
 
       const response = await updateProfile(formData);
       
-      // 사용자 정보 업데이트
+      // 🔑 사용자 정보 업데이트 및 인증 상태 재확인
       if (response.mePreviewDto) {
         updateUser(response.mePreviewDto);
       }
+      
+      // 🔑 인증 상태 재확인 (헤더에 프로필 정보 표시를 위해)
+      await refreshAuthStatus();
 
-      // 원래 페이지로 리다이렉트 (returnUrl이 있으면 해당 페이지, 없으면 홈)
+      // 🔑 인증 상태 재확인 완료 후 리다이렉트 (클라이언트 사이드 라우팅)
       const returnUrl = sessionStorage.getItem('returnUrl');
       if (returnUrl) {
         sessionStorage.removeItem('returnUrl');
-        setTimeout(() => {
-          window.location.href = returnUrl;
-        }, 1000); // 1초 지연
+        router.push(returnUrl);
       } else {
-        // returnUrl이 없으면 홈으로 리다이렉트
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1000); // 1초 지연
+        router.push('/');
       }
       // 성공 시에는 로딩 상태를 유지 (리다이렉트까지)
     } catch (err) {
@@ -143,14 +141,17 @@ export default function ProfileSetupPage() {
   };
 
   const handleSkip = async () => {
-    // 이미 프로필이 초기화된 경우 API 호출하지 않고 원래 페이지로 이동
+    // 이미 프로필이 초기화된 경우에도 인증 상태 재확인 후 이동
     if (user?.isProfileInitialized) {
+      // 🔑 인증 상태 재확인 (헤더에 프로필 정보 표시를 위해)
+      await refreshAuthStatus();
+      
       const returnUrl = sessionStorage.getItem('returnUrl');
       if (returnUrl) {
         sessionStorage.removeItem('returnUrl');
-        window.location.href = returnUrl;
+        router.push(returnUrl);
       } else {
-        window.location.href = '/';
+        router.push('/');
       }
       return;
     }
@@ -166,22 +167,21 @@ export default function ProfileSetupPage() {
       
       const response = await updateProfile(formData);
       
-      // 사용자 정보 업데이트
+      // 🔑 사용자 정보 업데이트 및 인증 상태 재확인
       if (response.mePreviewDto) {
         updateUser(response.mePreviewDto);
       }
+      
+      // 🔑 인증 상태 재확인 (헤더에 프로필 정보 표시를 위해)
+      await refreshAuthStatus();
 
-      // 원래 페이지로 리다이렉트 (returnUrl이 있으면 해당 페이지, 없으면 홈)
+      // 🔑 인증 상태 재확인 완료 후 리다이렉트 (클라이언트 사이드 라우팅)
       const returnUrl = sessionStorage.getItem('returnUrl');
       if (returnUrl) {
         sessionStorage.removeItem('returnUrl');
-        setTimeout(() => {
-          window.location.href = returnUrl;
-        }, 1000); // 1초 지연
+        router.push(returnUrl);
       } else {
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1000); // 1초 지연
+        router.push('/');
       }
       // 성공 시에는 로딩 상태를 유지 (리다이렉트까지)
     } catch (err) {

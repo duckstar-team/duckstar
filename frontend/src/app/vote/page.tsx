@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import BigCandidate from "@/components/anime/BigCandidate";
-import { getStarCandidates, getUserInfo } from "@/api/client";
+import { getStarCandidates } from "@/api/client";
 import { StarCandidateDto } from "@/types/api";
 import { getVotedEpisodes } from "@/lib/voteStorage";
 import { useRouter } from "next/navigation";

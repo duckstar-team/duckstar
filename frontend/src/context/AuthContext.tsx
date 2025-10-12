@@ -16,11 +16,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
-  accessToken: string | null;
   login: (userData?: User) => Promise<void>;
   logout: () => Promise<void>;
   withdraw: () => Promise<void>;
   updateUser: (userData: User) => void;
+  refreshAuthStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,15 +41,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   const resetAuthState = () => {
     setUser(null);
     setIsAuthenticated(false);
-    setAccessToken(null);
     setIsLoading(false);
-    setHasCheckedAuth(false); // 🔑 인증 확인 상태도 초기화
+    setHasCheckedAuth(false);
   };
 
   const login = async (userData?: User) => {
@@ -67,7 +65,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(user as User);
         setIsAuthenticated(true);
       } catch (error) {
-console.error('사용자 정보 가져오기 실패:', error);
         resetAuthState();
       } finally {
         setIsLoading(false);
@@ -134,94 +131,95 @@ console.error('회원탈퇴 실패:', error);
     setUser(userData);
   };
 
-  // 🔑 핵심: 초기 로드 시 인증 상태 확인 (토큰이 있을 때만)
+  // 프로필 설정 완료 후 인증 상태 재확인
+  const refreshAuthStatus = async () => {
+    try {
+      const userData = await getUserInfo();
+      const user = userData.result || userData;
+      setUser(user as User);
+      setIsAuthenticated(true);
+      setHasCheckedAuth(true);
+    } catch (error) {
+      resetAuthState();
+    }
+  };
+
+  // 최적화된 인증 로직: 쿠키 체크 후 API 호출
   useEffect(() => {
     const checkAuthStatus = async () => {
-      // 로딩 중이 아닐 때만 실행
-      if (!isLoading) {
-        // localStorage에서 토큰 확인
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          // 토큰이 없으면 로그인하지 않은 상태로 설정
-          resetAuthState();
-          return;
-        }
+      if (hasCheckedAuth || isLoading) return;
 
-        setIsLoading(true);
-        try {
-          const userData = await getUserInfo();
-          const user = userData.result || userData;
-          setUser(user as User);
-          setIsAuthenticated(true);
-        } catch (error) {
-          // 401 에러는 정상적인 동작이므로 조용히 처리
-          resetAuthState();
-        } finally {
-          setIsLoading(false);
+      // AUTH_STATUS 쿠키 체크 (백엔드에서 설정한 인증 상태 쿠키)
+      const hasAuthStatus = document.cookie.includes('AUTH_STATUS=');
+      const hasLoginState = document.cookie.includes('LOGIN_STATE=');
+      
+      if (!hasAuthStatus && !hasLoginState) {
+        setHasCheckedAuth(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      setHasCheckedAuth(true);
+      
+      try {
+        const userData = await getUserInfo();
+        const user = userData.result || userData;
+        setUser(user as User);
+        setIsAuthenticated(true);
+        
+        // OAuth 콜백 처리 (LOGIN_STATE 쿠키가 있을 때만)
+        const hasLoginState = document.cookie.includes('LOGIN_STATE=');
+        if (hasLoginState) {
+          try {
+            const loginStateCookie = document.cookie
+              .split('; ')
+              .find(row => row.startsWith('LOGIN_STATE='));
+              
+            if (loginStateCookie) {
+              const encoded = loginStateCookie.split('=')[1];
+              const decoded = atob(encoded);
+              const loginState = JSON.parse(decoded);
+              
+              // returnUrl 처리
+              const returnUrl = sessionStorage.getItem('returnUrl');
+              if (returnUrl) {
+                if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
+                  window.location.href = '/profile-setup';
+                  return;
+                }
+                
+                if (loginState.isMigrated) {
+                  sessionStorage.setItem('migration_completed', 'true');
+                }
+                
+                sessionStorage.removeItem('returnUrl');
+                window.location.href = returnUrl;
+                return;
+              }
+              
+              if (loginState.isMigrated) {
+                sessionStorage.setItem('migration_completed', 'true');
+              }
+              
+              if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
+                window.location.href = '/profile-setup';
+                return;
+              }
+            }
+          } catch (error) {
+            // LOGIN_STATE 쿠키 파싱 실패 시 조용히 처리
+          }
         }
+        
+      } catch (error) {
+        resetAuthState();
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkAuthStatus();
-  }, []); // 🔑 한 번만 실행
-
-  // OAuth 로그인 후 처리 (LOGIN_STATE 쿠키 확인)
-  useEffect(() => {
-    const handleOAuthCallback = () => {
-      if (typeof window === 'undefined') return;
-
-      // LOGIN_STATE 쿠키 확인
-      const loginStateCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('LOGIN_STATE='));
-      
-      if (loginStateCookie) {
-        try {
-          const encoded = loginStateCookie.split('=')[1];
-          const decoded = atob(encoded);
-          const loginState = JSON.parse(decoded);
-          
-          
-          // returnUrl이 있으면 해당 페이지로 리다이렉트 (새 사용자와 기존 사용자 모두)
-          const returnUrl = sessionStorage.getItem('returnUrl');
-          
-          if (returnUrl) {
-            // 새 사용자인 경우 returnUrl을 보존하고 프로필 설정 페이지로 리다이렉트
-            if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
-              window.location.href = '/profile-setup';
-              return;
-            }
-            // 기존 사용자인 경우 returnUrl로 리다이렉트
-            
-            // 기존 사용자도 마이그레이션이 일어났으면 토스트 설정
-            if (loginState.isMigrated) {
-              sessionStorage.setItem('migration_completed', 'true');
-            }
-            
-            sessionStorage.removeItem('returnUrl');
-            window.location.href = returnUrl;
-            return;
-          }
-          
-          // 마이그레이션이 일어났는지 확인 (returnUrl 처리 후)
-          if (loginState.isMigrated) {
-            sessionStorage.setItem('migration_completed', 'true');
-          }
-          
-          // returnUrl이 없는 경우 새 사용자는 프로필 설정 페이지로 리다이렉트
-          if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
-            window.location.href = '/profile-setup';
-            return;
-          }
-          
-        } catch (error) {
-          console.error('LOGIN_STATE 쿠키 파싱 실패:', error);
-        }
-      }
-    };
-
-    // 페이지 로드 시 OAuth 콜백 처리
-    handleOAuthCallback();
   }, []);
 
 
@@ -229,11 +227,11 @@ console.error('회원탈퇴 실패:', error);
     isAuthenticated,
     isLoading,
     user,
-    accessToken,
     login,
     logout: logoutUser,
     withdraw: withdrawUser,
     updateUser,
+    refreshAuthStatus,
   };
 
   return (
