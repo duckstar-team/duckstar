@@ -11,6 +11,20 @@ interface SortingMenuProps {
 
 const SortingMenu: React.FC<SortingMenuProps> = ({ currentSort, onSortChange, onScrollToTop }) => {
   const [hoveredSort, setHoveredSort] = useState<SortOption | null>(null);
+  
+  // 화면 크기 감지 (425px 미만에서 텍스트 크기 조정)
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsVerySmallScreen(window.innerWidth < 425);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const [selectedBarStyle, setSelectedBarStyle] = useState({
     width: '0px',
     left: '0px',
@@ -28,9 +42,9 @@ const SortingMenu: React.FC<SortingMenuProps> = ({ currentSort, onSortChange, on
   const tabRefs = useRef<{ [key in SortOption]: HTMLButtonElement | null }>({} as Record<SortOption, HTMLButtonElement | null>);
 
   const sortOptions = [
-    { key: 'Popular' as const, label: '인기순', width: 'w-[100px]' },
-    { key: 'Recent' as const, label: '최신순', width: 'w-[100px]' },
-    { key: 'Oldest' as const, label: '오래된 순', width: 'w-[115px]' }
+    { key: 'Popular' as const, label: '인기순', width: 'flex-1' },
+    { key: 'Recent' as const, label: '최신순', width: 'flex-1' },
+    { key: 'Oldest' as const, label: '오래된 순', width: 'flex-1' }
   ];
 
   // 네비게이션 바 위치 업데이트
@@ -122,10 +136,10 @@ const SortingMenu: React.FC<SortingMenuProps> = ({ currentSort, onSortChange, on
   }, [currentSort, hoveredSort]);
 
   return (
-    <div className="box-border content-stretch flex gap-[105px] items-center justify-start relative size-full">
+    <div className="box-border content-stretch flex gap-4 items-center justify-start relative size-full">
       <div 
         ref={containerRef}
-        className="content-stretch flex items-center justify-start relative shrink-0"
+        className="content-stretch flex items-center justify-center relative shrink-0 w-full"
         onMouseLeave={handleMouseLeave}
       >
         {/* 모든 탭 아래에 이어지는 회색 선 */}
@@ -179,12 +193,12 @@ const SortingMenu: React.FC<SortingMenuProps> = ({ currentSort, onSortChange, on
               )}
             >
               <div className={cn(
-                "justify-start text-[18px] font-normal font-['Pretendard'] leading-snug text-center transition-colors duration-200",
+                `justify-start font-normal font-['Pretendard'] leading-snug text-center transition-colors duration-200 ${isVerySmallScreen ? 'text-[16px]' : 'text-[18px]'}`,
                 isSelected || isHovered
                   ? "font-semibold text-[#990033]"
                   : "font-normal text-[#adb5bd]"
               )}>
-                <p className="leading-[16.336px] whitespace-pre">{option.label}</p>
+                <p className={`whitespace-pre ${isVerySmallScreen ? 'leading-[14px]' : 'leading-[16.336px]'}`}>{option.label}</p>
               </div>
             </button>
           );

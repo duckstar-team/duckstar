@@ -117,11 +117,11 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         {/* Background Layer */}
         <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
         
-        {/* Hamburger - vote and search pages mobile only, placed to the left of the logo */}
-        {(pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/')) && (
+        {/* Hamburger - vote, search, and anime pages mobile only, placed to the left of the logo */}
+        {(pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/')) && (
           <div
             ref={menuContainerRef}
-            className="md:hidden absolute top-1/2 -translate-y-1/2 left-1 z-10"
+            className="lg:hidden absolute top-1/2 -translate-y-1/2 left-1 z-10"
           >
             <button
               type="button"
@@ -140,7 +140,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         )}
 
       {/* Logo */}
-      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-[50px] sm:left-[58px] md:left-[25px] top-0 absolute z-10 cursor-pointer">
+      <Link href="/" onClick={handleLogoClick} className="w-[80px] sm:w-[93px] h-[60px] left-[50px] sm:left-[58px] lg:left-[25px] top-0 absolute z-10 cursor-pointer">
         <img
           src="/logo.svg"
           alt="Duckstar Logo"
@@ -150,10 +150,10 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       
       {/* Right Section - Search Bar + Login Button */}
       <div className={`absolute right-2 sm:right-3 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
-        isAuthenticated ? 'gap-7' : 'gap-4'
+        isAuthenticated ? 'gap-4 pr-[6px]' : 'gap-4 pr-[18px]'
       }`}>
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="w-[200px] sm:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] flex justify-start items-center gap-4 hover:opacity-100 transition-opacity hidden md:flex">
+        <form onSubmit={handleSearch} className="hidden md:flex w-[150px] sm:w-[200px] md:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 hover:opacity-100 transition-opacity">
           {/* Search Icon */}
           <div className="w-5 h-5 relative overflow-hidden">
             <img

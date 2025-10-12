@@ -99,12 +99,12 @@ export default function AnimeDetailClient() {
     try {
       await updateAnimeImage(parseInt(animeId), imageFile);
       
-      // 성공 시 애니메이션 데이터 새로고침
-      const updatedData = await getAnimeDetail(parseInt(animeId));
-      if (updatedData?.animeInfoDto) {
-        setAnime(updatedData.animeInfoDto);
-        setRawAnimeData(updatedData);
-      }
+        // 성공 시 애니메이션 데이터 새로고침
+        const updatedData = await getAnimeDetail(parseInt(animeId));
+        if (updatedData && typeof updatedData === 'object' && 'animeInfoDto' in updatedData) {
+          setAnime((updatedData as any).animeInfoDto);
+          setRawAnimeData(updatedData);
+        }
       
       setIsEditingImage(false);
       setImageFile(null);
@@ -279,7 +279,10 @@ export default function AnimeDetailClient() {
                    animeInfo?.seasonDtos?.[0]?.seasonType === "SUMMER" ? 3 :
                    animeInfo?.seasonDtos?.[0]?.seasonType === "AUTUMN" ? 4 :
                    animeInfo?.seasonDtos?.[0]?.seasonType === "WINTER" ? 1 : 2,
-          seasons: animeInfo?.seasonDtos || [], // 모든 시즌 정보 저장
+           seasons: animeInfo?.seasonDtos?.map((season: any) => ({
+             year: season.year || 0,
+             seasonType: season.seasonType || 'SPRING'
+           })) || [], // 모든 시즌 정보 저장
           studio: animeInfo?.corp || "",
           director: animeInfo?.director || "",
           source: animeInfo?.author || "",
@@ -312,7 +315,7 @@ export default function AnimeDetailClient() {
               description: (castData.description as string),
               voiceActor: (castData.cv as string) || '미정', // API에서 cv 사용
               role: (castData.role as 'MAIN' | 'SUPPORTING' | 'MINOR') || (index < 2 ? 'MAIN' : index < 4 ? 'SUPPORTING' : 'MINOR'),
-              gender: (castData.gender as string) || (index % 2 === 0 ? 'FEMALE' : 'MALE'),
+               gender: (castData.gender as 'FEMALE' | 'MALE' | 'OTHER' | undefined) || (index % 2 === 0 ? 'FEMALE' : 'MALE'),
               age: castData.age as number,
               height: castData.height as number,
               weight: castData.weight as number,
@@ -321,7 +324,11 @@ export default function AnimeDetailClient() {
               occupation: castData.occupation as string,
               personality: castData.personality ? (Array.isArray(castData.personality) ? castData.personality as string[] : [castData.personality as string]) : [],
               abilities: castData.abilities ? (Array.isArray(castData.abilities) ? castData.abilities as string[] : [castData.abilities as string]) : [],
-              relationships: (castData.relationships as Array<{ characterName: string; relationship: string }>) || []
+               relationships: ((castData.relationships as Array<{ characterName: string; relationship: string }>) || []).map((rel, relIndex) => ({
+                 characterId: relIndex + 1,
+                 characterName: rel.characterName,
+                 relationship: rel.relationship
+               }))
             };
           });
         };
@@ -356,89 +363,170 @@ export default function AnimeDetailClient() {
 
   if (loading) {
     return (
-      <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
-        <div className="w-full flex justify-center">
-          <div className="max-w-7xl w-auto flex">
-            {/* 왼쪽 영역: 스켈레톤 로딩 */}
-            <div className="fixed top-[90px] z-10" style={{ width: '584px', left: 'calc(50% - 511px)' }}>
-              <div className="bg-white rounded-2xl shadow-lg animate-pulse" style={{ minHeight: 'calc(100vh - 120px)' }}>
-                {/* 메인 이미지 스켈레톤 */}
-                <div className="h-[300px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-t-2xl"></div>
-                
-                {/* 정보 영역 스켈레톤 */}
-                <div className="p-6 space-y-3">
-                  {/* 제목 영역 */}
-                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      <main className="w-full overflow-x-hidden overflow-y-visible max-w-full" style={{ backgroundColor: '#F8F9FA', minHeight: 'calc(100vh - 60px)' }}>
+        {/* 데스크톱 스켈레톤 - 1280px 이상 */}
+        <div className="hidden xl:block w-full">
+          <div className="w-full px-4">
+            <div className="max-w-7xl mx-auto flex gap-4">
+              {/* 왼쪽 영역: 스켈레톤 로딩 */}
+              <div className="flex-1 max-w-[584px] min-w-0">
+                <div className="bg-white rounded-2xl shadow-lg animate-pulse" style={{ minHeight: 'calc(100vh - 120px)' }}>
+                  {/* 메인 이미지 스켈레톤 */}
+                  <div className="h-[300px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-t-2xl"></div>
                   
-                  {/* 탭 영역 스켈레톤 */}
-                  <div className="flex gap-4 mt-4">
-                    <div className="h-8 bg-gray-200 rounded w-16"></div>
-                    <div className="h-8 bg-gray-200 rounded w-20"></div>
-                    <div className="h-8 bg-gray-200 rounded w-18"></div>
-                  </div>
-                  
-                  {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
-                  <div className="space-y-2 mt-4">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
-                  </div>
-                  
-                  {/* 추가 정보 영역 */}
-                  <div className="space-y-2 mt-4">
-                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                  {/* 정보 영역 스켈레톤 */}
+                  <div className="p-6 space-y-3">
+                    {/* 제목 영역 */}
+                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    
+                    {/* 탭 영역 스켈레톤 */}
+                    <div className="flex gap-4 mt-4">
+                      <div className="h-8 bg-gray-200 rounded w-16"></div>
+                      <div className="h-8 bg-gray-200 rounded w-20"></div>
+                      <div className="h-8 bg-gray-200 rounded w-18"></div>
+                    </div>
+                    
+                    {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
+                    <div className="space-y-2 mt-4">
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                      <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                    </div>
+                    
+                    {/* 추가 정보 영역 */}
+                    <div className="space-y-2 mt-4">
+                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            {/* 오른쪽 영역: 스켈레톤 로딩 */}
-            <div className="ml-[612px]" style={{ width: '610px' }}>
-              <div className="bg-white border-l border-r border-gray-300 animate-pulse" style={{ minHeight: 'calc(100vh - 60px)' }}>
-                {/* 에피소드 섹션 스켈레톤 */}
-                <div className="flex justify-center pt-7 pb-1">
-                  <div className="w-[534px] h-[200px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
-                </div>
-                
-                {/* 댓글 헤더 스켈레톤 */}
-                <div className="sticky top-[60px] z-20 bg-white px-6 py-4">
-                  <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-                </div>
-                
-                {/* 댓글 작성 폼 스켈레톤 */}
-                <div className="px-6 py-4">
-                  <div className="bg-gray-100 rounded-lg p-4 space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                    <div className="h-20 bg-gray-200 rounded"></div>
-                    <div className="flex justify-end">
-                      <div className="h-8 bg-gray-200 rounded w-16"></div>
+              
+              {/* 오른쪽 영역: 스켈레톤 로딩 */}
+              <div className="flex-1 max-w-[610px] min-w-0 w-full">
+                <div className="bg-white border-l border-r border-gray-300 animate-pulse" style={{ minHeight: 'calc(100vh - 60px)' }}>
+                  {/* 에피소드 섹션 스켈레톤 */}
+                  <div className="flex justify-center pt-7 pb-1">
+                    <div className="w-[534px] h-[200px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"></div>
+                  </div>
+                  
+                  {/* 댓글 헤더 스켈레톤 */}
+                  <div className="sticky top-[60px] z-20 bg-white px-6 py-4">
+                    <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                  </div>
+                  
+                  {/* 댓글 작성 폼 스켈레톤 */}
+                  <div className="px-6 py-4">
+                    <div className="bg-gray-100 rounded-lg p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                      <div className="h-20 bg-gray-200 rounded"></div>
+                      <div className="flex justify-end">
+                        <div className="h-8 bg-gray-200 rounded w-16"></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                {/* 댓글 목록 스켈레톤 */}
-                <div className="px-6 space-y-4">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div key={index} className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                        <div className="h-4 bg-gray-200 rounded w-20"></div>
-                        <div className="h-3 bg-gray-200 rounded w-16"></div>
+                  
+                  {/* 댓글 목록 스켈레톤 */}
+                  <div className="px-6 space-y-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                          <div className="h-4 bg-gray-200 rounded w-20"></div>
+                          <div className="h-3 bg-gray-200 rounded w-16"></div>
+                        </div>
+                        <div className="space-y-2 ml-11">
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
                       </div>
-                      <div className="space-y-2 ml-11">
-                        <div className="h-4 bg-gray-200 rounded"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* 중간 레이아웃 스켈레톤 - 1024px~1279px (left panel 584px 고정) */}
+        <div className="hidden lg:block xl:hidden w-full">
+          <div className="w-full px-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="pt-[30px] max-w-[584px] mx-auto">
+                <div className="bg-white rounded-2xl shadow-lg animate-pulse" style={{ minHeight: 'calc(100vh - 120px)' }}>
+                  {/* 메인 이미지 스켈레톤 */}
+                  <div className="h-[300px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-t-2xl"></div>
+                  
+                  {/* 정보 영역 스켈레톤 */}
+                  <div className="p-6 space-y-3">
+                    {/* 제목 영역 */}
+                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    
+                    {/* 탭 영역 스켈레톤 */}
+                    <div className="flex gap-4 mt-4">
+                      <div className="h-8 bg-gray-200 rounded w-16"></div>
+                      <div className="h-8 bg-gray-200 rounded w-20"></div>
+                      <div className="h-8 bg-gray-200 rounded w-18"></div>
+                    </div>
+                    
+                    {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
+                    <div className="space-y-2 mt-4">
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                      <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                    </div>
+                    
+                    {/* 추가 정보 영역 */}
+                    <div className="space-y-2 mt-4">
+                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 모바일 스켈레톤 - 1024px 미만 (right panel 숨김) */}
+        <div className="lg:hidden w-full">
+          <div className="w-full px-1">
+            <div className="bg-white rounded-2xl shadow-lg animate-pulse" style={{ minHeight: 'calc(100vh - 120px)' }}>
+              {/* 메인 이미지 스켈레톤 */}
+              <div className="h-[300px] bg-gradient-to-r from-gray-200 to-gray-300 rounded-t-2xl"></div>
+              
+              {/* 정보 영역 스켈레톤 */}
+              <div className="p-6 space-y-3">
+                {/* 제목 영역 */}
+                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                
+                {/* 탭 영역 스켈레톤 */}
+                <div className="flex gap-4 mt-4">
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  <div className="h-8 bg-gray-200 rounded w-20"></div>
+                  <div className="h-8 bg-gray-200 rounded w-18"></div>
+                </div>
+                
+                {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
+                <div className="space-y-2 mt-4">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                </div>
+                
+                {/* 추가 정보 영역 */}
+                <div className="space-y-2 mt-4">
+                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -452,7 +540,7 @@ export default function AnimeDetailClient() {
   };
 
   return (
-    <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
+    <main className="w-full overflow-x-hidden overflow-y-visible max-w-full" style={{ backgroundColor: '#F8F9FA', minHeight: 'calc(100vh - 60px)' }}>
       {/* 숨겨진 파일 입력 필드 */}
       <input
         ref={fileInputRef}
@@ -462,36 +550,87 @@ export default function AnimeDetailClient() {
         className="hidden"
       />
       
-      <div className="w-full flex justify-center">
-        <div className="max-w-7xl w-auto flex">
-          {/* 왼쪽 영역: fixed 고정 */}
-          <div className="fixed top-[90px] z-10" style={{ width: '584px', left: 'calc(50% - 511px)' }}>
-            {/* LeftInfoPanel */}
-            <LeftInfoPanel 
-              anime={anime} 
-              onBack={handleBack} 
-              characters={characters}
-              onImageModalToggle={setIsImageModalOpen}
-              isAdmin={isAdmin}
-              onImageEdit={handleImageEdit}
-              isEditingImage={isEditingImage}
-              imageFile={imageFile}
-              onImageUpdate={handleImageUpdate}
-              onImageEditCancel={handleImageEditCancel}
-            />
-          </div>
-          
-          {/* 오른쪽 영역 */}
-          <div className="flex-1 ml-[612px]">
-            <RightCommentPanel 
-              animeId={parseInt(animeId)} 
-              isImageModalOpen={isImageModalOpen}
-              animeData={anime} // 애니메이션 데이터 전달
-              rawAnimeData={rawAnimeData} // 백엔드 원본 데이터 전달
-            />
+      {/* 데스크톱 레이아웃 - 1280px 이상 */}
+      <div className="hidden xl:block w-full">
+        <div className="w-full px-4">
+          <div className="max-w-7xl mx-auto flex gap-7 justify-center">
+            {/* 왼쪽 영역: 반응형 너비 */}
+            <div className="flex-1 pt-[30px] max-w-[584px] min-w-0">
+              <LeftInfoPanel 
+                anime={anime!} 
+                onBack={handleBack} 
+                characters={characters}
+                onImageModalToggle={setIsImageModalOpen}
+                isAdmin={isAdmin}
+                onImageEdit={handleImageEdit}
+                isEditingImage={isEditingImage}
+                imageFile={imageFile}
+                onImageUpdate={handleImageUpdate}
+                onImageEditCancel={handleImageEditCancel}
+                isMobile={false}
+              />
+            </div>
+            
+            {/* 오른쪽 영역 */}
+            <div className="flex-1 max-w-[610px] min-w-0 w-full xl:w-[610px] xl:flex-none">
+              <RightCommentPanel 
+                animeId={parseInt(animeId)} 
+                isImageModalOpen={isImageModalOpen}
+                animeData={anime} // 애니메이션 데이터 전달
+                rawAnimeData={rawAnimeData} // 백엔드 원본 데이터 전달
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* 중간 레이아웃 - 1024px~1279px (댓글 패널을 왼쪽 아래에 배치) */}
+      <div className="hidden lg:block xl:hidden w-full">
+        <div className="w-full px-4">
+          <div className="max-w-7xl mx-auto">
+            {/* 왼쪽 영역 */}
+            <div className="pt-[30px] max-w-[584px] mx-auto">
+              <LeftInfoPanel 
+                anime={anime!} 
+                onBack={handleBack} 
+                characters={characters}
+                onImageModalToggle={setIsImageModalOpen}
+                isAdmin={isAdmin}
+                onImageEdit={handleImageEdit}
+                isEditingImage={isEditingImage}
+                imageFile={imageFile}
+                onImageUpdate={handleImageUpdate}
+                onImageEditCancel={handleImageEditCancel}
+                isMobile={false}
+                animeId={parseInt(animeId)}
+                rawAnimeData={rawAnimeData}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 모바일 레이아웃 */}
+      <div className="lg:hidden w-full">
+        <div className="w-full px-1">
+          {/* 모바일용 LeftInfoPanel */}
+          <LeftInfoPanel 
+            anime={anime!} 
+            onBack={handleBack} 
+            characters={characters}
+            onImageModalToggle={setIsImageModalOpen}
+            isAdmin={isAdmin}
+            onImageEdit={handleImageEdit}
+            isEditingImage={isEditingImage}
+            imageFile={imageFile}
+            onImageUpdate={handleImageUpdate}
+            onImageEditCancel={handleImageEditCancel}
+            isMobile={true}
+            animeId={parseInt(animeId)}
+            rawAnimeData={rawAnimeData}
+          />
+        </div>
+      </div>
+    </main>
   );
 }

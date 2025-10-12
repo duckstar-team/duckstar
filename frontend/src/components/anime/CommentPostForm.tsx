@@ -172,8 +172,8 @@ export default function CommentPostForm({
   const isSubmitDisabled = disabled || isSubmitting || (!comment.trim() && uploadedImages.length === 0);
 
   // 댓글 폼 전용 스타일 설정
-  const containerWidth = 'w-[534px]';
-  const inputAreaWidth = 'w-[534px]';
+  const containerWidth = 'w-full max-w-[534px]';
+  const inputAreaWidth = 'w-full max-w-[100%]';
   const inputAreaHeight = 'h-[83px]';
   const footerSectionWidth = 'flex-1';
   const footerSectionHeight = 'h-[35px]';

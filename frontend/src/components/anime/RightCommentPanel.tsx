@@ -46,6 +46,9 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
   // 검색 페이지에서는 아예 렌더링하지 않음
   const [isSearchPage, setIsSearchPage] = useState(false);
   
+  // 화면 크기 감지 (425px 미만에서 텍스트 크기 조정)
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
+  
   useEffect(() => {
     const checkPath = () => {
       if (typeof window !== 'undefined' && window.location.pathname.startsWith('/search')) {
@@ -55,12 +58,23 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       }
     };
     
+    const checkScreenSize = () => {
+      setIsVerySmallScreen(window.innerWidth < 425);
+    };
+    
     checkPath();
+    checkScreenSize();
     
     // 경로 변경 감지
     const interval = setInterval(checkPath, 100);
     
-    return () => clearInterval(interval);
+    // 화면 크기 변경 감지
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', checkScreenSize);
+    };
   }, []);
   
   if (isSearchPage) {
@@ -877,14 +891,14 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
 
   // 로딩 상태 렌더링
   const renderLoadingState = () => (
-    <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
+    <div className="bg-white border-l border-r border-gray-300 w-full" style={{ minHeight: 'calc(100vh - 60px)' }}>
       {/* 에피소드 섹션 스켈레톤 */}
-      <div className="flex justify-center pt-7 pb-1" style={{ width: '610px' }}>
-        <div className="w-[534px] h-[200px] bg-gray-100 rounded-lg animate-pulse"></div>
+      <div className="flex justify-center pt-7 pb-1" style={{ width: '100%' }}>
+        <div className="w-full max-w-[534px] h-[200px] bg-gray-100 rounded-lg animate-pulse"></div>
       </div>
       
       {/* 댓글 섹션 스켈레톤 */}
-      <div className="w-full bg-white flex flex-col" style={{ width: '608px' }}>
+      <div className="w-full bg-white flex flex-col">
         <div className="w-full flex flex-col justify-start items-start pb-7">
           <div className="w-full flex justify-center items-center py-8">
             <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
@@ -897,9 +911,9 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
 
   // 에러 상태 렌더링
   const renderErrorState = () => (
-    <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}>
+    <div className="bg-white border-l border-r border-gray-300" style={{ minHeight: 'calc(100vh - 60px)', width: '100%' }}>
       {/* 에피소드 섹션 */}
-      <div className="flex justify-center pt-7 pb-1" style={{ width: '610px' }}>
+      <div className="flex justify-center pt-7 pb-1" style={{ width: '100%' }}>
         <EpisodeSection 
           episodes={processedEpisodes}
           totalEpisodes={totalEpisodes}
@@ -912,7 +926,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       </div>
       
       {/* 에러 메시지 */}
-      <div className="w-full bg-white flex flex-col" style={{ width: '610px' }}>
+      <div className="w-full bg-white flex flex-col" style={{ width: '100%' }}>
         <div className="w-full flex flex-col justify-start items-start pb-7">
           <div className="w-full flex justify-center items-center py-8">
             <div className="text-red-500">{error}</div>
@@ -931,8 +945,11 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       ) : (
         <div 
           ref={rightPanelRef}
-          className="bg-white border-l border-r border-gray-300" 
-          style={{ minHeight: 'calc(100vh - 60px)', width: '610px' }}
+          className="bg-white border-l border-r border-gray-300 w-full"
+          style={{ 
+            minHeight: '100% + 60px',
+            maxWidth: '100%'
+          }}
         >
           {/* section/episode */}
           <div className="flex justify-center pt-7 pb-1">
@@ -944,6 +961,7 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
               animeId={animeId}
               currentPage={episodeCurrentPage}
               onPageChange={setEpisodeCurrentPage}
+              isMobile={true}
             />
           </div>
       
@@ -965,10 +983,9 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             style={{ 
               position: isCommentHeaderSticky ? 'fixed' : 'static',
               top: isCommentHeaderSticky ? '60px' : 'auto',
-              left: isCommentHeaderSticky ? 'calc(50% + 102px)' : 'auto', // 오른쪽 패널 위치에 맞춤
-              width: '608px',
-              zIndex: 30,
-              transition: 'all 0.3s ease-in-out'
+              left: isCommentHeaderSticky ? 'auto' : 'auto',
+              width: isCommentHeaderSticky ? (window.innerWidth >= 1024 ? '584px' : '100%') : '100%',
+              maxWidth: isCommentHeaderSticky ? (window.innerWidth >= 1024 ? '584px' : '100%') : '100%'
             }}
           >
             <div className="size- flex flex-col justify-start items-start gap-5">
@@ -986,10 +1003,10 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       
       {/* 댓글 작성 폼 */}
       {!isImageModalOpen && (
-        <div data-comment-form className="w-full flex flex-col justify-center items-center gap-2.5 px-0 pt-5" style={{ width: '610px' }}>
-        <div className="self-stretch px-[11px] pt-[10px] pb-[16px] bg-[#F8F9FA] flex flex-col justify-center items-center gap-[10px] overflow-hidden" style={{ width: '608px' }}>
+        <div data-comment-form className="w-full flex flex-col justify-center items-center gap-2.5 px-0 pt-5">
+        <div className="self-stretch px-[11px] pt-[10px] pb-[16px] bg-[#F8F9FA] flex flex-col justify-center items-center gap-[10px] overflow-hidden w-full max-w-[100%]">
           {/* First Row - Episode Comment Header */}
-          <div className="w-[534px] inline-flex justify-end items-center">
+          <div className="w-full max-w-[534px] inline-flex justify-end items-center">
             <button 
               onClick={() => setIsEpisodeCommentModalOpen(true)}
               className="inline-flex items-center gap-2.5 text-right text-[#ADB5BD] text-xs font-medium font-['Pretendard'] leading-snug hover:underline cursor-pointer"
@@ -1058,14 +1075,13 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
             className="bg-white z-30"
             style={{ 
               position: isSortingMenuSticky ? 'fixed' : 'static',
-              top: isSortingMenuSticky ? `${60 + commentHeaderHeight}px` : 'auto', // 헤더 + 댓글 헤더 높이
-              left: isSortingMenuSticky ? 'calc(50% + 102px)' : 'auto', // 오른쪽 패널 위치에 맞춤
-              width: '608px',
-              zIndex: 30,
-              transition: 'all 0.3s ease-in-out'
+              top: isSortingMenuSticky ? `${60 + commentHeaderHeight}px` : 'auto',
+              left: isSortingMenuSticky ? 'auto' : 'auto',
+              width: isSortingMenuSticky ? (window.innerWidth >= 1024 ? '584px' : '100%') : '100%',
+              maxWidth: isSortingMenuSticky ? (window.innerWidth >= 1024 ? '584px' : '100%') : '100%'
             }}
           >
-            <div className="pl-3 pt-3">
+            <div className="pt-3">
               <SortingMenu 
                 currentSort={currentSort}
                 onSortChange={handleSortChange}
@@ -1078,10 +1094,10 @@ export default function RightCommentPanel({ animeId = 1, isImageModalOpen = fals
       
         
         {/* 댓글 목록 */}
-        <div className="w-full bg-white flex flex-col" style={{ width: '608px' }}>
+        <div className="w-full bg-white flex flex-col">
           
           {/* 댓글 목록 */}
-          <div ref={commentListRef} className="w-full flex flex-col justify-start items-start pb-7" style={{ width: '608px' }}>
+          <div ref={commentListRef} className="w-full flex flex-col justify-start items-start pb-7">
             {commentsLoading && comments.length === 0 ? (
               <div className="w-full flex flex-col items-center py-8">
                 <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-2"></div>

@@ -88,7 +88,7 @@ export default function HeaderList({ weekDtos, selectedWeek: propSelectedWeek, o
     };
   }, [isDropdownOpen]);
   return (
-    <div className={`w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:w-[750px] pl-3 sm:px-4 md:px-5 inline-flex justify-center md:justify-between lg:justify-start lg:gap-100 xl:justify-between items-end gap-17 sm:gap-25 md:gap-30 lg:gap-100 xl:gap-90${className}`}>
+    <div className={`w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:w-[750px] pl-3 sm:px-4 md:px-5 inline-flex justify-center md:justify-between lg:justify-start lg:gap-100 xl:justify-between items-end gap-17 sm:gap-25 md:gap-30 xl:gap-90 ${className}`}>
     {/* 왼쪽 헤더 - ChartHeader 사용 */}
       <div className="size- flex justify-start items-center">
         <div className="w-32 sm:w-36 md:w-40 lg:w-44 h-12 relative overflow-hidden">

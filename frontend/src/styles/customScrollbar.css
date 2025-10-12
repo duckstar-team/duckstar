@@ -21,3 +21,8 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:active {
   background: #718096;
 }
+
+/* 탭 스크롤바 숨기기 */
+.tab-scroll-container::-webkit-scrollbar {
+  display: none;
+}

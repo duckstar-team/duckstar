@@ -7,8 +7,9 @@ import CharacterList from './CharacterList';
 import { CharacterData } from './CharacterCard';
 import ImageModal from './ImageModal';
 import { useImageCache } from '../../hooks/useImageCache';
+import RightCommentPanel from './RightCommentPanel';
 
-export type TabOption = 'info' | 'performance' | 'characters';
+export type TabOption = 'info' | 'characters' | 'performance' | 'comments';
 
 interface TabOptionConfig {
   key: TabOption;
@@ -27,6 +28,9 @@ interface LeftInfoPanelProps {
   imageFile?: File | null; // 선택된 이미지 파일
   onImageUpdate?: () => void; // 이미지 업데이트 핸들러
   onImageEditCancel?: () => void; // 이미지 편집 취소 핸들러
+  isMobile?: boolean;
+  animeId?: number; // 댓글 패널용 애니 ID
+  rawAnimeData?: any; // 댓글 패널용 원본 데이터
   anime: {
     animeId: number;
     mainThumbnailUrl: string;
@@ -70,14 +74,17 @@ const getSeasonInKorean = (seasonType: string): string => {
 export default function LeftInfoPanel({ 
   anime, 
   onBack, 
-  characters, 
+  characters,
   onImageModalToggle,
   isAdmin = false,
   onImageEdit,
   isEditingImage = false,
   imageFile,
   onImageUpdate,
-  onImageEditCancel
+  onImageEditCancel,
+  isMobile = false,
+  animeId,
+  rawAnimeData
 }: LeftInfoPanelProps) {
   // 이미지 캐시 훅 사용
   const { isImageLoaded, isImageError } = useImageCache();
@@ -85,6 +92,24 @@ export default function LeftInfoPanel({
   // 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<TabOption>('info');
   const [hoveredTab, setHoveredTab] = useState<TabOption | null>(null);
+  
+  // 화면 크기 감지 (1280px 미만에서 스크롤 컨테이너 없이 자연스러운 레이아웃)
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 1280);
+      setIsMediumScreen(window.innerWidth >= 600 && window.innerWidth < 1024);
+      setIsVerySmallScreen(window.innerWidth < 425);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   
   // Synopsis 접기/펼치기 상태 관리
   const [isSynopsisExpanded, setIsSynopsisExpanded] = useState(false);
@@ -169,10 +194,15 @@ export default function LeftInfoPanel({
   // 등장인물 탭용 스크롤 컨테이너 높이 계산
   const characterScrollContainerHeight = Math.max(infoContentHeight, 90);
 
-  const tabOptions: TabOptionConfig[] = [
-    { key: 'info' as const, label: '애니 정보', width: 'w-[175px]', isBeta: false },
-    { key: 'characters' as const, label: '등장인물', width: 'w-[175px]', isBeta: false },
-    { key: 'performance' as const, label: '분기 성적', width: 'w-[175px]', isBeta: true, badgeText: '준비중' }
+  const tabOptions: TabOptionConfig[] = (isMobile || (animeId && rawAnimeData)) ? [
+    { key: 'info' as const, label: '애니 정보', width: 'flex-1', isBeta: false },
+    { key: 'characters' as const, label: '등장인물', width: 'flex-1', isBeta: false },
+    { key: 'performance' as const, label: '분기 성적', width: 'flex-1', isBeta: true, badgeText: '준비중' },
+    { key: 'comments' as const, label: '댓글', width: 'flex-1', isBeta: false }
+  ] : [
+    { key: 'info' as const, label: '애니 정보', width: 'flex-1', isBeta: false },
+    { key: 'characters' as const, label: '등장인물', width: 'flex-1', isBeta: false },
+    { key: 'performance' as const, label: '분기 성적', width: 'flex-1', isBeta: true, badgeText: '준비중' }
   ];
 
   // 네비게이션 바 위치 업데이트
@@ -239,7 +269,7 @@ export default function LeftInfoPanel({
   // anime 객체가 null인 경우 early return
   if (!anime) {
     return (
-      <div className="w-[612px] h-[1144px] bg-white rounded-xl border border-[#D1D1D6] flex items-center justify-center">
+      <div className={`w-full ${isMobile ? '' : 'max-w-[612px]'} h-[1144px] bg-white rounded-xl border border-[#D1D1D6] flex items-center justify-center`}>
         <div className="text-gray-500">애니메이션 정보를 불러오는 중...</div>
       </div>
     );
@@ -596,11 +626,15 @@ export default function LeftInfoPanel({
   return (
     <>
       <div 
-        className="relative rounded-[12px] w-[584px]" 
-        style={{ height: `${panelHeight}px` }}
+        className="relative rounded-[12px] w-full overflow-hidden"
+        style={{ height: isSmallScreen ? 'auto' : `${panelHeight}px` }}
         data-name="Left_Info_Pannel"
       >
-      <div aria-hidden="true" className="absolute border border-[#ced4da] border-solid inset-[-1px] pointer-events-none rounded-[13px]" />
+      <div 
+        aria-hidden="true" 
+        className={`absolute border-2 border-[#ced4da] border-solid pointer-events-none rounded-[13px] z-50 ${isMobile ? 'inset-0' : ''}`}
+        style={!isMobile ? { top: '-1px', left: '-1px', right: '-1px', bottom: '-1px' } : {}}
+      />
       
       {/* 이전 버튼 - left panel 좌상단 */}
         <div className="absolute top-4 left-4 z-20">
@@ -616,19 +650,21 @@ export default function LeftInfoPanel({
       
       {/* 메인 이미지 섹션 */}
       <div 
-        className="absolute bg-white left-0 overflow-clip rounded-tl-[12px] rounded-tr-[12px] top-0 w-[584px] cursor-pointer hover:opacity-95 transition-opacity duration-200"
-        style={{ height: `${mainImageHeight}px` }}
+        className={`${isSmallScreen ? 'relative' : 'absolute'} bg-white left-0 overflow-clip rounded-tl-[12px] rounded-tr-[12px] top-0 w-full cursor-pointer hover:opacity-95 transition-opacity duration-200`}
+        style={{ height: isSmallScreen ? 'auto' : `${mainImageHeight}px` }}
         onClick={handleImageClick}
         title="이미지를 클릭하여 크게 보기"
       >
         <div 
-          className={`absolute bg-no-repeat h-[828px] left-[-2px] top-[-221px] w-[586px] ${!skipTransition && !isMainImageLoaded && !isCachedImage ? 'transition-opacity duration-300' : ''}`}
+          className={`${isSmallScreen ? 'relative' : 'absolute'} bg-no-repeat bg-center bg-cover w-full ${!skipTransition && !isMainImageLoaded && !isCachedImage ? 'transition-opacity duration-300' : ''}`}
           style={{ 
             backgroundImage: `url('${currentBackgroundImage}')`,
             backgroundPosition: 'center center',
             backgroundSize: 'cover',
-            opacity: isMainImageLoaded || isCachedImage ? 1 : 0.9
-          }} 
+            opacity: isMainImageLoaded || isCachedImage ? 1 : 0.9,
+            height: isSmallScreen ? '400px' : (isMobile ? '100%' : '828px'),
+            top: isSmallScreen ? 'auto' : (isMobile ? '0' : '-221px')
+          }}
         />
         
         {/* 관리자 편집 버튼 */}
@@ -685,27 +721,27 @@ export default function LeftInfoPanel({
       
       {/* 제목 및 정보 오버레이 */}
       <div 
-        className="absolute left-0 w-[584px]"
+        className={`${isSmallScreen ? 'relative' : 'absolute'} left-0 w-full`}
         style={{ 
-          height: `${titleOverlayHeight}px`,
-          top: `${titleOverlayTop}px`
+          height: isSmallScreen ? 'auto' : `${titleOverlayHeight}px`,
+          top: isSmallScreen ? 'auto' : `${titleOverlayTop}px`
         }}
       >
-        <div className="absolute bg-gradient-to-b bottom-0 box-border content-stretch flex flex-col from-[#00000000] gap-[9.653px] items-start justify-start left-0 overflow-clip pl-[22.276px] pr-[11.88px] pt-[29.701px] pb-[15px] right-[0.1px] to-[#00000073] to-[93.023%] via-[#00000033] via-[11.628%]">
+        <div className={`absolute bg-gradient-to-b bottom-0 box-border content-stretch flex flex-col from-[#00000000] gap-[9.653px] items-start justify-start left-0 overflow-clip pt-[29.701px] pb-[15px] right-[0.1px] to-[#00000073] to-[93.023%] via-[#00000033] via-[11.628%] ${isMobile ? 'pl-4 pr-4' : 'pl-[22.276px] pr-[11.88px]'}`}>
           {/* 한글 제목 */}
-          <div className="[text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] font-bold font-['Pretendard'] leading-[0] not-italic relative shrink-0 text-[29.2px] text-white w-[395px]">
+          <div className={`[text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] font-bold font-['Pretendard'] leading-[0] not-italic relative shrink-0 text-[29.2px] text-white w-full ${isMobile ? 'max-w-none' : 'max-w-[395px]'}`}>
             <p className="leading-[normal]">{titleKor}</p>
           </div>
           
           {/* 일본어 제목 */}
           {titleJpn && (
-            <div className="[text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] font-medium font-['Pretendard'] leading-[0] not-italic relative shrink-0 text-[14.6px] text-white w-[400px]">
+            <div className={`[text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] font-medium font-['Pretendard'] leading-[0] not-italic relative shrink-0 text-[14.6px] text-white w-full ${isMobile ? 'max-w-none' : 'max-w-[400px]'}`}>
               <p className="leading-[normal]">{titleJpn}</p>
             </div>
           )}
           
           {/* 정보 텍스트 */}
-          <div className="[text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] font-medium font-['Pretendard'] leading-[0] not-italic relative shrink-0 text-[14.6px] text-white w-[400px]">
+          <div className={`[text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] font-medium font-['Pretendard'] leading-[0] not-italic relative shrink-0 text-[14.6px] text-white w-full ${isMobile ? 'max-w-none' : 'max-w-[400px]'}`}>
             <p className="leading-[normal]">
               {anime.seasons && anime.seasons.length > 0 
                 ? anime.seasons.map(season => `${season.year}년 ${getSeasonInKorean(season.seasonType)}`).join(' · ')
@@ -776,29 +812,35 @@ export default function LeftInfoPanel({
         </div>
       </div>
       
-      {/* 우측 작은 이미지 */}
-      <div 
-        className="absolute bg-center bg-cover bg-no-repeat h-[206.958px] left-[419.53px] rounded-[8.91px] top-[111.38px] w-[146.423px] cursor-pointer hover:opacity-95 transition-opacity duration-200 shadow-lg hover:shadow-xl"
-        style={{ 
-          backgroundImage: `url('${currentPosterImage}')`
-        }}
-        onClick={handleImageClick}
-        title="이미지를 클릭하여 크게 보기"
-      />
+      {/* 우측 작은 이미지 - 모바일에서는 숨김 */}
+      {!isMobile && (
+        <div 
+          className="absolute bg-center bg-cover bg-no-repeat h-[206.958px] right-[18px] rounded-[8.91px] top-[111.38px] w-[146.423px] cursor-pointer hover:opacity-95 transition-opacity duration-200 shadow-lg hover:shadow-xl"
+          style={{ 
+            backgroundImage: `url('${currentPosterImage}')`
+          }}
+          onClick={handleImageClick}
+          title="이미지를 클릭하여 크게 보기"
+        />
+      )}
       
       {/* 하단 정보 패널 */}
-      <div 
-        className="absolute bg-white box-border content-stretch flex flex-col gap-[9.653px] items-center justify-start left-0 overflow-clip pt-[10px] px-0 rounded-bl-[12px] rounded-br-[12px] w-[584px]"
-        style={{ 
-          top: `${lowerPanelTop}px`,
-          height: `${lowerPanelHeight}px`
-        }}
-      >
+        <div 
+          className={`${isSmallScreen ? 'relative' : 'absolute'} bg-white box-border content-stretch flex flex-col gap-[9.653px] items-center justify-start left-0 overflow-clip pt-[10px] rounded-bl-[12px] rounded-br-[12px] w-full ${isMobile ? 'px-1' : 'px-0'}`}
+          style={{ 
+            top: isSmallScreen ? 'auto' : `${lowerPanelTop}px`,
+            height: isSmallScreen ? 'auto' : `${lowerPanelHeight}px`
+          }}
+        >
         
         {/* 탭 메뉴 */}
         <div 
           ref={containerRef}
-          className="content-stretch flex items-center justify-center relative shrink-0 w-full"
+          className="flex items-center justify-start relative overflow-hidden"
+          style={{ 
+            width: '100%',
+            maxWidth: isMobile ? '100%' : '584px'
+          }}
           onMouseLeave={handleMouseLeave}
         >
           {/* 선택된 탭의 네비게이션 바 */}
@@ -845,20 +887,20 @@ export default function LeftInfoPanel({
                 }}
                 onMouseEnter={() => handleMouseEnter(option.key)}
                 className={cn(
-                  "h-11 relative shrink-0 flex items-center justify-center transition-all duration-200",
+                  "h-11 relative flex-shrink-0 flex items-center justify-center transition-all duration-200",
                   isBeta ? "opacity-50" : "cursor-pointer",
                   option.width
                 )}
               >
                 <div className={cn(
-                  "justify-start text-[18px] font-normal font-['Pretendard'] leading-snug text-center transition-colors duration-200",
+                  `justify-start font-normal font-['Pretendard'] leading-snug text-center transition-colors duration-200 ${isVerySmallScreen ? 'text-[16px]' : 'text-[18px]'}`,
                   isBeta 
                     ? "font-normal text-[#adb5bd]"
                     : isSelected || isHovered
                       ? "font-semibold text-[#990033]"
                       : "font-normal text-[#adb5bd]"
                 )}>
-                  <p className="leading-[16.336px] whitespace-pre">{option.label}</p>
+                  <p className={`whitespace-pre ${isVerySmallScreen ? 'leading-[14px]' : 'leading-[16.336px]'}`}>{option.label}</p>
                 </div>
                 
                 {/* 준비중 배지 */}
@@ -879,7 +921,7 @@ export default function LeftInfoPanel({
           <div 
             className="w-full custom-scrollbar overflow-y-auto"
             style={{ 
-              height: `${characterScrollContainerHeight}px`,
+              height: isSmallScreen ? 'auto' : `${characterScrollContainerHeight}px`,
               scrollbarWidth: 'thin',
               scrollbarColor: '#CBD5E0 #F7FAFC'
             }}
@@ -887,106 +929,129 @@ export default function LeftInfoPanel({
             <CharacterList
               characters={characters || []}
               className="w-full"
+              isMobile={isMobile}
+            />
+          </div>
+        )}
+
+        {/* 댓글 탭 - 모바일 또는 댓글 데이터가 있을 때 표시 */}
+        {(isMobile || (animeId && rawAnimeData)) && currentTab === 'comments' && (
+          <div 
+            className="w-full custom-scrollbar overflow-y-auto"
+            style={{ 
+              height: isSmallScreen ? 'auto' : `${characterScrollContainerHeight}px`,
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#CBD5E0 #F7FAFC'
+            }}
+          >
+            <RightCommentPanel
+              animeId={animeId || anime.animeId}
+              isImageModalOpen={false}
+              animeData={anime}
+              rawAnimeData={rawAnimeData}
             />
           </div>
         )}
 
         {/* 정보 내용 - 애니 정보와 분기 성적 탭용 */}
-        {currentTab !== 'characters' && (
+        {currentTab !== 'characters' && currentTab !== 'comments' && (
           <div 
-            className="bg-[#f8f9fa] box-border pl-[25px] relative rounded-[12px] shrink-0 w-[554px]"
+            className={`bg-[#f8f9fa] box-border relative rounded-[12px] shrink-0 w-full ${isMobile ? 'pl-2 pr-2' : 'pl-[25px]'}`}
             style={{ 
-              height: `${infoContentHeight}px`,
+              height: isSmallScreen ? 'auto' : `${infoContentHeight}px`,
               paddingTop: '10px',
-              paddingBottom: '10px'
+              paddingBottom: '10px',
+              maxWidth: isMobile ? '100%' : '554px'
             }}
           >
             {/* 스크롤 컨테이너 */}
-            <div 
-              className="overflow-y-auto custom-scrollbar"
-              style={{ 
-                width: 'calc(100% + 12.5px)',
-                marginRight: '10px',
-                height: `${scrollContainerHeight}px`
-              }}
-            >
+             <div 
+               className="overflow-y-auto custom-scrollbar"
+               style={{ 
+                 width: isMobile ? '100%' : 'calc(100% + 12.5px)',
+                 marginRight: isMobile ? '0' : '10px',
+                 height: isSmallScreen ? 'auto' : `${scrollContainerHeight}px`
+               }}
+             >
             
             {/* 탭별 내용 렌더링 */}
             {currentTab === 'info' && (
             <div style={{ 
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0px'
+              gridTemplateColumns: isMobile ? '50% 50%' : '1fr 1fr',
+              gap: '0px',
+              width: '100%',
+              overflow: 'hidden'
             }}>
               {/* 왼쪽 정보 */}
               <div 
-                className="box-border flex flex-col items-start justify-start p-[11.138px] pr-[0px] relative shrink-0"
+                className={`box-border flex flex-col ${isMobile ? 'items-center' : 'items-start'} justify-start relative shrink-0 ${isMobile ? 'p-2 w-full' : 'p-[11.138px]'}`}
               >
-            <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-center leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full" style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
-              <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
-                <p className="leading-[16.336px] whitespace-pre">제작사</p>
+            <div className={`box-border content-stretch flex flex-col gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? 'text-[20px]' : 'text-[18.25px]'} w-full`} style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
+              <div className={`font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}>
+                <p className="leading-[16.336px] whitespace-nowrap">제작사</p>
               </div>
-              <div className="font-['Pretendard'] font-medium relative shrink-0 text-black w-full" style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
-                <p className="leading-[normal]">{studio || ''}</p>
-              </div>
-            </div>
-            
-            <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-center leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full" style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
-              <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
-                <p className="leading-[16.336px] whitespace-pre">감독</p>
-              </div>
-              <div className="font-['Pretendard'] font-medium relative shrink-0 text-black w-full" style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
-                <p className="leading-[normal]">{director || ''}</p>
+              <div className={`font-['Pretendard'] font-medium relative shrink-0 text-black w-full ${isMobile ? 'text-center' : 'text-left'}`} style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
+                <p className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}>{studio || ''}</p>
               </div>
             </div>
             
-            <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-start leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full">
-              <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
-                <p className="leading-[16.336px] whitespace-pre">장르</p>
+            <div className={`box-border content-stretch flex flex-col gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`} style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
+              <div className={`font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}>
+                <p className="leading-[16.336px] whitespace-nowrap">감독</p>
               </div>
-              <div className="font-['Pretendard'] font-medium relative shrink-0 text-black w-full">
-                <p className="leading-[normal]">{genre || ''}</p>
+              <div className={`font-['Pretendard'] font-medium relative shrink-0 text-black w-full ${isMobile ? 'text-center' : 'text-left'}`} style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
+                <p className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}>{director || ''}</p>
+              </div>
+            </div>
+            
+            <div className={`box-border content-stretch flex flex-col gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}>
+              <div className={`font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}>
+                <p className="leading-[16.336px] whitespace-nowrap">장르</p>
+              </div>
+              <div className={`font-['Pretendard'] font-medium relative shrink-0 text-black w-full ${isMobile ? 'text-center' : 'text-left'}`}>
+                <p className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}>{genre || ''}</p>
               </div>
             </div>
           </div>
           
           {/* 오른쪽 정보 */}
-          <div 
-            className="box-border flex flex-col items-start justify-start pl-[11.138px] py-[11.138px] relative shrink-0"
-          >
-            <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-center leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full" style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
-              <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
-                <p className="leading-[16.336px] whitespace-pre">원작</p>
+           <div 
+             className={`box-border flex flex-col ${isMobile ? 'items-center' : 'items-start'} justify-start relative shrink-0 ${isMobile ? 'p-2 w-full' : 'p-[11.138px]'}`}
+           >
+             <div className={`box-border content-stretch flex flex-col gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`} style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
+               <div className={`font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}>
+                 <p className="leading-[16.336px] whitespace-nowrap">원작</p>
+               </div>
+               <div className={`font-['Pretendard'] font-medium relative shrink-0 text-black w-full ${isMobile ? 'text-center' : 'text-left'}`} style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
+                 <p className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}>{source || ''}</p>
+               </div>
+             </div>
+            
+            <div className={`box-border content-stretch flex flex-col gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`} style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
+              <div className={`font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}>
+                <p className="leading-[16.336px] whitespace-nowrap">{medium === 'MOVIE' ? '개봉일' : '방영 시작일'}</p>
               </div>
-              <div className="font-['Pretendard'] font-medium relative shrink-0 text-black w-full" style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
-                <p className="leading-[normal]">{source || ''}</p>
+              <div className={`font-['Pretendard'] font-medium relative shrink-0 text-black w-full ${isMobile ? 'text-center' : 'text-left'}`} style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
+                <p className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}>{startDate || ''}</p>
               </div>
             </div>
             
-            <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-center leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full" style={{ height: `${Math.max(77.41 * heightRatio, 50)}px` }}>
-              <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
-                <p className="leading-[16.336px] whitespace-pre">{medium === 'MOVIE' ? '개봉일' : '방영 시작일'}</p>
+            <div className={`box-border content-stretch flex flex-col gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}>
+              <div className={`font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}>
+                <p className="leading-[16.336px] whitespace-nowrap">등급</p>
               </div>
-              <div className="font-['Pretendard'] font-medium relative shrink-0 text-black w-full" style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
-                <p className="leading-[normal]">{startDate || ''}</p>
-              </div>
-            </div>
-            
-            <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-start leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full">
-              <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
-                <p className="leading-[16.336px] whitespace-pre">등급</p>
-              </div>
-              <div className="font-['Pretendard'] font-medium relative shrink-0 text-black w-full" style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
-                <p className="leading-[normal]">{rating || ''}</p>
+              <div className={`font-['Pretendard'] font-medium relative shrink-0 text-black w-full ${isMobile ? 'text-center' : 'text-left'}`} style={{ height: `${Math.max(44 * heightRatio, 30)}px` }}>
+                <p className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}>{rating || ''}</p>
               </div>
             </div>
             
-            <div className="box-border content-stretch flex flex-col gap-[11.138px] items-start justify-start leading-[0] not-italic px-[17.821px] py-[2.97px] relative shrink-0 text-[18.25px] w-full">
-              <div className="font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] text-center text-nowrap">
-                <p className="leading-[16.336px] whitespace-pre">공식 사이트</p>
+            <div className={`box-border content-stretch flex flex-col gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}>
+              <div className={`font-['Pretendard'] font-normal relative shrink-0 text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}>
+                <p className="leading-[16.336px] whitespace-nowrap">공식 사이트</p>
               </div>
-              <div className="font-['Pretendard'] font-medium relative shrink-0 text-black w-[225.727px]">
-                <div className="flex flex-wrap gap-[6px] items-start justify-start">
+              <div className={`font-['Pretendard'] font-medium relative shrink-0 text-black ${isMobile ? 'w-full flex justify-center' : 'w-[225.727px]'}`}>
+                <div className={`flex flex-wrap ${isMobile ? 'gap-2' : 'gap-[6px]'} items-start ${isMobile ? 'justify-center' : 'justify-start'}`}>
                 {officialSite ? (
                   // officialSite가 문자열인 경우
                   typeof officialSite === 'string' ? (
@@ -994,7 +1059,7 @@ export default function LeftInfoPanel({
                       href={officialSite} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="relative shrink-0 w-[25px] h-[25px] cursor-pointer hover:opacity-80 transition-opacity"
+                      className={`relative shrink-0 ${isMobile ? 'w-6 h-6' : 'w-[25px] h-[25px]'} cursor-pointer hover:opacity-80 transition-opacity`}
                       title="공식 사이트 방문"
                     >
                       <img 
@@ -1022,7 +1087,7 @@ export default function LeftInfoPanel({
                               href={singleUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="relative shrink-0 w-[25px] h-[25px] cursor-pointer hover:opacity-80 transition-opacity"
+                              className={`relative shrink-0 ${isMobile ? 'w-6 h-6' : 'w-[25px] h-[25px]'} cursor-pointer hover:opacity-80 transition-opacity`}
                               title={`${siteType} 방문하기`}
                             >
                               <img 
@@ -1041,7 +1106,7 @@ export default function LeftInfoPanel({
                             href={url} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="relative shrink-0 w-[25px] h-[25px] cursor-pointer hover:opacity-80 transition-opacity"
+                            className={`relative shrink-0 ${isMobile ? 'w-6 h-6' : 'w-[25px] h-[25px]'} cursor-pointer hover:opacity-80 transition-opacity`}
                             title={`${siteType} 방문하기`}
                           >
                             {/* 사이트 타입에 따른 아이콘 매핑 */}
@@ -1100,7 +1165,7 @@ export default function LeftInfoPanel({
           
           {/* Synopsis 섹션 - 그리드 아래에 배치 */}
           {synopsis && (
-            <div className="col-span-2 mt-4 pt-3 pl-[15px] pr-[50px]">
+            <div className={`col-span-2 mt-4 pt-3 ${isMobile ? 'px-2' : 'pl-[15px] pr-[50px]'}`}>
               {/* 구분선 */}
               <div className="mb-4 border-b border-gray-200"></div>
               
@@ -1111,17 +1176,20 @@ export default function LeftInfoPanel({
                  ref={synopsisRef}
                  className={cn(
                    "font-['Pretendard'] font-medium text-black text-[16px] leading-[1.6] transition-all duration-300",
-                   !isSynopsisExpanded && showExpandButton && "line-clamp-2"
+                   !isSynopsisExpanded && showExpandButton && "line-clamp-2",
+                   isMobile && "w-full max-w-full overflow-hidden"
                  )}
                  style={{
                    display: !isSynopsisExpanded && showExpandButton ? '-webkit-box' : 'block',
                    WebkitLineClamp: !isSynopsisExpanded && showExpandButton ? 2 : 'unset',
                    WebkitBoxOrient: 'vertical',
                    overflow: 'hidden',
-                   whiteSpace: 'pre-wrap' // 줄바꿈 문자(\n)를 실제 줄바꿈으로 표시
+                   whiteSpace: 'pre-wrap', // 줄바꿈 문자(\n)를 실제 줄바꿈으로 표시
+                   wordBreak: isMobile ? 'break-word' : 'normal',
+                   maxWidth: isMobile ? '100%' : 'none'
                  }}
                >
-                 <p className="text-justify">{synopsis}</p>
+                 <p className={`${isMobile ? 'text-left break-words' : 'text-justify'}`}>{synopsis}</p>
                </div>
               {showExpandButton && (
                 <div className="flex justify-end mt-2">
