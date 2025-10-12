@@ -525,7 +525,7 @@ console.error('🏠 복원된 주차 데이터 로드 실패:', error);
           
           {/* 홈배너 섹션 */}
           <div className="flex items-center justify-center min-h-[300px] pt-6 pb-5 xl:py-12">
-            <div className="flex flex-col xl:flex-row justify-center items-center gap-4 xl:gap-[57px] w-full">
+            <div className="flex flex-col xl:flex-row justify-center items-center gap-4 xl:gap-[75px] xl:mr-6 w-full">
               {/* HomeBanner 컴포넌트 */}
               <div className="flex justify-center xl:justify-start">
                 <HomeBanner 
