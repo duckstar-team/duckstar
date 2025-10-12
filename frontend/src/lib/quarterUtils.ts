@@ -32,26 +32,26 @@ function firstDayOfQuarter(year: number, quarter: number): Date {
 }
 
 /**
- * 분기 앵커: 첫날이 토 → 이전 금 19:00, 그 외 → 다음(또는 같은) 금 19:00
+ * 분기 앵커: 분기 첫날이 포함된 주의 월요일 18:00 (첫날 이전 또는 같은 월요일)
+ * 백엔드의 TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)와 동일한 로직
  */
 function anchorForQuarter(year: number, quarter: number): Date {
-  const first = firstDayOfQuarter(year, quarter);
-  const dow = first.getDay(); // 0=일요일, 6=토요일
-
-  let anchorDate: Date;
-  if (dow === 6) { // 토요일
-    // 이전 금요일
-    anchorDate = new Date(first);
-    anchorDate.setDate(first.getDate() - 1);
+  const first = firstDayOfQuarter(year, quarter); // 1,4,7,10월 1일
+  const dow = first.getDay(); // 0=일요일, 1=월요일, ..., 6=토요일
+  
+  // previousOrSame(MONDAY) 로직: 월요일이면 그대로, 아니면 이전 월요일
+  let daysToMonday: number;
+  if (dow === 1) { // 월요일
+    daysToMonday = 0;
   } else {
-    // 다음 또는 같은 금요일
-    const daysToFriday = (5 - dow + 7) % 7; // 금요일까지의 일수
-    anchorDate = new Date(first);
-    anchorDate.setDate(first.getDate() + daysToFriday);
+    daysToMonday = dow === 0 ? 6 : dow - 1; // 이전 월요일까지의 일수
   }
-
-  // 19:00으로 설정
-  anchorDate.setHours(19, 0, 0, 0);
+  
+  const anchorDate = new Date(first);
+  anchorDate.setDate(first.getDate() - daysToMonday);
+  
+  // 18:00으로 설정
+  anchorDate.setHours(18, 0, 0, 0);
   return anchorDate;
 }
 
@@ -68,24 +68,24 @@ function resolveAnchor(time: Date): AnchorInfo {
   const nextY = q === 4 ? y + 1 : y;
   const nextAnchor = anchorForQuarter(nextY, nextQ);
 
-  if (time.getTime() >= nextAnchor.getTime()) { // time >= nextAnchor → 다음 분기
-    return { year: nextY, quarter: nextQ, anchorStart: nextAnchor };
-  }
-  if (time.getTime() < currAnchor.getTime()) { // time < 현재 분기 앵커 → 이전 분기
+  if (time.getTime() < currAnchor.getTime()) {
     const prevQ = q === 1 ? 4 : q - 1;
     const prevY = q === 1 ? y - 1 : y;
     const prevAnchor = anchorForQuarter(prevY, prevQ);
     return { year: prevY, quarter: prevQ, anchorStart: prevAnchor };
   }
-  return { year: y, quarter: q, anchorStart: currAnchor }; // currAnchor ≤ time < nextAnchor
+  if (time.getTime() < nextAnchor.getTime()) {
+    return { year: y, quarter: q, anchorStart: currAnchor };
+  }
+  return { year: nextY, quarter: nextQ, anchorStart: nextAnchor };
 }
 
 /**
- * 분기 주차: 앵커 기준 7일 단위, 1부터 시작
+ * 분기 주차: 앵커 기준 7일(=168시간) 단위, 1부터 시작
  */
 function weekOfQuarter(time: Date, anchor: Date): number {
-  const days = Math.floor((time.getTime() - anchor.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.floor(days / 7) + 1;
+  const hours = Math.floor((time.getTime() - anchor.getTime()) / (1000 * 60 * 60));
+  return Math.floor(hours / (7 * 24)) + 1; // 168시간 단위
 }
 
 // ---- Public API ----
@@ -95,8 +95,10 @@ function weekOfQuarter(time: Date, anchor: Date): number {
 export function getThisWeekRecord(time: Date): YQWRecord {
   const ai = resolveAnchor(time);
   const week = weekOfQuarter(time, ai.anchorStart);
-  // 분기 "연도"는 항상 firstDayOfQuarter의 연도로 정의 (앵커가 전월일 수 있으므로 주의)
-  const quarterYear = firstDayOfQuarter(ai.year, ai.quarter).getFullYear();
+
+  // ✅ 분기 연도를 앵커 연도로 정의
+  const quarterYear = ai.anchorStart.getFullYear();
+
   return { yearValue: quarterYear, quarterValue: ai.quarter, weekValue: week };
 }
 
