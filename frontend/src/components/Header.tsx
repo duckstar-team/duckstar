@@ -198,9 +198,9 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       
       {/* Right Section - Search Bar + Login Button */}
       <div className={`absolute right-[25px] sm:right-3 md:right-[25px] top-0 h-[60px] flex items-center z-10 ${
-        isAuthenticated ? 'pr-[8px]' : 'pr-[24px]'
+        isAuthenticated ? 'pr-[8px]' : 'pr-0'
       }`} style={{
-        gap: isSmallScreen ? '0px' : '4px'
+        gap: isSmallScreen ? '0px' : (isAuthenticated ? '4px' : '25px')
       }}>
         {/* Desktop Search Bar */}
         <form onSubmit={handleSearch} className="hidden md:flex w-[150px] sm:w-[200px] md:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 hover:opacity-100 transition-opacity">
