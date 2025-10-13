@@ -111,3 +111,44 @@ temp/
 
 # Cursor Rules
 .cursor/rules/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Next.js specific
+.next/
+out/
+
+# Vercel
+.vercel
+
+# Local development
+.env*.local
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# IDE specific
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
