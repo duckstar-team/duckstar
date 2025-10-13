@@ -61,6 +61,7 @@ export default function AnimeDetailClient() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditingImage, setIsEditingImage] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // 캐시된 데이터 확인
@@ -96,7 +97,21 @@ export default function AnimeDetailClient() {
   const handleImageUpdate = async () => {
     if (!imageFile || !anime) return;
     
+    setIsUploading(true);
+    
     try {
+      // 파일 크기 재검증 (20MB)
+      if (imageFile.size > 20 * 1024 * 1024) {
+        alert('파일 크기는 20MB를 초과할 수 없습니다.');
+        return;
+      }
+      
+      // 파일 타입 재검증
+      if (!imageFile.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드할 수 있습니다.');
+        return;
+      }
+      
       await updateAnimeImage(parseInt(animeId), imageFile);
       
         // 성공 시 애니메이션 데이터 새로고침
@@ -109,9 +124,29 @@ export default function AnimeDetailClient() {
       setIsEditingImage(false);
       setImageFile(null);
       alert('이미지가 성공적으로 업데이트되었습니다!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('이미지 업데이트 실패:', error);
-      alert('이미지 업데이트에 실패했습니다.');
+      
+      // 구체적인 에러 메시지 표시
+      let errorMessage = '이미지 업데이트에 실패했습니다.';
+      
+      if (error.message) {
+        if (error.message.includes('413')) {
+          errorMessage = '파일 크기가 너무 큽니다. 20MB 이하의 파일을 선택해주세요.';
+        } else if (error.message.includes('400')) {
+          errorMessage = '지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.';
+        } else if (error.message.includes('500')) {
+          errorMessage = '서버에서 이미지 처리 중 오류가 발생했습니다. 다른 이미지를 시도해주세요.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = '업로드 시간이 초과되었습니다. 파일 크기를 줄이거나 다시 시도해주세요.';
+        } else {
+          errorMessage = `업로드 실패: ${error.message}`;
+        }
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsUploading(false);
     }
   };
   
@@ -567,6 +602,7 @@ export default function AnimeDetailClient() {
                 imageFile={imageFile}
                 onImageUpdate={handleImageUpdate}
                 onImageEditCancel={handleImageEditCancel}
+                isUploading={isUploading}
                 isMobile={false}
               />
             </div>
@@ -601,6 +637,7 @@ export default function AnimeDetailClient() {
                 imageFile={imageFile}
                 onImageUpdate={handleImageUpdate}
                 onImageEditCancel={handleImageEditCancel}
+                isUploading={isUploading}
                 isMobile={false}
                 animeId={parseInt(animeId)}
                 rawAnimeData={rawAnimeData}
@@ -625,6 +662,7 @@ export default function AnimeDetailClient() {
             imageFile={imageFile}
             onImageUpdate={handleImageUpdate}
             onImageEditCancel={handleImageEditCancel}
+            isUploading={isUploading}
             isMobile={true}
             animeId={parseInt(animeId)}
             rawAnimeData={rawAnimeData}

@@ -72,6 +72,7 @@ export interface StarCandidateDto {
   year: number;
   quarter: number;
   week: number;
+  animeId: number;
   episodeId: number;
   mainThumbnailUrl: string;
   status: "UPCOMING" | "NOW_SHOWING" | "COOLING" | "ENDED";
@@ -85,6 +86,7 @@ export interface StarCandidateDto {
   medium: "TVA" | "MOVIE";
   info: StarInfoDto;
   userHistory: StarInfoDto;
+  isFallback?: boolean; // fallback 데이터 여부
 }
 
 export type ApiResponseStarInfoDto = ApiResponse<StarInfoDto>;

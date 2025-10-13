@@ -30,9 +30,9 @@ export default function ProfileSetupPage() {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 파일 크기 검증 (5MB 제한)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('파일 크기는 5MB 이하여야 합니다.');
+      // 파일 크기 검증 (20MB 제한)
+      if (file.size > 20 * 1024 * 1024) {
+        setError('파일 크기는 20MB 이하여야 합니다.');
         return;
       }
       

@@ -27,13 +27,13 @@ const STYLES = {
   iconContainer: "w-5 h-5 flex-shrink-0",
   inputContainer: "flex-1 max-w-[380px] min-w-[60px]",
   inputWrapper: "relative",
-  input: "w-full h-10 py-2 bg-white border-b-2 border-[#990033] outline-none text-sm placeholder-gray-400",
+  input: "w-full h-10 py-2 bg-transparent border-b-2 border-[#990033] outline-none text-sm placeholder-gray-400",
 } as const;
 
 // 340px 이하에서 SearchBar width를 작게 조정하는 함수
 const getInputContainerStyle = (isMobile: boolean, screenWidth: number) => {
   if (isMobile && screenWidth <= 340) {
-    return "flex-1 max-w-[120px] min-w-[40px]";
+    return "flex-1 max-w-[200px] min-w-[80px]";
   } else if (isMobile) {
     return "flex-1 max-w-[280px] min-w-[120px]";
   }
@@ -129,7 +129,11 @@ export default function SearchBar({
   onChange, 
   placeholder = "애니메이션 제목을 입력하세요" 
 }: SearchBarProps) {
-  const { isMobile, currentPlaceholder, isClient, screenWidth } = useResponsivePlaceholder();
+  const { isMobile, isClient, screenWidth } = useResponsivePlaceholder();
+  
+  // 외부에서 전달된 placeholder가 있으면 사용, 없으면 기본 로직 사용
+  const { currentPlaceholder } = useResponsivePlaceholder();
+  const finalPlaceholder = placeholder || currentPlaceholder;
   
   return (
     <div className={STYLES.container}>
@@ -138,7 +142,7 @@ export default function SearchBar({
         value={value}
         onChange={onChange}
         isMobile={isMobile}
-        currentPlaceholder={currentPlaceholder}
+        currentPlaceholder={finalPlaceholder}
         isClient={isClient}
         screenWidth={screenWidth}
       />

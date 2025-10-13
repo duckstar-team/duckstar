@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import Winner from '@/components/chart/Winner';
 import RankCard from '@/components/chart/RankCard';
 import AbroadRankCard from '@/components/chart/AbroadRankCard';
-import { getChartData, ChartAnimeData } from '@/api/chart';
+import { getChartData, ChartAnimeData, getWeeks } from '@/api/chart';
 import { queryConfig } from '@/lib/queryConfig';
 import { useChart } from '@/components/AppContainer';
 
@@ -144,17 +144,29 @@ export default function ChartPage() {
   const currentWeek = selectedWeek?.week || 1;
   
   
-  // 분기 이름 매핑
+  // 분기 이름 매핑 (영어 대문자)
   const getQuarterName = (quarter: number) => {
     switch (quarter) {
       case 1: return 'SPRING';
       case 2: return 'SUMMER';
       case 3: return 'AUTUMN';
-      case 4: return 'WINTER';
+      case 4: return 'AUTUMN'; // 4분기도 AUTUMN
       default: return 'SUMMER';
     }
   };
   
+  // 주간 정보 조회
+  const { data: weeksData } = useQuery({
+    queryKey: ['weeks'],
+    queryFn: getWeeks,
+    ...queryConfig.home,
+  });
+
+  // 현재 주차 정보 찾기
+  const currentWeekInfo = weeksData?.result?.find(
+    (week) => week.year === currentYear && week.quarter === currentQuarter && week.week === currentWeek
+  );
+
   // 무한 스크롤을 위한 useInfiniteQuery 사용
   const {
     data,
@@ -164,9 +176,10 @@ export default function ChartPage() {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['chart', 2025, 4, 1],
-    queryFn: ({ pageParam = 0 }) => getChartData(2025, 4, 1, pageParam),
-    getNextPageParam: (lastPage) => {
+    queryKey: ['chart', currentYear, currentQuarter, currentWeek],
+    queryFn: ({ pageParam = 0 }) => getChartData(currentYear, currentQuarter, currentWeek, pageParam as number),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: any) => {
       if (lastPage.result.pageInfo.hasNext) {
         return lastPage.result.pageInfo.page + 1;
       }
@@ -175,30 +188,22 @@ export default function ChartPage() {
     ...queryConfig.home,
   });
 
-  // API 데이터에서 날짜 정보 가져오기
+  // 주간 정보에서 날짜 범위 가져오기
   const getDateRangeFromData = () => {
-    if (data?.pages?.[0]?.result?.animeRankDtos?.[0]?.animeStatDto) {
-      const animeStat = data.pages[0].result.animeRankDtos[0].animeStatDto;
-      // debutDate와 peakDate를 사용하여 날짜 범위 계산
-      const startDate = animeStat.debutDate ? new Date(animeStat.debutDate) : new Date('2025-06-29');
-      const endDate = animeStat.peakDate ? new Date(animeStat.peakDate) : new Date('2025-07-06');
+    if (currentWeekInfo?.startDate && currentWeekInfo?.endDate) {
+      // YYYY-MM-DD 형식을 YYYY/MM/DD로 변환
+      const formatDate = (dateStr: string) => {
+        return dateStr.replace(/-/g, '/');
+      };
       
       return {
-        start: startDate.toLocaleDateString('ko-KR', { 
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit' 
-        }).replace(/\./g, '/').replace(/\s/g, '').replace(/\/$/, ''),
-        end: endDate.toLocaleDateString('ko-KR', { 
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit' 
-        }).replace(/\./g, '/').replace(/\s/g, '').replace(/\/$/, '')
+        start: formatDate(currentWeekInfo.startDate),
+        end: formatDate(currentWeekInfo.endDate)
       };
     }
     
     // 기본값
-    return { start: '2025/06/29', end: '2025/07/06' };
+    return { start: `${currentYear}/06/29`, end: `${currentYear}/07/06` };
   };
   
   const quarterName = getQuarterName(currentQuarter);
@@ -327,7 +332,7 @@ export default function ChartPage() {
             />
             {/* 배너 텍스트 오버레이 */}
             <div className="absolute inset-0 inline-flex flex-col justify-center items-center gap-1 sm:gap-0">
-              <div className="justify-center text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-['Pretendard'] leading-tight sm:leading-[1.2] md:leading-[1.3] lg:leading-[50.75px]" style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}>
+              <div className="justify-center text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-['Pretendard'] leading-tight sm:leading-[1.2] md:leading-[1.3] lg:leading-[50.75px] whitespace-nowrap" style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}>
                 {currentYear} {quarterName} {currentWeek}주차 애니메이션 순위
               </div>
               <div className="self-stretch h-6 text-center justify-center text-white text-base font-light font-['Pretendard'] -mt-[5px] tracking-wide">

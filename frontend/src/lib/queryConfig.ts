@@ -30,8 +30,10 @@ export const queryConfig = {
     gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    retry: 2, // 검색은 빠른 실패
-    retryDelay: 2000,
+    retry: 1, // 재시도 횟수 감소 (무한로딩 방지)
+    retryDelay: 3000, // 재시도 간격 증가
+    retryOnMount: true, // 마운트 시 재시도
+    networkMode: 'online', // 온라인 상태에서만 요청
   },
   
   // 투표 데이터 (중요한 데이터)
