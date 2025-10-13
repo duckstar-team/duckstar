@@ -606,31 +606,38 @@ export default function VotePage() {
               </div>
             </div>
             
-            {/* 뷰 모드 토글 버튼 */}
-            <div className="flex bg-gray-100 rounded-lg p-0.5 sm:p-1 shadow-sm border border-gray-200 flex-shrink-0">
-              <button
-                onClick={() => handleViewModeChange('large')}
-                className={`px-2 py-1 sm:px-4 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors duration-200 ${
-                  viewMode === 'large' 
-                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                크게 보기
-              </button>
-              <button
-                onClick={() => handleViewModeChange('small')}
-                className={`px-2 py-1 sm:px-4 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors duration-200 ${
-                  viewMode === 'small' 
-                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                작게 보기
-              </button>
-            </div>
+            {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
+            {starCandidates.length > 0 && filteredStarCandidates.length > 0 && (
+              <div className="flex bg-gray-100 rounded-lg p-0.5 sm:p-1 shadow-sm border border-gray-200 flex-shrink-0">
+                <button
+                  onClick={() => handleViewModeChange('large')}
+                  className={`px-2 py-1 sm:px-4 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'large' 
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  크게 보기
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('small')}
+                  className={`px-2 py-1 sm:px-4 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'small' 
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  작게 보기
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* 스티키 검색창 placeholder - 레이아웃 점프 방지 */}
+        {isSearchBarSticky && (
+          <div className="h-[80px] mb-7 md:mb-8"></div>
+        )}
 
         {/* 별점 투표 후보자 섹션 */}
         {starCandidates.length > 0 && (

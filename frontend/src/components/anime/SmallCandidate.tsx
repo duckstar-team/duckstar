@@ -281,65 +281,79 @@ export default function SmallCandidate({
             <div className="flex items-center justify-end sm:justify-between">
             <span className="text-xs text-gray-500 hidden sm:block truncate">{anime.genre || ''}</span>
             <div className="flex items-center gap-2 mt-3 sm:mt-0">
-              {/* BigCandidate와 동일한 별점 컴포넌트 */}
-               <StarRatingSimple
-                 key={`star-${anime.episodeId}-${isPanelVisible}`}
-                 rating={currentRating}
-                 readOnly={isPanelVisible}
-                 onRatingChange={isPanelVisible ? undefined : async (rating) => {
-                  console.log('onRatingChange called with rating:', rating);
-                  
-                  setCurrentRating(rating);
-                  
-                  if (rating > 0) {
-                    console.log('Rating > 0, proceeding with vote');
-                    // 로딩 상태로 전환
-                    setVoteState('loading');
-                    
-                    try {
-                      // 별점을 0.5-5.0에서 1-10으로 변환 (2배)
-                      const starScore = Math.round(rating * 2);
-                      // 실제 별점 투표 API 호출
-                      const response = await submitStarVote(anime.episodeId, starScore);
-                      setVoteState('submitted');
-                      
-                       // 데스크톱과 모바일 모두에서 패널 유지
-                       setIsPanelVisible(true);
+              {/* 로딩 상태 표시 */}
+              {voteState === 'loading' ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin">
+                    <img 
+                      src="/icons/star/star-Selected.svg" 
+                      alt="로딩 중" 
+                      className="w-5 h-5"
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500">투표 처리 중...</span>
+                </div>
+              ) : (
+                /* BigCandidate와 동일한 별점 컴포넌트 */
+                <StarRatingSimple
+                  key={`star-${anime.episodeId}-${isPanelVisible}`}
+                  rating={currentRating}
+                  readOnly={isPanelVisible}
+                  onRatingChange={isPanelVisible ? undefined : async (rating) => {
+                   console.log('onRatingChange called with rating:', rating);
+                   
+                   setCurrentRating(rating);
+                   
+                   if (rating > 0) {
+                     console.log('Rating > 0, proceeding with vote');
+                     // 로딩 상태로 전환
+                     setVoteState('loading');
+                     
+                     try {
+                       // 별점을 0.5-5.0에서 1-10으로 변환 (2배)
+                       const starScore = Math.round(rating * 2);
+                       // 실제 별점 투표 API 호출
+                       const response = await submitStarVote(anime.episodeId, starScore);
+                       setVoteState('submitted');
                        
-                       // 호버 상태 강제 리셋을 위한 지연
-                       setTimeout(() => {
-                         // 별점 컴포넌트의 호버 상태를 리셋하기 위해 강제 리렌더링
-                         const starElements = document.querySelectorAll('[data-star-rating]');
-                         starElements.forEach(element => {
-                           element.dispatchEvent(new Event('mouseleave'));
-                         });
-                       }, 100);
-                      
-                      // API 응답으로 별점 분포 업데이트
-                      updateStarDistribution(response);
-                      
-                      // 투표한 episode ID를 브라우저에 저장
-                      addVotedEpisode(anime.episodeId);
-                      
-                      // 투표 완료 콜백 호출
-                      if (onVoteComplete) {
-                        onVoteComplete();
-                      }
-                      
-                    } catch (error) {
-                      // 에러 시 다시 제출 상태로 돌아감
-                      setVoteState('submitting');
-                      console.error('투표 중 오류:', error);
-                      // TODO: 사용자에게 에러 메시지 표시
-                    }
-                  } else {
-                    console.log('Rating is 0, staying in submitting state');
-                    setVoteState('submitting');
-                  }
-                }}
-                disabled={voteState === 'loading'}
-                size="md"
-              />
+                        // 데스크톱과 모바일 모두에서 패널 유지
+                        setIsPanelVisible(true);
+                        
+                        // 호버 상태 강제 리셋을 위한 지연
+                        setTimeout(() => {
+                          // 별점 컴포넌트의 호버 상태를 리셋하기 위해 강제 리렌더링
+                          const starElements = document.querySelectorAll('[data-star-rating]');
+                          starElements.forEach(element => {
+                            element.dispatchEvent(new Event('mouseleave'));
+                          });
+                        }, 100);
+                       
+                       // API 응답으로 별점 분포 업데이트
+                       updateStarDistribution(response);
+                       
+                       // 투표한 episode ID를 브라우저에 저장
+                       addVotedEpisode(anime.episodeId);
+                       
+                       // 투표 완료 콜백 호출
+                       if (onVoteComplete) {
+                         onVoteComplete();
+                       }
+                       
+                     } catch (error) {
+                       // 에러 시 다시 제출 상태로 돌아감
+                       setVoteState('submitting');
+                       console.error('투표 중 오류:', error);
+                       // TODO: 사용자에게 에러 메시지 표시
+                     }
+                   } else {
+                     console.log('Rating is 0, staying in submitting state');
+                     setVoteState('submitting');
+                   }
+                 }}
+                 disabled={voteState === 'loading'}
+                 size="md"
+               />
+              )}
               
             </div>
           </div>
