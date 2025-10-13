@@ -24,6 +24,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
   
   // 덕스타 로고 클릭 시 스크롤 탑으로 이동
@@ -83,6 +84,20 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isSearchOpen]);
+
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 375);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
   
   // 외부 클릭 감지
   useEffect(() => {
@@ -182,9 +197,11 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
       </Link>
       
       {/* Right Section - Search Bar + Login Button */}
-      <div className={`absolute right-2 sm:right-3 md:right-[25px] top-0 h-[60px] flex items-center gap-7 z-10 ${
-        isAuthenticated ? 'gap-4 pr-[6px]' : 'gap-4 pr-[18px]'
-      }`}>
+      <div className={`absolute right-[25px] sm:right-3 md:right-[25px] top-0 h-[60px] flex items-center z-10 ${
+        isAuthenticated ? 'pr-[8px]' : 'pr-[24px]'
+      }`} style={{
+        gap: isSmallScreen ? '0px' : '4px'
+      }}>
         {/* Desktop Search Bar */}
         <form onSubmit={handleSearch} className="hidden md:flex w-[150px] sm:w-[200px] md:w-[248px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 hover:opacity-100 transition-opacity">
           {/* Search Icon */}
@@ -215,7 +232,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
         {/* Mobile Search Toggle Button */}
         <button
           onClick={toggleSearch}
-          className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg bg-white/80 backdrop-blur-[12px]"
+          className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg bg-transparent"
           aria-label="검색"
         >
           <img
@@ -227,7 +244,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
 
         {/* Mobile Search Bar */}
         {isSearchOpen && (
-          <form onSubmit={handleSearch} className="md:hidden absolute right-0 top-0 h-[60px] w-[175px] sm:w-[220px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 flex">
+          <form onSubmit={handleSearch} className="md:hidden absolute right-0 top-[6px] h-[50px] w-[160px] sm:w-[200px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 flex">
             {/* Search Icon */}
             <div className="w-5 h-5 relative overflow-hidden">
               <img
@@ -247,7 +264,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="제목, 초성으로 애니 찾기"
+                placeholder="애니 검색"
                 className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
                 autoFocus
               />
@@ -260,7 +277,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
           <LoginButton 
             variant="default" 
             showProfileImage={true}
-            className="max-w-[200px] sm:max-w-[250px] md:max-w-none"
+            className="max-w-[120px] sm:max-w-[150px] md:max-w-[180px]"
           />
         </div>
       </div>
