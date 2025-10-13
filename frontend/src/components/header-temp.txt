@@ -227,7 +227,7 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
 
         {/* Mobile Search Bar */}
         {isSearchOpen && (
-          <form onSubmit={handleSearch} className="md:hidden absolute right-0 top-0 h-[60px] w-[175px] sm:w-[220px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 flex">
+          <form onSubmit={handleSearch} className="md:hidden absolute right-0 top-0 h-[60px] w-[200px] sm:w-[250px] pl-4 pr-4 pt-[9px] pb-[9px] bg-[#F1F3F5] overflow-hidden rounded-xl border border-[#E9ECEF] justify-start items-center gap-4 flex">
             {/* Search Icon */}
             <div className="w-5 h-5 relative overflow-hidden">
               <img
@@ -383,10 +383,10 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                   style={{
                     padding: '12px 16px',
                     borderRadius: '8px',
-                    background: (pathname === '/chart' || pathname.startsWith('/chart/')) ? 'linear-gradient(to right, #cb285e, #9c1f49)' : 'transparent',
-                    color: (pathname === '/chart' || pathname.startsWith('/chart/')) ? '#ffffff' : '#586672',
+                    background: pathname === '/chart' ? 'linear-gradient(to right, #cb285e, #9c1f49)' : 'transparent',
+                    color: pathname === '/chart' ? '#ffffff' : '#586672',
                     fontSize: '16px',
-                    fontWeight: (pathname === '/chart' || pathname.startsWith('/chart/')) ? 'bold' : '500',
+                    fontWeight: pathname === '/chart' ? 'bold' : '500',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease-in-out',
                     display: 'flex',
@@ -399,18 +399,18 @@ const Header: NextPage<HeaderType> = ({ className = "" }) => {
                     textAlign: 'left'
                   }}
                   onMouseEnter={(e) => {
-                    if (pathname !== '/chart' && !pathname.startsWith('/chart/')) {
+                    if (pathname !== '/chart') {
                       e.currentTarget.style.backgroundColor = '#ffd4e2';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (pathname !== '/chart' && !pathname.startsWith('/chart/')) {
+                    if (pathname !== '/chart') {
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }
                   }}
                 >
                   <img 
-                    src={(pathname === '/chart' || pathname.startsWith('/chart/')) ? "/icons/chart-active.svg" : "/icons/chart-default.svg"}
+                    src={pathname === '/chart' ? "/icons/chart-active.svg" : "/icons/chart-default.svg"}
                     alt="주간 차트"
                     style={{ width: '20px', height: '20px' }}
                   />

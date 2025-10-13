@@ -28,6 +28,7 @@ interface LeftInfoPanelProps {
   imageFile?: File | null; // 선택된 이미지 파일
   onImageUpdate?: () => void; // 이미지 업데이트 핸들러
   onImageEditCancel?: () => void; // 이미지 편집 취소 핸들러
+  isUploading?: boolean; // 이미지 업로드 중 여부
   isMobile?: boolean;
   animeId?: number; // 댓글 패널용 애니 ID
   rawAnimeData?: any; // 댓글 패널용 원본 데이터
@@ -82,6 +83,7 @@ export default function LeftInfoPanel({
   imageFile,
   onImageUpdate,
   onImageEditCancel,
+  isUploading = false,
   isMobile = false,
   animeId,
   rawAnimeData

@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimePreviewDto } from '@/components/search/types';
 import StarRatingSimple from '@/components/StarRatingSimple';
 import StarSubmissionBox from '@/components/star/StarSubmissionBox';
@@ -19,6 +20,8 @@ interface BigCandidateProps {
 }
 
 export default function BigCandidate({ anime, className, isCurrentSeason = true, voteInfo, starInfo, onVoteComplete }: BigCandidateProps) {
+  const router = useRouter();
+  
   // 별점 제출 상태 관리 - starInfo가 있고 userStarScore가 있으면 초기 상태를 submitted로 설정
   const [voteState, setVoteState] = useState<'submitting' | 'loading' | 'submitted'>(
     starInfo && starInfo.userStarScore && starInfo.userStarScore > 0 ? 'submitted' : 'submitting'
@@ -350,7 +353,10 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
       onClick={handleClickOutside}
     >
       {/* Thumbnail Image */}
-      <div className="relative w-full h-[340px] overflow-hidden bg-gray-300">
+      <div 
+        className="relative w-full h-[340px] overflow-hidden bg-gray-300 cursor-pointer"
+        onClick={() => router.push(`/animes/${animeId}`)}
+      >
         <img
           src={mainThumbnailUrl}
           alt={titleKor}
@@ -373,7 +379,10 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
         <div className="min-h-[120px] flex flex-col">
           {/* Title - 고정 높이로 2줄 기준 설정 */}
           <div className="h-[48px] relative">
-            <h3 className="font-bold text-gray-900 text-[16px] leading-tight line-clamp-2 font-['Pretendard']">
+            <h3 
+              className="font-bold text-gray-900 text-[16px] leading-tight line-clamp-2 font-['Pretendard'] cursor-pointer hover:text-[#990033] transition-colors"
+              onClick={() => router.push(`/animes/${animeId}`)}
+            >
               {titleKor}
             </h3>
             

@@ -705,7 +705,7 @@ function SeasonPageContent() {
   return (
     <main className="w-full min-h-screen overflow-x-hidden overflow-y-visible" style={{ backgroundColor: '#F8F9FA' }}>
       {/* SearchSection - #F1F3F5 배경, 창 폭 가득, 높이 196px, 레이어 맨 뒤 */}
-      <div className="w-full bg-[#F1F3F5] h-[196px] relative">
+      <div className="w-full bg-[#F1F3F5] h-[170px] md:h-[196px] relative">
         {/* SearchFilters 컨테이너 - 하얀색 배경, 위아래 #DADCE0 테두리, 높이 100px, 헤더에서 20px 갭 */}
         <div className="absolute top-5 left-0 w-full h-[100px] bg-white border-t border-b border-[#DADCE0] z-10">
           {/* 배경만 유지 */}
@@ -965,7 +965,7 @@ function SeasonPageContent() {
                 {/* 요일 선택 (모바일에서만 표시) */}
                 {!searchQuery.trim() && selectedOttServices.length === 0 && (
                   <div className="flex-1">
-                    <div className="bg-white rounded-lg px-3 py-2 border relative">
+                    <div className="bg-white rounded-lg px-3 py-2 border border-gray-300 relative">
                       <select
                         value={selectedDay}
                         onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
@@ -1015,8 +1015,8 @@ function SeasonPageContent() {
 
       {/* 모바일 전용 드롭다운 버튼 영역 */}
       <div className="w-full bg-white md:hidden" ref={mobileMenuRef}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+        <div className="max-w-7xl mx-auto px-6 p-4">
+          <div className="bg-gray-50 rounded-lg space-y-2.5">
             {/* 첫 번째 줄: 여름 애니메이션 / 요일 */}
             <div className="flex gap-3 items-center">
               {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
@@ -1044,7 +1044,7 @@ function SeasonPageContent() {
               {/* 요일 선택 (모바일에서만 표시) */}
               {!searchQuery.trim() && selectedOttServices.length === 0 && (
                 <div className="flex-1">
-                  <div className="bg-white rounded-lg px-3 py-2 border relative">
+                  <div className="bg-white rounded-lg px-3 py-2 border border-gray-300 relative">
                     <select
                       value={selectedDay}
                       onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
@@ -1099,7 +1099,7 @@ function SeasonPageContent() {
             <div ref={daySelectionRef} className="mb-[40px] flex justify-center w-full max-w-6xl mx-auto">
               {/* 태블릿: 드롭다운 */}
               <div className="lg:hidden">
-                <div className="bg-white rounded-lg px-3 py-2 border relative">
+                <div className="bg-white rounded-lg px-3 py-2 border border-gray-300 relative">
                   <select
                     value={selectedDay}
                     onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
@@ -1180,7 +1180,7 @@ function SeasonPageContent() {
 
       {/* Anime Grid Section - F8F9FA 배경 */}
       <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
-        <div className="max-w-7xl mx-auto px-6 pt-8 pb-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-2 pb-0 md:pt-8 md:pb-8">
           {/* 검색 중일 때 검색 결과 표시 */}
           {searchQuery.trim() ? (
             <div className="space-y-4" data-content-loaded>
@@ -1188,7 +1188,7 @@ function SeasonPageContent() {
                 <div className="text-sm text-gray-600 mb-4">
                   "{searchQuery}"에 대한 검색 결과
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px] justify-items-center">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[15px] sm:gap-[30px] justify-items-center">
                   {Object.values(groupedAnimes).flat().map((anime) => (
                     <AnimeCard
                       key={anime.animeId}
@@ -1215,14 +1215,14 @@ function SeasonPageContent() {
                 // OTT 필터링 시: 모든 애니메이션을 하나의 그리드로 표시
                 <div>
                   <div className="flex items-end gap-3 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
                       필터링 결과
                     </h2>
                     <span className="text-[12px] font-normal text-[#868E96] font-['Pretendard']">
                       {Object.values(groupedAnimes).flat().length}개의 애니메이션
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px] justify-items-center">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[15px] sm:gap-[30px] justify-items-center">
                     {Object.values(groupedAnimes).flat().map((anime) => (
                       <AnimeCard
                         key={anime.animeId}
@@ -1257,7 +1257,7 @@ function SeasonPageContent() {
                     {/* 요일 제목 */}
                     <div className="flex items-end gap-3 mb-6">
                       <h2 
-                        className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                        className="text-lg sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
                         onClick={() => {
                            // 요일 헤더 클릭 시 해당 요일 선택만 (스크롤 이동 제거)
                           const dayToKorean = {
@@ -1288,7 +1288,7 @@ function SeasonPageContent() {
                     </div>
 
                     {/* 애니메이션 그리드 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px] mb-12">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[15px] sm:gap-[30px] mb-12">
                       {dayAnimes.map((anime) => (
                         <AnimeCard
                           key={anime.animeId}

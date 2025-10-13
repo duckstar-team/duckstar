@@ -16,10 +16,10 @@ export function useImageUpload() {
 
   const uploadImage = useCallback((file: File) => {
 
-    // 파일 크기 제한 (5MB)
-    const maxSize = 5 * 1024 * 1024;
+    // 파일 크기 제한 (20MB)
+    const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert('파일 크기는 5MB를 초과할 수 없습니다.');
+      alert('파일 크기는 20MB를 초과할 수 없습니다.');
       return;
     }
 

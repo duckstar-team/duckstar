@@ -144,32 +144,30 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* PC용 네비게이션 버튼 - 오른쪽 아래 배치 */}
-      <div className="hidden md:flex absolute bottom-4 right-4 gap-3 z-20">
-        <button
-          onClick={goToPrevious}
-          className="w-8 h-8 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full transition-all duration-200 flex"
-          aria-label="이전 배너"
-        >
-          <img
-            src="/icons/episodes-before.svg"
-            alt="이전"
-            className="w-4 h-4 filter brightness-0 invert"
-          />
-        </button>
+      {/* PC용 좌우 네비게이션 버튼 */}
+      <button
+        onClick={goToPrevious}
+        className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full transition-all duration-200 z-20"
+        aria-label="이전 배너"
+      >
+        <img
+          src="/icons/episodes-before.svg"
+          alt="이전"
+          className="w-4 h-4 filter brightness-0 invert"
+        />
+      </button>
 
-        <button
-          onClick={goToNext}
-          className="w-8 h-8 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full transition-all duration-200 flex"
-          aria-label="다음 배너"
-        >
-          <img
-            src="/icons/episodes-after.svg"
-            alt="다음"
-            className="w-4 h-4 filter brightness-0 invert"
-          />
-        </button>
-      </div>
+      <button
+        onClick={goToNext}
+        className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full transition-all duration-200 z-20"
+        aria-label="다음 배너"
+      >
+        <img
+          src="/icons/episodes-after.svg"
+          alt="다음"
+          className="w-4 h-4 filter brightness-0 invert"
+        />
+      </button>
 
       {/* 모든 배너를 미리 렌더링 - 실무 방식 */}
       <div 

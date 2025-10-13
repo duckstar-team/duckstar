@@ -61,7 +61,7 @@ export default function SearchFilters({
       </div>
 
       {/* OTT 필터 목록 - 선택된 OTT는 대기 리스트에서 숨김 */}
-      <div className="flex gap-[9px] items-center justify-center ml-8">
+      <div className="flex gap-[9px] items-center justify-center ml-2 sm:ml-8">
         {ottServices.map((ott) => {
           const isSelected = selectedOttServices.includes(ott.name.toLowerCase());
           
@@ -70,7 +70,7 @@ export default function SearchFilters({
               key={ott.id}
               onClick={() => handleOttClick(ott.id)}
               className={cn(
-                "relative w-9 h-9 rounded-lg transition-all duration-200 hover:scale-110 cursor-pointer",
+                "relative w-7 h-7 md:w-9 md:h-9 rounded-lg transition-all duration-200 hover:scale-110 cursor-pointer",
                 "flex items-center justify-center"
               )}
               style={{

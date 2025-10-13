@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { AnimePreviewDto } from '@/components/search/types';
 import { useNavigation } from '@/hooks/useNavigation';
@@ -15,10 +15,28 @@ interface AnimeCardProps {
 export default function AnimeCard({ anime, className, isCurrentSeason = true }: AnimeCardProps) {
   const { animeId, mainThumbnailUrl, status, isBreak, titleKor, dayOfWeek, scheduledAt, isRescheduled, genre, medium, ottDtos } = anime;
   const [imageError, setImageError] = useState(false);
+  const [screenSize, setScreenSize] = useState('desktop');
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { navigateToDetail } = useNavigation();
   
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (window.innerWidth >= 640) {
+        setScreenSize('desktop');
+      } else if (window.innerWidth >= 400) {
+        setScreenSize('tablet');
+      } else {
+        setScreenSize('mobile');
+      }
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
   // 애니메이션 카드 클릭 핸들러
   const handleCardClick = () => {
     navigateToDetail(animeId);
@@ -309,8 +327,8 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
     <div 
       data-anime-item
       className={cn(
-        "bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02]",
-        "flex flex-col h-full max-w-[280px] w-full",
+        "bg-white rounded-lg sm:rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02]",
+        "flex flex-col h-full max-w-[250px] sm:max-w-[280px] w-full",
         "shadow-[0_1.9px_7.2px_rgba(0,0,0,0.1)]",
         "cursor-pointer",
         isCurrentlyAiring() && "ring-2 ring-[#990033]",
@@ -319,7 +337,10 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
       onClick={handleCardClick}
     >
       {/* Thumbnail Image */}
-      <div className="relative w-full h-[340px] overflow-hidden">
+      <div className={cn(
+        "relative w-full overflow-hidden",
+        screenSize === 'mobile' ? "h-[180px]" : "h-[240px] sm:h-[340px]"
+      )}>
         <img
           src={mainThumbnailUrl}
           alt={titleKor}
@@ -332,7 +353,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
           {(ottDtos || []).slice(0, 5).map((ott, index) => (
             <div
               key={index}
-              className="relative shrink-0 size-[36px] cursor-pointer hover:scale-110 transition-transform duration-200 drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)]"
+              className="relative shrink-0 size-[28px] sm:size-[36px] cursor-pointer hover:scale-110 transition-transform duration-200 drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)]"
               onClick={(e) => {
                 e.stopPropagation(); // 카드 클릭 이벤트 방지
                 if (ott.watchUrl) {
@@ -397,11 +418,13 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
         </div>
         
         {/* Status Badge */}
-        <div className="absolute top-3 left-3">
-          <span className={cn("px-2 py-1 rounded text-xs font-medium font-['Pretendard']", getStatusColor(status))}>
-            {getStatusText(status)}
-          </span>
-        </div>
+        {screenSize !== 'mobile' && (
+          <div className="absolute top-3 left-3">
+            <span className={cn("px-2 py-1 rounded text-xs font-medium font-['Pretendard']", getStatusColor(status))}>
+              {getStatusText(status)}
+            </span>
+          </div>
+        )}
         
 
         
@@ -422,15 +445,45 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
             </span>
           </div>
         )}
+
+        {/* Time Remaining Badge - 모바일에서만 포스터 오른쪽 위에 표시 */}
+        {timeRemaining && screenSize === 'mobile' && (
+          <div className="absolute top-3 right-3">
+            <div className={cn(
+              "px-2 py-1 rounded-md flex items-center",
+              isCurrentlyAiring() 
+                ? "bg-[#990033]" 
+                : "bg-yellow-400"
+            )}>
+              <span className={cn(
+                "text-[10px] font-bold font-['Pretendard']",
+                isCurrentlyAiring() 
+                  ? "text-white" 
+                  : "text-[#65142f]"
+              )}>
+                {timeRemaining}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Content Section */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className={cn(
+        "flex-1 flex flex-col",
+        screenSize === 'mobile' ? "p-2" : "p-3 sm:p-4"
+      )}>
         {/* Title and Air Time Section */}
         <div className="flex-1">
           {/* Title - 고정 높이로 2줄 기준 설정 */}
-          <div className="h-[48px] relative">
-            <h3 className="font-bold text-gray-900 text-[16px] leading-tight line-clamp-2 font-['Pretendard']">
+          <div className={cn(
+            "relative",
+            screenSize === 'mobile' ? "h-[32px]" : "h-[40px] sm:h-[48px]"
+          )}>
+            <h3 className={cn(
+              "font-bold text-gray-900 leading-tight line-clamp-2 font-['Pretendard']",
+              screenSize === 'mobile' ? "text-[12px]" : "text-[14px] sm:text-[16px]"
+            )}>
               {titleKor}
             </h3>
             
@@ -441,7 +494,10 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
           </div>
           
           {/* Air Time and Countdown */}
-          <div className="flex items-center mt-[9px]">
+          <div className={cn(
+            "flex items-center",
+            screenSize === 'mobile' ? "mt-[6px]" : "mt-[9px]"
+          )}>
             <div className="flex items-center gap-2">
               {(() => {
                 const airTimeText = formatAirTime(scheduledAt, anime.airTime);
@@ -468,7 +524,7 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
                             : getDayInKorean(dayOfWeek)
                         }
                       </span>
-                      <span className="bg-black text-white px-2 py-1 rounded text-[13px] font-bold font-['Pretendard']">
+                      <span className="bg-black text-white px-2 py-1 rounded text-[13px] font-bold font-['Pretendard'] hidden sm:inline-block">
                         {airTimeText}
                       </span>
                       <span className="text-[14px] font-medium text-[#868E96] font-['Pretendard']">
@@ -498,9 +554,9 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
             </div>
             {timeRemaining && (
               <>
-                <div className="w-[7px]"></div>
+                <div className="w-[7px] hidden sm:block"></div>
                 <div className={cn(
-                  "px-2 py-0.5 rounded-md flex items-center",
+                  "px-2 py-0.5 rounded-md flex items-center hidden sm:flex",
                   isCurrentlyAiring() 
                     ? "bg-[#990033]" 
                     : "bg-yellow-400"
@@ -519,18 +575,59 @@ export default function AnimeCard({ anime, className, isCurrentSeason = true }: 
           </div>
         </div>
 
-        {/* Genres and Medium Type */}
-        <div className="flex items-center justify-between mt-[5px]">
-          {/* Genres */}
-          <span className="text-[13px] font-medium text-[#868E96] font-['Pretendard'] pr-2">
-            {genre}
-          </span>
-          
-                      {/* Medium Type */}
+        {/* Genres and Medium Type - 데스크톱에서만 표시 */}
+        {screenSize === 'desktop' && (
+          <div className="flex items-center justify-between mt-[5px]">
+            {/* Genres */}
+            <span className="text-[13px] font-medium text-[#868E96] font-['Pretendard'] pr-2">
+              {genre}
+            </span>
+            
+            {/* Medium Type */}
             <span className="text-[13px] font-normal text-[#868E96] font-['Pretendard'] whitespace-nowrap">
               {getMediumInKorean(medium)}
             </span>
-        </div>
+          </div>
+        )}
+
+        {/* Tablet: D-DAY and Time Remaining - 태블릿에서만 표시 */}
+        {screenSize === 'tablet' && (
+          <div className="flex items-center justify-between mt-[5px]">
+            {/* D-DAY 배지 */}
+            {(() => {
+              const airTimeText = formatAirTime(scheduledAt, anime.airTime);
+              const isUpcomingCountdown = status === 'UPCOMING' && airTimeText.includes('D-');
+              
+              if (isUpcomingCountdown) {
+                return (
+                  <span className="bg-black text-white px-2 py-1 rounded text-[12px] font-bold font-['Pretendard']">
+                    {airTimeText}
+                  </span>
+                );
+              }
+              return null;
+            })()}
+            
+            {/* 시간 정보 */}
+            {timeRemaining && (
+              <div className={cn(
+                "px-2 py-1 rounded-md flex items-center",
+                isCurrentlyAiring() 
+                  ? "bg-[#990033]" 
+                  : "bg-yellow-400"
+              )}>
+                <span className={cn(
+                  "text-[12px] font-bold font-['Pretendard']",
+                  isCurrentlyAiring() 
+                    ? "text-white" 
+                    : "text-[#65142f]"
+                )}>
+                  {timeRemaining}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

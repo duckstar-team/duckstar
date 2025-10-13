@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import BigCandidate from "@/components/anime/BigCandidate";
+import SmallCandidate from "@/components/anime/SmallCandidate";
+import AnimeCard from "@/components/anime/AnimeCard";
+import SearchBar from "@/components/legacy-vote/SearchBar";
+import { searchMatch, extractChosung } from "@/lib/searchUtils";
 import { getStarCandidates } from "@/api/client";
 import { StarCandidateDto } from "@/types/api";
 import { getVotedEpisodes } from "@/lib/voteStorage";
@@ -9,6 +13,8 @@ import { useRouter } from "next/navigation";
 import { useModal } from "@/components/AppContainer";
 import { hasVoteCookieId, getCookie } from "@/lib/cookieUtils";
 import { useAuth } from "@/context/AuthContext";
+import { getUpcomingAnimes } from "@/api/search";
+import { AnimePreviewDto } from "@/types/api";
 
 export default function VotePage() {
   const router = useRouter();
@@ -72,14 +78,55 @@ export default function VotePage() {
   // 창 너비에 따른 동적 컨테이너 너비 계산 (그리드 최적화)
   const getOptimalContainerWidth = (candidateCount: number) => {
     // 창 너비에 따라 점진적으로 줄어드는 너비 (큰 화면부터)
-    return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[700px] md:max-w-[700px] sm:max-w-[500px]';
+    return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[900px] md:max-w-[700px] sm:max-w-[500px]';
   };
   const [starCandidates, setStarCandidates] = useState<StarCandidateDto[]>([]);
+  const [fallbackAnimes, setFallbackAnimes] = useState<AnimePreviewDto[]>([]); // fallback 애니메이션 데이터
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [voteInfo, setVoteInfo] = useState<{year: number, quarter: number, week: number, startDate: string, endDate: string} | null>(null);
   const [hasVotedCandidates, setHasVotedCandidates] = useState(false);
   const [hasVotedEpisodes, setHasVotedEpisodes] = useState(false);
+  const [isUsingFallback, setIsUsingFallback] = useState(false); // fallback 데이터 사용 여부
+  const [searchQuery, setSearchQuery] = useState(""); // 검색 쿼리 상태
+  const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>(''); // 랜덤 애니메이션 제목
+  const [isSearchBarSticky, setIsSearchBarSticky] = useState(false); // 검색바 스티키 상태
+  const [viewMode, setViewMode] = useState<'large' | 'small'>('large'); // 뷰 모드 상태
+
+  // 뷰 모드 변경 핸들러
+  const handleViewModeChange = (mode: 'large' | 'small') => {
+    setViewMode(mode);
+    localStorage.setItem('voteViewMode', mode);
+  };
+
+  // 화면 크기에 따른 기본 뷰 모드 설정 및 저장된 뷰 모드 복원
+  useEffect(() => {
+    const handleResize = () => {
+      const savedViewMode = localStorage.getItem('voteViewMode') as 'large' | 'small' | null;
+      
+      if (savedViewMode) {
+        // 저장된 뷰 모드가 있으면 사용
+        setViewMode(savedViewMode);
+      } else {
+        // 저장된 뷰 모드가 없으면 화면 크기에 따라 기본값 설정
+        if (window.innerWidth < 768) {
+          setViewMode('small');
+        } else {
+          setViewMode('large');
+        }
+      }
+    };
+    
+    // 초기 로드 시 체크
+    handleResize();
+    
+    // 리사이즈 이벤트 리스너
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // 투표 완료 시 호출되는 핸들러
   const handleVoteComplete = () => {
@@ -88,6 +135,150 @@ export default function VotePage() {
       setHasVotedEpisodes(true);
     }
   };
+
+  // 검색 쿼리 변경 핸들러
+  const handleSearchQueryChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  // 검색 필터링 함수 (초성 검색 포함)
+  const filterCandidates = (candidates: StarCandidateDto[], query: string) => {
+    if (!query.trim()) return candidates;
+    
+    return candidates.filter(candidate => 
+      searchMatch(query, candidate.titleKor)
+    );
+  };
+
+  // 검색 필터링 함수 (fallback 데이터용, 초성 검색 포함)
+  const filterFallbackAnimes = (animes: AnimePreviewDto[], query: string) => {
+    if (!query.trim()) return animes;
+    
+    return animes.filter(anime => 
+      searchMatch(query, anime.titleKor)
+    );
+  };
+
+  // 필터링된 데이터
+  const filteredStarCandidates = filterCandidates(starCandidates, searchQuery);
+  const filteredFallbackAnimes = filterFallbackAnimes(fallbackAnimes, searchQuery);
+
+  // 랜덤 placeholder 생성 함수
+  const generateRandomPlaceholder = (animes: (StarCandidateDto | AnimePreviewDto)[]) => {
+    if (animes.length === 0) return '';
+    
+    const randomIndex = Math.floor(Math.random() * animes.length);
+    const selectedAnime = animes[randomIndex];
+    const title = selectedAnime.titleKor;
+    
+    const chosung = extractChosung(title);
+    const koreanCount = (title.match(/[가-힣]/g) || []).length;
+    
+    // 초성 추천 로직 (검색화면과 동일)
+    const shouldShowChosung = (() => {
+      // 숫자나 특수문자가 포함된 경우 초성 추천 제외
+      const hasNumbers = /\d/.test(title);
+      const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(title);
+      
+      if (hasNumbers || hasSpecialChars) {
+        return false;
+      }
+      
+      // 1. 한글이 3글자 이상인 경우만 초성 추천 (정확도 우선)
+      if (koreanCount >= 3 && chosung.length >= 3) {
+        return true;
+      }
+      
+      // 2. 한글이 2글자인 경우, 영문이 많지 않은 경우만 초성 추천
+      if (koreanCount >= 2 && chosung.length >= 2) {
+        const englishCount = (title.match(/[a-zA-Z]/g) || []).length;
+        // 영문이 한글보다 많지 않은 경우만 초성 추천
+        return englishCount <= koreanCount;
+      }
+      
+      // 3. 그 외의 경우는 초성 추천하지 않음
+      return false;
+    })();
+    
+    if (shouldShowChosung) {
+      const limitedChosung = chosung.slice(0, Math.min(4, chosung.length));
+      return `${title} (예: ${limitedChosung}...)`;
+    } else {
+      return title;
+    }
+  };
+
+  // fallback 데이터 가져오기 (곧 시작 그룹)
+  const fetchFallbackCandidates = async () => {
+    try {
+      console.log('투표 후보가 비어있어서 곧 시작 그룹을 fallback으로 사용합니다.');
+      setIsUsingFallback(true);
+      
+      const upcomingData = await getUpcomingAnimes();
+      const upcomingAnimes = upcomingData.schedule['곧 시작'] || [];
+      
+      // 남은 시간 순으로 정렬 (가장 가까운 시간부터)
+      const sortedAnimes = upcomingAnimes.sort((a, b) => {
+        const timeA = new Date(a.scheduledAt).getTime();
+        const timeB = new Date(b.scheduledAt).getTime();
+        return timeA - timeB; // 오름차순 정렬 (가장 가까운 시간이 먼저)
+      });
+      
+      // AnimePreviewDto 형태로 저장 (검색화면과 동일한 형태)
+      setFallbackAnimes(sortedAnimes);
+      
+      // 투표 정보 설정 (현재 시간 기준)
+      const now = new Date();
+      setVoteInfo({
+        year: now.getFullYear(),
+        quarter: Math.ceil((now.getMonth() + 1) / 3),
+        week: Math.ceil(now.getDate() / 7),
+        startDate: now.toISOString().split('T')[0],
+        endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      });
+      
+    } catch (fallbackError) {
+      console.error('Fallback 데이터 가져오기 실패:', fallbackError);
+      setError('투표 후보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
+    }
+  };
+
+  // 랜덤 placeholder 설정
+  useEffect(() => {
+    if (starCandidates.length > 0) {
+      const placeholder = generateRandomPlaceholder(starCandidates);
+      setRandomAnimeTitle(placeholder);
+    } else if (fallbackAnimes.length > 0) {
+      const placeholder = generateRandomPlaceholder(fallbackAnimes);
+      setRandomAnimeTitle(placeholder);
+    }
+  }, [starCandidates, fallbackAnimes]);
+
+  // 검색바 스티키 처리
+  useEffect(() => {
+    const handleStickyScroll = () => {
+      const searchBarElement = document.querySelector('[data-search-bar]');
+      if (!searchBarElement) return;
+      
+      const scrollY = window.scrollY;
+      const searchBarRect = searchBarElement.getBoundingClientRect();
+      const searchBarTop = searchBarRect.top + scrollY;
+      
+      // 검색바가 화면 상단에서 60px 지점을 지나면 스티키
+      const shouldBeSticky = scrollY >= searchBarTop - 60 && window.scrollY > 100;
+      
+      if (shouldBeSticky !== isSearchBarSticky) {
+        setIsSearchBarSticky(shouldBeSticky);
+      }
+    };
+
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', handleStickyScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleStickyScroll);
+    };
+  }, [isSearchBarSticky]);
 
   // 로그인 상태 변화 감지 - 로그아웃 시 즉시 투표 이력 화면 표시
   useEffect(() => {
@@ -139,12 +330,20 @@ export default function VotePage() {
           });
         }
 
-        setStarCandidates(response.result?.starCandidates || []);
+        const candidates = response.result?.starCandidates || [];
+        setStarCandidates(candidates);
+        
+        // 후보가 비어있으면 fallback 데이터 사용
+        if (candidates.length === 0) {
+          console.log('투표 후보가 비어있어서 곧 시작 그룹을 fallback으로 사용합니다.');
+          await fetchFallbackCandidates();
+          return; // fallback 데이터 사용 시 기존 로직 건너뛰기
+        }
         
         // vote_cookie_id가 없으면서 투표한 episodeId가 현재 투표 오픈한 에피소드에 포함되어 있는지 확인
         const votedEpisodes = getVotedEpisodes();
         const hasVoteCookie = hasVoteCookieId();
-        const currentEpisodeIds = response.result?.starCandidates?.map((candidate: StarCandidateDto) => candidate.episodeId) || [];
+        const currentEpisodeIds = candidates.map((candidate: StarCandidateDto) => candidate.episodeId);
         
         
         // 겹치는 에피소드 확인
@@ -297,39 +496,61 @@ export default function VotePage() {
 
       {/* 메인 컨텐츠 영역 */}
       <div className={`w-full ${getOptimalContainerWidth(starCandidates.length)} mx-auto px-2 sm:px-4 p-3 sm:p-6`}>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 pt-6 pb-2 mb-8">
-          <div className="mb-6 flex flex-col items-center">
-            {/* 기존 툴팁 컴포넌트 재사용 */}
-            <div className="bg-[#f1f2f3] flex h-8 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit max-w-full mb-4">
-              <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
-                <div className="relative size-3 sm:size-4 overflow-hidden">
-                  <img
-                    src="/icons/voteSection-notify-icon.svg"
-                    alt="Notification Icon"
-                    className="w-full h-full"
-                  />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 pt-3 pb-1 md:pt-6 md:pb-2 mb-4">
+          <div className={`${isUsingFallback ? 'mb-0' : 'mb-6'} flex flex-col items-center`}>
+            {/* Fallback 데이터 사용 시 알림 */}
+            {isUsingFallback && (
+              <div className="bg-blue-50 border border-blue-200 flex h-8 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit max-w-full mb-4">
+                <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                  <div className="relative size-3 sm:size-4 overflow-hidden">
+                    <div className="w-full h-full bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">!</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-blue-700 text-xs sm:text-base min-w-0 flex-1">
+                  <p className="leading-normal break-words">
+                    현재 투표 가능한 애니메이션이 없습니다.
+                  </p>
                 </div>
               </div>
-              <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
-                <p className="leading-normal break-words">
-                  마음에 든 애니메이션을 투표해주세요!
-                </p>
-              </div>
-            </div>
+            )}
             
-            <div className="text-gray-700 text-center">
-              <p className="mb-2">
-                <span className="sm:hidden">모든 후보는 방영 이후<br />36시간 이내에 투표할 수 있어요.</span>
-                <span className="hidden sm:inline">모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.</span>
-              </p>
-              <p className="text-sm text-gray-500">
-                <span className="sm:hidden">*덕스타 투표 시 중복 방지를 위해<br />쿠키와 암호화된 IP 정보가 사용됩니다.</span>
-                <span className="hidden sm:inline">*덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가 사용됩니다.</span>
-              </p>
-            </div>
+            {/* 기존 툴팁 컴포넌트 재사용 - fallback 사용 시 숨김 */}
+            {!isUsingFallback && (
+              <>
+                <div className="bg-[#f1f2f3] flex h-8 sm:h-9 items-center justify-start pl-1 pr-2 sm:pl-2 sm:pr-3 lg:pr-5 py-0 rounded-lg w-fit max-w-full mb-4">
+                  <div className="flex gap-1 sm:gap-2 lg:gap-2.5 items-center justify-start px-1 sm:px-2 lg:px-2.5 py-0">
+                    <div className="relative size-3 sm:size-4 overflow-hidden">
+                      <img
+                        src="/icons/voteSection-notify-icon.svg"
+                        alt="Notification Icon"
+                        className="w-full h-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col font-['Pretendard',_sans-serif] font-semibold justify-center text-[#23272b] text-xs sm:text-base min-w-0 flex-1">
+                    <p className="leading-normal break-words">
+                      마음에 든 애니메이션을 투표해주세요!
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-gray-700 text-center">
+                  <p className="mb-2">
+                    <span className="sm:hidden">모든 후보는 방영 이후<br />36시간 이내에 투표할 수 있어요.</span>
+                    <span className="hidden sm:inline">모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.</span>
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <span className="sm:hidden">*덕스타 투표 시 중복 방지를 위해<br />쿠키와 암호화된 IP 정보가 사용됩니다.</span>
+                    <span className="hidden sm:inline">*덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가 사용됩니다.</span>
+                  </p>
+                </div>
+              </>
+            )}
             
-            {/* 비로그인 투표 시 로그인 안내 버튼 */}
-            {(!isAuthenticated && hasVotedEpisodes) && (
+            {/* 비로그인 투표 시 로그인 안내 버튼 - fallback 사용 시 숨김 */}
+            {(!isAuthenticated && hasVotedEpisodes && !isUsingFallback) && (
               <div className="mt-4 flex justify-end">
                 <div className="relative group">
                   <button 
@@ -369,16 +590,62 @@ export default function VotePage() {
           </div>
         </div>
 
+        {/* 검색창 섹션 */}
+        <div 
+          data-search-bar
+          className={`${isSearchBarSticky ? `fixed top-[60px] left-1/2 lg:left-[calc(50%+100px)] transform -translate-x-1/2 z-10 w-full ${getOptimalContainerWidth(starCandidates.length)} px-4 backdrop-blur-md bg-white/80 rounded-b-lg` : 'rounded-lg'} bg-white shadow-sm border border-gray-200 p-4 mb-7 md:mb-8`}
+        >
+          <div className="flex flex-row items-center gap-2 sm:gap-4">
+            <div className="flex justify-center flex-1 min-w-0">
+              <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={handleSearchQueryChange}
+                  placeholder={randomAnimeTitle || "애니메이션 제목을 입력하세요"}
+                />
+              </div>
+            </div>
+            
+            {/* 뷰 모드 토글 버튼 */}
+            <div className="flex bg-gray-100 rounded-lg p-0.5 sm:p-1 shadow-sm border border-gray-200 flex-shrink-0">
+              <button
+                onClick={() => handleViewModeChange('large')}
+                className={`px-2 py-1 sm:px-4 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors duration-200 ${
+                  viewMode === 'large' 
+                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                크게 보기
+              </button>
+              <button
+                onClick={() => handleViewModeChange('small')}
+                className={`px-2 py-1 sm:px-4 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors duration-200 ${
+                  viewMode === 'small' 
+                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                작게 보기
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 별점 투표 후보자 섹션 */}
         {starCandidates.length > 0 && (
           <div className="mb-8">
-            <div className={`${starCandidates.length <= 3 ? 'flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-[40px]' : 'grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-[40px] justify-items-center'}`}>
-              {starCandidates.map((candidate) => (
-                <BigCandidate
-                  key={candidate.episodeId}
-                  anime={{
-                    animeId: candidate.episodeId, // 임시로 episodeId 사용
-                    episodeId: candidate.episodeId,
+            <div className={viewMode === 'large' 
+              ? `${filteredStarCandidates.length <= 3 ? 'flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-[40px]' : 'grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 sm:gap-6 lg:gap-[40px] justify-items-center'}` 
+              : 'flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:min-w-[500px]'
+            }>
+              {filteredStarCandidates.map((candidate) => (
+                viewMode === 'large' ? (
+                        <BigCandidate
+                          key={candidate.episodeId}
+                          anime={{
+                            animeId: candidate.animeId,
+                            episodeId: candidate.episodeId,
                     mainThumbnailUrl: candidate.mainThumbnailUrl,
                     status: candidate.status,
                     isBreak: candidate.isBreak,
@@ -400,16 +667,94 @@ export default function VotePage() {
                   starInfo={candidate.info}
                   onVoteComplete={handleVoteComplete}
                 />
+                ) : (
+                  <SmallCandidate
+                    key={candidate.episodeId}
+                    anime={{
+                      animeId: candidate.animeId,
+                      episodeId: candidate.episodeId,
+                      mainThumbnailUrl: candidate.mainThumbnailUrl,
+                      status: candidate.status,
+                      isBreak: candidate.isBreak,
+                      titleKor: candidate.titleKor,
+                      dayOfWeek: candidate.dayOfWeek,
+                      scheduledAt: candidate.scheduledAt,
+                      isRescheduled: candidate.isRescheduled,
+                      airTime: candidate.airTime,
+                      genre: candidate.genre,
+                      medium: candidate.medium,
+                      ottDtos: []
+                    }}
+                    isCurrentSeason={true}
+                    voteInfo={{
+                      year: candidate.year,
+                      quarter: candidate.quarter,
+                      week: candidate.week
+                    }}
+                    starInfo={candidate.info || undefined}
+                    onVoteComplete={handleVoteComplete}
+                  />
+                )
               ))}
             </div>
           </div>
         )}
 
+        {/* Fallback 데이터 섹션 (검색화면 컴포넌트 사용) */}
+        {isUsingFallback && fallbackAnimes.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 pt-6 px-1 mb-6">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">곧 시작하는 애니메이션</h3>
+                <p className="text-sm text-gray-600">12시간 이내 방영 예정인 애니메이션들입니다</p>
+              </div>
+              
+              {/* 검색화면과 동일한 그리드 레이아웃 */}
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[15px] sm:gap-[30px] justify-items-center">
+                {filteredFallbackAnimes.map((anime) => (
+                  <AnimeCard
+                    key={anime.animeId}
+                    anime={anime}
+                    isCurrentSeason={true}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 검색 결과가 없는 경우 */}
+        {searchQuery.trim() && filteredStarCandidates.length === 0 && !isUsingFallback && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="text-center">
+              <p className="text-gray-600">'{searchQuery}'에 대한 검색 결과가 없습니다.</p>
+            </div>
+          </div>
+        )}
+
+        {/* 검색 결과가 없는 경우 (fallback 데이터) */}
+        {searchQuery.trim() && isUsingFallback && filteredFallbackAnimes.length === 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="text-center">
+              <p className="text-gray-600">'{searchQuery}'에 대한 검색 결과가 없습니다.</p>
+            </div>
+          </div>
+        )}
+
         {/* 투표 가능한 애니메이션이 없는 경우 */}
-        {starCandidates.length === 0 && (
+        {starCandidates.length === 0 && !isUsingFallback && !searchQuery.trim() && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="text-center">
               <p className="text-gray-600">현재 투표 가능한 애니메이션이 없습니다.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Fallback 데이터도 비어있는 경우 */}
+        {isUsingFallback && fallbackAnimes.length === 0 && !searchQuery.trim() && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="text-center">
+              <p className="text-gray-600">곧 시작하는 애니메이션이 없습니다.</p>
             </div>
           </div>
         )}
