@@ -3,6 +3,7 @@
 import React from 'react';
 import StarDetailPopup from '@/components/star/StarDetailPopup';
 import StarRatingSimple from '@/components/StarRatingSimple';
+import { withdrawStar } from '@/api/client';
 
 interface StarSubmissionBoxProps {
   /** 현재 선택된 별점 (0.5~5.0) */
@@ -13,6 +14,8 @@ interface StarSubmissionBoxProps {
   participantCount: number;
   /** 별점 분산 데이터 (0.5~5.0점 각각의 비율) */
   distribution: number[];
+  /** 에피소드 ID */
+  episodeId: number;
   /** 상태: 'submitting' | 'loading' | 'submitted' */
   variant: 'submitting' | 'loading' | 'submitted';
   /** 별점 변경 핸들러 (submitting 상태에서만 사용) */
@@ -21,8 +24,14 @@ interface StarSubmissionBoxProps {
   onEditClick?: () => void;
   /** 닫기 버튼 클릭 핸들러 (submitted 상태에서만 사용) */
   onCloseClick?: () => void;
+  /** 별점 회수 완료 핸들러 */
+  onWithdrawComplete?: () => void;
+  /** 별점 즉시 초기화 핸들러 (bin 버튼 클릭 시 호출) */
+  onRatingReset?: () => void;
   /** 투표 정보 (연도, 분기, 주차) */
   voteInfo?: {year: number, quarter: number, week: number} | null;
+  /** bin 아이콘 표시 여부 (info가 null이 아닌 경우에만 true) */
+  showBinIcon?: boolean;
   /** 클래스명 */
   className?: string;
 }
@@ -32,11 +41,15 @@ export default function StarSubmissionBox({
   averageRating,
   participantCount,
   distribution,
+  episodeId,
   variant,
   onRatingChange,
   onEditClick,
   onCloseClick,
+  onWithdrawComplete,
+  onRatingReset,
   voteInfo,
+  showBinIcon = false,
   className = ''
 }: StarSubmissionBoxProps) {
   const isSubmitting = variant === 'submitting';
@@ -82,8 +95,38 @@ export default function StarSubmissionBox({
       {isSubmitting ? (
         // 상태1: 간단한 별점 제출 UI (BigCandidate와 동일)
         <div className="relative z-10 p-4 h-full flex flex-col justify-center items-center pb-2">
+          {/* bin 아이콘 - showBinIcon이 true일 때만 표시 */}
+          {showBinIcon && (
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                // 즉시 별점 초기화
+                if (onRatingReset) {
+                  onRatingReset();
+                }
+                try {
+                  await withdrawStar(episodeId);
+                  if (onWithdrawComplete) {
+                    onWithdrawComplete();
+                  }
+                } catch (error) {
+                  console.error('별점 회수 실패:', error);
+                }
+              }}
+              className="absolute -left-8 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 rounded transition-colors duration-200"
+              aria-label="별점 회수"
+            >
+              <img 
+                src="/icons/bin-icon.svg" 
+                alt="별점 회수" 
+                className="w-4 h-4"
+              />
+            </button>
+          )}
+          
           <div>
             <StarRatingSimple
+              key={`star-${episodeId}-${currentRating}`}
               maxStars={5}
               initialRating={currentRating}
               size="md"

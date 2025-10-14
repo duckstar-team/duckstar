@@ -7,6 +7,7 @@ interface RankContentsProps {
   rank: number;
   rankDiff: number;
   rankDiffType: "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero";
+  rankDiffValue?: string;
   title: string;
   studio: string;
   image: string;
@@ -19,12 +20,13 @@ export default function RankContents({
   rank,
   rankDiff,
   rankDiffType,
+  rankDiffValue,
   title,
   studio,
   image,
   rating,
   className = ""
-}: RankCardProps) {
+}: RankContentsProps) {
 
 
   return (
@@ -36,7 +38,7 @@ export default function RankContents({
         </div>
         <RankDiff 
           property1={rankDiffType} 
-          value={rankDiff} 
+          value={rankDiffValue || rankDiff} 
         />
       </div>
 

@@ -62,6 +62,11 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
     starInfo && starInfo.userStarScore && starInfo.userStarScore > 0
   );
 
+  // bin 아이콘 표시 여부 관리 (별점 회수 후에는 false, 새로 투표하면 true)
+  const [showBinIcon, setShowBinIcon] = useState(
+    !!(starInfo && starInfo.userStarScore && starInfo.userStarScore > 0)
+  );
+
   // 닫기 버튼 핸들러
   const handleClosePanel = (e: React.MouseEvent) => {
     e.stopPropagation(); // 이벤트 버블링 방지
@@ -495,8 +500,23 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                     averageRating={averageRating}
                     participantCount={participantCount}
                     distribution={distribution}
+                    episodeId={anime.episodeId}
                     variant={voteState}
                     voteInfo={voteInfo}
+                    showBinIcon={showBinIcon}
+                    onRatingReset={() => {
+                      // bin 버튼 클릭 시 즉시 별점 초기화
+                      setCurrentRating(0);
+                    }}
+                    onWithdrawComplete={() => {
+                      // 별점 회수 완료 시 상태 초기화
+                      setVoteState('submitting');
+                      setIsPanelVisible(false);
+                      setShowBinIcon(false); // bin 아이콘 숨기기
+                      if (onVoteComplete) {
+                        onVoteComplete();
+                      }
+                    }}
                     onRatingChange={async (rating) => {
                       console.log('onRatingChange called with rating:', rating);
                       
@@ -523,6 +543,9 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                           // 투표한 episode ID를 브라우저에 저장
                           addVotedEpisode(anime.episodeId);
                           
+                          // bin 아이콘 표시하기 (새로 투표했으므로)
+                          setShowBinIcon(true);
+                          
                           // 투표 완료 콜백 호출
                           if (onVoteComplete) {
                             onVoteComplete();
@@ -547,11 +570,10 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                       setVoteState('submitting');
                       // 수정 버튼 클릭 시 패널 강제 유지 (모바일/데스크톱 모두)
                       setIsPanelVisible(true);
-                      // 수정 시 별점 초기화
-                      setCurrentRating(0);
-                      console.log('onEditClick: setIsPanelVisible(true) called, setCurrentRating(0)');
+                      // 수정 시 기존 별점 유지 (초기화하지 않음)
+                      console.log('onEditClick: setIsPanelVisible(true) called, keeping current rating');
                     }}
-                    onCloseClick={voteState === 'submitted' ? handleClosePanel : undefined}
+                    onCloseClick={voteState === 'submitted' ? () => handleClosePanel({} as React.MouseEvent) : undefined}
                   />
                 </div>
               </div>

@@ -7,6 +7,7 @@ interface WinnerRankContentsProps {
   rank: number;
   rankDiff: number;
   rankDiffType: "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero";
+  rankDiffValue?: string;
   title: string;
   studio: string;
   image: string;
@@ -18,6 +19,7 @@ export default function WinnerRankContents({
   rank,
   rankDiff,
   rankDiffType,
+  rankDiffValue,
   title,
   studio,
   image,
@@ -34,7 +36,7 @@ export default function WinnerRankContents({
         </div>
         <RankDiff 
           property1={rankDiffType} 
-          value={rankDiff} 
+          value={rankDiffValue || rankDiff} 
         />
       </div>
 

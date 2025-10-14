@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { StarCandidateDto } from '@/types/api';
-import { formatTimeRemaining } from '@/lib/timeUtils';
+import { StarCandidateDto, StarInfoDto } from '@/types/api';
+// import { formatTimeRemaining } from '@/lib/timeUtils';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/AppContainer';
 import StarRatingSimple from '@/components/StarRatingSimple';
 import StarDistributionChart from '@/components/chart/StarDistributionChart';
-import { submitStarVote } from '@/api/client';
+import { submitStarVote, withdrawStar } from '@/api/client';
 import { addVotedEpisode } from '@/lib/voteStorage';
 
 import { AnimePreviewDto } from '@/types/api';
@@ -21,13 +21,7 @@ interface SmallCandidateProps {
     quarter: number;
     week: number;
   };
-  starInfo?: {
-    star1: number;
-    star2: number;
-    star3: number;
-    star4: number;
-    star5: number;
-  };
+  starInfo?: StarInfoDto;
   onVoteComplete?: () => void;
 }
 
@@ -139,6 +133,14 @@ export default function SmallCandidate({
   const [isPanelVisible, setIsPanelVisible] = useState(
     starInfo && starInfo.userStarScore && starInfo.userStarScore > 0
   );
+
+  // bin 아이콘 표시 여부 관리 (별점 회수 후에는 false, 새로 투표하면 true)
+  const [showBinIcon, setShowBinIcon] = useState(
+    !!(starInfo && starInfo.userStarScore && starInfo.userStarScore > 0)
+  );
+
+  // 수정 모드 상태 관리 (사용자가 별점을 클릭해서 수정할 때만 true)
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
@@ -277,10 +279,41 @@ export default function SmallCandidate({
             </div>
           </div>
 
-          {/* 장르와 별점을 같은 줄에 배치 */}
-            <div className="flex items-center justify-end sm:justify-between">
-            <span className="text-xs text-gray-500 hidden sm:block truncate">{anime.genre || ''}</span>
-            <div className="flex items-center gap-2 mt-3 sm:mt-0">
+            {/* 장르와 별점을 같은 줄에 배치 */}
+            <div className="flex items-center justify-end sm:justify-between relative">
+            <span className="text-xs text-gray-500 hidden sm:block truncate flex-shrink-1 min-w-0">{anime.genre || ''}</span>
+            <div className="flex items-center gap-2 mt-3 sm:mt-0 relative flex-shrink-0">
+              {/* bin 아이콘 - 수정 모드일 때만 표시 */}
+              {isEditMode && showBinIcon && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    // 즉시 별점 초기화
+                    setCurrentRating(0);
+                    try {
+                      await withdrawStar(anime.episodeId);
+                      // 별점 회수 완료 시 상태 초기화
+                      setVoteState('submitting');
+                      setIsPanelVisible(false);
+                      setShowBinIcon(false); // bin 아이콘 숨기기
+                      setIsEditMode(false); // 수정 모드 비활성화
+                      if (onVoteComplete) {
+                        onVoteComplete();
+                      }
+                    } catch (error) {
+                      console.error('별점 회수 실패:', error);
+                    }
+                  }}
+                  className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 rounded transition-colors duration-200 z-10 mt-1"
+                  aria-label="별점 회수"
+                >
+                  <img 
+                    src="/icons/bin-icon.svg" 
+                    alt="별점 회수" 
+                    className="w-4 h-4"
+                  />
+                </button>
+              )}
               {/* 로딩 상태 표시 */}
               {voteState === 'loading' ? (
                 <div className="flex items-center gap-2">
@@ -296,12 +329,14 @@ export default function SmallCandidate({
               ) : (
                 /* BigCandidate와 동일한 별점 컴포넌트 */
                 <StarRatingSimple
-                  key={`star-${anime.episodeId}-${isPanelVisible}`}
-                  rating={currentRating}
-                  readOnly={isPanelVisible}
+                  key={`star-${anime.episodeId}-${currentRating}`}
+                  initialRating={currentRating}
+                  readOnly={!!isPanelVisible}
                   onRatingChange={isPanelVisible ? undefined : async (rating) => {
                    console.log('onRatingChange called with rating:', rating);
                    
+                   // 수정 모드 활성화 (사용자가 별점을 클릭했으므로)
+                   setIsEditMode(true);
                    setCurrentRating(rating);
                    
                    if (rating > 0) {
@@ -334,6 +369,12 @@ export default function SmallCandidate({
                        // 투표한 episode ID를 브라우저에 저장
                        addVotedEpisode(anime.episodeId);
                        
+                       // bin 아이콘 표시하기 (새로 투표했으므로)
+                       setShowBinIcon(true);
+                       
+                       // 수정 모드 비활성화 (투표 완료)
+                       setIsEditMode(false);
+                       
                        // 투표 완료 콜백 호출
                        if (onVoteComplete) {
                          onVoteComplete();
@@ -350,7 +391,6 @@ export default function SmallCandidate({
                      setVoteState('submitting');
                    }
                  }}
-                 disabled={voteState === 'loading'}
                  size="md"
                />
               )}
@@ -376,6 +416,7 @@ export default function SmallCandidate({
               e.stopPropagation();
               setIsPanelVisible(false);
               setVoteState('submitting');
+              setIsEditMode(true); // 수정 모드 활성화
             }}
             className="absolute top-1 right-1 z-5 px-2 pt-[3px] pb-1 rounded-sm inline-flex justify-center items-center gap-2.5 hover:opacity-80 transition-opacity"
             style={{
@@ -428,15 +469,16 @@ export default function SmallCandidate({
             </div>
             {/* 사용자별점 리스트 (480px 미만에서는 아래에 배치) */}
             <div className="size- relative flex justify-center items-center gap-2.5 max-[480px]:order-2 lg:order-2 xl:order-1">
-            <div className="size- px-[2.96px] pb-1.5 flex justify-end items-center gap-[0.74px] pointer-events-none">
-              <StarRatingSimple
-                maxStars={5}
-                initialRating={currentRating}
-                size="sm"
-                withBackground={true}
-                onRatingChange={() => {}} // 읽기 전용
-              />
-            </div>
+              <div className="size- px-[2.96px] pb-1.5 flex justify-end items-center gap-[0.74px] pointer-events-none">
+                <StarRatingSimple
+                  key={`star-small-${anime.episodeId}-${currentRating}`}
+                  maxStars={5}
+                  initialRating={currentRating}
+                  size="sm"
+                  withBackground={true}
+                  onRatingChange={() => {}} // 읽기 전용
+                />
+              </div>
             </div>
           </div>
         </div>

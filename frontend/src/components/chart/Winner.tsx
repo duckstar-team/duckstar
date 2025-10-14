@@ -21,6 +21,7 @@ interface WinnerProps {
   rank: number;
   rankDiff: number;
   rankDiffType: "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero";
+  rankDiffValue?: string;
   title: string;
   studio: string;
   image: string;
@@ -45,6 +46,7 @@ export default function Winner({
   rank,
   rankDiff,
   rankDiffType,
+  rankDiffValue,
   title,
   studio,
   image,
@@ -78,6 +80,7 @@ export default function Winner({
           rank={rank}
           rankDiff={rankDiff}
           rankDiffType={rankDiffType}
+          rankDiffValue={rankDiffValue}
           title={title}
           studio={studio}
           image={image}

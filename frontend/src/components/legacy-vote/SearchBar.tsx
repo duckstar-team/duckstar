@@ -27,7 +27,7 @@ const STYLES = {
   iconContainer: "w-5 h-5 flex-shrink-0",
   inputContainer: "flex-1 max-w-[380px] min-w-[60px]",
   inputWrapper: "relative",
-  input: "w-full h-10 py-2 bg-transparent border-b-2 border-[#990033] outline-none text-sm placeholder-gray-400",
+  input: "w-full h-10 py-2 bg-transparent border-b-2 border-[#990033] outline-none text-sm placeholder-gray-400 text-gray-900 dark:text-gray-500",
 } as const;
 
 // 340px 이하에서 SearchBar width를 작게 조정하는 함수

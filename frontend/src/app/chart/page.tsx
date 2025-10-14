@@ -21,14 +21,27 @@ function convertMedalType(apiType: string): "Gold" | "Silver" | "Bronze" | "None
 }
 
 // 순위 변동 타입 결정 함수
-function getRankDiffType(rankDiff: number | null): "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero" {
+function getRankDiffType(rankDiff: number | null, consecutiveWeeks: number = 0): "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero" {
   if (rankDiff === null) return "new";
-  if (rankDiff === 0) return "same-rank";
+  
+  // rankDiff가 0이 아니면 up/down 우선 처리
   if (rankDiff > 0) {
     return rankDiff >= 5 ? "up-greater-equal-than-5" : "up-less-than-5";
-  } else {
+  }
+  if (rankDiff < 0) {
     return rankDiff <= -5 ? "down-greater-equal-than-5" : "down-less-than-5";
   }
+  
+  // rankDiff가 0인 경우 consecutiveWeeks로 판단
+  if (consecutiveWeeks >= 2) {
+    return "same-rank";
+  }
+  
+  if (consecutiveWeeks === 1) {
+    return "new";
+  }
+  
+  return "Zero";
 }
 
 // 별점 분포 배열 생성 함수 (절대값을 비율로 변환)
@@ -236,15 +249,16 @@ export default function ChartPage() {
       const hasAnimeCorner = animeCornerData.length > 0;
       
       if (hasAnilab && !hasAnimeCorner) {
-        // Anilab만 있는 경우
+        // Anilab만 있는 경우 - Anilab 탭 활성화
         setActiveView('anilab');
       } else if (hasAnimeCorner) {
-        // Anime Corner가 있는 경우 (둘 다 있거나 Anime Corner만 있는 경우)
+        // Anime Corner가 있는 경우 (둘 다 있거나 Anime Corner만 있는 경우) - Anime Corner 탭 활성화
         setActiveView('anime-corner');
       } else if (hasAnilab) {
-        // Anilab만 있는 경우 (fallback)
+        // Anilab만 있는 경우 (fallback) - Anilab 탭 활성화
         setActiveView('anilab');
       }
+      // 둘 다 없으면 기본값 유지 (duckstar)
     }
   }, [data, isDesktop]);
 
@@ -357,8 +371,11 @@ export default function ChartPage() {
                <div className="w-[768px] flex justify-start items-center pl-2">
                  <div className="w-44 h-12 relative overflow-hidden">
                    <button 
-                     onClick={() => setActiveView('duckstar')}
-                     className="w-full h-full flex items-center justify-center cursor-pointer"
+                     onClick={() => !isDesktop && setActiveView('duckstar')}
+                     className={`w-full h-full flex items-center justify-center ${
+                       isDesktop ? 'cursor-default' : 'cursor-pointer'
+                     }`}
+                     disabled={isDesktop}
                    >
                      <p className={`font-['Pretendard'] leading-tight md:leading-[22px] not-italic text-md md:text-[20px] text-center text-nowrap whitespace-pre ${
                        isButtonActive('duckstar')
@@ -495,7 +512,8 @@ export default function ChartPage() {
             medals={winnerMedals}
             rank={winnerAnime.rankPreviewDto.rank}
             rankDiff={winnerAnime.rankPreviewDto.rankDiff || 0}
-            rankDiffType={getRankDiffType(winnerAnime.rankPreviewDto.rankDiff)}
+            rankDiffType={getRankDiffType(winnerAnime.rankPreviewDto.rankDiff, winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank)}
+            rankDiffValue={getRankDiffType(winnerAnime.rankPreviewDto.rankDiff, winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank) === "same-rank" ? winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank.toString() : (winnerAnime.rankPreviewDto.rankDiff || 0).toString()}
             title={winnerAnime.rankPreviewDto.title}
             studio={winnerAnime.rankPreviewDto.subTitle}
             image={winnerAnime.rankPreviewDto.mainThumbnailUrl}
@@ -538,7 +556,8 @@ export default function ChartPage() {
                 medals={animeMedals}
                 rank={anime.rankPreviewDto.rank}
                 rankDiff={anime.rankPreviewDto.rankDiff || 0}
-                rankDiffType={getRankDiffType(anime.rankPreviewDto.rankDiff)}
+                rankDiffType={getRankDiffType(anime.rankPreviewDto.rankDiff, anime.rankPreviewDto.consecutiveWeeksAtSameRank)}
+                rankDiffValue={getRankDiffType(anime.rankPreviewDto.rankDiff, anime.rankPreviewDto.consecutiveWeeksAtSameRank) === "same-rank" ? anime.rankPreviewDto.consecutiveWeeksAtSameRank.toString() : (anime.rankPreviewDto.rankDiff || 0).toString()}
                 title={anime.rankPreviewDto.title}
                 studio={anime.rankPreviewDto.subTitle}
                 image={anime.rankPreviewDto.mainThumbnailUrl}
@@ -607,7 +626,7 @@ export default function ChartPage() {
                     
                     {/* 로딩 메시지 (앞배경) */}
                     <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                      {selectedTab === 'anilab' ? (
+                      {activeView === 'anilab' ? (
                         <>
                           <div className="text-gray-400 text-6xl mb-4 opacity-90">🇯🇵</div>
                           <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
