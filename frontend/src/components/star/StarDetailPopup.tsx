@@ -43,7 +43,7 @@ export default function StarDetailPopup({
         <button
           onClick={(e) => {
             e.stopPropagation(); // 이벤트 버블링 방지
-            onClose(e);
+            onClose();
           }}
           className="absolute -top-[1px] -left-[12px] z-20 w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-white/20 rounded transition-colors duration-200"
           aria-label="닫기"
@@ -69,6 +69,7 @@ export default function StarDetailPopup({
       <div className="size- relative inline-flex justify-center items-center gap-2.5">
         <div className="size- px-[2.96px] pb-1.5 flex justify-end items-center gap-[0.74px] pointer-events-none">
           <StarRatingSimple
+            key={`star-detail-${currentRating}`}
             maxStars={5}
             initialRating={currentRating}
             size="sm"

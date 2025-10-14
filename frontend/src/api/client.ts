@@ -320,6 +320,13 @@ export async function getStarCandidates() {
   return apiCall<ApiResponseStarCandidateListDto>('/api/v1/vote/star');
 }
 
+// 별점 회수 API
+export async function withdrawStar(episodeId: number) {
+  return apiCall<ApiResponseVoid>(`/api/v1/vote/withdraw/${episodeId}`, {
+    method: 'POST',
+  });
+}
+
 // Admin API functions
 export async function createAnime(animeData: Record<string, unknown>) {
   return apiCall(ENDPOINTS.admin.animes, {

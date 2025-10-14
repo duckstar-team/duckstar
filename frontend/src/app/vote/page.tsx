@@ -227,15 +227,8 @@ export default function VotePage() {
       // AnimePreviewDto 형태로 저장 (검색화면과 동일한 형태)
       setFallbackAnimes(sortedAnimes);
       
-      // 투표 정보 설정 (현재 시간 기준)
-      const now = new Date();
-      setVoteInfo({
-        year: now.getFullYear(),
-        quarter: Math.ceil((now.getMonth() + 1) / 3),
-        week: Math.ceil(now.getDate() / 7),
-        startDate: now.toISOString().split('T')[0],
-        endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
+      // API 응답에서 weekDto 정보 사용 (이미 설정되어 있음)
+      // voteInfo는 이미 fetchStarCandidates에서 설정되었으므로 추가 설정 불필요
       
     } catch (fallbackError) {
       console.error('Fallback 데이터 가져오기 실패:', fallbackError);
