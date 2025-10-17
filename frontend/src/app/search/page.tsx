@@ -5,7 +5,6 @@ import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AnimeSearchBar from '@/components/search/ui/AnimeSearchBar';
 import AnimeCard from '@/components/anime/AnimeCard';
-import SmallCandidate from '@/components/anime/SmallCandidate';
 import DaySelection, { DayOfWeek } from '@/components/search/ui/DaySelection';
 import SearchFilters from '@/components/search/filters/SearchFilters';
 import SearchInput from '@/components/search/ui/SearchInput';
@@ -73,7 +72,6 @@ function SearchPageContent() {
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
   const [isPreloading, setIsPreloading] = useState(false);
-  const [viewMode, setViewMode] = useState<'large' | 'small'>('large'); // 뷰 모드 상태
   const [preloadingStatus, setPreloadingStatus] = useState({ total: 0, loaded: 0, active: 0 });
   const preloadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -82,7 +80,7 @@ function SearchPageContent() {
   const [selectedQuarter, setSelectedQuarter] = useState<number | null>(null);
   const [isThisWeek, setIsThisWeek] = useState(true); // 기본값을 "이번 주"로 설정
   
-  const [isInitialized, setIsInitialized] = useState(false); // 초기화 완료 여부
+  // isInitialized 상태 제거 - React Query가 즉시 실행되도록 수정
   
   // 검색 관련 상태
   const [searchQuery, setSearchQuery] = useState('');
@@ -407,9 +405,7 @@ function SearchPageContent() {
     }
     
     
-    // 초기화 완료 표시
-    console.log('검색 페이지 초기화 완료');
-    setIsInitialized(true);
+    // 초기화 완료 (isInitialized 상태 제거로 불필요)
   }, []);
 
   
@@ -452,12 +448,8 @@ function SearchPageContent() {
       setSelectedYear(null);
       setSelectedQuarter(null);
       
-      // "이번 주"로 이동할 때 초기화 상태 리셋 및 데이터 강제 새로고침
-      setIsInitialized(false);
-      setTimeout(() => {
-        setIsInitialized(true);
-        refetch();
-      }, 100);
+      // "이번 주"로 이동할 때 데이터 강제 새로고침
+      refetch();
     } else {
       // 시즌 메뉴로 이동
       const dayToSave = selectedDay === '곧 시작' ? '월' : selectedDay;
@@ -644,40 +636,30 @@ function SearchPageContent() {
   };
 
 
-  // React Query를 사용한 데이터 페칭 (통일된 캐싱 전략)
+  // React Query를 사용한 데이터 페칭 (즉시 실행)
   const { data: scheduleData, error, isLoading, isFetching, refetch } = useQuery<AnimePreviewListDto>({
     queryKey: ['schedule', 'this-week'],
-    queryFn: async () => {
-      console.log('getCurrentSchedule API 호출 시작');
-      // 타임아웃 설정 (10초)
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          console.log('API 요청 타임아웃 (10초)');
-          reject(new Error('요청 시간이 초과되었습니다. 다시 시도해주세요.'));
-        }, 10000);
-      });
-      
-      const dataPromise = getCurrentSchedule();
-      
-      try {
-        const result = await Promise.race([dataPromise, timeoutPromise]);
-        console.log('getCurrentSchedule API 호출 성공');
-        return result;
-      } catch (err) {
-        console.error('getCurrentSchedule API 호출 실패:', err);
-        throw err;
-      }
-    },
-    enabled: isInitialized, // 초기화 완료 후에만 API 호출
-    ...queryConfig.search, // 통일된 검색 데이터 캐싱 전략 적용
+    queryFn: getCurrentSchedule, // 항상 '이번 주' 데이터만 호출
+    // enabled 조건 제거 - 즉시 API 호출 실행
+    staleTime: 2 * 60 * 1000, // 2분간 fresh 상태 유지
+    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
+    refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
+    refetchOnReconnect: true, // 네트워크 재연결 시 재요청
+    retry: 2, // 재시도 횟수
+    retryDelay: 3000, // 재시도 간격
   });
 
   // 검색 쿼리 - 통일된 캐싱 전략 적용
   const { data: searchData, error: searchError, isLoading: isSearchLoading } = useQuery<AnimeSearchListDto>({
     queryKey: ['search', searchQuery], // 검색어만으로 키 생성
     queryFn: () => searchAnimes(searchQuery),
-    enabled: isInitialized && searchQuery.trim().length > 0, // 검색어가 있을 때만 API 호출
-    ...queryConfig.search, // 통일된 검색 데이터 캐싱 전략 적용
+    enabled: searchQuery.trim().length > 0, // 검색어가 있을 때만 API 호출
+    staleTime: 1 * 60 * 1000, // 1분간 fresh 상태 유지
+    gcTime: 5 * 60 * 1000, // 5분간 캐시 유지
+    refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
+    refetchOnReconnect: true, // 네트워크 재연결 시 재요청
+    retry: 1, // 검색은 빠른 실패
+    retryDelay: 2000, // 재시도 간격
   });
 
 
@@ -1583,7 +1565,7 @@ function SearchPageContent() {
   return (
     <main className="w-full min-h-screen overflow-x-hidden overflow-y-visible" style={{ backgroundColor: '#F8F9FA' }}>
       {/* SearchSection - #F1F3F5 배경, 창 폭 가득, 높이 196px, 레이어 맨 뒤 */}
-      <div className="w-full bg-[#F1F3F5] h-[170px] md:h-[196px] relative">
+      <div className="w-full bg-[#F1F3F5] h-[196px] relative">
         {/* SearchFilters 컨테이너 - 하얀색 배경, 위아래 #DADCE0 테두리, 높이 100px, 헤더에서 20px 갭 */}
         <div className="absolute top-5 left-0 w-full h-[100px] bg-white border-t border-b border-[#DADCE0] z-10">
           {/* 배경만 유지 */}
@@ -1613,15 +1595,16 @@ function SearchPageContent() {
               </div>
             </div>
             
-            {/* SearchInput */}
-            <div className="relative flex items-center gap-4">
+            {/* SearchInput과 OTT 필터 큐 */}
+            <div className="relative">
               <SearchInput
                 value={searchInput}
                 onChange={handleSearchChange}
                 onSearch={handleSearch}
                 placeholder={randomAnimeTitle || "분기 신작 애니/캐릭터를 검색해보세요..."}
-                className="flex-1 h-[62px]"
+                className="w-full h-[62px]"
               />
+              
             </div>
           </div>
         </div>
@@ -1697,7 +1680,7 @@ function SearchPageContent() {
         <div className="max-w-7xl mx-auto px-6 pt-[15px] md:pt-[50px] md:pb-[8px]">
           {/* 모바일 전용 드롭다운 버튼 영역 */}
           <div className="w-full md:hidden mb-[40px]" ref={mobileMenuRef}>
-            <div className="bg-gray-50 rounded-lg space-y-4">
+            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
               {/* 첫 번째 줄: 이번주 / 요일 */}
               <div className="flex gap-3 items-center">
                 {/* 검색 중일 때는 돌아가기 버튼, 아니면 시즌 선택 드롭다운 */}
@@ -1725,7 +1708,7 @@ function SearchPageContent() {
                 {/* 요일 선택 (모바일에서만 표시) */}
                 {!searchQuery.trim() && selectedOttServices.length === 0 && (
                   <div className="flex-1">
-                    <div className="bg-white rounded-lg px-3 py-2 border border-gray-300 relative">
+                    <div className="bg-white rounded-lg px-3 py-2 border relative">
                       <select
                         value={selectedDay}
                         onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
@@ -1812,7 +1795,7 @@ function SearchPageContent() {
 
       {/* Anime Grid Section - F8F9FA 배경 */}
       <div className="w-full" style={{ backgroundColor: '#F8F9FA' }}>
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-0 pb-0 md:pt-8 md:pb-8">
+        <div className="max-w-7xl mx-auto px-6 pt-8 pb-8">
           {/* Anime Grid - OTT 필터링 시 요일 구분 없이 표시 */}
           {groupedAnimes && Object.keys(groupedAnimes).length > 0 ? (
             <div className="space-y-0" data-content-loaded>
@@ -1820,43 +1803,20 @@ function SearchPageContent() {
                 // OTT 필터링 시 또는 검색 중일 때: 모든 애니메이션을 하나의 그리드로 표시
                 <div>
                   <div className="flex items-end gap-3 mb-6">
-                    <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-gray-900">
                       {searchQuery.trim() ? '검색 결과' : '필터링 결과'}
                     </h2>
                     <span className="text-[12px] font-normal text-[#868E96] font-['Pretendard']">
                       {isSearchMode ? searchResults.length : Object.values(groupedAnimes).flat().length}개의 애니메이션
                     </span>
                   </div>
-                  <div className={viewMode === 'large' 
-                    ? "grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[15px] sm:gap-[30px] justify-items-center"
-                    : "space-y-4"
-                  }>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px] justify-items-center">
                     {Object.values(groupedAnimes).flat().map((anime) => (
-                      viewMode === 'large' ? (
-                        <AnimeCard
-                          key={anime.animeId}
-                          anime={anime}
-                          isCurrentSeason={isThisWeek}
-                        />
-                      ) : (
-                        <SmallCandidate
-                          key={anime.animeId}
-                          anime={anime}
-                          isCurrentSeason={isThisWeek}
-                          voteInfo={{
-                            year: new Date().getFullYear(),
-                            quarter: Math.ceil((new Date().getMonth() + 1) / 3),
-                            week: Math.ceil(new Date().getDate() / 7)
-                          }}
-                          starInfo={{
-                            star1: 0,
-                            star2: 0,
-                            star3: 0,
-                            star4: 0,
-                            star5: 0
-                          }}
-                        />
-                      )
+                      <AnimeCard
+                        key={anime.animeId}
+                        anime={anime}
+                        isCurrentSeason={isThisWeek}
+                      />
                     ))}
                   </div>
                 </div>
@@ -1886,7 +1846,7 @@ function SearchPageContent() {
                         {!searchQuery.trim() && (
                           <div className="flex items-end gap-3 mb-6">
                             <h2 
-                              className="text-lg sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                              className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
                               onClick={() => {
                                 // 요일 헤더 클릭 시 해당 요일 선택만 (스크롤 이동 제거)
                                 const dayToKorean = {
@@ -1918,36 +1878,13 @@ function SearchPageContent() {
                         )}
 
                         {/* 애니메이션 그리드 */}
-                        <div className={viewMode === 'large' 
-                          ? "grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[15px] sm:gap-[30px] mb-12 justify-items-center"
-                          : "space-y-4 mb-12"
-                        }>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[30px] mb-12 justify-items-center">
                           {dayAnimes.map((anime) => (
-                            viewMode === 'large' ? (
-                              <AnimeCard
-                                key={anime.animeId}
-                                anime={anime}
-                                isCurrentSeason={isThisWeek}
-                              />
-                            ) : (
-                              <SmallCandidate
-                                key={anime.animeId}
-                                anime={anime}
-                                isCurrentSeason={isThisWeek}
-                                voteInfo={{
-                                  year: new Date().getFullYear(),
-                                  quarter: Math.ceil((new Date().getMonth() + 1) / 3),
-                                  week: Math.ceil(new Date().getDate() / 7)
-                                }}
-                                starInfo={{
-                                  star1: 0,
-                                  star2: 0,
-                                  star3: 0,
-                                  star4: 0,
-                                  star5: 0
-                                }}
-                              />
-                            )
+                            <AnimeCard
+                              key={anime.animeId}
+                              anime={anime}
+                              isCurrentSeason={isThisWeek}
+                            />
                           ))}
                         </div>
                         
@@ -1969,25 +1906,11 @@ function SearchPageContent() {
                     <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-500"></div>
                   </div>
                 </div>
-              ) : error ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    데이터를 불러올 수 없습니다
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    {error.message || '네트워크 연결을 확인하고 다시 시도해주세요.'}
-                  </p>
-                  <button
-                    onClick={() => refetch()}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    다시 시도
-                  </button>
+              ) : currentError ? (
+                <div className="text-gray-400 mb-4">
+                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
                 </div>
               ) : (
                 <div className="text-gray-400 mb-4">
@@ -2021,13 +1944,21 @@ function SearchPageContent() {
                  selectedOttServices.length > 0 ? '필터링 결과가 없습니다' : 
                  showOnlyAiring ? '방영 중인 애니메이션이 없습니다' : '데이터가 없습니다'}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-4">
                 {currentIsLoading || isInitialLoading ? '잠시만 기다려주세요' : 
-                 currentError ? '다시 시도해주세요' : 
+                 currentError ? '네트워크 연결을 확인하고 다시 시도해주세요' : 
                  isSearchMode ? `"${searchQuery}"에 대한 검색 결과가 없습니다. 다른 검색어를 시도해보세요.` : 
                  selectedOttServices.length > 0 ? '선택한 OTT 서비스에 해당하는 애니메이션이 없습니다.' : 
                  showOnlyAiring ? '필터를 해제하거나 다른 시즌을 확인해보세요.' : '데이터를 불러오는 중입니다'}
               </p>
+              {currentError && (
+                <button 
+                  onClick={() => refetch()} 
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                >
+                  다시 시도
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -2248,7 +2179,7 @@ function SearchPageContent() {
                 {/* 요일 선택 (모바일에서만 표시) */}
                 {!searchQuery.trim() && selectedOttServices.length === 0 && (
                   <div className="flex-1">
-                    <div className="bg-white rounded-lg px-3 py-2 border border-gray-300 relative">
+                    <div className="bg-white rounded-lg px-3 py-2 border relative">
                       <select
                         value={selectedDay}
                         onChange={(e) => handleDaySelect(e.target.value as DayOfWeek)}
