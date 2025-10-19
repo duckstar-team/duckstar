@@ -1276,7 +1276,7 @@ function SearchPageContent() {
           const filteredUpcoming = upcomingAnimes;
         
         if (filteredUpcoming.length > 0) {
-          // 남은 시간 기준으로 정렬 (라이브 중인 것은 반드시 앞에, 그 다음은 남은 시간이 적은 순)
+          // 남은 시간 기준으로 정렬 (라이브 중인 것은 반드시 앞에, 그 다음은 남은 시간이 적은 순, 마지막으로 title_kor 순)
           filteredUpcoming.sort((a, b) => {
             if (!a.scheduledAt || !b.scheduledAt) return 0;
             
@@ -1298,7 +1298,13 @@ function SearchPageContent() {
             const aTimeRemaining = aScheduled.getTime() - now.getTime();
             const bTimeRemaining = bScheduled.getTime() - now.getTime();
             
-            return aTimeRemaining - bTimeRemaining;
+            // 남은 시간이 다르면 남은 시간 순으로 정렬
+            if (aTimeRemaining !== bTimeRemaining) {
+              return aTimeRemaining - bTimeRemaining;
+            }
+            
+            // 남은 시간이 같으면 title_kor 순으로 정렬
+            return a.titleKor.localeCompare(b.titleKor);
           });
           
           grouped['UPCOMING'] = filteredUpcoming;
