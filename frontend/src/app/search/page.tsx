@@ -1278,29 +1278,58 @@ function SearchPageContent() {
           const filteredUpcoming = upcomingAnimes;
         
         if (filteredUpcoming.length > 0) {
-          // 남은 시간 기준으로 정렬 (라이브 중인 것은 반드시 앞에, 그 다음은 남은 시간이 적은 순)
+          // 남은 시간 기준으로 정렬 (라이브 중인 것은 반드시 앞에, 그 다음은 남은 시간이 적은 순, 마지막으로 title_kor 순)
           filteredUpcoming.sort((a, b) => {
             if (!a.scheduledAt || !b.scheduledAt) return 0;
             
             const now = new Date();
-            const aScheduled = new Date(a.scheduledAt);
-            const bScheduled = new Date(b.scheduledAt);
+            
+            // 각 애니메이션의 실제 방영 예정 시간 계산
+            const getActualScheduledTime = (anime: any) => {
+              const scheduled = new Date(anime.scheduledAt);
+              const targetDayOfWeek = scheduled.getDay();
+              const targetHours = scheduled.getHours();
+              const targetMinutes = scheduled.getMinutes();
+              
+              const currentDayOfWeek = now.getDay();
+              let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
+              
+              // 목표 요일이 지났다면 이번 주에서는 이미 지난 시간
+              if (daysUntilTarget < 0) {
+                daysUntilTarget += 7;
+              }
+              
+              const actualScheduled = new Date(now);
+              actualScheduled.setHours(targetHours, targetMinutes, 0, 0);
+              actualScheduled.setDate(now.getDate() + daysUntilTarget);
+              
+              return actualScheduled;
+            };
+            
+            const aActualScheduled = getActualScheduledTime(a);
+            const bActualScheduled = getActualScheduledTime(b);
             
             // 현재 방영중인지 확인 (방영 시작부터 24시간 후까지)
-            const aEndTime = new Date(aScheduled.getTime() + 24 * 60 * 60 * 1000);
-            const bEndTime = new Date(bScheduled.getTime() + 24 * 60 * 60 * 1000);
-            const aIsCurrentlyAiring = now >= aScheduled && now <= aEndTime;
-            const bIsCurrentlyAiring = now >= bScheduled && now <= bEndTime;
+            const aEndTime = new Date(aActualScheduled.getTime() + 24 * 60 * 60 * 1000);
+            const bEndTime = new Date(bActualScheduled.getTime() + 24 * 60 * 60 * 1000);
+            const aIsCurrentlyAiring = now >= aActualScheduled && now <= aEndTime;
+            const bIsCurrentlyAiring = now >= bActualScheduled && now <= bEndTime;
             
             // 라이브 중인 애니는 반드시 앞에
             if (aIsCurrentlyAiring && !bIsCurrentlyAiring) return -1;
             if (!aIsCurrentlyAiring && bIsCurrentlyAiring) return 1;
             
             // 둘 다 라이브 중이거나 둘 다 방영 예정인 경우, 남은 시간이 적은 순으로 정렬
-            const aTimeRemaining = aScheduled.getTime() - now.getTime();
-            const bTimeRemaining = bScheduled.getTime() - now.getTime();
+            const aTimeRemaining = aActualScheduled.getTime() - now.getTime();
+            const bTimeRemaining = bActualScheduled.getTime() - now.getTime();
             
-            return aTimeRemaining - bTimeRemaining;
+            // 남은 시간이 다르면 남은 시간 순으로 정렬
+            if (aTimeRemaining !== bTimeRemaining) {
+              return aTimeRemaining - bTimeRemaining;
+            }
+            
+            // 남은 시간이 같으면 title_kor 순으로 정렬
+            return a.titleKor.localeCompare(b.titleKor);
           });
           
           grouped['UPCOMING'] = filteredUpcoming;
