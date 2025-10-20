@@ -528,7 +528,7 @@ export default function ChartPage() {
             peakDate={winnerAnime.animeStatDto.peakDate}
             top10Weeks={winnerAnime.animeStatDto.weeksOnTop10}
              week={`${year}년 ${quarter}분기 ${week}주차`}
-            averageRating={winnerAnime.starInfoDto.starAverage * 2}
+            averageRating={winnerAnime.starInfoDto.starAverage}
             participantCount={winnerAnime.starInfoDto.voterCount}
             distribution={createDistributionArray(winnerAnime.starInfoDto, `${year}년 ${quarter}분기 ${week}주차`)}
             animeId={winnerAnime.rankPreviewDto.contentId}
@@ -572,7 +572,7 @@ export default function ChartPage() {
                 peakDate={anime.animeStatDto.peakDate}
                 top10Weeks={anime.animeStatDto.weeksOnTop10}
                 week={`${year}년 ${quarter}분기 ${week}주차`}
-                averageRating={anime.starInfoDto.starAverage * 2}
+                averageRating={anime.starInfoDto.starAverage}
                 participantCount={anime.starInfoDto.voterCount}
                 distribution={createDistributionArray(anime.starInfoDto, `${year}년 ${quarter}분기 ${week}주차`)}
                 animeId={anime.rankPreviewDto.contentId}

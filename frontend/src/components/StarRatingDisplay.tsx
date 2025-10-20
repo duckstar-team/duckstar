@@ -31,8 +31,8 @@ export default function StarRatingDisplay({
   return (
     <div className={`flex items-center gap-px ${className}`}>
       {Array.from({ length: maxStars }, (_, index) => {
-        const starValue = index + 1;
-        const fillPercentage = Math.max(0, Math.min(1, rating - index));
+        const starValue = (index + 1) * 2; // 10점 만점에서 별 하나당 2점씩
+        const fillPercentage = Math.max(0, Math.min(1, (rating - index * 2) / 2));
         
         return (
           <div 
