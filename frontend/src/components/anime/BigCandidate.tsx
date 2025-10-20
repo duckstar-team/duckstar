@@ -32,7 +32,7 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
   
   // 별점 분포 데이터 상태 관리 - starInfo가 있으면 초기값 설정
   const [averageRating, setAverageRating] = useState(
-    starInfo ? starInfo.starAverage : 0
+    starInfo ? starInfo.starAverage / 2 : 0
   );
   const [participantCount, setParticipantCount] = useState(
     starInfo ? starInfo.voterCount : 0
@@ -150,7 +150,7 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
     if (response.result) {
       const { starAverage, voterCount, star_0_5, star_1_0, star_1_5, star_2_0, star_2_5, star_3_0, star_3_5, star_4_0, star_4_5, star_5_0 } = response.result;
       
-      setAverageRating(starAverage);
+      setAverageRating(starAverage / 2);
       setParticipantCount(voterCount);
       
       // 별점 분포를 비율로 변환 (0.5점 단위)

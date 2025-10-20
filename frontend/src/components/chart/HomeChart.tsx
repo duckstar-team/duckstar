@@ -113,7 +113,7 @@ export default function HomeChart({ duckstarRankPreviews, selectedWeek, classNam
                     studio={subTitle}
                     image={mainThumbnailUrl}
                     percentage={safeVotePercent.toFixed(2)}
-                    averageRating={safeAverageRating * 2} // 5점 만점을 10점 만점으로 변환
+                    averageRating={safeAverageRating}
                     voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
                     medal={getMedalType(rank)}
                     type={type}
@@ -132,7 +132,7 @@ export default function HomeChart({ duckstarRankPreviews, selectedWeek, classNam
                     studio={subTitle}
                     image={mainThumbnailUrl}
                     percentage={safeVotePercent.toFixed(2)}
-                    averageRating={safeAverageRating * 2} // 5점 만점을 10점 만점으로 변환
+                    averageRating={safeAverageRating}
                     voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
                     medal={getMedalType(rank)}
                     type={type}
