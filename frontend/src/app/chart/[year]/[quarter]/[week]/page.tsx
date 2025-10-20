@@ -49,13 +49,13 @@ function getRankDiffType(rankDiff: number | null, consecutiveWeeks: number = 0):
 function createDistributionArray(starInfo: any, week: string): number[] {
   const totalVoters = starInfo.voterCount;
   if (totalVoters === 0) {
-    // 4분기 1-2주차는 1점 단위 (5개), 나머지는 0.5점 단위 (10개)
-    const isIntegerMode = week.includes('4분기 1주차') || week.includes('4분기 2주차');
+    // 25년 4분기 1-2주차는 1점 단위 (5개), 나머지는 0.5점 단위 (10개)
+    const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
     return isIntegerMode ? [0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   }
   
-  // 4분기 1-2주차는 1점 단위 데이터 사용
-  const isIntegerMode = week.includes('4분기 1주차') || week.includes('4분기 2주차');
+  // 25년 4분기 1-2주차는 1점 단위 데이터 사용
+  const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
   
   if (isIntegerMode) {
     // 1점 단위: 1점, 2점, 3점, 4점, 5점

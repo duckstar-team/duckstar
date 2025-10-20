@@ -17,8 +17,8 @@ export default function WeekRatingStats({
   distribution,
   className = ""
 }: WeekRatingStatsProps) {
-  // 4분기 1-2주차인지 확인 (1점 단위 모드)
-  const isIntegerMode = week.includes('4분기 1주차') || week.includes('4분기 2주차');
+  // 25년 4분기 1-2주차인지 확인 (1점 단위 모드)
+  const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
   
   // 평균 별점을 정수 부분과 소수 부분으로 분리 (소수점 첫째 자리)
   const integerPart = Math.floor(averageRating);
@@ -29,7 +29,7 @@ export default function WeekRatingStats({
     <div className={`inline-flex flex-col items-center sm:items-end gap-1 min-w-0 flex-shrink-0 ${className}`}>
       {/* 주차 정보 */}
       <div className="text-left sm:text-right text-white text-sm xs:text-lg sm:text-lg font-normal font-['Pretendard'] ml-2 sm:ml-0">
-        {week.includes('4분기 1주차') || week.includes('4분기 2주차') ? (
+        {week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차') ? (
           <div className="flex sm:hidden items-start gap-4">
             <div className="flex-shrink-0">
               <div>{week.split(' ').slice(0, 2).join(' ')}</div>
@@ -55,7 +55,8 @@ export default function WeekRatingStats({
         ) : (
           <div className="flex sm:hidden items-start gap-2">
             <div className="flex-shrink-0">
-              <div>{week}</div>
+              <div>{week.split(' ').slice(0, 2).join(' ')}</div>
+              <div>{week.split(' ').slice(2).join(' ')}</div>
             </div>
             <div className="inline-flex flex-col items-end gap-0.5">
               <div className="inline-flex items-center gap-1.5">
@@ -71,7 +72,7 @@ export default function WeekRatingStats({
                   <span className="text-white text-xl font-semibold font-['Pretendard'] leading-loose tracking-widest">{decimalString}</span>
                 </div>
               </div>
-              <div className=" text-right text-gray-400 text-sm font-medium font-['Pretendard'] leading-loose">{participantCount}명 참여</div>
+              <div className="text-right text-gray-400 text-sm font-medium font-['Pretendard'] leading-loose -mt-3 sm:mt-0">{participantCount}명 참여</div>
             </div>
           </div>
         )}
