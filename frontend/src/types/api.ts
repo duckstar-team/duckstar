@@ -286,11 +286,12 @@ export interface DuckstarRankPreviewDto {
 export interface HomeBannerDto {
   bannerType: "HOT" | "NOTICEABLE";
   contentType: "ANIME" | "HERO" | "HEROINE";
+  animeId: number;
+  characterId: number;
   mainTitle: string;
   subTitle: string;
   animeImageUrl: string;
   characterImageUrl: string;
-  contentId: number;
 }
 
 
@@ -325,11 +326,12 @@ export interface WeeklyTopDto {
 export interface HomeBannerDto {
   bannerType: "HOT" | "NOTICEABLE";
   contentType: "ANIME" | "HERO" | "HEROINE";
+  animeId: number;
+  characterId: number;
   mainTitle: string;
   subTitle: string;
   animeImageUrl: string;
   characterImageUrl: string;
-  contentId: number;
 }
 
 // Home DTO
