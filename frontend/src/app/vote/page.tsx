@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import BigCandidate from "@/components/anime/BigCandidate";
 import SmallCandidate from "@/components/anime/SmallCandidate";
 import AnimeCard from "@/components/anime/AnimeCard";
@@ -326,6 +326,9 @@ export default function VotePage() {
     };
   }, [isSearchBarSticky]);
 
+  // 로그인 상태 변경을 명시적으로 감지하기 위한 ref
+  const prevAuthStatusRef = useRef<boolean | null>(null);
+  
   useEffect(() => {
     const fetchStarCandidates = async () => {
       try {
@@ -379,8 +382,25 @@ export default function VotePage() {
       }
     };
 
-    fetchStarCandidates();
-  }, [router]);
+    // 로그인 상태가 변경되었는지 확인
+    const hasAuthStatusChanged = prevAuthStatusRef.current !== null && 
+                                prevAuthStatusRef.current !== isAuthenticated;
+    
+    // 페이지 로드 시 또는 로그인 상태 변경 시 API 호출
+    if (prevAuthStatusRef.current === null || hasAuthStatusChanged) {
+      console.log('투표 후보 조회 API 호출 - 로그인 상태:', isAuthenticated);
+      // // 운영환경에서 확실한 해결을 위해 로그인 상태 변경 시 강제 새로고침
+      // if (hasAuthStatusChanged && isAuthenticated) {
+      //   console.log('로그인 상태 변경 감지 - 페이지 새로고침으로 확실한 해결');
+      //   window.location.reload();
+      //   return;
+      // }
+      fetchStarCandidates();
+    }
+    
+    // 현재 인증 상태를 저장 (API 호출 후에 저장)
+    prevAuthStatusRef.current = isAuthenticated;
+  }, [router, isAuthenticated]);
 
   if (loading) {
     return (
