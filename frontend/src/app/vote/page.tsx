@@ -8,10 +8,9 @@ import SearchBar from "@/components/legacy-vote/SearchBar";
 import { searchMatch, extractChosung } from "@/lib/searchUtils";
 import { getStarCandidates } from "@/api/client";
 import { StarCandidateDto } from "@/types/api";
-import { getVotedEpisodes } from "@/lib/voteStorage";
+import { getVotedEpisodes, addVotedEpisodeWithTTL, removeVotedEpisode } from "@/lib/voteStorage";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/components/AppContainer";
-import { hasVoteCookieId, getCookie } from "@/lib/cookieUtils";
 import { useAuth } from "@/context/AuthContext";
 import { getUpcomingAnimes } from "@/api/search";
 import { AnimePreviewDto } from "@/types/api";
@@ -85,13 +84,14 @@ export default function VotePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [voteInfo, setVoteInfo] = useState<{year: number, quarter: number, week: number, startDate: string, endDate: string} | null>(null);
-  const [hasVotedCandidates, setHasVotedCandidates] = useState(false);
-  const [hasVotedEpisodes, setHasVotedEpisodes] = useState(false);
   const [isUsingFallback, setIsUsingFallback] = useState(false); // fallback 데이터 사용 여부
   const [searchQuery, setSearchQuery] = useState(""); // 검색 쿼리 상태
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>(''); // 랜덤 애니메이션 제목
   const [isSearchBarSticky, setIsSearchBarSticky] = useState(false); // 검색바 스티키 상태
   const [viewMode, setViewMode] = useState<'large' | 'small'>('large'); // 뷰 모드 상태
+  const [hasVotedCandidates, setHasVotedCandidates] = useState(false); // 중복 투표 방지 화면 표시 여부
+  const [hasVotedEpisodes, setHasVotedEpisodes] = useState(false); // 비회원 투표 내역 로그인 버튼 표시 여부
+  const [duplicatePreventionEndTime, setDuplicatePreventionEndTime] = useState<number | null>(null); // 중복 방지 종료 시간
 
   // 뷰 모드 변경 핸들러
   const handleViewModeChange = (mode: 'large' | 'small') => {
@@ -128,12 +128,65 @@ export default function VotePage() {
     };
   }, []);
 
-  // 투표 완료 시 호출되는 핸들러
-  const handleVoteComplete = () => {
-    // 이미 투표 이력이 있다면 업데이트하지 않음
-    if (!hasVotedEpisodes) {
-      setHasVotedEpisodes(true);
+  // 로그아웃 시 중복 투표 방지 화면 관리
+  useEffect(() => {
+    if (isAuthenticated === false && duplicatePreventionEndTime) {
+      // 로그아웃 상태에서 중복 방지 시간이 설정되어 있으면 화면 표시
+      setHasVotedCandidates(true);
+      
+      // 시간이 지나면 자동으로 해제
+      const timer = setTimeout(() => {
+        setHasVotedCandidates(false);
+        setDuplicatePreventionEndTime(null);
+        localStorage.removeItem('duckstar_vote_block_until');
+      }, duplicatePreventionEndTime * 1000);
+      
+      return () => clearTimeout(timer);
+    } else if (isAuthenticated === true) {
+      // 로그인 시 중복 방지 화면 해제
+      setHasVotedCandidates(false);
+      setDuplicatePreventionEndTime(null);
+      localStorage.removeItem('duckstar_vote_block_until');
     }
+  }, [isAuthenticated, duplicatePreventionEndTime]);
+
+  // localStorage에서 중복 투표 방지 시간 확인
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      const blockUntil = localStorage.getItem('duckstar_vote_block_until');
+      if (blockUntil) {
+        const blockUntilTime = parseInt(blockUntil);
+        const now = Date.now();
+        
+        if (now < blockUntilTime) {
+          // 아직 차단 시간이 남아있음
+          const timeLeftMs = blockUntilTime - now;
+          setDuplicatePreventionEndTime(Math.floor(timeLeftMs / 1000));
+        } else {
+          // 차단 시간이 만료됨
+          localStorage.removeItem('duckstar_vote_block_until');
+        }
+      }
+    }
+  }, [isAuthenticated]);
+
+  // 투표 상태 업데이트 함수
+  const updateVoteStatus = () => {
+    const votedEpisodes = getVotedEpisodes();
+    setHasVotedEpisodes(votedEpisodes.length > 0);
+  };
+
+  // 투표 완료 시 호출되는 핸들러
+  const handleVoteComplete = (episodeId: number, voteTimeLeft: number) => {
+    if (voteTimeLeft > 0) {
+      // 투표 완료
+      addVotedEpisodeWithTTL(episodeId, voteTimeLeft);
+    } else {
+      // 투표 회수
+      removeVotedEpisode(episodeId);
+    }
+    // 즉시 상태 업데이트
+    updateVoteStatus();
   };
 
   // 검색 쿼리 변경 핸들러
@@ -273,24 +326,6 @@ export default function VotePage() {
     };
   }, [isSearchBarSticky]);
 
-  // 로그인 상태 변화 감지 - 로그아웃 시 즉시 투표 이력 화면 표시
-  useEffect(() => {
-    if (isAuthenticated === false) {
-      
-      const votedEpisodes = getVotedEpisodes();
-      const hasVoteCookie = hasVoteCookieId();
-      const currentEpisodeIds = starCandidates.map(candidate => candidate.episodeId);
-      
-      
-      // 로그아웃 상태에서 투표 이력이 현재 에피소드와 겹치는 경우
-      const hasVoted = !hasVoteCookie && votedEpisodes.some(episodeId => 
-        currentEpisodeIds.includes(episodeId)
-      );
-      
-      setHasVotedCandidates(hasVoted);
-    }
-  }, [isAuthenticated, starCandidates]);
-
   useEffect(() => {
     const fetchStarCandidates = async () => {
       try {
@@ -326,35 +361,16 @@ export default function VotePage() {
         const candidates = response.result?.starCandidates || [];
         setStarCandidates(candidates);
         
+        // 비회원 로그인 권유 버튼은 duckstar_voted_episodes 기반으로 표시
+        const votedEpisodes = getVotedEpisodes();
+        setHasVotedEpisodes(votedEpisodes.length > 0);
+        
         // 후보가 비어있으면 fallback 데이터 사용
         if (candidates.length === 0) {
           console.log('투표 후보가 비어있어서 곧 시작 그룹을 fallback으로 사용합니다.');
           await fetchFallbackCandidates();
           return; // fallback 데이터 사용 시 기존 로직 건너뛰기
         }
-        
-        // vote_cookie_id가 없으면서 투표한 episodeId가 현재 투표 오픈한 에피소드에 포함되어 있는지 확인
-        const votedEpisodes = getVotedEpisodes();
-        const hasVoteCookie = hasVoteCookieId();
-        const currentEpisodeIds = candidates.map((candidate: StarCandidateDto) => candidate.episodeId);
-        
-        
-        // 겹치는 에피소드 확인
-        const overlappingEpisodes = votedEpisodes.filter(episodeId => 
-          currentEpisodeIds.includes(episodeId)
-        );
-        
-        
-        // 로그인하지 않았고, 투표한 episodeId 중에 현재 투표 오픈한 에피소드가 포함되어 있는 경우
-        const hasVoted = !actualLoginStatus && !hasVoteCookie && votedEpisodes.some(episodeId => 
-          currentEpisodeIds.includes(episodeId)
-        );
-        
-        setHasVotedCandidates(hasVoted);
-        
-        // 투표 이력이 있는지 확인 (로그인하지 않은 상태에서)
-        const allVotedEpisodes = getVotedEpisodes();
-        setHasVotedEpisodes(allVotedEpisodes.length > 0);
         
       } catch (err) {
         setError(err instanceof Error ? err.message : '별점 투표 후보자를 불러오는데 실패했습니다.');
@@ -665,7 +681,7 @@ export default function VotePage() {
                     week: candidate.week
                   }}
                   starInfo={candidate.info}
-                  onVoteComplete={handleVoteComplete}
+                  onVoteComplete={(episodeId: number, voteTimeLeft: number) => handleVoteComplete(episodeId, voteTimeLeft)}
                 />
                 ) : (
                   <SmallCandidate
@@ -692,7 +708,7 @@ export default function VotePage() {
                       week: candidate.week
                     }}
                     starInfo={candidate.info || undefined}
-                    onVoteComplete={handleVoteComplete}
+                    onVoteComplete={(episodeId: number, voteTimeLeft: number) => handleVoteComplete(episodeId, voteTimeLeft)}
                   />
                 )
               ))}

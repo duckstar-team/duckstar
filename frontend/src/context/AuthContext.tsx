@@ -163,6 +163,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
       setIsLoading(false);
+      // 중복 투표 방지 시간 초기화
+      localStorage.removeItem('duckstar_vote_block_until');
       // 토큰 만료 타이머 설정
       console.log('로그인 성공, 토큰 만료 타이머 설정');
       setupTokenExpiryTimer();
@@ -174,6 +176,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const user = userData.result || userData;
         setUser(user as User);
         setIsAuthenticated(true);
+        // 중복 투표 방지 시간 초기화
+        localStorage.removeItem('duckstar_vote_block_until');
         // 토큰 만료 타이머 설정
         setupTokenExpiryTimer();
         
@@ -190,12 +194,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logoutUser = async () => {
     try {
       // 백엔드 로그아웃 API 호출
-      await fetch('/api/v1/auth/logout', {
+      const response = await fetch('/api/v1/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const timeLeftSec = data.result; // ApiResponseLong의 result 값
+        
+        if (timeLeftSec > 0) {
+          // 중복 투표 방지 시간을 localStorage에 저장
+          const blockUntil = Date.now() + (timeLeftSec * 1000);
+          localStorage.setItem('duckstar_vote_block_until', blockUntil.toString());
+        } else {
+          // 시간이 0이면 저장된 값 삭제
+          localStorage.removeItem('duckstar_vote_block_until');
+        }
+      }
     } catch (error) {
-console.error('로그아웃 API 호출 실패:', error);
+      console.error('로그아웃 API 호출 실패:', error);
     } finally {
       // localStorage에서 토큰 제거
       if (typeof window !== 'undefined') {

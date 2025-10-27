@@ -114,7 +114,7 @@ export function clearVoteProgressOnComplete() {
   deleteVoteProgress();
 }
 
-// vote_cookie_id 쿠키 확인
+// vote_cookie_id 쿠키 확인 (레거시 호환용)
 export function hasVoteCookieId(): boolean {
   if (typeof window === 'undefined') return false;
   
@@ -122,12 +122,6 @@ export function hasVoteCookieId(): boolean {
   return voteCookieId !== null && voteCookieId !== '';
 }
 
-// voted_this_week 쿠키 확인
-export function hasVotedThisWeek(): boolean {
-  if (typeof window === 'undefined') return false;
-  const votedThisWeek = getCookie('voted_this_week');
-  return votedThisWeek === '1';
-}
 
 // LOGIN_STATE 쿠키 읽기
 export function getLoginState(): { isNewUser: boolean; isMigrated: boolean } | null {
