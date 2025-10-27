@@ -22,7 +22,7 @@ interface SmallCandidateProps {
     week: number;
   };
   starInfo?: StarInfoDto;
-  onVoteComplete?: () => void;
+  onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void;
 }
 
 // 영어 요일을 한글로 변환하는 함수
@@ -298,7 +298,7 @@ export default function SmallCandidate({
                       setShowBinIcon(false); // bin 아이콘 숨기기
                       setIsEditMode(false); // 수정 모드 비활성화
                       if (onVoteComplete) {
-                        onVoteComplete();
+                        onVoteComplete(anime.episodeId, 0); // 회수 시 voteTimeLeft는 0
                       }
                     } catch (error) {
                       console.error('별점 회수 실패:', error);
@@ -369,6 +369,12 @@ export default function SmallCandidate({
                        // 투표한 episode ID를 브라우저에 저장
                        addVotedEpisode(anime.episodeId);
                        
+                       // 투표 남은 시간 계산 (36시간 후까지)
+                       const now = new Date();
+                       const scheduledAt = new Date(anime.scheduledAt);
+                       const voteEndTime = new Date(scheduledAt.getTime() + 36 * 60 * 60 * 1000); // 36시간 후
+                       const voteTimeLeft = Math.max(0, Math.floor((voteEndTime.getTime() - now.getTime()) / 1000)); // 초 단위
+                       
                        // bin 아이콘 표시하기 (새로 투표했으므로)
                        setShowBinIcon(true);
                        
@@ -377,7 +383,7 @@ export default function SmallCandidate({
                        
                        // 투표 완료 콜백 호출
                        if (onVoteComplete) {
-                         onVoteComplete();
+                         onVoteComplete(anime.episodeId, voteTimeLeft);
                        }
                        
                      } catch (error) {

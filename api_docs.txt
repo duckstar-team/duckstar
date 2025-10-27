@@ -57,16 +57,6 @@
         "summary": "별점 투표 후보자 리스트 조회 API",
         "description": "now - 36시간 ~ now + 36시간 범위의 에피소드들 조회",
         "operationId": "getStarCandidates",
-        "parameters": [
-          {
-            "name": "vote_cookie_id",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -490,7 +480,14 @@
         "operationId": "logout",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseLong"
+                }
+              }
+            }
           }
         }
       }
@@ -1718,6 +1715,24 @@
           }
         }
       },
+      "ApiResponseLong": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "ApiResponseCommentDto": {
         "type": "object",
         "properties": {
@@ -1964,24 +1979,6 @@
             "items": {
               "$ref": "#/components/schemas/OttDto"
             }
-          }
-        }
-      },
-      "ApiResponseLong": {
-        "type": "object",
-        "properties": {
-          "isSuccess": {
-            "type": "boolean"
-          },
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "result": {
-            "type": "integer",
-            "format": "int64"
           }
         }
       },

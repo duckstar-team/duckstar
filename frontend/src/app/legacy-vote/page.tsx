@@ -18,7 +18,7 @@ import { useUnifiedImagePreloading } from '@/hooks/useUnifiedImagePreloading';
 import { getSeasonFromDate } from '@/lib/utils';
 import { submitVote, revoteAnime } from '@/api/client';
 import { searchMatch } from '@/lib/searchUtils';
-import { hasVoteCookieId, hasVotedThisWeek } from '@/lib/cookieUtils';
+import { hasVoteCookieId } from '@/lib/cookieUtils';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/AppContainer';
 import { scrollUtils } from '@/hooks/useAdvancedScrollRestoration';
@@ -94,31 +94,6 @@ function VotePageContent() {
     ...queryConfig.vote, // 통일된 투표 데이터 캐싱 전략 적용
   });
 
-  // voted_this_week 쿠키 체크 - 클라이언트에서만 체크 (Hydration 에러 방지)
-  useEffect(() => {
-    const hasVoted = hasVotedThisWeek();
-    
-    // voted_this_week만 있고 vote_cookie_id가 없으면 메시지 표시
-    if (hasVoted) {
-      setShowVotedThisWeekMessage(true);
-    }
-  }, []);
-
-  // 로그인 상태 변경 감지
-  useEffect(() => {
-    // 로그아웃된 상태에서 voted_this_week 쿠키가 있으면 메시지 표시
-    if (!isAuthenticated && hasVotedThisWeek()) {
-      setShowVotedThisWeekMessage(true);
-      // 투표 결과 화면 숨김
-      setShowVoteResult(false);
-      setVoteHistory(null);
-      // SWR 캐시 무효화 - 로그아웃 시 투표 상태 데이터 새로고침
-        queryClient.invalidateQueries({ queryKey: ['vote-status'] });
-    } else if (isAuthenticated) {
-      // 로그인한 상태이면 메시지 숨김
-      setShowVotedThisWeekMessage(false);
-    }
-  }, [isAuthenticated]);
 
   // voteStatusData 로드 후 추가 체크
   useEffect(() => {
@@ -131,10 +106,8 @@ function VotePageContent() {
         // 실제 로그인한 상태이면 메시지 숨김
         setShowVotedThisWeekMessage(false);
       } else {
-        // 로그인하지 않은 상태에서 voted_this_week 쿠키가 있으면 메시지 표시
-        if (hasVotedThisWeek()) {
-          setShowVotedThisWeekMessage(true);
-        }
+        // 로그인하지 않은 상태에서는 API 응답으로 판단
+        // hasVotedThisWeek() 로직 제거됨
       }
       
       // 투표한 이력이 있으면 투표 결과 표시 (로그인 또는 vote_cookie_id)
@@ -175,8 +148,8 @@ function VotePageContent() {
       return;
     }
     
-    // 로그인하지 않은 경우: voted_this_week 쿠키가 없으면 API 호출
-    const result = !hasVotedThisWeek();
+    // 로그인하지 않은 경우: API 응답으로 판단
+    const result = true; // 항상 API 호출하도록 변경
     setShouldFetchCandidates(result);
   }, [voteStatusData, isRevoteMode]);
   

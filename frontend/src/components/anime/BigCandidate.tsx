@@ -16,7 +16,7 @@ interface BigCandidateProps {
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   voteInfo?: {year: number, quarter: number, week: number} | null; // 투표 정보
   starInfo?: StarInfoDto; // 별점 정보 (사용자 투표 이력 포함)
-  onVoteComplete?: () => void; // 투표 완료 시 호출되는 콜백
+  onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void; // 투표 완료 시 호출되는 콜백
 }
 
 export default function BigCandidate({ anime, className, isCurrentSeason = true, voteInfo, starInfo, onVoteComplete }: BigCandidateProps) {
@@ -514,7 +514,7 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                       setIsPanelVisible(false);
                       setShowBinIcon(false); // bin 아이콘 숨기기
                       if (onVoteComplete) {
-                        onVoteComplete();
+                        onVoteComplete(anime.episodeId, 0); // 회수 시 voteTimeLeft는 0
                       }
                     }}
                     onRatingChange={async (rating) => {
@@ -545,10 +545,15 @@ export default function BigCandidate({ anime, className, isCurrentSeason = true,
                           
                           // bin 아이콘 표시하기 (새로 투표했으므로)
                           setShowBinIcon(true);
+                          // 투표 남은 시간 계산 (36시간 후까지)
+                          const now = new Date();
+                          const scheduledAt = new Date(anime.scheduledAt);
+                          const voteEndTime = new Date(scheduledAt.getTime() + 36 * 60 * 60 * 1000); // 36시간 후
+                          const voteTimeLeft = Math.max(0, Math.floor((voteEndTime.getTime() - now.getTime()) / 1000)); // 초 단위
                           
                           // 투표 완료 콜백 호출
                           if (onVoteComplete) {
-                            onVoteComplete();
+                            onVoteComplete(anime.episodeId, voteTimeLeft);
                           }
                           
                         } catch (error) {
