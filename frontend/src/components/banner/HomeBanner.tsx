@@ -128,9 +128,9 @@ export default function HomeBanner({ homeBannerDtos, className = "" }: HomeBanne
     
     // Next.js 클라이언트 사이드 라우팅 사용 (간단한 라우터)
     if (banner.contentType === 'ANIME') {
-      router.push(`/animes/${banner.contentId}`);
+      router.push(`/animes/${banner.animeId}`);
     } else {
-      router.push(`/characters/${banner.contentId}`);
+      router.push(`/characters/${banner.characterId}`);
     }
   };
 
