@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getUserInfo, logout, withdraw, withdrawKakao, withdrawGoogle, withdrawNaver } from '../api/client';
+import { setUserId } from '@/utils/gtag';
 
 interface User {
   id: number;
@@ -52,6 +53,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     setIsLoading(false);
     setHasCheckedAuth(false);
+    // GA4 사용자 ID 제거
+    setUserId(null);
     // 토큰 만료 타이머 정리
     if (tokenExpiryTimer) {
       clearTimeout(tokenExpiryTimer);
@@ -165,6 +168,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
       // 중복 투표 방지 시간 초기화
       localStorage.removeItem('duckstar_vote_block_until');
+      // GA4 사용자 ID 설정
+      setUserId(userData.id);
       // 토큰 만료 타이머 설정
       console.log('로그인 성공, 토큰 만료 타이머 설정');
       setupTokenExpiryTimer();
@@ -178,6 +183,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         // 중복 투표 방지 시간 초기화
         localStorage.removeItem('duckstar_vote_block_until');
+        // GA4 사용자 ID 설정
+        setUserId((user as User).id);
         // 토큰 만료 타이머 설정
         setupTokenExpiryTimer();
         
@@ -272,6 +279,8 @@ console.error('회원탈퇴 실패:', error);
       setUser(user as User);
       setIsAuthenticated(true);
       setHasCheckedAuth(true);
+      // GA4 사용자 ID 설정
+      setUserId((user as User).id);
     } catch (error) {
       resetAuthState();
     }
@@ -323,6 +332,8 @@ console.error('회원탈퇴 실패:', error);
         const user = userData.result || userData;
         setUser(user as User);
         setIsAuthenticated(true);
+        // GA4 사용자 ID 설정
+        setUserId((user as User).id);
         
         // OAuth 콜백 처리 (LOGIN_STATE 쿠키가 있을 때만)
         const hasLoginState = document.cookie.includes('LOGIN_STATE=');

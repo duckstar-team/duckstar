@@ -1,5 +1,5 @@
 import { getCurrentYearAndQuarter } from '@/lib/quarterUtils';
-import type { AnimePreviewDto, OttDto, WeekDto, AnimePreviewListDto, AnimeSearchListDto } from '@/types/api';
+import type { AnimePreviewDto, OttDto, WeekDto, AnimePreviewListDto, AnimeSearchListDto, AnimeHomeDto } from '@/types/api';
 
 export interface ApiResponse<T> {
   isSuccess: boolean;
@@ -300,7 +300,7 @@ export async function setAnimeTotalEpisodesUnknown(animeId: number): Promise<{ s
  * @param animeId 애니메이션 ID
  * @returns 애니메이션 상세 정보
  */
-export async function getAnimeDetail(animeId: number): Promise<unknown> {
+export async function getAnimeDetail(animeId: number): Promise<AnimeHomeDto> {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/animes/${animeId}`, {
       method: 'GET',
@@ -314,7 +314,7 @@ export async function getAnimeDetail(animeId: number): Promise<unknown> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<unknown> = await response.json();
+    const apiResponse: ApiResponse<AnimeHomeDto> = await response.json();
     
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
