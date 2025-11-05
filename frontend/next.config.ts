@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   // 환경 변수 기본값 설정
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+    NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-FV68BFV3GX',
   },
   
   // ESLint 비활성화 (배포용)

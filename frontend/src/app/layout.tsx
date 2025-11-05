@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
+import Script from 'next/script';
 import "./globals.css";
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
@@ -8,6 +9,8 @@ import QueryProvider from '@/components/providers/QueryProvider';
 import MigrationToast from '@/components/common/MigrationToast';
 import ClientAppContainer from '@/components/ClientAppContainer';
 import { ToastContainer } from '@/components/common/Toast';
+import PageViewTracker from '@/components/analytics/PageViewTracker';
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 
 // Pretendard 폰트만 사용 (성능 최적화)
 const pretendard = localFont({
@@ -59,6 +62,12 @@ export default function RootLayout({
       <body
         className={`${pretendard.variable} antialiased`}
       >
+        {/* Google Analytics 4 - 개발 환경에서는 로드하지 않음 */}
+        <GoogleAnalytics />
+        
+        {/* 페이지뷰 자동 추적 */}
+        <PageViewTracker />
+
         <QueryProvider>
           <AuthProvider>
             <ClientAppContainer>

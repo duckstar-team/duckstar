@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import AnimeDetailClient from './AnimeDetailClient';
 import { getAnimeDetail } from '@/api/search';
+import AnimeStructuredData from '@/components/seo/AnimeStructuredData';
+import { getAnimeOgImageUrl } from '@/lib/ogImage';
 
 // SEO를 위한 동적 메타데이터 생성 (서버 사이드에서만 실행)
 export async function generateMetadata({ params }: { params: Promise<{ animeId: string }> }): Promise<Metadata> {
@@ -33,6 +35,9 @@ export async function generateMetadata({ params }: { params: Promise<{ animeId: 
     
     const description = createDescription(titleKor, synopsis, genre);
     
+    // OG 이미지 URL 생성 (WebP를 JPG로 변환)
+    const ogImageUrl = getAnimeOgImageUrl(animeInfo?.mainThumbnailUrl);
+    
     return {
       title: `${titleKor} 다시보기`,
       description: description,
@@ -40,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ animeId: 
       openGraph: {
         title: `${titleKor} 다시보기`,
         description: description,
-        images: [animeInfo?.mainThumbnailUrl || '/icons/favicon.svg'],
+        images: [ogImageUrl],
         type: 'website',
         siteName: '덕스타',
       },
@@ -48,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ animeId: 
         card: 'summary_large_image',
         title: `${titleKor} 다시보기`,
         description: description,
-        images: [animeInfo?.mainThumbnailUrl || '/icons/favicon.svg'],
+        images: [ogImageUrl],
       },
        // 추가 SEO 메타데이터
        alternates: {
@@ -63,6 +68,40 @@ export async function generateMetadata({ params }: { params: Promise<{ animeId: 
   }
 }
 
-export default function AnimeDetailPage() {
-  return <AnimeDetailClient />;
+export default async function AnimeDetailPage({ params }: { params: Promise<{ animeId: string }> }) {
+  const { animeId } = await params;
+  let animeInfo = null;
+  
+  try {
+    const data = await getAnimeDetail(parseInt(animeId));
+    animeInfo = data?.animeInfoDto;
+  } catch (error) {
+    // 에러 발생 시 structured data 없이 렌더링
+  }
+
+  return (
+    <>
+      {animeInfo && (
+        <AnimeStructuredData
+          animeInfo={{
+            animeId: parseInt(animeId),
+            titleKor: animeInfo.titleKor || '애니메이션',
+            titleOrigin: animeInfo.titleOrigin,
+            synopsis: animeInfo.synopsis,
+            genre: animeInfo.genre,
+            medium: animeInfo.medium,
+            mainThumbnailUrl: animeInfo.mainThumbnailUrl,
+            premiereDateTime: animeInfo.premiereDateTime,
+            director: animeInfo.director,
+            corp: animeInfo.corp,
+            author: animeInfo.author,
+            minAge: animeInfo.minAge,
+            dayOfWeek: animeInfo.dayOfWeek,
+            airTime: animeInfo.airTime,
+          }}
+        />
+      )}
+      <AnimeDetailClient />
+    </>
+  );
 }
