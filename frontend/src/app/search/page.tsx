@@ -23,7 +23,7 @@ import PreloadingProgress from '@/components/common/PreloadingProgress';
 
 // 애니메이션 데이터 (이제 별도 파일에서 import)
 
-function SearchPageContent() {
+function SearchPageContentWithParams() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('월'); // 기본값을 "월"로 설정
@@ -2318,7 +2318,7 @@ export default function SearchPage() {
         </div>
       </div>
     }>
-      <SearchPageContent />
+      <SearchPageContentWithParams />
     </Suspense>
   );
 }

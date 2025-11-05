@@ -29,7 +29,7 @@ interface Anime {
   thumbnailUrl: string;
 }
 
-function VotePageContent() {
+function VotePageContentWithParams() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -1101,7 +1101,7 @@ export default function VotePage() {
         </div>
       </div>
     }>
-      <VotePageContent />
+      <VotePageContentWithParams />
     </Suspense>
   );
 }
