@@ -66,7 +66,9 @@ export default function RootLayout({
         <GoogleAnalytics />
         
         {/* 페이지뷰 자동 추적 */}
-        <PageViewTracker />
+        <Suspense fallback={null}>
+          <PageViewTracker />
+        </Suspense>
 
         <QueryProvider>
           <AuthProvider>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import BigCandidate from "@/components/anime/BigCandidate";
 import SmallCandidate from "@/components/anime/SmallCandidate";
 import AnimeCard from "@/components/anime/AnimeCard";
@@ -15,7 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getUpcomingAnimes } from "@/api/search";
 import { AnimePreviewDto } from "@/types/api";
 
-export default function VotePage() {
+function VotePageContent() {
   const router = useRouter();
   const { openLoginModal } = useModal();
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -796,5 +796,22 @@ export default function VotePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function VotePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 flex items-center justify-center mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-500"></div>
+          </div>
+          <p className="text-gray-600">페이지를 불러오는 중...</p>
+        </div>
+      </div>
+    }>
+      <VotePageContent />
+    </Suspense>
   );
 }
