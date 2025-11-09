@@ -30,10 +30,10 @@ export const logoImages = {
    * 소셜 미디어 공유 시 사용
    */
   og: {
-    svg: '/banners/og-logo.svg',
-    png: '/banners/og-logo.png',
-    jpg: '/banners/og-logo.jpg',
-    webp: '/banners/og-logo.webp',
+    svg: '/og-logo.svg',
+    png: '/og-logo.png',
+    jpg: '/og-logo.jpg',
+    webp: '/og-logo.webp',
   },
   
   /**
@@ -71,11 +71,11 @@ export function getLogoUrl(
 
 /**
  * Open Graph용 로고 이미지 URL
- * @param format 이미지 형식 (기본값: 'jpg')
- * @returns OG용 로고 URL
+ * 항상 og-logo.jpg를 반환 (모든 OG 이미지 통일)
+ * @returns OG용 로고 URL (JPG)
  */
-export function getOgLogoUrl(format: LogoFormat = 'jpg'): string {
-  return getLogoUrl('og', format);
+export function getOgLogoUrl(): string {
+  return getLogoUrl('og', 'jpg');
 }
 
 /**

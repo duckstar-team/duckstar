@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     siteName: '덕스타',
     images: [
       {
-        url: getOgLogoUrl('jpg'),
+        url: getOgLogoUrl(),
         width: 1200,
         height: 630,
         alt: '덕스타 로고',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '덕스타 - 애니메이션 투표 플랫폼',
     description: '분기 신작 애니메이션 투표 및 차트 서비스',
-    images: [getOgLogoUrl('jpg')],
+    images: [getOgLogoUrl()],
   },
   alternates: {
     canonical: 'https://duckstar.kr',

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: getOgLogoUrl('jpg'),
+        url: getOgLogoUrl(),
         width: 1200,
         height: 630,
         alt: '덕스타 - 애니메이션 투표',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '애니메이션 투표 - 덕스타',
     description: '애니메이션 투표에 참여하고 주차별 순위를 확인하세요',
-    images: [getOgLogoUrl('jpg')],
+    images: [getOgLogoUrl()],
   },
   alternates: {
     canonical: 'https://duckstar.kr/vote',

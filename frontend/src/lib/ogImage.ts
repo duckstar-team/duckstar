@@ -31,7 +31,7 @@ export function getOgImageUrl(
   // 이미지 URL이 없으면 기본 로고 사용
   if (!imageUrl || imageUrl.trim() === '') {
     // 기본 로고는 정적 파일이므로 직접 반환 (OG용 JPG 사용)
-    return getOgLogoUrl('jpg');
+    return getOgLogoUrl();
   }
 
   // 상대 경로인 경우 절대 경로로 변환
