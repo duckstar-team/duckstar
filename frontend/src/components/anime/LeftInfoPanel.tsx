@@ -692,16 +692,25 @@ export default function LeftInfoPanel({
                     e.stopPropagation();
                     onImageUpdate?.();
                   }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                  disabled={isUploading}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  저장
+                  {isUploading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>저장 중...</span>
+                    </>
+                  ) : (
+                    '저장'
+                  )}
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onImageEditCancel?.();
                   }}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                  disabled={isUploading}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   취소
                 </button>

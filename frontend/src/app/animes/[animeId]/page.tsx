@@ -45,15 +45,31 @@ export async function generateMetadata({ params }: { params: Promise<{ animeId: 
       openGraph: {
         title: `${titleKor} 다시보기`,
         description: description,
-        images: [ogImageUrl],
-        type: 'website',
+        url: `https://duckstar.kr/animes/${animeId}`,
         siteName: '덕스타',
+        type: 'website',
+        locale: 'ko_KR',
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${titleKor} 포스터`,
+          },
+        ],
       },
       twitter: {
         card: 'summary_large_image',
         title: `${titleKor} 다시보기`,
         description: description,
-        images: [ogImageUrl],
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${titleKor} 포스터`,
+          },
+        ],
       },
        // 추가 SEO 메타데이터
        alternates: {

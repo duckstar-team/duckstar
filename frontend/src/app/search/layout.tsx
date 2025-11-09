@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: getOgLogoUrl('jpg'),
+        url: getOgLogoUrl(),
         width: 1200,
         height: 630,
         alt: '덕스타 - 애니메이션 검색',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '애니메이션 검색 - 덕스타',
     description: '애니메이션 검색 및 편성표 확인',
-    images: [getOgLogoUrl('jpg')],
+    images: [getOgLogoUrl()],
   },
   alternates: {
     canonical: 'https://duckstar.kr/search',

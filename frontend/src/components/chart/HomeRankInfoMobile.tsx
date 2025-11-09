@@ -98,7 +98,7 @@ export default function HomeRankInfoMobile({
         {/* 왼쪽 영역 - 순위와 이미지 */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* 순위 */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1 min-w-[28px]">
             <div className="text-xl sm:text-2xl font-bold font-['Pretendard'] leading-snug text-gray-400">
               {rank}
             </div>

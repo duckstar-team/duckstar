@@ -30,8 +30,20 @@ export default function MedalGrid({
   const [isAnimating, setIsAnimating] = useState(false);
   const [hoveredMedal, setHoveredMedal] = useState<{pageIndex: number, medalIndex: number} | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
   const medalsPerPage = 6;
   const totalPages = Math.ceil(medals.length / medalsPerPage);
+
+  // 425px 미만 체크
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 425);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // 모든 페이지의 메달 데이터를 미리 준비 (실제 메달만)
   const allPages = [];
@@ -164,7 +176,9 @@ export default function MedalGrid({
       {/* 툴팁 포털 */}
       {hoveredMedal && typeof window !== 'undefined' && createPortal(
         <div 
-          className="fixed px-2 py-1 bg-black text-white text-xs rounded whitespace-nowrap z-50 pointer-events-none"
+          className={`fixed px-2 py-1 bg-black text-white text-xs rounded z-50 pointer-events-none ${
+            isMobile ? 'whitespace-normal' : 'whitespace-nowrap'
+          }`}
           style={{
             left: tooltipPosition.x,
             top: tooltipPosition.y
@@ -173,8 +187,20 @@ export default function MedalGrid({
           {(() => {
             const pageMedals = allPages[hoveredMedal.pageIndex];
             const medal = pageMedals[hoveredMedal.medalIndex];
-            const shortYear = medal.year ? medal.year.toString().slice(-2) : '';
-            return `${shortYear}년 ${medal.quarter}분기 ${medal.week}주차 ${medal.rank}등`;
+            
+            if (isMobile) {
+              // 425px 미만: 연도 제거, 줄바꿈 추가
+              return (
+                <>
+                  {medal.quarter}분기 {medal.week}주차<br />
+                  {medal.rank}등
+                </>
+              );
+            } else {
+              // 기본: 연도 포함, 한 줄
+              const shortYear = medal.year ? medal.year.toString().slice(-2) : '';
+              return `${shortYear}년 ${medal.quarter}분기 ${medal.week}주차 ${medal.rank}등`;
+            }
           })()}
         </div>,
         document.body

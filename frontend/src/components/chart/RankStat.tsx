@@ -5,6 +5,7 @@ import RankHistory from './RankHistory';
 import Top10Achievement from './Top10Achievement';
 import WeekRatingStats from './WeekRatingStats';
 import MedalSection from './MedalSection';
+import { getThisWeekRecord } from '@/lib/quarterUtils';
 
 // 날짜 형식 변환 함수 (YYYY-MM-DD -> YY.MM.DD)
 function formatDate(dateString: string): string {
@@ -69,6 +70,25 @@ export default function RankStat({
       router.push(`/animes/${animeId}`);
     }
   };
+
+  // 날짜 클릭 핸들러: 해당 날짜의 00시를 기준으로 분기/주차 계산 후 차트 페이지로 이동
+  const handleDateClick = (dateString: string) => {
+    try {
+      // 날짜 문자열을 Date 객체로 변환 (YYYY-MM-DD 형식 가정)
+      const date = new Date(dateString);
+      
+      // 해당 날짜의 00시로 설정
+      date.setHours(0, 0, 0, 0);
+      
+      // 분기/주차 계산
+      const record = getThisWeekRecord(date);
+      
+      // 차트 페이지로 이동
+      router.push(`/chart/${record.yearValue}/${record.quarterValue}/${record.weekValue}`);
+    } catch (error) {
+      console.error('날짜 변환 실패:', error);
+    }
+  };
   return (
     <div className={`w-full max-w-[600px] md:max-w-[768px] px-2 xs:px-4 sm:px-8 py-4 bg-black flex flex-col md:flex-row justify-center items-center gap-2 xs:gap-4 md:gap-10 ${className}`}>
       {/* 아랫줄: 별분산과 평균별점 + 메달 섹션 (768px 미만에서만 별도 줄) */}
@@ -111,7 +131,15 @@ export default function RankStat({
                 <span className="text-rose-600 text-2xl xs:text-4xl sm:text-4xl font-semibold font-['Pretendard']">{debutRank}</span>
               </div>
               <div className="size- border-b border-white inline-flex justify-center items-center gap-1.5 xs:gap-2.5 sm:gap-2.5">
-                <div className="w-12 xs:w-16 sm:w-16 text-center justify-start text-white text-sm xs:text-base sm:text-base font-light font-['Pretendard']">{formatDate(debutDate)}</div>
+                <div 
+                  className="w-12 xs:w-16 sm:w-16 text-center justify-start text-white text-sm xs:text-base sm:text-base font-light font-['Pretendard'] cursor-pointer hover:text-rose-400 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDateClick(debutDate);
+                  }}
+                >
+                  {formatDate(debutDate)}
+                </div>
               </div>
             </div>
           </div>
@@ -134,7 +162,15 @@ export default function RankStat({
                 <span className="text-rose-600 text-2xl xs:text-4xl sm:text-4xl font-semibold font-['Pretendard']">{peakRank}</span>
               </div>
               <div className="size- border-b border-white inline-flex justify-center items-center gap-1.5 xs:gap-2.5 sm:gap-2.5">
-                <div className="w-12 xs:w-16 sm:w-16 text-center justify-start text-white text-sm xs:text-base sm:text-base font-light font-['Pretendard']">{formatDate(peakDate)}</div>
+                <div 
+                  className="w-12 xs:w-16 sm:w-16 text-center justify-start text-white text-sm xs:text-base sm:text-base font-light font-['Pretendard'] cursor-pointer hover:text-rose-400 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDateClick(peakDate);
+                  }}
+                >
+                  {formatDate(peakDate)}
+                </div>
               </div>
             </div>
           </div>
