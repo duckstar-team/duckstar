@@ -192,7 +192,7 @@
         }
       }
     },
-    "/api/v1/csv/import/{weekId}": {
+    "/api/v1/csv/import/{year}/{quarter}/{week}": {
       "post": {
         "tags": [
           "csv-controller"
@@ -200,12 +200,30 @@
         "operationId": "importAbroad",
         "parameters": [
           {
-            "name": "weekId",
+            "name": "year",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int32"
+            }
+          },
+          {
+            "name": "quarter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "week",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -477,6 +495,7 @@
           "auth-controller"
         ],
         "summary": "로그아웃 API",
+        "description": "로그아웃 시, 회원이 투표한 후보들 중 가장 마지막에 투표가 마감되는 후보에 대해 투표의 남은 시간만큼 프론트에 반환: 프론트는 해당 시간만큼 중복 투표 방지 화면을 띄움.",
         "operationId": "logout",
         "responses": {
           "200": {
@@ -604,6 +623,155 @@
         }
       }
     },
+    "/api/admin/ip/withdraw": {
+      "post": {
+        "tags": [
+          "admin-controller"
+        ],
+        "summary": "특정 주차, 특정 ip와 표 몰수 (전체 차단)",
+        "operationId": "withdrawVotesByWeekAndIp",
+        "parameters": [
+          {
+            "name": "weekId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "ipHash",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "maxLength": 300,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/ip/withdraw/undo": {
+      "post": {
+        "tags": [
+          "admin-controller"
+        ],
+        "summary": "되돌리기 - 특정 주차, 특정 ip와 표 몰수 롤백",
+        "operationId": "undoWithdrawnSubmissions",
+        "parameters": [
+          {
+            "name": "weekId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "ipHash",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "maxLength": 300,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/ip/ban": {
+      "post": {
+        "tags": [
+          "admin-controller"
+        ],
+        "summary": "ip 밴 토글 API",
+        "operationId": "banIp",
+        "parameters": [
+          {
+            "name": "ipHash",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "maxLength": 300,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/animes": {
       "post": {
         "tags": [
@@ -668,6 +836,47 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/animes/{animeId}/{episodeId}": {
+      "post": {
+        "tags": [
+          "admin-controller"
+        ],
+        "summary": "에피소드 휴방 API",
+        "operationId": "breakEpisode",
+        "parameters": [
+          {
+            "name": "animeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "episodeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseVoid"
                 }
               }
             }
@@ -1091,6 +1300,66 @@
         }
       }
     },
+    "/api/v1/images/og": {
+      "get": {
+        "tags": [
+          "image-controller"
+        ],
+        "summary": "Open Graph 이미지 변환 API",
+        "description": "WebP 이미지를 JPG 또는 PNG로 변환하여 반환 (OG 태그용)",
+        "operationId": "convertForOpenGraph",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "jpg"
+            }
+          },
+          {
+            "name": "width",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "height",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/home": {
       "get": {
         "tags": [
@@ -1363,12 +1632,12 @@
             "required": false,
             "schema": {
               "type": "string",
+              "default": "RECENT",
               "enum": [
                 "POPULAR",
                 "RECENT",
                 "OLDEST"
-              ],
-              "default": "RECENT"
+              ]
             }
           },
           {
@@ -1413,6 +1682,183 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseAnimeCommentSliceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/animes/ids": {
+      "get": {
+        "tags": [
+          "anime-controller"
+        ],
+        "summary": "모든 애니메이션 ID 조회 API (SEO용)",
+        "operationId": "getAllAnimeIds",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListLong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/submissions": {
+      "get": {
+        "tags": [
+          "admin-controller"
+        ],
+        "summary": "IP별 제출 수 슬라이스 조회 API",
+        "description": "커서 기반 무한 스크롤",
+        "operationId": "getSubmissionCountGroupByIp",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSubmissionCountSliceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/submissions/logs": {
+      "get": {
+        "tags": [
+          "admin-controller"
+        ],
+        "summary": "IP 관리 로그 조회 API",
+        "description": "커서 기반 무한 스크롤",
+        "operationId": "getAdminLogsOnIpManagement",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseIpManagementLogSliceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/ip": {
+      "get": {
+        "tags": [
+          "admin-controller"
+        ],
+        "summary": "특정 주차, 특정 ip 제출 현황 전체 조회 API",
+        "operationId": "getSubmissionsByWeekAndIp",
+        "parameters": [
+          {
+            "name": "weekId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "ipHash",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListEpisodeStarDto"
                 }
               }
             }
@@ -1479,6 +1925,9 @@
       "StarInfoDto": {
         "type": "object",
         "properties": {
+          "isBlocked": {
+            "type": "boolean"
+          },
           "userStarScore": {
             "type": "integer",
             "format": "int32"
@@ -2240,6 +2689,9 @@
       "StarCandidateListDto": {
         "type": "object",
         "properties": {
+          "hasVoted": {
+            "type": "boolean"
+          },
           "weekDto": {
             "$ref": "#/components/schemas/WeekDto"
           },
@@ -2519,7 +2971,11 @@
               "HEROINE"
             ]
           },
-          "contentId": {
+          "animeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "characterId": {
             "type": "integer",
             "format": "int64"
           },
@@ -3120,6 +3576,224 @@
           },
           "result": {
             "$ref": "#/components/schemas/AnimeCommentSliceDto"
+          }
+        }
+      },
+      "ApiResponseListLong": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        }
+      },
+      "ApiResponseSubmissionCountSliceDto": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/SubmissionCountSliceDto"
+          }
+        }
+      },
+      "SubmissionCountDto": {
+        "type": "object",
+        "properties": {
+          "weekId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quarter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "week": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ipHash": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isBlocked": {
+            "type": "boolean"
+          },
+          "isAllWithdrawn": {
+            "type": "boolean"
+          },
+          "firstCreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastCreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SubmissionCountSliceDto": {
+        "type": "object",
+        "properties": {
+          "submissionCountDtos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubmissionCountDto"
+            }
+          },
+          "pageInfo": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        }
+      },
+      "ApiResponseIpManagementLogSliceDto": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/IpManagementLogSliceDto"
+          }
+        }
+      },
+      "IpManagementLogDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "profileImageUrl": {
+            "type": "string"
+          },
+          "managerNickname": {
+            "type": "string"
+          },
+          "weekId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quarter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "week": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ipHash": {
+            "type": "string"
+          },
+          "taskType": {
+            "type": "string",
+            "enum": [
+              "BAN",
+              "UNBAN",
+              "WITHDRAW",
+              "UNDO_WITHDRAW"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "managedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IpManagementLogSliceDto": {
+        "type": "object",
+        "properties": {
+          "ipManagementLogDtos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IpManagementLogDto"
+            }
+          },
+          "pageInfo": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        }
+      },
+      "ApiResponseListEpisodeStarDto": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EpisodeStarDto"
+            }
+          }
+        }
+      },
+      "EpisodeStarDto": {
+        "type": "object",
+        "properties": {
+          "titleKor": {
+            "type": "string"
+          },
+          "starScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isBlocked": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }

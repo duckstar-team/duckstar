@@ -1,15 +1,18 @@
 package com.duckstar.schedule;
 
+import com.duckstar.apiPayload.code.status.ErrorStatus;
+import com.duckstar.apiPayload.exception.handler.WeekHandler;
 import com.duckstar.domain.Anime;
 import com.duckstar.domain.Week;
 import com.duckstar.domain.mapping.Episode;
+import com.duckstar.domain.mapping.EpisodeStar;
 import com.duckstar.domain.vo.RankInfo;
 import com.duckstar.repository.AnimeRepository;
 import com.duckstar.repository.Episode.EpisodeRepository;
+import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.service.ChartService;
-import com.duckstar.temp.Temp;
-import com.duckstar.temp.TempRepository;
+import com.duckstar.service.VoteCommandService;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @SpringBootTest
@@ -36,21 +37,100 @@ public class TempTest {
     @Autowired
     private EpisodeRepository episodeRepository;
     @Autowired
-    private TempRepository tempRepository;
-    @Autowired
     private ChartService chartService;
     @Autowired
     private AnimeRepository animeRepository;
+    @Autowired
+    private EpisodeStarRepository episodeStarRepository;
+    @Autowired
+    private VoteCommandService voteCommandService;
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    public void 에피소드_별점_리프레시() {
+        Long weekId = 26L;
+
+        voteCommandService.refreshEpisodeStatsByWeekId(weekId);
+    }
+
+    @Test
+    @Transactional
+    public void 부정사용자_통계_출력() {
+        Long weekId = 26L;
+
+        Week lastWeek = weekRepository.findWeekById(weekId).orElseThrow(() ->
+                new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
+
+        //=== 회수된 표 제외 ===//
+        List<EpisodeStar> allEpisodeStars = episodeStarRepository.findAllEligibleByWeekId(weekId);
+
+        Map<Long, List<EpisodeStar>> episodeStarMap = allEpisodeStars.stream()
+                .collect(Collectors.groupingBy(es -> es.getEpisode().getId()));
+
+        //=== 이번 주 휴방 아닌 에피소드들 - 표 집계===//
+        List<Episode> episodes = episodeRepository
+                .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
+                        lastWeek.getStartDateTime(), lastWeek.getEndDateTime())
+                .stream()
+                .filter(e -> e.getIsBreak() == null || !e.getIsBreak())
+                .toList();
+
+        Map<String, Map<String, List<Integer>>> suspiciousMap = new HashMap<>();
+        for (Episode episode : episodes) {
+            List<EpisodeStar> thisEpisodeStars =
+                    episodeStarMap.get(episode.getId());
+
+            if (thisEpisodeStars != null && !thisEpisodeStars.isEmpty())  {
+                //=== 같은 ip 에서 같은 점수 3개 이상 준 경우 감지 ===//
+                Map<String, List<Integer>> ipHashToScoresMap = thisEpisodeStars.stream()
+                        .collect(Collectors.groupingBy(
+                                        es -> es.getWeekVoteSubmission().getIpHash(),
+                                        Collectors.mapping(EpisodeStar::getStarScore, Collectors.toList())
+                                )
+                        );
+
+                for (Map.Entry<String, List<Integer>> entry : ipHashToScoresMap.entrySet()) {
+                    Map<Integer, Long> scoreCountMap = entry.getValue().stream()
+                            .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+
+                    boolean hasRepeatedScore = scoreCountMap.values().stream()
+                            .anyMatch(count -> count >= 3);
+
+                    if (hasRepeatedScore) {
+                        suspiciousMap
+                                .computeIfAbsent(episode.getAnime().getTitleKor(), k -> new HashMap<>())
+                                .put(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+        }
+
+        System.out.println("=== 동일 점수 3회 이상 반복해서 투표한 IP ===");
+        AtomicInteger size = new AtomicInteger();
+        suspiciousMap.forEach((anime, ipMap) -> {
+            System.out.println("애니메이션: " + anime);
+            ipMap.forEach((ip, scores) -> {
+                        System.out.println("IP Hash: " + ip + ", Scores: " + scores);
+                        size.addAndGet(scores.size());
+                    }
+            );
+            System.out.println();
+        });
+        System.out.println("제외할 표 수: " + size);
+    }
 
     @Test
     @Transactional
     @Rollback(false)
     public void calculateRankManual() {
-        Week week = weekRepository.findById(24L).get();
+        Long weekId = 25L;
 
-        chartService.buildDuckstars(week.getEndDateTime(), 24L);
+        Week week = weekRepository.findById(weekId).get();
 
-        chartService.createBanners(24L);
+        chartService.buildDuckstars(week.getEndDateTime(), weekId);
+
+        chartService.createBanners(weekId);
     }
 
     @Test
@@ -59,7 +139,6 @@ public class TempTest {
     public void organizeWeekCharts() {
         List<Anime> animes = animeRepository.findAll();
         animes.forEach(anime -> anime.initRankInfo(null, null));
-
 
         Week week1 = weekRepository.findById(20L).get();
         List<Episode> week1Episodes = episodeRepository
@@ -125,7 +204,7 @@ public class TempTest {
     @Rollback(false)
     public void breakEpisode() {
         // 관리자 화면, path variable 로 프론트에게 받는 id
-        Episode brokenEp = episodeRepository.findById(856L).get();
+        Episode brokenEp = episodeRepository.findById(859L).get();
         //=== 휴방으로 셋팅 ===//
         brokenEp.setIsBreak(true);
 

@@ -103,14 +103,70 @@ export default function SmallCandidate({
   );
   
   // 별점 분포 데이터 상태 관리 - starInfo가 있으면 초기값 설정
-  const [averageRating, setAverageRating] = useState(
-    starInfo ? starInfo.starAverage / 2 : 0
-  );
+  // isBlocked가 true면 유저의 별점을 가산해서 계산 (사용자가 눈치채지 못하도록)
+  const [averageRating, setAverageRating] = useState(() => {
+    if (!starInfo) return 0;
+    
+    // isBlocked가 true이고 userStarScore가 있으면 가산 처리
+    if (starInfo.isBlocked && starInfo.userStarScore !== undefined && starInfo.userStarScore > 0) {
+      const newVoterCount = starInfo.voterCount + 1;
+      const newDistributionArray = [
+        starInfo.star_0_5,
+        starInfo.star_1_0,
+        starInfo.star_1_5,
+        starInfo.star_2_0,
+        starInfo.star_2_5,
+        starInfo.star_3_0,
+        starInfo.star_3_5,
+        starInfo.star_4_0,
+        starInfo.star_4_5,
+        starInfo.star_5_0
+      ];
+      const userStarIndex = starInfo.userStarScore - 1;
+      if (userStarIndex >= 0 && userStarIndex < newDistributionArray.length) {
+        newDistributionArray[userStarIndex] += 1;
+      }
+      const weights = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+      const weightedSum = newDistributionArray.reduce((sum, count, index) => sum + weights[index] * count, 0);
+      const newStarAverage = newVoterCount > 0 ? weightedSum / newVoterCount : 0;
+      return newStarAverage / 2;
+    }
+    return starInfo.starAverage / 2;
+  });
+  
   const [participantCount, setParticipantCount] = useState(
-    starInfo ? starInfo.voterCount : 0
+    starInfo && starInfo.isBlocked && starInfo.userStarScore !== undefined && starInfo.userStarScore > 0
+      ? starInfo.voterCount + 1
+      : (starInfo ? starInfo.voterCount : 0)
   );
+  
   const [distribution, setDistribution] = useState(() => {
-    if (starInfo && starInfo.voterCount > 0) {
+    if (!starInfo) return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    // isBlocked가 true이고 userStarScore가 있으면 가산 처리
+    if (starInfo.isBlocked && starInfo.userStarScore !== undefined && starInfo.userStarScore > 0) {
+      const newVoterCount = starInfo.voterCount + 1;
+      const newDistributionArray = [
+        starInfo.star_0_5,
+        starInfo.star_1_0,
+        starInfo.star_1_5,
+        starInfo.star_2_0,
+        starInfo.star_2_5,
+        starInfo.star_3_0,
+        starInfo.star_3_5,
+        starInfo.star_4_0,
+        starInfo.star_4_5,
+        starInfo.star_5_0
+      ];
+      const userStarIndex = starInfo.userStarScore - 1;
+      if (userStarIndex >= 0 && userStarIndex < newDistributionArray.length) {
+        newDistributionArray[userStarIndex] += 1;
+      }
+      return newDistributionArray.map(count => count / newVoterCount);
+    }
+    
+    // 정상적인 경우
+    if (starInfo.voterCount > 0) {
       const totalVotes = starInfo.voterCount;
       return [
         starInfo.star_0_5 / totalVotes,
@@ -145,29 +201,71 @@ export default function SmallCandidate({
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   // 별점 분포 업데이트 함수 (BigCandidate와 동일)
-  const updateStarDistribution = (response: any) => {
+  const updateStarDistribution = (response: any, userStarScore?: number) => {
     if (response.result) {
-      const { starAverage, voterCount, star_0_5, star_1_0, star_1_5, star_2_0, star_2_5, star_3_0, star_3_5, star_4_0, star_4_5, star_5_0 } = response.result;
+      const { isBlocked, starAverage, voterCount, star_0_5, star_1_0, star_1_5, star_2_0, star_2_5, star_3_0, star_3_5, star_4_0, star_4_5, star_5_0 } = response.result;
       
-      setAverageRating(starAverage / 2);
-      setParticipantCount(voterCount);
-      
-      // 별점 분포를 비율로 변환 (0.5점 단위)
-      const totalVotes = voterCount;
-      if (totalVotes > 0) {
-        const newDistribution = [
-          star_0_5 / totalVotes,
-          star_1_0 / totalVotes,
-          star_1_5 / totalVotes,
-          star_2_0 / totalVotes,
-          star_2_5 / totalVotes,
-          star_3_0 / totalVotes,
-          star_3_5 / totalVotes,
-          star_4_0 / totalVotes,
-          star_4_5 / totalVotes,
-          star_5_0 / totalVotes
+      // isBlocked가 true면 유저의 별점을 가산해서 계산 (사용자가 눈치채지 못하도록)
+      if (isBlocked && userStarScore !== undefined) {
+        // 참여자 수: 기존 + 1
+        const newVoterCount = voterCount + 1;
+        
+        // 별점 분포: 기존 분포에 유저의 별점을 가산
+        const newDistributionArray = [
+          star_0_5,
+          star_1_0,
+          star_1_5,
+          star_2_0,
+          star_2_5,
+          star_3_0,
+          star_3_5,
+          star_4_0,
+          star_4_5,
+          star_5_0
         ];
+        
+        // 유저의 별점에 해당하는 인덱스 찾기
+        // starScore는 1-10 스케일이고, 분포 배열은 0.5, 1.0, ..., 5.0 (10개)
+        // starScore 1 -> 0.5점 (인덱스 0), starScore 2 -> 1.0점 (인덱스 1), ..., starScore 10 -> 5.0점 (인덱스 9)
+        const userStarIndex = userStarScore - 1;
+        if (userStarIndex >= 0 && userStarIndex < newDistributionArray.length) {
+          newDistributionArray[userStarIndex] += 1;
+        }
+        
+        // 별점 분포 배열을 사용해서 정확한 평균 계산 (백엔드와 동일한 방식)
+        // 백엔드는 1-10 스케일로 weightedSum을 계산: 1.0*star_0_5 + 2.0*star_1_0 + ... + 10.0*star_5_0
+        const weights = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        const weightedSum = newDistributionArray.reduce((sum, count, index) => sum + weights[index] * count, 0);
+        const newStarAverage = newVoterCount > 0 ? weightedSum / newVoterCount : 0;
+        
+        // 비율로 변환
+        const newDistribution = newDistributionArray.map(count => count / newVoterCount);
+        
+        setAverageRating(newStarAverage / 2);
+        setParticipantCount(newVoterCount);
         setDistribution(newDistribution);
+      } else {
+        // 정상적인 경우 기존 로직 사용
+        setAverageRating(starAverage / 2);
+        setParticipantCount(voterCount);
+        
+        // 별점 분포를 비율로 변환 (0.5점 단위)
+        const totalVotes = voterCount;
+        if (totalVotes > 0) {
+          const newDistribution = [
+            star_0_5 / totalVotes,
+            star_1_0 / totalVotes,
+            star_1_5 / totalVotes,
+            star_2_0 / totalVotes,
+            star_2_5 / totalVotes,
+            star_3_0 / totalVotes,
+            star_3_5 / totalVotes,
+            star_4_0 / totalVotes,
+            star_4_5 / totalVotes,
+            star_5_0 / totalVotes
+          ];
+          setDistribution(newDistribution);
+        }
       }
     }
   };
@@ -364,7 +462,8 @@ export default function SmallCandidate({
                         }, 100);
                        
                        // API 응답으로 별점 분포 업데이트
-                       updateStarDistribution(response);
+                       // isBlocked가 true면 유저의 별점을 가산해서 계산 (사용자가 눈치채지 못하도록)
+                       updateStarDistribution(response, starScore);
                        
                        // 투표한 episode ID를 브라우저에 저장
                        addVotedEpisode(anime.episodeId);
