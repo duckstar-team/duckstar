@@ -40,6 +40,55 @@ const ENDPOINTS = {
   },
 } as const;
 
+// Device fingerprint 생성 함수
+async function generateDeviceFingerprint(): Promise<string> {
+  if (typeof window === 'undefined') {
+    return 'no-fp';
+  }
+
+  try {
+    const components = [
+      navigator.userAgent || '',
+      navigator.language || '',
+      navigator.languages?.join(',') || '',
+      screen.width?.toString() || '',
+      screen.height?.toString() || '',
+      screen.colorDepth?.toString() || '',
+      new Date().getTimezoneOffset().toString(),
+      navigator.platform || '',
+      navigator.hardwareConcurrency?.toString() || '',
+      navigator.deviceMemory?.toString() || '',
+    ];
+
+    const fingerprintString = components.join('|');
+    
+    // Web Crypto API를 사용한 SHA-256 해시 생성
+    const encoder = new TextEncoder();
+    const data = encoder.encode(fingerprintString);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // 최소 20자 이상이어야 하므로 전체 해시 반환 (64자)
+    return hashHex;
+  } catch (error) {
+    console.error('Fingerprint 생성 실패:', error);
+    // Fallback: 간단한 base64 인코딩
+    try {
+      const components = [
+        navigator.userAgent || '',
+        navigator.language || '',
+        screen.width?.toString() || '',
+        screen.height?.toString() || '',
+      ];
+      const fingerprintString = components.join('|');
+      return btoa(fingerprintString).replace(/[^a-zA-Z0-9]/g, '').substring(0, 64);
+    } catch {
+      return 'no-fp';
+    }
+  }
+}
+
 // Default fetch options
 const getDefaultOptions = (): RequestInit => {
   return {
@@ -306,8 +355,13 @@ export async function revoteAnime(submissionId: number, voteData: Record<string,
 
 // 별점 투표 API
 export async function submitStarVote(episodeId: number, starScore: number) {
+  const fingerprint = await generateDeviceFingerprint();
+  
   return apiCall<ApiResponseStarInfoDto>('/api/v1/vote/star', {
     method: 'POST',
+    headers: {
+      'X-DEVICE-FP': fingerprint,
+    },
     body: JSON.stringify({
       episodeId,
       starScore
@@ -333,6 +387,173 @@ export async function createAnime(animeData: Record<string, unknown>) {
     method: 'POST',
     body: JSON.stringify(animeData),
   });
+}
+
+// Admin Submission API functions
+export interface SubmissionCountDto {
+  weekId: number;
+  year: number;
+  quarter: number;
+  week: number;
+  ipHash: string;
+  count: number;
+  isBlocked: boolean;
+  isAllWithdrawn: boolean;
+  firstCreatedAt: string;
+  lastCreatedAt: string;
+}
+
+export interface PageInfo {
+  hasNext: boolean;
+  page: number;
+  size: number;
+}
+
+export interface SubmissionCountSliceDto {
+  submissionCountDtos: SubmissionCountDto[];
+  pageInfo: PageInfo;
+}
+
+export interface ApiResponseSubmissionCountSliceDto {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: SubmissionCountSliceDto;
+}
+
+export interface EpisodeStarDto {
+  titleKor: string;
+  starScore: number;
+  isBlocked: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApiResponseListEpisodeStarDto {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: EpisodeStarDto[];
+}
+
+export async function getSubmissionCountGroupByIp(
+  page: number = 0,
+  size: number = 50,
+  sort?: string[]
+): Promise<ApiResponseSubmissionCountSliceDto> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  });
+  
+  if (sort && sort.length > 0) {
+    sort.forEach(s => params.append('sort', s));
+  }
+  
+  return apiCall<ApiResponseSubmissionCountSliceDto>(`/api/admin/submissions?${params.toString()}`);
+}
+
+export async function getSubmissionsByWeekAndIp(
+  weekId: number,
+  ipHash: string
+): Promise<ApiResponseListEpisodeStarDto> {
+  const params = new URLSearchParams({
+    weekId: weekId.toString(),
+    ipHash: ipHash,
+  });
+  
+  return apiCall<ApiResponseListEpisodeStarDto>(`/api/admin/ip?${params.toString()}`);
+}
+
+// IP 차단 토글
+export async function banIp(ipHash: string, enabled: boolean, reason: string): Promise<void> {
+  const params = new URLSearchParams({
+    ipHash,
+    enabled: enabled.toString(),
+    reason
+  });
+  return apiCall<void>(
+    `/api/admin/ip/ban?${params.toString()}`,
+    { method: 'POST' }
+  );
+}
+
+// 표 몰수
+export async function withdrawVotesByWeekAndIp(weekId: number, ipHash: string, reason: string): Promise<void> {
+  const params = new URLSearchParams({
+    weekId: weekId.toString(),
+    ipHash,
+    reason
+  });
+  return apiCall<void>(
+    `/api/admin/ip/withdraw?${params.toString()}`,
+    { method: 'POST' }
+  );
+}
+
+// 표 몰수 되돌리기
+export async function undoWithdrawnSubmissions(logId: number, weekId: number, ipHash: string, reason: string): Promise<void> {
+  if (!logId || !weekId || !ipHash || !reason) {
+    throw new Error('필수 파라미터가 누락되었습니다.');
+  }
+  
+  const params = new URLSearchParams({
+    logId: logId.toString(),
+    weekId: weekId.toString(),
+    ipHash,
+    reason
+  });
+  return apiCall<void>(
+    `/api/admin/ip/withdraw/undo?${params.toString()}`,
+    { method: 'POST' }
+  );
+}
+
+// IP 관리 로그 관련 타입
+export interface IpManagementLogDto {
+  logId: number;
+  memberId: number;
+  profileImageUrl: string;
+  managerNickname: string;
+  weekId: number | null;
+  year: number | null;
+  quarter: number | null;
+  week: number | null;
+  ipHash: string;
+  taskType: 'BAN' | 'UNBAN' | 'WITHDRAW' | 'UNDO_WITHDRAW';
+  reason: string;
+  managedAt: string;
+  isUndoable: boolean;
+}
+
+export interface IpManagementLogSliceDto {
+  ipManagementLogDtos: IpManagementLogDto[];
+  pageInfo: PageInfo;
+}
+
+export interface ApiResponseIpManagementLogSliceDto {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: IpManagementLogSliceDto;
+}
+
+// IP 관리 로그 조회
+export async function getAdminLogsOnIpManagement(
+  page: number = 0,
+  size: number = 10,
+  sort?: string[]
+): Promise<ApiResponseIpManagementLogSliceDto> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  });
+  
+  if (sort && sort.length > 0) {
+    sort.forEach(s => params.append('sort', s));
+  }
+  
+  return apiCall<ApiResponseIpManagementLogSliceDto>(`/api/admin/submissions/logs?${params.toString()}`);
 }
 
 export async function updateAnimeImage(animeId: number, imageFile: File) {

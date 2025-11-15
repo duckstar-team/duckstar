@@ -52,6 +52,7 @@ export interface StarRequestDto {
 
 // Star Info DTO (새로운 구조)
 export interface StarInfoDto {
+  isBlocked?: boolean; // 별점이 DB에 반영되지 않았는지 여부
   userStarScore?: number; // 사용자가 투표한 별점
   starAverage: number;
   voterCount: number;
