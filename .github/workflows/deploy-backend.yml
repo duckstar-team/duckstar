@@ -1,0 +1,225 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy-backend.yml'
+
+# 동시 배포 제어: 같은 EC2 인스턴스에 대한 배포는 순차적으로 실행
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false  # 진행 중인 배포는 취소하지 않고 대기
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    env:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+      SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+      SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      SECURITY_IP_HASH_KEY: ${{ secrets.SECURITY_IP_HASH_KEY }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+      NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+      KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+      KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+      KAKAO_ADMIN_KEY: ${{ secrets.KAKAO_ADMIN_KEY }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Discord Notification - 배포 시작
+        if: always()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "🚀 Backend 배포 시작",
+                   "color": 3447003,
+                   "fields": [
+                     {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
+                     {"name": "커밋", "value": "${{ github.sha }}", "inline": false},
+                     {"name": "작성자", "value": "${{ github.actor }}", "inline": true}
+                   ],
+                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+                 }]
+               }' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
+
+      - name: Get public IP of GitHub Actions runner
+        id: ip
+        run: echo "IP=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_OUTPUT
+
+      - name: Add IP to EC2 Security Group for SSH
+        id: add_ip
+        run: |
+          # 현재 IP가 이미 보안 그룹에 있는지 확인
+          if aws ec2 describe-security-groups \
+            --group-ids sg-01655f148522c2cac \
+            --query "SecurityGroups[0].IpPermissions[?IpRanges[?CidrIp=='${{ steps.ip.outputs.IP }}/32']]" \
+            --output text | grep -q "${{ steps.ip.outputs.IP }}/32"; then
+            echo "IP ${{ steps.ip.outputs.IP }} is already in the security group"
+            echo "ip_added=false" >> $GITHUB_OUTPUT
+          else
+            echo "Adding IP ${{ steps.ip.outputs.IP }} to security group"
+            aws ec2 authorize-security-group-ingress \
+              --group-id sg-01655f148522c2cac \
+              --protocol tcp \
+              --port 22 \
+              --cidr ${{ steps.ip.outputs.IP }}/32
+            echo "ip_added=true" >> $GITHUB_OUTPUT
+          fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-northeast-2
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
+          SPRING_DATASOURCE_URL=${{ env.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ env.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ env.SPRING_DATASOURCE_PASSWORD }}
+          JWT_SECRET=${{ env.JWT_SECRET }}
+          SECURITY_IP_HASH_KEY=${{ env.SECURITY_IP_HASH_KEY }}
+          GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}
+          NAVER_CLIENT_ID=${{ env.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET=${{ env.NAVER_CLIENT_SECRET }}
+          KAKAO_CLIENT_ID=${{ env.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ env.KAKAO_CLIENT_SECRET }}
+          KAKAO_ADMIN_KEY=${{ env.KAKAO_ADMIN_KEY }}
+          NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+          EOF
+
+      - name: Git pulling
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
+            set -e
+            cd /home/ubuntu/duckstar
+
+            echo "🔄 Git Pulling..."
+            # 전체 레포 pull (docker-compose.yml과 .env 파일 필요)
+            git fetch origin master
+            git reset --hard origin/master
+          EOF
+
+      - name: Upload .env to EC2
+        run: scp -o StrictHostKeyChecking=no .env ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/duckstar/.env
+
+      - name: Deploy Backend to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
+            set -e
+            cd /home/ubuntu/duckstar
+
+            echo "🛠 백엔드 빌드 시작"
+            docker compose up -d --build backend
+
+            echo "🧹 이미지 정리"
+            docker image prune -f
+
+            echo "📋 컨테이너 상태"
+            docker ps -a
+
+            echo "📄 백엔드 최근 로그"
+            docker compose logs --tail=50 backend
+          EOF
+
+      - name: Health Check
+        id: health_check
+        run: |
+          echo "🏥 헬스체크 시작..."
+          MAX_ATTEMPTS=12
+          ATTEMPT=0
+          
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "헬스체크 시도 $ATTEMPT/$MAX_ATTEMPTS..."
+            
+            # Nginx 컨테이너를 통해 백엔드 헬스체크 (Docker 네트워크 내부에서 backend:8080 접근)
+            if ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
+              "docker exec duckstar-nginx curl -f -s http://backend:8080/actuator/health > /dev/null 2>&1"; then
+              echo "✅ 헬스체크 성공!"
+              echo "status=success" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+              echo "⏳ 서비스 준비 중... 5초 대기"
+              sleep 5
+            fi
+          done
+          
+          echo "❌ 헬스체크 실패: 60초 내에 서비스가 응답하지 않음"
+          echo "status=failed" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Discord Notification - 배포 성공
+        if: steps.health_check.outputs.status == 'success'
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "✅ Backend 배포 성공",
+                   "color": 3066993,
+                   "fields": [
+                     {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
+                     {"name": "커밋", "value": "[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})", "inline": false},
+                     {"name": "작성자", "value": "${{ github.actor }}", "inline": true},
+                     {"name": "헬스체크", "value": "✅ 통과", "inline": true}
+                   ],
+                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+                 }]
+               }' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
+
+      - name: Discord Notification - 배포 실패
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "❌ Backend 배포 실패",
+                   "color": 15158332,
+                   "fields": [
+                     {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
+                     {"name": "커밋", "value": "[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})", "inline": false},
+                     {"name": "작성자", "value": "${{ github.actor }}", "inline": true},
+                     {"name": "워크플로우", "value": "[상세 보기](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": false}
+                   ],
+                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+                 }]
+               }' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
+
+      - name: Remove IP from EC2 Security Group
+        if: always() && steps.add_ip.outputs.ip_added == 'true'
+        run: |
+          echo "Removing IP ${{ steps.ip.outputs.IP }} from security group"
+          aws ec2 revoke-security-group-ingress \
+            --group-id sg-01655f148522c2cac \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.IP }}/32 || echo "Failed to remove IP (may have been removed already)"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-northeast-2
+

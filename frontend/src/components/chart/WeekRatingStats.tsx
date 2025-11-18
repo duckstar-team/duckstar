@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import StarDistributionChart from './StarDistributionChart';
 
 interface WeekRatingStatsProps {
@@ -17,6 +19,10 @@ export default function WeekRatingStats({
   distribution,
   className = ""
 }: WeekRatingStatsProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  
   // 25년 4분기 1-2주차인지 확인 (1점 단위 모드)
   const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
   
@@ -24,6 +30,21 @@ export default function WeekRatingStats({
   const integerPart = Math.floor(averageRating);
   const decimalPart = Math.floor((averageRating - integerPart) * 10) / 10;
   const decimalString = decimalPart.toFixed(1).substring(1); // ".7" 형태
+  
+  // 실제 전체 점수 (소수점 셋째자리까지 반올림, 항상 표시)
+  const fullRating = (Math.round(averageRating * 1000) / 1000).toFixed(3);
+  
+  // 딜레이 후 서서히 보이게
+  useEffect(() => {
+    if (showTooltip) {
+      const timer = setTimeout(() => {
+        setTooltipVisible(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setTooltipVisible(false);
+    }
+  }, [showTooltip]);
 
   return (
     <div className={`inline-flex flex-col items-center sm:items-end gap-1 min-w-0 flex-shrink-0 ${className}`}>
@@ -36,7 +57,16 @@ export default function WeekRatingStats({
               <div>{week.split(' ').slice(2).join(' ')}</div>
             </div>
             <div className="inline-flex flex-col items-end gap-0.5 -mt-3">
-              <div className="inline-flex items-center gap-1.5">
+              <div 
+                className="inline-flex items-center gap-1.5 cursor-pointer"
+                onMouseEnter={(e) => {
+                  setTooltipPosition({ x: e.clientX, y: e.clientY });
+                  setShowTooltip(true);
+                }}
+                onMouseLeave={() => {
+                  setShowTooltip(false);
+                }}
+              >
                 <div className="size-6 relative">
                   <img 
                     src="/icons/star/star-Selected.svg" 
@@ -59,7 +89,16 @@ export default function WeekRatingStats({
               <div>{week.split(' ').slice(2).join(' ')}</div>
             </div>
             <div className="inline-flex flex-col items-end gap-0.5">
-              <div className="inline-flex items-center gap-1.5">
+              <div 
+                className="inline-flex items-center gap-1.5 cursor-pointer"
+                onMouseEnter={(e) => {
+                  setTooltipPosition({ x: e.clientX, y: e.clientY });
+                  setShowTooltip(true);
+                }}
+                onMouseLeave={() => {
+                  setShowTooltip(false);
+                }}
+              >
                 <div className="size-6 relative">
                   <img 
                     src="/icons/star/star-Selected.svg" 
@@ -99,7 +138,16 @@ export default function WeekRatingStats({
         
         {/* 평균 별점 및 참여자 수 - 640px 이상에서만 표시 */}
         <div className="hidden sm:inline-flex flex-col items-end">
-          <div className="inline-flex items-center gap-1.5 xs:gap-2 sm:gap-2">
+          <div 
+            className="inline-flex items-center gap-1.5 xs:gap-2 sm:gap-2 cursor-pointer"
+            onMouseEnter={(e) => {
+              setTooltipPosition({ x: e.clientX, y: e.clientY });
+              setShowTooltip(true);
+            }}
+            onMouseLeave={() => {
+              setShowTooltip(false);
+            }}
+          >
             <div className="size-6 xs:size-8 sm:size-8 relative">
               <img 
                 src="/icons/star/star-Selected.svg" 
@@ -115,6 +163,22 @@ export default function WeekRatingStats({
           <div className="text-right text-gray-400 text-sm xs:text-lg sm:text-lg font-medium font-['Pretendard'] leading-loose -mt-[10px] xs:-mt-[14px] sm:-mt-[14px]">{participantCount}명 참여</div>
         </div>
       </div>
+      
+      {/* 툴팁 포털 */}
+      {showTooltip && typeof window !== 'undefined' && createPortal(
+        <div 
+          className={`fixed px-2 py-1 bg-gray-700/60 text-white text-xs rounded shadow-lg pointer-events-none whitespace-nowrap z-50 transition-opacity duration-300 ${
+            tooltipVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+            left: tooltipPosition.x + 10,
+            top: tooltipPosition.y + 10
+          }}
+        >
+          ★ {fullRating} / 10
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
