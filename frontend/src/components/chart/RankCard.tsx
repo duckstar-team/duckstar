@@ -85,6 +85,7 @@ export default function RankCard({
           studio={studio}
           image={image}
           rating={rating}
+          averageRating={averageRating}
         />
 
         {/* 메달 섹션 */}

@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import RankDiff from './RankDiff';
 import StarRatingDisplay from '../StarRatingDisplay';
 
@@ -12,6 +14,7 @@ interface WinnerRankContentsProps {
   studio: string;
   image: string;
   rating: number;
+  averageRating?: number; // 원본 전체 점수
   className?: string;
 }
 
@@ -24,8 +27,29 @@ export default function WinnerRankContents({
   studio,
   image,
   rating,
+  averageRating,
   className = ""
 }: WinnerRankContentsProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  
+  // 실제 전체 점수 (소수점 셋째자리까지 반올림, 항상 표시)
+  const fullRating = averageRating !== undefined 
+    ? (Math.round(averageRating * 1000) / 1000).toFixed(3)
+    : (Math.round(rating * 1000) / 1000).toFixed(3);
+  
+  // 딜레이 후 서서히 보이게
+  useEffect(() => {
+    if (showTooltip) {
+      const timer = setTimeout(() => {
+        setTooltipVisible(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setTooltipVisible(false);
+    }
+  }, [showTooltip]);
 
   return (
     <div className={`w-full max-w-[488px] h-52 inline-flex justify-start items-center gap-2 xs:gap-3 sm:gap-5 ${className}`}>
@@ -61,7 +85,16 @@ export default function WinnerRankContents({
         </div>
         
         {/* 별점 */}
-        <div className="self-stretch pr-[5px] inline-flex justify-start items-center gap-2.5">
+        <div 
+          className="self-stretch pr-[5px] inline-flex justify-start items-center gap-2.5 cursor-pointer"
+          onMouseEnter={(e) => {
+            setTooltipPosition({ x: e.clientX, y: e.clientY });
+            setShowTooltip(true);
+          }}
+          onMouseLeave={() => {
+            setShowTooltip(false);
+          }}
+        >
           <StarRatingDisplay 
             rating={rating} 
             size="lg" 
@@ -70,6 +103,22 @@ export default function WinnerRankContents({
           />
         </div>
       </div>
+      
+      {/* 툴팁 포털 */}
+      {showTooltip && typeof window !== 'undefined' && createPortal(
+        <div 
+          className={`fixed px-2 py-1 bg-gray-700/60 text-white text-xs rounded shadow-lg pointer-events-none whitespace-nowrap z-50 transition-opacity duration-300 ${
+            tooltipVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+            left: tooltipPosition.x + 10,
+            top: tooltipPosition.y + 10
+          }}
+        >
+          ★ {fullRating} / 10
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
