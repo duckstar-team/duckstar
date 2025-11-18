@@ -115,8 +115,26 @@ jobs:
             cd /home/ubuntu/duckstar
 
             echo "🔄 Git Pulling..."
+            # 원격 리포지토리 확인
+            if ! git remote get-url origin > /dev/null 2>&1; then
+              echo "❌ 원격 리포지토리가 설정되지 않았습니다."
+              echo "원격 리포지토리 설정 중..."
+              git remote add origin https://github.com/duckstar-team/duckstar.git || true
+            fi
+            
+            # 원격 리포지토리 URL 확인 및 업데이트
+            CURRENT_URL=$(git remote get-url origin 2>/dev/null || echo "")
+            EXPECTED_URL="https://github.com/duckstar-team/duckstar.git"
+            if [ "$CURRENT_URL" != "$EXPECTED_URL" ]; then
+              echo "원격 리포지토리 URL 업데이트 중..."
+              git remote set-url origin "$EXPECTED_URL" || git remote add origin "$EXPECTED_URL"
+            fi
+            
             # 전체 레포 pull (docker-compose.yml과 .env 파일 필요)
-            git fetch origin master
+            git fetch origin master || {
+              echo "❌ Git fetch 실패. 원격 리포지토리 접근 권한을 확인하세요."
+              exit 1
+            }
             git reset --hard origin/master
           EOF
 
