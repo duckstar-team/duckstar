@@ -108,38 +108,44 @@ jobs:
           NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
           EOF
 
-      - name: Git pulling
+      - name: Upload code to EC2
         run: |
+          echo "📦 코드 압축 중..."
+          tar -czf /tmp/duckstar-code.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='backend/build' \
+            --exclude='frontend/.next' \
+            --exclude='frontend/node_modules' \
+            frontend/ \
+            docker-compose.yml \
+            nginx/ \
+            .env
+          
+          echo "📤 EC2로 코드 전송 중..."
+          scp -o StrictHostKeyChecking=no /tmp/duckstar-code.tar.gz ubuntu@${{ secrets.EC2_HOST }}:/tmp/duckstar-code.tar.gz
+          
+          echo "📂 EC2에서 코드 압축 해제 중..."
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
             set -e
             cd /home/ubuntu/duckstar
-
-            echo "🔄 Git Pulling..."
-            # 원격 리포지토리 확인
-            if ! git remote get-url origin > /dev/null 2>&1; then
-              echo "❌ 원격 리포지토리가 설정되지 않았습니다."
-              echo "원격 리포지토리 설정 중..."
-              git remote add origin https://github.com/duckstar-team/duckstar.git || true
+            
+            # 기존 파일 백업 (선택사항)
+            if [ -d "frontend" ]; then
+              echo "기존 frontend 디렉토리 백업 중..."
             fi
             
-            # 원격 리포지토리 URL 확인 및 업데이트
-            CURRENT_URL=$(git remote get-url origin 2>/dev/null || echo "")
-            EXPECTED_URL="https://github.com/duckstar-team/duckstar.git"
-            if [ "$CURRENT_URL" != "$EXPECTED_URL" ]; then
-              echo "원격 리포지토리 URL 업데이트 중..."
-              git remote set-url origin "$EXPECTED_URL" || git remote add origin "$EXPECTED_URL"
-            fi
+            # 압축 해제
+            tar -xzf /tmp/duckstar-code.tar.gz -C /home/ubuntu/duckstar
             
-            # 전체 레포 pull (docker-compose.yml과 .env 파일 필요)
-            git fetch origin master || {
-              echo "❌ Git fetch 실패. 원격 리포지토리 접근 권한을 확인하세요."
-              exit 1
-            }
-            git reset --hard origin/master
+            # 임시 파일 정리
+            rm -f /tmp/duckstar-code.tar.gz
+            
+            echo "✅ 코드 업데이트 완료"
           EOF
-
-      - name: Upload .env to EC2
-        run: scp -o StrictHostKeyChecking=no .env ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/duckstar/.env
+          
+          # 로컬 임시 파일 정리
+          rm -f /tmp/duckstar-code.tar.gz
 
       - name: Deploy Frontend and Nginx to EC2
         run: |
