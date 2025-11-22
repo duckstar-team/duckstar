@@ -1,5 +1,6 @@
 package com.duckstar.service;
 
+import com.duckstar.TestContainersConfig;
 import com.duckstar.domain.Anime;
 import com.duckstar.domain.Season;
 import com.duckstar.domain.Week;
@@ -20,9 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-//@Disabled("로컬 개발용 테스트")
-@ActiveProfiles("test-db")
-public class AnimeServiceTest {
+@Disabled("로컬 개발용 테스트")
+@ActiveProfiles("test")
+public class AnimeServiceTest extends TestContainersConfig {
 
     @Autowired AnimeService animeService;
     @Autowired
@@ -70,26 +71,26 @@ public class AnimeServiceTest {
         }
     }
 
-    @Test
-    @Transactional
-//    @Rollback(false)
-    public void postEpisodes() {
-        Anime anime = animeRepository.findById(133L).get();
-        int totalEpisodes = anime.getTotalEpisodes();
-
-        //=== 에피소드 생성 ===//
-        List<Episode> episodes = new ArrayList<>();
-        LocalDateTime scheduledAt = anime.getPremiereDateTime();
-        for (int i = 0; i < totalEpisodes; i++) {
-            LocalDateTime nextEpScheduledAt = scheduledAt.plusWeeks(1);
-            episodes.add(Episode.create(
-                    anime,
-                    i + 1,
-                    scheduledAt,
-                    nextEpScheduledAt
-            ));
-            scheduledAt = nextEpScheduledAt;
-        }
-        episodeRepository.saveAll(episodes);
-    }
+//    @Test
+//    @Transactional
+////    @Rollback(false)
+//    public void postEpisodes() {
+//        Anime anime = animeRepository.findById(133L).get();
+//        int totalEpisodes = anime.getTotalEpisodes();
+//
+//        //=== 에피소드 생성 ===//
+//        List<Episode> episodes = new ArrayList<>();
+//        LocalDateTime scheduledAt = anime.getPremiereDateTime();
+//        for (int i = 0; i < totalEpisodes; i++) {
+//            LocalDateTime nextEpScheduledAt = scheduledAt.plusWeeks(1);
+//            episodes.add(Episode.create(
+//                    anime,
+//                    i + 1,
+//                    scheduledAt,
+//                    nextEpScheduledAt
+//            ));
+//            scheduledAt = nextEpScheduledAt;
+//        }
+//        episodeRepository.saveAll(episodes);
+//    }
 }

@@ -1,0 +1,53 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+#    url: jdbc:mysql://localhost:3306/duckstar_test
+#    username: root
+#    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 테스트에서만 활성
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+  sql:
+    init:
+      mode: never
+
+  security:
+    ip-hash:
+      key: local-secret-key-1234567890
+      use-hex: true
+
+    oauth2:
+      client:
+        registration:
+          google: {}
+          kakao: {}
+          naver: {}
+        provider: {}
+
+app:
+  kakao:
+    admin-key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  cookie:
+    same-site: None
+    secure: false
+  base-url: http://localhost:3000
+
+jwt:
+  secret: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  issuer: "localhost"
+
+cloud:
+  aws:
+    s3:
+      bucket: img.duckstar.kr

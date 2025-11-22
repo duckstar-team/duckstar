@@ -1,10 +1,7 @@
 package com.duckstar.service;
 
 import com.duckstar.apiPayload.code.status.ErrorStatus;
-import com.duckstar.apiPayload.exception.handler.EpisodeHandler;
-import com.duckstar.apiPayload.exception.handler.MemberHandler;
-import com.duckstar.apiPayload.exception.handler.VoteHandler;
-import com.duckstar.apiPayload.exception.handler.WeekHandler;
+import com.duckstar.apiPayload.exception.handler.*;
 import com.duckstar.domain.Member;
 import com.duckstar.domain.Quarter;
 import com.duckstar.domain.Week;
@@ -14,6 +11,7 @@ import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.repository.WeekVoteSubmission.WeekVoteSubmissionRepository;
+import com.duckstar.security.MemberPrincipal;
 import com.duckstar.security.repository.MemberRepository;
 import com.duckstar.security.service.ShadowBanService;
 import com.duckstar.web.support.Hasher;
@@ -346,21 +344,14 @@ public class VoteCommandService {
             HttpServletRequest requestRaw,
             HttpServletResponse responseRaw
     ) {
-        //=== 투표 유효성(방영시간으로부터 36시간 이내인지) ===//
+        //=== 투표 유효성( VOTING_WINDOW 상태인지 ) ===//
         Long episodeId = request.getEpisodeId();
         Episode episode = episodeRepository.findById(episodeId)
                 .orElseThrow(() -> new EpisodeHandler(ErrorStatus.EPISODE_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime scheduledAt = episode.getScheduledAt();
-        Boolean isBreak = episode.getIsBreak();
+        EpEvaluateState state = episode.getEvaluateState();
 
-        // 유효 투표 조건: 방송 이후 36시간 동안
-        boolean isValid = !now.isBefore(scheduledAt) && now.isBefore(scheduledAt.plusHours(36)) &&
-                // 그리고 휴방 아님
-                (isBreak == null || !isBreak);
-
-        if (!isValid) {
+        if (state != EpEvaluateState.VOTING_WINDOW) {
             throw new VoteHandler(ErrorStatus.VOTE_CLOSED);
         }
 
@@ -371,7 +362,7 @@ public class VoteCommandService {
                 null;
 
         // ** 방영된 에피소드가 속한 주
-        Week currentWeek = weekService.getWeekByTime(scheduledAt);
+        Week currentWeek = weekService.getWeekByTime(episode.getScheduledAt());
 
         //=== 제출 정보 찾기 ===//
         Quarter quarter = currentWeek.getQuarter();
@@ -386,7 +377,6 @@ public class VoteCommandService {
         String principalKey = voteCookieManager.toPrincipalKey(memberId, cookieId);
         Optional<WeekVoteSubmission> submissionOpt =
                 submissionRepository.findByWeek_IdAndPrincipalKey(currentWeek.getId(), principalKey);
-
 
         String ip = identifierExtractor.extract(requestRaw);
         String ipHash = hasher.hash(ip);
@@ -434,6 +424,25 @@ public class VoteCommandService {
         }
 
         return StarInfoDto.of(isBlocked, starScore, episode);
+    }
+
+    public StarInfoDto lateVoteOrUpdateStar(
+            LateStarRequestDto request,
+            MemberPrincipal principal,
+            HttpServletRequest requestRaw,
+            HttpServletResponse responseRaw
+    ) {
+        if (principal == null) {
+            throw new AuthHandler(ErrorStatus.LATE_STAR_UNAUTHORIZED);
+        }
+
+        Episode episode = episodeRepository.findById(request.getEpisodeId()).orElseThrow(() ->
+                new EpisodeHandler(ErrorStatus.EPISODE_NOT_FOUND));
+        Member member = memberRepository.findById(principal.getId()).orElseThrow(() ->
+                new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+
+        return null;
     }
     
     public void withdrawStar(

@@ -29,7 +29,7 @@ public class VoteController {
      * 별점 투표 방식
      */
 
-    @Operation(summary = "별점 투표 후보자 리스트 조회 API", description = "now - 36시간 ~ now + 36시간 범위의 에피소드들 조회")
+    @Operation(summary = "실시간 투표 리스트 조회 API", description = "now - 36시간 ~ now 범위의 에피소드들 (VOTING_WINDOW 상태) 조회")
     @GetMapping("/star")
     public ApiResponse<StarCandidateListDto> getStarCandidates(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -62,12 +62,25 @@ public class VoteController {
 
     // 마지막 후보 투표시간 끝나고 ~ 주차 발표 전까지 공백 ??
 
-//    @Operation(summary = "늦참 투표/수정 API (로그인 ONLY)", description = "TVA 투표 : Episode 기반, " +
-//                    "방송 후 투표시간 끝나고 주차 발표 전까지, Comment 5글자 이상 필수")
-//    @PostMapping()
+    @Operation(summary = "늦참 투표/수정 API (로그인 ONLY)",
+            description = "TVA 투표 : Episode 기반, " +
+                    "방송 후 투표시간 끝나고 주차 마감 전까지, Comment 5글자 이상 필수")
+    @PostMapping("/star-late")
+    public ApiResponse<StarInfoDto> lateVoteOrUpdateStar(
+            @Valid @RequestBody LateStarRequestDto request,
+            @AuthenticationPrincipal MemberPrincipal principal,
+            HttpServletRequest requestRaw,
+            HttpServletResponse responseRaw
+    ) {
+        return ApiResponse.onSuccess(voteCommandService.lateVoteOrUpdateStar(
+                request,
+                principal,
+                requestRaw,
+                responseRaw
+        ));
+    }
 
-
-    // 개발 연기 ?
+    // 개발 연기
 //    @Operation(summary = "상시 평가/수정 API (로그인 ONLY)",
 //            description = "Episode 기반, 지난 주차")
 //    @PostMapping()
