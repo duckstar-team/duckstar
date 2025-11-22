@@ -38,7 +38,7 @@ jobs:
       # 4. feature → dev PR: 단위 테스트만 실행
       - name: Run Unit Tests
         if: github.base_ref == 'dev'
-        run: ./gradlew clean test
+        run: ./gradlew clean test --info --stacktrace
 
       # 5. dev → master PR: 전체 빌드 및 통합 테스트 실행
       - name: Full Build & Integration Tests
