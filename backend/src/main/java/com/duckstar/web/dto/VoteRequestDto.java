@@ -24,6 +24,8 @@ public class VoteRequestDto {
         @NotBlank
         @Size(min = 5, max = 1000)
         String body;
+
+        Long episodeStarId;  // 추가
     }
 
     @Getter
@@ -35,6 +37,8 @@ public class VoteRequestDto {
         @Min(1)
         @Max(10)
         Integer starScore;
+
+        Long episodeStarId;  // 추가
     }
 
     @AnimeVoteConstraint

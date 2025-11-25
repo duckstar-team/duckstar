@@ -6,8 +6,10 @@ import com.duckstar.domain.Anime;
 import com.duckstar.domain.Member;
 import com.duckstar.domain.enums.CommentSortType;
 import com.duckstar.domain.enums.CommentStatus;
+import com.duckstar.domain.enums.EpEvaluateState;
 import com.duckstar.domain.mapping.CommentLike;
 import com.duckstar.domain.mapping.Episode;
+import com.duckstar.domain.mapping.EpisodeStar;
 import com.duckstar.domain.mapping.Reply;
 import com.duckstar.domain.mapping.comment.AnimeComment;
 import com.duckstar.repository.AnimeComment.AnimeCommentRepository;
@@ -15,6 +17,7 @@ import com.duckstar.repository.AnimeRepository;
 import com.duckstar.repository.AnimeVote.AnimeVoteRepository;
 import com.duckstar.repository.CommentLikeRepository;
 import com.duckstar.repository.Episode.EpisodeRepository;
+import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
 import com.duckstar.repository.Reply.ReplyRepository;
 import com.duckstar.s3.S3Uploader;
 import com.duckstar.security.MemberPrincipal;
@@ -49,6 +52,7 @@ public class CommentService {
 
     private final AnimeService animeService;
     private final S3Uploader s3Uploader;
+    private final EpisodeStarRepository episodeStarRepository;
 
     @Transactional
     public CommentDto leaveAnimeComment(
@@ -67,8 +71,8 @@ public class CommentService {
         Member author = memberRepository.findById(memberId).orElseThrow(() ->
                 new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        int voteCount = animeVoteRepository
-                .countAllByAnimeCandidate_Anime_IdAndWeekVoteSubmission_Member_Id(
+        int voteCount = episodeStarRepository
+                .countAllByEpisode_Anime_IdAndWeekVoteSubmission_Member_Id(
                         animeId,
                         memberId
                 );
@@ -258,6 +262,12 @@ public class CommentService {
 
         } else {
             throw new CommentHandler(ErrorStatus.DELETE_UNAUTHORIZED);
+        }
+
+        //=== 만약 늦참에 의해 생성된 댓글이라면 별점도 회수 ===//
+        EpisodeStar episodeStar = comment.getEpisodeStar();
+        if (episodeStar.isLateParticipating()) {
+            episodeStar.withdrawScore();
         }
 
         return DeleteResultDto.builder()

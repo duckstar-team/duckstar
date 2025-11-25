@@ -2,6 +2,7 @@ package com.duckstar.web.dto;
 
 import com.duckstar.domain.enums.*;
 import com.duckstar.domain.mapping.Episode;
+import com.duckstar.domain.mapping.EpisodeStar;
 import com.duckstar.web.dto.WeekResponseDto.WeekDto;
 import lombok.*;
 
@@ -13,18 +14,47 @@ public class VoteResponseDto {
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class StarCandidateListDto {
-        WeekDto weekDto;
+    public static class CandidateFormDto {  // 후보 모달용
+        Long episodeId;
 
-        List<StarCandidateDto> currentWeekStarCandidates;
+        Integer voterCount;
 
-        List<StarCandidateDto> lastWeekStarCandidates;
+        Long animeId;
+
+        String mainThumbnailUrl;
+
+        VoteFormResultDto result;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class WeekCandidateDto {  // 주차 후보
+        Long episodeId;
+
+        EpEvaluateState state;
+
+        Boolean hasVoted;
+
+        String mainThumbnailUrl;
+
+        String titleKor;
     }
 
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class StarCandidateDto {
+    public static class LiveCandidateListDto {  // 실시간 투표
+        WeekDto weekDto;
+
+        List<LiveCandidateDto> currentWeekLiveCandidates;
+
+        List<LiveCandidateDto> lastWeekLiveCandidates;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class LiveCandidateDto {
         /**
          * 후보(에피소드) 정보
          */
@@ -33,8 +63,6 @@ public class VoteResponseDto {
         Integer week;
 
         Long episodeId;
-        EpEvaluateState state;
-        Integer voterCount;
 
         /**
          * 애니 정보
@@ -58,17 +86,33 @@ public class VoteResponseDto {
         /**
          * 유저 기록
          */
-        StarInfoDto info;  // VOTING_WINDOW 전용
+        VoteResultDto result;
+    }
 
-        Boolean hasVoted;  // LOGIN_REQUIRED 전용
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class VoteFormResultDto {
+        Boolean isLateParticipating;
 
-        public void setUserHistory(StarInfoDto info) {
-            this.info = info;
-        }
+        Integer voterCount;
 
-        public void setVoted(Boolean hasVoted) {
-            this.hasVoted = hasVoted;
-        }
+        StarInfoDto info;
+
+        LocalDateTime voteUpdatedAt;
+
+        Long commentId;
+
+        String body;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class VoteResultDto {
+        Integer voterCount;
+
+        StarInfoDto info;
     }
 
     @Getter
@@ -76,6 +120,8 @@ public class VoteResponseDto {
     @AllArgsConstructor
     public static class StarInfoDto {
         Boolean isBlocked;
+
+        Long episodeStarId;  // 추가
         Integer userStarScore;
 
         Double starAverage;
@@ -91,14 +137,19 @@ public class VoteResponseDto {
         Integer star_4_5;
         Integer star_5_0;
 
-        public static StarInfoDto of(Boolean isBlocked, Integer userStarScore, Episode episode) {
+        public static StarInfoDto of(
+                Boolean isBlocked,
+                EpisodeStar episodeStar,
+                Episode episode
+        ) {
             if (episode == null) {
                 return StarInfoDto.builder().build();
             }
 
             return StarInfoDto.builder()
                     .isBlocked(isBlocked)
-                    .userStarScore(userStarScore)
+                    .episodeStarId(episodeStar.getId())
+                    .userStarScore(episodeStar.getStarScore())
                     .starAverage(episode.getStarAverage())
                     .star_0_5(episode.getStar_0_5())
                     .star_1_0(episode.getStar_1_0())
@@ -110,48 +161,6 @@ public class VoteResponseDto {
                     .star_4_0(episode.getStar_4_0())
                     .star_4_5(episode.getStar_4_5())
                     .star_5_0(episode.getStar_5_0())
-                    .build();
-        }
-
-        public static StarInfoDto createWithoutAvg(
-                Integer voterCount,
-                Integer star_0_5,
-                Integer star_1_0,
-                Integer star_1_5,
-                Integer star_2_0,
-                Integer star_2_5,
-                Integer star_3_0,
-                Integer star_3_5,
-                Integer star_4_0,
-                Integer star_4_5,
-                Integer star_5_0
-        ) {
-            double weightedSum =
-                    0.5 * star_0_5 +
-                    1.0 * star_1_0 +
-                    1.5 * star_1_5 +
-                    2.0 * star_2_0 +
-                    2.5 * star_2_5 +
-                    3.0 * star_3_0 +
-                    3.5 * star_3_5 +
-                    4.0 * star_4_0 +
-                    4.5 * star_4_5 +
-                    5.0 * star_5_0;
-
-            double starAverage = (voterCount == 0) ? 0.0 : weightedSum / (double) voterCount;
-
-            return StarInfoDto.builder()
-                    .starAverage(starAverage)
-                    .star_0_5(star_0_5)
-                    .star_1_0(star_1_0)
-                    .star_1_5(star_1_5)
-                    .star_2_0(star_2_0)
-                    .star_2_5(star_2_5)
-                    .star_3_0(star_3_0)
-                    .star_3_5(star_3_5)
-                    .star_4_0(star_4_0)
-                    .star_4_5(star_4_5)
-                    .star_5_0(star_5_0)
                     .build();
         }
     }
