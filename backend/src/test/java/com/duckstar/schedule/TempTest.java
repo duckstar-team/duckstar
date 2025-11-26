@@ -12,7 +12,7 @@ import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.service.ChartService;
-import com.duckstar.service.VoteCommandService;
+import com.duckstar.service.VoteCommandServiceImpl;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ public class TempTest {
     @Autowired
     private EpisodeStarRepository episodeStarRepository;
     @Autowired
-    private VoteCommandService voteCommandService;
+    private VoteCommandServiceImpl voteCommandServiceImpl;
 
     @Test
     @Transactional
@@ -51,7 +51,7 @@ public class TempTest {
     public void 에피소드_별점_리프레시() {
         Long weekId = 26L;
 
-        voteCommandService.refreshEpisodeStatsByWeekId(weekId);
+        voteCommandServiceImpl.refreshEpisodeStatsByWeekId(weekId);
     }
 
     @Test
@@ -124,13 +124,7 @@ public class TempTest {
     @Transactional
     @Rollback(false)
     public void calculateRankManual() {
-        Long weekId = 27L;
-
-        Week week = weekRepository.findById(weekId).get();
-
-        chartService.buildDuckstars(week.getEndDateTime(), weekId);
-
-        chartService.createBanners(weekId);
+        chartService.calculateRankByYQW(2025, 4, 8);
     }
 
     @Test
@@ -173,30 +167,21 @@ public class TempTest {
             episode.setRankInfo(week2, newRankInfo);
         });
 
+        //=== 덕스타 런칭부터 임의의 주차까지의 week_id들 ===//
+        Long[] weekIdList = { 22L, 23L, 24L, 25L, 26L, 27L };
 
-        Week week3 = weekRepository.findById(22L).get();
+        for (Long weekId : weekIdList) {
+            Week week = weekRepository.findById(weekId).get();
 
-        List<Episode> week3Episodes = episodeRepository
-                .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
-                        week3.getStartDateTime(), week3.getEndDateTime()).stream()
-                .filter(e -> e.getRankInfo() != null && e.getRankInfo().getRank() != null)
-                .toList();
-        week3Episodes.forEach(episode -> episode.setRankInfo(null, null));
+            List<Episode> week3Episodes = episodeRepository
+                    .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
+                            week.getStartDateTime(), week.getEndDateTime()).stream()
+                    .filter(e -> e.getRankInfo() != null && e.getRankInfo().getRank() != null)
+                    .toList();
+            week3Episodes.forEach(episode -> episode.setRankInfo(null, null));
 
-        chartService.buildDuckstars(week3.getEndDateTime(), 22L);
-
-
-
-        Week week4 = weekRepository.findById(23L).get();
-
-        List<Episode> week4Episodes = episodeRepository
-                .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
-                        week4.getStartDateTime(), week4.getEndDateTime()).stream()
-                .filter(e -> e.getRankInfo() != null && e.getRankInfo().getRank() != null)
-                .toList();
-        week4Episodes.forEach(episode -> episode.setRankInfo(null, null));
-
-        chartService.buildDuckstars(week4.getEndDateTime(), 23L);
+            chartService.buildDuckstars(weekId, true);
+        }
     }
 
 //    @Test
