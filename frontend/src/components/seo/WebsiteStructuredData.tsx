@@ -5,6 +5,10 @@ export default function WebsiteStructuredData() {
     name: '덕스타',
     url: 'https://duckstar.kr',
     description: '분기 신작 애니메이션 투표 및 차트 서비스',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://duckstar.kr/icons/favicon.svg',
+    },
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -17,6 +21,10 @@ export default function WebsiteStructuredData() {
       '@type': 'Organization',
       name: '덕스타',
       url: 'https://duckstar.kr',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://duckstar.kr/icons/favicon.svg',
+      },
     },
   };
 
@@ -27,4 +35,3 @@ export default function WebsiteStructuredData() {
     />
   );
 }
-
