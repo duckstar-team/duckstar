@@ -3,6 +3,7 @@
 import React from 'react';
 import StarDistributionChart from '@/components/chart/StarDistributionChart';
 import StarRatingSimple from '@/components/StarRatingSimple';
+import { X } from 'lucide-react';
 
 interface StarDetailPopupProps {
   /** 현재 선택된 별점 (0.5~5.0) */
@@ -21,6 +22,8 @@ interface StarDetailPopupProps {
   onCloseClick?: () => void;
   /** 클래스명 */
   className?: string;
+  /** full width variant (summary 화면) */
+  fullWidth?: boolean;
 }
 
 export default function StarDetailPopup({
@@ -30,14 +33,15 @@ export default function StarDetailPopup({
   distribution,
   onEditClick,
   onClose,
-  onCloseClick,
-  className = ''
+  className = '',
+  fullWidth = false,
 }: StarDetailPopupProps) {
+  const baseClass = fullWidth
+    ? 'flex w-full gap-4'
+    : `w-64 h-28 py-6 left-0 top-0 absolute bg-black rounded-bl-2xl rounded-br-2xl inline-flex flex-col justify-center items-center gap-[2px] ${className}`;
 
   return (
-    <div 
-      className={`w-64 h-28 py-6 left-0 top-0 absolute bg-black rounded-bl-2xl rounded-br-2xl inline-flex flex-col justify-center items-center gap-[2px] ${className}`}
-    >
+    <div className={baseClass}>
       {/* 닫기 버튼 */}
       {onClose && (
         <button
@@ -45,29 +49,17 @@ export default function StarDetailPopup({
             e.stopPropagation(); // 이벤트 버블링 방지
             onClose();
           }}
-          className="absolute -top-[1px] -left-[12px] z-20 w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-white/20 rounded transition-colors duration-200"
+          className="absolute -top-[1px] -left-[12px] z-20 flex h-8 w-8 items-center justify-center rounded text-gray-400 transition-colors duration-200 hover:bg-white/20"
           aria-label="닫기"
         >
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 16 16" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              d="M12 4L4 12M4 4L12 12" 
-              stroke="currentColor" 
-              strokeWidth="1.7" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            />
-          </svg>
+          <X size={16} />
         </button>
       )}
       {/* 상단: 별점 선택 및 수정 버튼 */}
-      <div className="size- relative inline-flex justify-center items-center gap-2.5">
-        <div className="size- px-[2.96px] pb-1.5 flex justify-end items-center gap-[0.74px] pointer-events-none">
+      <div
+        className={`relative ${fullWidth ? 'order-2' : 'order-1'} inline-flex items-center justify-center gap-2.5`}
+      >
+        <div className="pointer-events-none flex items-center justify-end gap-[0.74px] px-[2.96px] pb-1.5">
           <StarRatingSimple
             key={`star-detail-${currentRating}`}
             maxStars={5}
@@ -77,15 +69,17 @@ export default function StarDetailPopup({
             onRatingChange={() => {}} // 읽기 전용
           />
         </div>
-        <div className="h-7 pb-[5px] left-[135px] top-[-5px] absolute inline-flex flex-col justify-center items-center gap-[4.85px] overflow-hidden">
+        <div
+          className={` ${fullWidth ? 'self-start' : 'absolute top-[-5px] left-[135px]'} inline-flex h-7 flex-col items-center justify-center gap-[4.85px] overflow-hidden pb-[5px]`}
+        >
           <button
             onClick={onEditClick}
-            className="px-2 pt-[3px] pb-1 rounded-sm inline-flex justify-center items-center gap-2.5 hover:opacity-80 transition-opacity"
+            className="inline-flex items-center justify-center gap-2.5 rounded-sm px-2 pt-[3px] pb-1 transition-opacity hover:opacity-80"
             style={{
-              background: 'linear-gradient(to right, #495057, #343A40)'
+              background: 'linear-gradient(to right, #495057, #343A40)',
             }}
           >
-            <div className="text-right justify-center text-white text-[10px] font-bold font-['Pretendard'] whitespace-nowrap">
+            <div className="justify-center text-right font-['Pretendard'] text-[10px] font-bold whitespace-nowrap text-white">
               수정
             </div>
           </button>
@@ -93,34 +87,36 @@ export default function StarDetailPopup({
       </div>
 
       {/* 하단: 평균 별점 및 분포 그래프 */}
-      <div className="size- inline-flex justify-center items-center gap-4.5">
+      <div
+        className={`${fullWidth ? 'order-1' : 'order-2'} inline-flex items-center justify-center gap-4.5`}
+      >
         {/* 평균 별점 정보 */}
-        <div className="size- inline-flex flex-col justify-center items-center">
-          <div className="size- inline-flex justify-center items-center gap-2">
-            <div className="size-4 relative">
-              <img 
-                src="/icons/star/star-Selected.svg" 
-                alt="별" 
-                className="w-5 h-5 left-0 top-0 absolute pb-1"
+        <div className="inline-flex flex-col items-center justify-center">
+          <div className="inline-flex items-center justify-center gap-2">
+            <div className="relative size-4">
+              <img
+                src="/icons/star/star-Selected.svg"
+                alt="별"
+                className="absolute top-0 left-0 h-5 w-5 pb-1"
               />
             </div>
-            <div className="size- pt-0.5 flex justify-center items-center gap-2.5">
-              <div className="text-center justify-start text-white text-2xl font-semibold font-['Pretendard'] leading-snug">
+            <div className="flex items-center justify-center gap-2.5 pt-0.5">
+              <div className="justify-start text-center text-2xl leading-snug font-semibold text-white">
                 {averageRating.toFixed(1)}
               </div>
             </div>
           </div>
-          <div className="size- flex flex-col justify-start items-center gap-0.5 pb-1">
-            <div className="size- inline-flex justify-start items-center gap-1">
-              <div className="text-right justify-start text-gray-400 text-sm font-medium font-['Pretendard'] leading-snug">
-                {participantCount.toLocaleString()}명 참여
+          <div className="flex flex-col items-center justify-start gap-0.5 pb-1">
+            <div className="inline-flex items-center justify-start gap-1">
+              <div className="justify-start text-right text-sm leading-snug font-medium text-gray-400">
+                {participantCount?.toLocaleString()}명 참여
               </div>
             </div>
           </div>
         </div>
 
         {/* 별점 분산 막대 그래프 */}
-        <div className="w-24 h-10 relative pt-1">
+        <div className="relative h-10 w-24 pt-1">
           <StarDistributionChart
             distribution={distribution}
             totalVoters={participantCount}
