@@ -19,10 +19,10 @@ export default function HeaderList({
 }: HeaderListProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // CLOSED된 주차들만 필터링 (안전장치 추가)
-  const closedWeeks = weekDtos?.filter((week) => week.week) || [];
+  // 모든 주차 사용
+  const closedWeeks = weekDtos || [];
 
-  // 외부에서 전달받은 selectedWeek 사용, 없으면 첫 번째 CLOSED 주차를 기본 선택
+  // 외부에서 전달받은 selectedWeek 사용, 없으면 첫 번째 주차를 기본 선택
   const selectedWeek = propSelectedWeek || closedWeeks[0] || null;
 
   // 드롭다운 메뉴 상태 저장 및 복원

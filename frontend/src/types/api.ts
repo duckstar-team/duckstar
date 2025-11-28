@@ -10,7 +10,6 @@ export interface ApiResponse<T> {
 
 // Week DTO
 export interface WeekDto {
-  voteStatus: VoteStatus; // TODO: 삭제 예정
   year: number;
   quarter: number;
   week: number;
