@@ -5,14 +5,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimePreviewDto } from '@/components/search/types';
 import StarSubmissionBox from '@/components/star/StarSubmissionBox';
-import { submitStarVote } from '@/api/client';
+import { submitStarVote, withdrawStar } from '@/api/client';
 import { ApiResponseStarInfoDto, StarInfoDto } from '@/types/api';
 import { addVotedEpisode } from '@/lib/voteStorage';
-import { useAuth } from '@/context/AuthContext';
-import { useModal } from '@/components/AppContainer';
-import LoginModal from '@/components/common/LoginModal';
-import VoteModal from '@/components/vote/VoteModal';
 import { Clock } from 'lucide-react';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   addHours,
   differenceInHours,
@@ -33,16 +30,133 @@ interface BigCandidateProps {
 export default function BigCandidate({
   anime,
   className,
-  isCurrentSeason = true,
   voteInfo,
   starInfo,
   voterCount,
   onVoteComplete,
 }: BigCandidateProps) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
-  const { openLoginModal, closeLoginModal, isLoginModalOpen } = useModal();
-  const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // 별점 투표 mutation
+  const voteMutation = useMutation({
+    mutationFn: async (starScore: number) => {
+      // 이미 투표한 경우(수정) episodeStarId 전달
+      return await submitStarVote(anime.episodeId, starScore, episodeStarId);
+    },
+    onMutate: async () => {
+      // 처음 투표하는 경우에만 voterCount +1 (수정 시에는 업데이트 안 함)
+      const isFirstVote =
+        !starInfo?.userStarScore || starInfo.userStarScore === 0;
+      if (isFirstVote) {
+        setLocalVoterCount((prev) => prev + 1);
+      }
+      setVoteState('loading');
+    },
+    onSuccess: (response, starScore) => {
+      setVoteState('submitted');
+      setIsPanelVisible(true);
+      setShowBinIcon(true);
+      updateStarDistribution(response, starScore);
+      addVotedEpisode(anime.episodeId);
+
+      // 응답에서 episodeStarId 저장 (회수 시 사용)
+      if (response.result?.info?.episodeStarId) {
+        setEpisodeStarId(response.result.info.episodeStarId);
+        console.log(episodeStarId);
+      }
+
+      // 투표 남은 시간 계산
+      const now = new Date();
+      const scheduled = new Date(anime.scheduledAt);
+      const voteEndTime = addHours(scheduled, 36);
+      const voteTimeLeft = Math.max(0, differenceInSeconds(voteEndTime, now));
+
+      // 서버 데이터 동기화
+      queryClient.invalidateQueries({
+        queryKey: ['starCandidates'],
+      });
+      // VoteCandidateList와 VoteModal 업데이트를 위해 candidateList 쿼리도 무효화
+      if (voteInfo) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            'candidateList',
+            voteInfo.year,
+            voteInfo.quarter,
+            voteInfo.week,
+          ],
+        });
+      }
+      // VoteModal 업데이트를 위해 candidate 쿼리도 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['candidate', anime.episodeId],
+      });
+
+      if (onVoteComplete) {
+        onVoteComplete(anime.episodeId, voteTimeLeft);
+      }
+    },
+    onError: (error) => {
+      // 에러 시 optimistic update 롤백 (처음 투표인 경우에만)
+      const isFirstVote =
+        !starInfo?.userStarScore || starInfo.userStarScore === 0;
+      if (isFirstVote) {
+        setLocalVoterCount((prev) => Math.max(0, prev - 1));
+      }
+      setVoteState('submitting');
+      console.error('투표 중 오류:', error);
+    },
+  });
+
+  // 별점 회수 mutation
+  const withdrawMutation = useMutation({
+    mutationFn: async () => {
+      if (!episodeStarId) {
+        throw new Error('episodeStarId가 없습니다.');
+      }
+      return await withdrawStar(anime.episodeId, episodeStarId);
+    },
+    onMutate: async () => {
+      // Optimistic update: 즉시 voterCount -1
+      setLocalVoterCount((prev) => Math.max(0, prev - 1));
+    },
+    onSuccess: () => {
+      setVoteState('submitting');
+      setIsPanelVisible(false);
+      setShowBinIcon(false);
+      setCurrentRating(0);
+      setEpisodeStarId(undefined); // 회수 후 episodeStarId 초기화
+
+      // 서버 데이터 동기화
+      queryClient.invalidateQueries({
+        queryKey: ['starCandidates'],
+      });
+      // VoteCandidateList와 VoteModal 업데이트를 위해 candidateList 쿼리도 무효화
+      if (voteInfo) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            'candidateList',
+            voteInfo.year,
+            voteInfo.quarter,
+            voteInfo.week,
+          ],
+        });
+      }
+      // VoteModal 업데이트를 위해 candidate 쿼리도 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['candidate', anime.episodeId],
+      });
+
+      if (onVoteComplete) {
+        onVoteComplete(anime.episodeId, 0);
+      }
+    },
+    onError: (error) => {
+      // 에러 시 optimistic update 롤백
+      setLocalVoterCount((prev) => prev + 1);
+      console.error('별점 회수 실패:', error);
+    },
+  });
 
   // 별점 제출 상태 관리 - starInfo가 있고 userStarScore가 있으면 초기 상태를 submitted로 설정
   const [voteState, setVoteState] = useState<
@@ -57,6 +171,18 @@ export default function BigCandidate({
       ? starInfo.userStarScore / 2
       : 0
   );
+
+  // episodeStarId를 state로 관리 (투표 후 응답에서 받아옴)
+  const [episodeStarId, setEpisodeStarId] = useState<number | undefined>(
+    starInfo?.episodeStarId
+  );
+
+  // starInfo가 변경되면 episodeStarId 동기화
+  useEffect(() => {
+    if (starInfo?.episodeStarId) {
+      setEpisodeStarId(starInfo.episodeStarId);
+    }
+  }, [starInfo?.episodeStarId]);
 
   // 별점 분포 데이터 상태 관리 - starInfo가 있으면 초기값 설정
   // isBlocked가 true면 유저의 별점을 가산해서 계산 (사용자가 눈치채지 못하도록)
@@ -98,16 +224,32 @@ export default function BigCandidate({
     return starInfo.starAverage / 2;
   });
 
-  const [participantCount, setParticipantCount] = useState(
-    starInfo &&
+  // voterCount를 로컬 state로 관리 (즉시 업데이트를 위해)
+  const [localVoterCount, setLocalVoterCount] = useState(() => {
+    if (
+      starInfo &&
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
       starInfo.userStarScore > 0
-      ? voterCount + 1
-      : starInfo
-        ? voterCount
-        : 0
-  );
+    ) {
+      return voterCount + 1;
+    }
+    return voterCount;
+  });
+
+  // props의 voterCount가 변경되면 로컬 state 동기화
+  useEffect(() => {
+    if (
+      starInfo &&
+      starInfo.isBlocked &&
+      starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore > 0
+    ) {
+      setLocalVoterCount(voterCount + 1);
+    } else {
+      setLocalVoterCount(voterCount);
+    }
+  }, [voterCount, starInfo]);
 
   const [distribution, setDistribution] = useState(() => {
     if (!starInfo) return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -169,8 +311,7 @@ export default function BigCandidate({
   );
 
   // 닫기 버튼 핸들러
-  const handleClosePanel = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 이벤트 버블링 방지
+  const handleClosePanel = () => {
     console.log('handleClosePanel called');
     setIsPanelVisible(false);
   };
@@ -253,12 +394,14 @@ export default function BigCandidate({
   }, [voteState, isPanelVisible]);
 
   // API 응답을 별점 분포로 변환하는 함수
-  const updateStarDistribution = (response: any, userStarScore?: number) => {
+  const updateStarDistribution = (
+    response: ApiResponseStarInfoDto,
+    userStarScore?: number
+  ) => {
     if (response.result) {
       const {
         isBlocked,
         starAverage,
-        voterCount,
         star_0_5,
         star_1_0,
         star_1_5,
@@ -269,12 +412,12 @@ export default function BigCandidate({
         star_4_0,
         star_4_5,
         star_5_0,
-      } = response.result;
+      } = response.result.info;
 
       // isBlocked가 true면 유저의 별점을 가산해서 계산 (사용자가 눈치채지 못하도록)
       if (isBlocked && userStarScore !== undefined) {
         // 참여자 수: 기존 + 1
-        const newVoterCount = voterCount + 1;
+        const newVoterCount = response.result.voterCount + 1;
 
         // 별점 분포: 기존 분포에 유저의 별점을 가산
         const newDistributionArray = [
@@ -314,15 +457,13 @@ export default function BigCandidate({
         );
 
         setAverageRating(newStarAverage / 2);
-        setParticipantCount(newVoterCount);
         setDistribution(newDistribution);
       } else {
         // 정상적인 경우 기존 로직 사용
         setAverageRating(starAverage / 2);
-        setParticipantCount(voterCount);
 
         // 별점 분포를 비율로 변환 (0.5점 단위)
-        const totalVotes = voterCount;
+        const totalVotes = response.result.voterCount;
         if (totalVotes > 0) {
           const newDistribution = [
             star_0_5 / totalVotes,
@@ -345,14 +486,12 @@ export default function BigCandidate({
     animeId,
     mainThumbnailUrl,
     status,
-    isBreak,
     titleKor,
     dayOfWeek,
     scheduledAt,
     isRescheduled,
     genre,
     medium,
-    airTime,
   } = anime;
   const [imageError, setImageError] = useState(false);
 
@@ -438,43 +577,6 @@ export default function BigCandidate({
     return '시간 미정';
   };
 
-  // 방영까지 남은 시간 계산 (NOW_SHOWING 23분 59초 이내 또는 UPCOMING 12시간 이내)
-  const getTimeRemaining = () => {
-    // 시즌별 조회인 경우 추적하지 않음
-    if (!isCurrentSeason) return null;
-
-    if (!scheduledAt) return null;
-
-    const now = new Date();
-    const scheduled = new Date(scheduledAt);
-    const diffMs = scheduled.getTime() - now.getTime();
-
-    // UPCOMING 상태이고 12시간 이내인 경우
-    if (status === 'UPCOMING' && diffMs > 0 && diffMs <= 12 * 60 * 60 * 1000) {
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      return `${hours}시간 ${minutes}분 후`;
-    }
-
-    // NOW_SHOWING 상태이고 23분 59초 이내인 경우
-    if (
-      status === 'NOW_SHOWING' &&
-      diffMs > 0 &&
-      diffMs <= 23 * 60 * 60 * 1000
-    ) {
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      return `${hours}시간 ${minutes}분 후`;
-    }
-
-    return null;
-  };
-
-  // 현재 방영 중인지 확인
-  const isCurrentlyAiring = () => {
-    return status === 'NOW_SHOWING';
-  };
-
   // 요일을 한국어로 변환 (한 글자)
   const getDayInKorean = (dayOfWeek: string) => {
     const dayMap: { [key: string]: string } = {
@@ -522,18 +624,6 @@ export default function BigCandidate({
     }
   };
 
-  // 미디어 타입을 한국어로 변환
-  const getMediumInKorean = (medium: string) => {
-    const mediumMap: { [key: string]: string } = {
-      TV: 'TV',
-      TVA: 'TVA',
-      MOVIE: '극장판',
-      OVA: 'OVA',
-      SPECIAL: '특별편성',
-    };
-    return mediumMap[medium] || medium;
-  };
-
   return (
     <div
       data-anime-item
@@ -555,20 +645,17 @@ export default function BigCandidate({
         className="relative h-[340px] w-full cursor-pointer overflow-hidden bg-gray-300"
         onClick={() => router.push(`/animes/${animeId}`)}
       >
+        {localVoterCount > 0 && (
+          <span className="absolute top-2 left-2 rounded-md bg-gray-800 px-2 py-1 text-xs font-bold text-white">
+            {localVoterCount}명 참여
+          </span>
+        )}
         <img
           src={mainThumbnailUrl}
           alt={titleKor}
           className="h-full w-full object-cover"
           onError={() => setImageError(true)}
         />
-
-        {/* OTT Services Overlay - 제거됨 */}
-
-        {/* Status Badge - 제거됨 */}
-
-        {/* Live Badge - 제거됨 */}
-
-        {/* Break Badge - 제거됨 */}
       </div>
 
       {/* Content Section */}
@@ -682,7 +769,9 @@ export default function BigCandidate({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex items-center space-x-2">
               <div className="text-xs font-medium text-gray-600 opacity-70 transition-all duration-200 group-hover:text-white group-hover:opacity-100">
-                마우스를 올려서 투표
+                {voteState === 'submitted'
+                  ? '투표 내역 보기'
+                  : '마우스를 올려서 투표'}
               </div>
               <div className="h-0 w-0 animate-bounce border-r-[6px] border-b-[6px] border-l-[6px] border-transparent border-b-gray-600 opacity-60 transition-all duration-200 group-hover:border-b-white group-hover:opacity-100"></div>
             </div>
@@ -704,7 +793,7 @@ export default function BigCandidate({
           <StarSubmissionBox
             currentRating={currentRating}
             averageRating={averageRating}
-            participantCount={participantCount}
+            participantCount={localVoterCount}
             distribution={distribution}
             episodeId={anime.episodeId}
             variant={voteState}
@@ -715,72 +804,25 @@ export default function BigCandidate({
               setCurrentRating(0);
             }}
             onWithdrawComplete={() => {
-              // 별점 회수 완료 시 상태 초기화
-              setVoteState('submitting');
-              setIsPanelVisible(false);
-              setShowBinIcon(false); // bin 아이콘 숨기기
-              if (onVoteComplete) {
-                onVoteComplete(anime.episodeId, 0); // 회수 시 voteTimeLeft는 0
-              }
+              // 별점 회수 mutation 실행
+              withdrawMutation.mutate();
             }}
-            onRatingChange={async (rating) => {
+            onRatingChange={(rating) => {
               console.log('onRatingChange called with rating:', rating);
 
               setCurrentRating(rating);
 
               if (rating > 0) {
                 console.log('Rating > 0, proceeding with vote');
-                // 로딩 상태로 전환
-                setVoteState('loading');
-
-                try {
-                  // 별점을 0.5-5.0에서 1-10으로 변환 (2배)
-                  const starScore = Math.round(rating * 2);
-                  // 실제 별점 투표 API 호출
-                  const response = await submitStarVote(
-                    anime.episodeId,
-                    starScore
-                  );
-
-                  setVoteState('submitted');
-
-                  // 데스크톱과 모바일 모두에서 패널 유지
-                  setIsPanelVisible(true);
-
-                  // API 응답으로 별점 분포 업데이트
-                  // isBlocked가 true면 유저의 별점을 가산해서 계산 (사용자가 눈치채지 못하도록)
-                  updateStarDistribution(response, starScore);
-
-                  // 투표한 episode ID를 브라우저에 저장
-                  addVotedEpisode(anime.episodeId);
-
-                  // bin 아이콘 표시하기 (새로 투표했으므로)
-                  setShowBinIcon(true);
-                  // 투표 남은 시간 계산 (36시간 후까지)
-                  const now = new Date();
-                  const scheduled = new Date(anime.scheduledAt);
-                  const voteEndTime = addHours(scheduled, 36);
-                  const voteTimeLeft = Math.max(
-                    0,
-                    differenceInSeconds(voteEndTime, now)
-                  ); // 초 단위
-
-                  // 투표 완료 콜백 호출
-                  if (onVoteComplete) {
-                    onVoteComplete(anime.episodeId, voteTimeLeft);
-                  }
-                } catch (error) {
-                  // 에러 시 다시 제출 상태로 돌아감
-                  setVoteState('submitting');
-                  console.error('투표 중 오류:', error);
-                  // TODO: 사용자에게 에러 메시지 표시
-                }
+                // 별점을 0.5-5.0에서 1-10으로 변환 (2배)
+                const starScore = Math.round(rating * 2);
+                // 투표 mutation 실행
+                voteMutation.mutate(starScore);
               } else {
                 console.log('Rating = 0, closing panel without submission');
                 // 0점일 때 패널 닫기 (제출하지 않음)
                 setIsPanelVisible(false);
                 setVoteState('submitting'); // 제출 상태로 되돌림
-                return; // 함수 종료
               }
             }}
             onEditClick={() => {
@@ -797,9 +839,7 @@ export default function BigCandidate({
               );
             }}
             onCloseClick={
-              voteState === 'submitted'
-                ? () => handleClosePanel({} as React.MouseEvent)
-                : undefined
+              voteState === 'submitted' ? () => handleClosePanel() : undefined
             }
           />
         </div>
