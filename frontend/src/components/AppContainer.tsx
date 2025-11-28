@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -14,6 +20,9 @@ interface ModalContextType {
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
+  isVoteModalOpen: boolean;
+  openVoteModal: () => void;
+  closeVoteModal: () => void;
 }
 
 // 주간 차트 상태를 관리하는 Context
@@ -32,7 +41,9 @@ interface MobileMenuContextType {
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 const ChartContext = createContext<ChartContextType | undefined>(undefined);
-const MobileMenuContext = createContext<MobileMenuContextType | undefined>(undefined);
+const MobileMenuContext = createContext<MobileMenuContextType | undefined>(
+  undefined
+);
 
 export const useModal = () => {
   const context = useContext(ModalContext);
@@ -64,6 +75,7 @@ interface AppContainerProps {
 
 export default function AppContainer({ children }: AppContainerProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
   const [isThinNavHovered, setIsThinNavHovered] = useState(false);
   const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -77,6 +89,14 @@ export default function AppContainer({ children }: AppContainerProps) {
 
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
+  };
+
+  const openVoteModal = () => {
+    setIsVoteModalOpen(true);
+  };
+
+  const closeVoteModal = () => {
+    setIsVoteModalOpen(false);
   };
 
   const toggleMobileMenu = () => {
@@ -108,7 +128,7 @@ export default function AppContainer({ children }: AppContainerProps) {
           console.error('주차 데이터 로딩 실패:', error);
         }
       };
-      
+
       fetchWeeks();
     }
   }, [isChartPage, weeks.length]);
@@ -133,11 +153,13 @@ export default function AppContainer({ children }: AppContainerProps) {
     }
   }, [isChartPage, pathname]);
 
-
   const modalContextValue: ModalContextType = {
     isLoginModalOpen,
     openLoginModal,
     closeLoginModal,
+    isVoteModalOpen,
+    openVoteModal,
+    closeVoteModal,
   };
 
   const chartContextValue: ChartContextType = {
@@ -149,78 +171,93 @@ export default function AppContainer({ children }: AppContainerProps) {
   const mobileMenuContextValue = {
     isMobileMenuOpen,
     setIsMobileMenuOpen,
-    toggleMobileMenu
+    toggleMobileMenu,
   };
 
   return (
     <ModalContext.Provider value={modalContextValue}>
       <ChartContext.Provider value={chartContextValue}>
-      <MobileMenuContext.Provider value={mobileMenuContextValue}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Mobile Menu Overlay - 차트 페이지에서는 오버레이 제거 */}
-        {isMobileMenuOpen && (pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/profile-setup') && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-20 z-[9999998] lg:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
+        <MobileMenuContext.Provider value={mobileMenuContextValue}>
+          <div className="min-h-screen bg-gray-50">
+            {/* Mobile Menu Overlay - 차트 페이지에서는 오버레이 제거 */}
+            {isMobileMenuOpen &&
+              (pathname === '/vote' ||
+                pathname === '/search' ||
+                pathname.startsWith('/search/') ||
+                pathname.startsWith('/animes/') ||
+                pathname === '/profile-setup') && (
+                <div
+                  className="bg-opacity-20 fixed inset-0 z-[9999998] bg-black lg:hidden"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+              )}
+
+            {/* Fixed Header */}
+            <div className="fixed top-0 right-0 left-0 z-[9999]">
+              <Header />
+            </div>
+
+            {/* Fixed Sidebar */}
+            <div
+              className={`fixed top-[60px] bottom-0 left-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy' ? 'hidden lg:block' : ''}`}
+            >
+              {isChartPage ? (
+                <>
+                  <ThinNav
+                    onHover={setIsThinNavHovered}
+                    isExpanded={isThinNavHovered || isThinNavDetailHovered}
+                  />
+                  <div
+                    className={`absolute top-0 transition-all duration-300 ease-in-out ${
+                      isThinNavHovered || isThinNavDetailHovered
+                        ? 'left-[200px]'
+                        : 'left-[60px]'
+                    }`}
+                    onMouseEnter={() => {
+                      if (isThinNavHovered) {
+                        setIsThinNavDetailHovered(true);
+                      }
+                    }}
+                    onMouseLeave={() => setIsThinNavDetailHovered(false)}
+                  >
+                    <ThinNavDetail weeks={weeks} selectedWeek={selectedWeek} />
+                  </div>
+                </>
+              ) : (
+                <Sidebar />
+              )}
+            </div>
+
+            {/* Main Content */}
+            <main
+              className={`bg-gray-50 pt-[60px] transition-all duration-300 ease-in-out ${
+                isChartPage
+                  ? 'ml-0 lg:ml-[200px]' // 모바일에서는 마진 없음, 데스크톱에서만 ThinNav 마진
+                  : pathname === '/vote' ||
+                      pathname === '/search' ||
+                      pathname.startsWith('/search/') ||
+                      pathname.startsWith('/animes/') ||
+                      pathname === '/profile-setup' ||
+                      pathname === '/about' ||
+                      pathname === '/terms' ||
+                      pathname === '/privacy-policy'
+                    ? 'ml-0 lg:ml-[200px]'
+                    : pathname === '/'
+                      ? 'ml-0 lg:ml-[200px]'
+                      : 'ml-[50px] overflow-x-hidden group-hover:ml-[200px] sm:ml-[55px] lg:ml-[200px]'
+              }`}
+            >
+              {children}
+            </main>
+          </div>
+
+          {/* Global Modals - 전체 앱 레벨에서 관리 */}
+          <LoginModal
+            isOpen={isLoginModalOpen}
+            onClose={closeLoginModal}
+            backdropStyle="blur"
           />
-        )}
-        
-        {/* Fixed Header */}
-        <div className="fixed top-0 left-0 right-0 z-[9999]">
-          <Header />
-        </div>
-        
-        {/* Fixed Sidebar */}
-        <div className={`fixed top-[60px] left-0 bottom-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy' ? 'hidden lg:block' : ''}`}>
-          {isChartPage ? (
-            <>
-              <ThinNav 
-                onHover={setIsThinNavHovered} 
-                isExpanded={isThinNavHovered || isThinNavDetailHovered} 
-              />
-              <div 
-                className={`absolute top-0 transition-all duration-300 ease-in-out ${
-                  (isThinNavHovered || isThinNavDetailHovered) ? 'left-[200px]' : 'left-[60px]'
-                }`}
-                onMouseEnter={() => {
-                  if (isThinNavHovered) {
-                    setIsThinNavDetailHovered(true);
-                  }
-                }}
-                onMouseLeave={() => setIsThinNavDetailHovered(false)}
-              >
-                <ThinNavDetail 
-                weeks={weeks}
-                selectedWeek={selectedWeek}
-              />
-              </div>
-            </>
-          ) : (
-            <Sidebar />
-          )}
-        </div>
-        
-        {/* Main Content */}
-        <main className={`pt-[60px] bg-gray-50 transition-all duration-300 ease-in-out ${
-          isChartPage 
-            ? 'ml-0 lg:ml-[200px]' // 모바일에서는 마진 없음, 데스크톱에서만 ThinNav 마진
-            : pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy'
-              ? 'ml-0 lg:ml-[200px]' 
-              : pathname === '/'
-                ? 'ml-0 lg:ml-[200px]'
-                : 'ml-[50px] sm:ml-[55px] lg:ml-[200px] group-hover:ml-[200px] overflow-x-hidden'
-        }`}>
-          {children}
-        </main>
-      </div>
-      
-      {/* Global Modals - 전체 앱 레벨에서 관리 */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={closeLoginModal}
-        backdropStyle="blur"
-      />
-      </MobileMenuContext.Provider>
+        </MobileMenuContext.Provider>
       </ChartContext.Provider>
     </ModalContext.Provider>
   );

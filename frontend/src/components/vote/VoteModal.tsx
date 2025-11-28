@@ -32,22 +32,7 @@ interface VoteModalProps {
   week: number;
   hasVoted: boolean;
   onClose: () => void;
-  isOpen?: boolean;
 }
-
-const isApiErrorResponse = (
-  error: unknown
-): error is ApiResponse<{ body?: string }> => {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-  return (
-    'result' in error &&
-    'isSuccess' in error &&
-    'code' in error &&
-    'message' in error
-  );
-};
 
 export default function VoteModal({
   episodeId,
@@ -58,10 +43,9 @@ export default function VoteModal({
   week,
   hasVoted,
   onClose,
-  isOpen = true,
 }: VoteModalProps) {
   const { isAuthenticated } = useAuth();
-  const { isLoginModalOpen } = useModal();
+  const { isLoginModalOpen, isVoteModalOpen } = useModal();
   const modalRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const candidateQuery = useQuery<CandidateDto | null>({
@@ -70,7 +54,7 @@ export default function VoteModal({
       const response = await getCandidate(episodeId);
       return response.result ?? null;
     },
-    enabled: isOpen && !!episodeId,
+    enabled: isVoteModalOpen && !!episodeId,
     staleTime: 60_000,
     retry: false,
   });
@@ -106,7 +90,7 @@ export default function VoteModal({
   useOutsideClick(modalRef, handleOutsideClick);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isVoteModalOpen) {
       return;
     }
 
@@ -127,10 +111,10 @@ export default function VoteModal({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = originalOverflow;
     };
-  }, [isOpen, isLoginModalOpen, onClose]);
+  }, [isVoteModalOpen, isLoginModalOpen, onClose]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isVoteModalOpen) {
       setModalError(null);
       setShowCommentForm(false);
       setRating(0);
@@ -149,7 +133,7 @@ export default function VoteModal({
     } else {
       setPhase('form');
     }
-  }, [hasSelfVoteRecorded, hasUserRating, isEditing, isOpen]);
+  }, [hasSelfVoteRecorded, hasUserRating, isEditing, isVoteModalOpen]);
 
   useEffect(() => {
     if (phase !== 'form') return;
@@ -160,8 +144,20 @@ export default function VoteModal({
     }
   }, [phase, hasUserRating, userStarScore]);
 
+  // voterCount를 로컬 state로 관리 (즉시 업데이트를 위해)
+  const [localVoterCount, setLocalVoterCount] = useState(
+    candidate?.result?.voterCount ?? 0
+  );
+
+  // candidate가 변경되면 voterCount 동기화
+  useEffect(() => {
+    if (candidate?.result?.voterCount !== undefined) {
+      setLocalVoterCount(candidate.result.voterCount);
+    }
+  }, [candidate?.result?.voterCount]);
+
   const { distribution, participantCount, averageScore } = useMemo(() => {
-    const voterCount = candidate?.result?.voterCount ?? 0;
+    const voterCount = localVoterCount;
     if (!starInfo) {
       return {
         distribution: Array(10).fill(0),
@@ -210,26 +206,40 @@ export default function VoteModal({
       participantCount: totalVotes,
       averageScore: computedAverage,
     };
-  }, [candidate?.result?.voterCount, starInfo]);
+  }, [localVoterCount, starInfo]);
 
   const mutation = useMutation({
     mutationFn: (payload: Record<string, unknown>) => submitVoteForm(payload),
+    onMutate: async () => {
+      // 처음 투표하는 경우에만 voterCount +1 (수정 시에는 업데이트 안 함)
+      const isFirstVote =
+        !starInfo?.userStarScore || starInfo.userStarScore === 0;
+      if (isFirstVote) {
+        setLocalVoterCount((prev) => prev + 1);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['candidate', episodeId] });
       queryClient.invalidateQueries({
         queryKey: ['candidateList', year, quarter, week],
+      });
+      // starCandidates 쿼리도 무효화하여 실시간 투표 목록 업데이트
+      queryClient.invalidateQueries({
+        queryKey: ['starCandidates'],
       });
       setPhase('summary');
       setShowCommentForm(false);
       setIsEditing(false);
       setHasSelfVoteRecorded(true);
     },
-    onError: (error) => {
-      const apiError = isApiErrorResponse(error) ? error : null;
-      const message =
-        (apiError as ApiResponse<{ body: string }>)?.result?.body ??
-        '투표 정보를 저장하는 데 실패했습니다.';
-      setModalError(message);
+    onError: () => {
+      // 에러 시 optimistic update 롤백 (처음 투표인 경우에만)
+      const isFirstVote =
+        !starInfo?.userStarScore || starInfo.userStarScore === 0;
+      if (isFirstVote) {
+        setLocalVoterCount((prev) => Math.max(0, prev - 1));
+      }
+      setModalError('댓글을 5자 이상 작성해주세요.');
     },
   });
 
@@ -273,7 +283,7 @@ export default function VoteModal({
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isVoteModalOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -316,7 +326,10 @@ export default function VoteModal({
               className="grid grid-cols-[1fr_auto] items-start gap-6 transition-all duration-500 max-md:grid-cols-1"
             >
               <div className="flex h-fit w-full flex-col items-center gap-2 md:w-32">
-                <Link href={`/animes/${candidate?.animeId}`}>
+                <Link
+                  href={`/animes/${candidate?.animeId}`}
+                  className="relative"
+                >
                   <Image
                     src={mainThumbnailUrl}
                     alt={titleKor}
@@ -324,6 +337,12 @@ export default function VoteModal({
                     height={100}
                     className="h-48 w-32 rounded-lg object-cover"
                   />
+                  {!isAuthenticated ||
+                    (phase === 'form' && (
+                      <span className="absolute top-1 left-1 rounded-md bg-gray-800 px-2 py-1 text-xs font-semibold text-white">
+                        {localVoterCount}명 참여
+                      </span>
+                    ))}
                 </Link>
                 <Link
                   href={`/animes/${candidate?.animeId}`}
