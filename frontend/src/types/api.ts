@@ -10,7 +10,7 @@ export interface ApiResponse<T> {
 
 // Week DTO
 export interface WeekDto {
-  voteStatus: VoteStatus;
+  voteStatus: VoteStatus; // TODO: 삭제 예정
   year: number;
   quarter: number;
   week: number;
@@ -188,12 +188,12 @@ export interface AnimeCandidateDto {
   medium: 'TVA' | 'MOVIE';
 }
 
+// TODO: 삭제 예정
 // Vote Status Enum
 export type VoteStatus = 'OPEN' | 'PAUSED' | 'CLOSED';
 
 // Anime Candidate List DTO
 export interface AnimeCandidateListDto {
-  status: VoteStatus;
   weekId: number;
   weekDto: WeekDto;
   animeCandidates: AnimeCandidateDto[];
