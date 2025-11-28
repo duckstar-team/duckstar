@@ -262,7 +262,7 @@ export default function CommentPostForm({
             <div
               className={`box-border flex content-stretch justify-between ${footerSectionHeight} relative w-full items-center overflow-clip px-3`}
             >
-              {phase === 'summary' || phase === 'form' ? (
+              {phase ? (
                 <div className="flex items-center gap-2">
                   {user && (
                     <>
@@ -325,7 +325,23 @@ export default function CommentPostForm({
 
           {/* Post Button */}
           <button
-            onClick={handleSubmit}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isAuthenticated) {
+                if (
+                  confirm(
+                    '댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?'
+                  )
+                ) {
+                  openLoginModal();
+                  return;
+                }
+                return;
+              } else {
+                handleSubmit();
+              }
+            }}
             disabled={isSubmitDisabled || phase === 'summary'}
             className={`w-20 ${buttonHeight} flex cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-br-[10px] border-t border-l border-[#adb5bd] bg-amber-400 px-8 transition-colors duration-200 hover:bg-[#FED783] disabled:cursor-not-allowed! disabled:bg-[#FED783]`}
           >

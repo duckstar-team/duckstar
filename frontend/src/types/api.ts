@@ -187,12 +187,12 @@ export interface AnimeCandidateDto {
   medium: 'TVA' | 'MOVIE';
 }
 
+// TODO: 삭제 예정
 // Vote Status Enum
 export type VoteStatus = 'OPEN' | 'PAUSED' | 'CLOSED';
 
 // Anime Candidate List DTO
 export interface AnimeCandidateListDto {
-  status: VoteStatus;
   weekId: number;
   weekDto: WeekDto;
   animeCandidates: AnimeCandidateDto[];

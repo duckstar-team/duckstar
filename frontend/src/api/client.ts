@@ -166,9 +166,7 @@ async function apiCall<T>(
   }
 
   if (!response.ok) {
-    // 서버에서 표준 오류 포맷을 내려주면 그대로 throw하여 클라이언트에서 메시지를 활용
-    const errorPayload: ApiResponse<{ body: string }> = await response.json();
-    throw errorPayload;
+    throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
   }
 
   return response.json();
@@ -451,7 +449,7 @@ export async function getCandidate(episodeId: number) {
 }
 
 // 별점 회수 API
-export async function withdrawStar(episodeId: number, episodeStarId?: number) {
+export async function withdrawStar(episodeId: number, episodeStarId: number) {
   // TODO: episodeStarId 필수 처리
   return apiCall<ApiResponse<void>>(
     `/api/v1/vote/withdraw/${episodeId}/${episodeStarId}`,

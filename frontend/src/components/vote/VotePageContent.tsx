@@ -7,23 +7,23 @@ import AnimeCard from '@/components/anime/AnimeCard';
 import SearchBar from '@/components/legacy-vote/SearchBar';
 import { searchMatch, extractChosung } from '@/lib/searchUtils';
 import { getStarCandidates } from '@/api/client';
-import { LiveCandidateDto, WeekDto } from '@/types/api';
+import { LiveCandidateDto } from '@/types/api';
 import {
   getVotedEpisodes,
   addVotedEpisodeWithTTL,
   removeVotedEpisode,
 } from '@/lib/voteStorage';
-import { useRouter } from 'next/navigation';
 import { useModal } from '@/components/AppContainer';
 import { useAuth } from '@/context/AuthContext';
 import { getUpcomingAnimes } from '@/api/search';
 import { AnimePreviewDto } from '@/types/api';
 import VoteBanner from './VoteBanner';
-import { format, subDays } from 'date-fns';
+import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryConfig } from '@/lib/queryConfig';
 
 export default function VotePageContent() {
-  const router = useRouter();
   const { openLoginModal } = useModal();
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -95,21 +95,47 @@ export default function VotePageContent() {
   };
 
   // 창 너비에 따른 동적 컨테이너 너비 계산 (그리드 최적화)
-  const getOptimalContainerWidth = (candidateCount: number) => {
+  const getOptimalContainerWidth = () => {
     // 창 너비에 따라 점진적으로 줄어드는 너비 (큰 화면부터)
     return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[900px] md:max-w-[700px] sm:max-w-[500px]';
   };
-  const [currentWeekLiveCandidates, setCurrentWeekLiveCandidates] = useState<
-    LiveCandidateDto[]
-  >([]);
-  const [lastWeekLiveCandidates, setLastWeekLiveCandidates] = useState<
-    LiveCandidateDto[]
-  >([]);
+  const queryClient = useQueryClient();
   const [fallbackAnimes, setFallbackAnimes] = useState<AnimePreviewDto[]>([]); // fallback 애니메이션 데이터
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [voteInfo, setVoteInfo] = useState<WeekDto | null>(null);
   const [isUsingFallback, setIsUsingFallback] = useState(false); // fallback 데이터 사용 여부
+
+  // React Query를 사용한 별점 후보 조회
+  const {
+    data: starCandidatesData,
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
+    queryKey: ['starCandidates', isAuthenticated],
+    queryFn: async () => {
+      // 로그인 상태 확인이 완료될 때까지 대기
+      if (isLoading) {
+        throw new Error('로그인 상태 확인 중...');
+      }
+      const response = await getStarCandidates();
+      if (!response.isSuccess) {
+        throw new Error(response.message);
+      }
+      return response;
+    },
+    enabled: !isLoading, // 로그인 상태 확인 완료 후에만 실행
+    ...queryConfig.vote,
+  });
+
+  // 데이터 추출
+  const currentWeekLiveCandidates =
+    starCandidatesData?.result?.currentWeekLiveCandidates || [];
+  const lastWeekLiveCandidates =
+    starCandidatesData?.result?.lastWeekLiveCandidates || [];
+  const voteInfo = starCandidatesData?.result?.weekDto || null;
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : '별점 투표 후보자를 불러오는데 실패했습니다.'
+    : null;
   const [searchQuery, setSearchQuery] = useState(''); // 검색 쿼리 상태
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>(''); // 랜덤 애니메이션 제목
   const [isSearchBarSticky, setIsSearchBarSticky] = useState(false); // 검색바 스티키 상태
@@ -207,7 +233,10 @@ export default function VotePageContent() {
   };
 
   // 투표 완료 시 호출되는 핸들러
-  const handleVoteComplete = (episodeId: number, voteTimeLeft: number) => {
+  const handleVoteComplete = async (
+    episodeId: number,
+    voteTimeLeft: number
+  ) => {
     if (voteTimeLeft > 0) {
       // 투표 완료
       addVotedEpisodeWithTTL(episodeId, voteTimeLeft);
@@ -217,6 +246,8 @@ export default function VotePageContent() {
     }
     // 즉시 상태 업데이트
     updateVoteStatus();
+    // voterCount 업데이트를 위해 React Query 캐시 무효화 및 리패칭
+    await queryClient.invalidateQueries({ queryKey: ['starCandidates'] });
   };
 
   // 검색 쿼리 변경 핸들러
@@ -240,14 +271,32 @@ export default function VotePageContent() {
     return animes.filter((anime) => searchMatch(query, anime.titleKor));
   };
 
+  // 투표 시간이 많이 남은 순서로 정렬하는 함수
+  const sortCandidatesByVoteTimeRemaining = (
+    candidates: LiveCandidateDto[]
+  ): LiveCandidateDto[] => {
+    const now = new Date();
+    return [...candidates].sort((a, b) => {
+      if (!a.scheduledAt || !b.scheduledAt) return 0;
+
+      const voteEndTimeA = addHours(new Date(a.scheduledAt), 36);
+      const voteEndTimeB = addHours(new Date(b.scheduledAt), 36);
+
+      // 투표 종료 시간까지 남은 시간 계산
+      const timeRemainingA = differenceInSeconds(voteEndTimeA, now);
+      const timeRemainingB = differenceInSeconds(voteEndTimeB, now);
+
+      // 내림차순 정렬 (많이 남은 순서대로)
+      return timeRemainingB - timeRemainingA;
+    });
+  };
+
   // 필터링된 데이터
-  const filteredcurrentWeekLiveCandidates = filterCandidates(
-    currentWeekLiveCandidates,
-    searchQuery
+  const filteredcurrentWeekLiveCandidates = sortCandidatesByVoteTimeRemaining(
+    filterCandidates(currentWeekLiveCandidates, searchQuery)
   );
-  const filteredlastWeekLiveCandidates = filterCandidates(
-    lastWeekLiveCandidates,
-    searchQuery
+  const filteredlastWeekLiveCandidates = sortCandidatesByVoteTimeRemaining(
+    filterCandidates(lastWeekLiveCandidates, searchQuery)
   );
   const filteredFallbackAnimes = filterFallbackAnimes(
     fallbackAnimes,
@@ -255,64 +304,62 @@ export default function VotePageContent() {
   );
 
   // 후보자 목록 렌더링 함수
-  const renderCandidateList = (
+  const renderLiveCandidates = (
     candidates: LiveCandidateDto[],
     filteredCandidates: LiveCandidateDto[]
   ) => {
     if (candidates.length === 0) return null;
 
     return (
-      <div className="mb-8">
-        <div
-          className={
-            viewMode === 'large'
-              ? `${
-                  filteredCandidates.length <= 3
-                    ? 'flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-[40px]'
-                    : 'grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-1 sm:gap-6 md:grid-cols-2 lg:grid-cols-2 lg:gap-[40px] xl:grid-cols-3 2xl:grid-cols-4'
-                }`
-              : 'flex flex-col gap-4 lg:grid lg:min-w-[500px] lg:grid-cols-2 lg:gap-4'
-          }
-        >
-          {filteredCandidates.map((candidate) =>
-            viewMode === 'large' ? (
-              <BigCandidate
-                key={candidate.episodeId}
-                anime={{
-                  ...candidate,
-                  ottDtos: [],
-                }}
-                isCurrentSeason={true}
-                voteInfo={{
-                  year: candidate.year,
-                  quarter: candidate.quarter,
-                  week: candidate.week,
-                }}
-                starInfo={candidate.result.info}
-                voterCount={candidate.result.voterCount}
-                onVoteComplete={(episodeId: number, voteTimeLeft: number) =>
-                  handleVoteComplete(episodeId, voteTimeLeft)
-                }
-              />
-            ) : (
-              <SmallCandidate
-                key={candidate.episodeId}
-                anime={{ ...candidate, ottDtos: [] } as AnimePreviewDto}
-                isCurrentSeason={true}
-                voteInfo={{
-                  year: candidate.year,
-                  quarter: candidate.quarter,
-                  week: candidate.week,
-                }}
-                starInfo={candidate.result.info || undefined}
-                voterCount={candidate.result.voterCount}
-                onVoteComplete={(episodeId: number, voteTimeLeft: number) =>
-                  handleVoteComplete(episodeId, voteTimeLeft)
-                }
-              />
-            )
-          )}
-        </div>
+      <div
+        className={
+          viewMode === 'large'
+            ? `${
+                filteredCandidates.length <= 3
+                  ? 'flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-[40px]'
+                  : 'grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-1 sm:gap-6 md:grid-cols-2 lg:grid-cols-2 lg:gap-[40px] xl:grid-cols-3 2xl:grid-cols-4'
+              }`
+            : 'flex flex-col gap-4 lg:grid lg:min-w-[500px] lg:grid-cols-2 lg:gap-4'
+        }
+      >
+        {filteredCandidates.map((candidate) =>
+          viewMode === 'large' ? (
+            <BigCandidate
+              key={candidate.episodeId}
+              anime={{
+                ...candidate,
+                ottDtos: [],
+              }}
+              isCurrentSeason={true}
+              voteInfo={{
+                year: candidate.year,
+                quarter: candidate.quarter,
+                week: candidate.week,
+              }}
+              starInfo={candidate.result.info}
+              voterCount={candidate.result.voterCount}
+              onVoteComplete={(episodeId: number, voteTimeLeft: number) =>
+                handleVoteComplete(episodeId, voteTimeLeft)
+              }
+            />
+          ) : (
+            <SmallCandidate
+              key={candidate.episodeId}
+              anime={{ ...candidate, ottDtos: [] } as AnimePreviewDto}
+              isCurrentSeason={true}
+              voteInfo={{
+                year: candidate.year,
+                quarter: candidate.quarter,
+                week: candidate.week,
+              }}
+              starInfo={candidate.result.info}
+              voterCount={candidate.result.voterCount}
+              onVoteComplete={(episodeId: number, voteTimeLeft: number) =>
+                handleVoteComplete(episodeId, voteTimeLeft)
+              }
+            />
+          )
+        )}
       </div>
     );
   };
@@ -391,7 +438,7 @@ export default function VotePageContent() {
       // voteInfo는 이미 fetchStarCandidates에서 설정되었으므로 추가 설정 불필요
     } catch (fallbackError) {
       console.error('Fallback 데이터 가져오기 실패:', fallbackError);
-      setError('투표 후보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
+      // React Query의 error는 별도로 처리되므로 여기서는 로그만 남김
     }
   };
 
@@ -433,82 +480,27 @@ export default function VotePageContent() {
     };
   }, [isSearchBarSticky]);
 
-  // 로그인 상태 변경을 명시적으로 감지하기 위한 ref
-  const prevAuthStatusRef = useRef<boolean | null>(null);
-
+  // 비회원 투표 내역 업데이트
   useEffect(() => {
-    const fetchStarCandidates = async () => {
-      try {
-        setLoading(true);
+    const votedEpisodes = getVotedEpisodes();
+    setHasVotedEpisodes(votedEpisodes.length > 0);
+  }, [starCandidatesData]);
 
-        // 로그인 상태 확인이 완료될 때까지 대기
-        if (isLoading) {
-          return;
-        }
-
-        // 새로운 별점 투표 API 사용
-        const response = await getStarCandidates();
-
-        if (!response.isSuccess) {
-          throw new Error(response.message);
-        }
-
-        // 투표 정보 저장 (API에서 weekDto 사용)
-        if (response.result && response.result.weekDto) {
-          const weekDto = response.result.weekDto;
-          setVoteInfo(weekDto);
-        }
-
-        const currentWeekCandidates =
-          response.result?.currentWeekLiveCandidates || [];
-        const lastWeekCandidates =
-          response.result?.lastWeekLiveCandidates || [];
-        setCurrentWeekLiveCandidates(currentWeekCandidates);
-        setLastWeekLiveCandidates(lastWeekCandidates);
-
-        // 비회원 로그인 권유 버튼은 duckstar_voted_episodes 기반으로 표시
-        const votedEpisodes = getVotedEpisodes();
-        setHasVotedEpisodes(votedEpisodes.length > 0);
-
-        // 후보가 비어있으면 fallback 데이터 사용
-        if (currentWeekCandidates.length === 0) {
-          console.log(
-            '투표 후보가 비어있어서 곧 시작 그룹을 fallback으로 사용합니다.'
-          );
-          await fetchFallbackCandidates();
-          return; // fallback 데이터 사용 시 기존 로직 건너뛰기
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : '별점 투표 후보자를 불러오는데 실패했습니다.'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // 로그인 상태가 변경되었는지 확인
-    const hasAuthStatusChanged =
-      prevAuthStatusRef.current !== null &&
-      prevAuthStatusRef.current !== isAuthenticated;
-
-    // 페이지 로드 시 또는 로그인 상태 변경 시 API 호출
-    if (prevAuthStatusRef.current === null || hasAuthStatusChanged) {
-      console.log('투표 후보 조회 API 호출 - 로그인 상태:', isAuthenticated);
-      // // 운영환경에서 확실한 해결을 위해 로그인 상태 변경 시 강제 새로고침
-      // if (hasAuthStatusChanged && isAuthenticated) {
-      //   console.log('로그인 상태 변경 감지 - 페이지 새로고침으로 확실한 해결');
-      //   window.location.reload();
-      //   return;
-      // }
-      fetchStarCandidates();
+  // fallback 데이터 처리
+  useEffect(() => {
+    if (
+      !loading &&
+      starCandidatesData &&
+      currentWeekLiveCandidates.length === 0
+    ) {
+      console.log(
+        '투표 후보가 비어있어서 곧 시작 그룹을 fallback으로 사용합니다.'
+      );
+      fetchFallbackCandidates();
+    } else if (currentWeekLiveCandidates.length > 0) {
+      setIsUsingFallback(false);
     }
-
-    // 현재 인증 상태를 저장 (API 호출 후에 저장)
-    prevAuthStatusRef.current = isAuthenticated;
-  }, [router, isAuthenticated]);
+  }, [loading, starCandidatesData, currentWeekLiveCandidates.length]);
 
   if (loading) {
     return (
@@ -589,9 +581,7 @@ export default function VotePageContent() {
 
         {/* 메인 컨텐츠 */}
         <div
-          className={`w-full ${getOptimalContainerWidth(
-            currentWeekLiveCandidates.length
-          )} mx-auto px-2 py-3 sm:px-4 sm:py-6`}
+          className={`w-full ${getOptimalContainerWidth()} mx-auto px-2 py-3 sm:px-4 sm:py-6`}
         >
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="text-center">
@@ -675,136 +665,133 @@ export default function VotePageContent() {
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div
-        className={`w-full ${getOptimalContainerWidth(
-          currentWeekLiveCandidates.length
-        )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
-      >
-        <div className="mb-4 rounded-lg border border-gray-200 bg-white pt-3 pb-1 shadow-sm md:pt-6 md:pb-2">
-          <div
-            className={`${
-              isUsingFallback ? 'mb-0' : 'mb-6'
-            } flex flex-col items-center`}
-          >
-            {/* Fallback 데이터 사용 시 알림 */}
-            {isUsingFallback && (
-              <div className="mb-4 flex h-8 w-fit max-w-full items-center justify-start rounded-lg border border-blue-200 bg-blue-50 py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
+      <div className="mb-4 bg-white pt-1 md:pt-4 md:pb-2">
+        <div
+          className={`w-full ${getOptimalContainerWidth()} mx-auto ${
+            isUsingFallback ? 'mb-0' : 'mb-2'
+          } flex flex-col items-center`}
+        >
+          {/* Fallback 데이터 사용 시 알림 */}
+          {isUsingFallback && (
+            <div className="mb-4 flex h-8 w-fit max-w-full items-center justify-start rounded-lg border border-blue-200 bg-blue-50 py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
+              <div className="flex items-center justify-start gap-1 px-1 py-0 sm:gap-2 sm:px-2 lg:gap-2.5 lg:px-2.5">
+                <div className="relative size-3 overflow-hidden sm:size-4">
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-500">
+                    <span className="text-xs font-bold text-white">!</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-blue-700 sm:text-base">
+                <p className="leading-normal break-words">
+                  현재 투표 가능한 애니메이션이 없습니다.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 기존 툴팁 컴포넌트 재사용 - fallback 사용 시 숨김 */}
+          {!isUsingFallback && (
+            <div className="flex w-full items-center justify-between gap-4 px-10 max-lg:flex-col">
+              <div className="flex h-8 w-fit max-w-full items-center justify-start rounded-lg bg-[#f1f2f3] py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
                 <div className="flex items-center justify-start gap-1 px-1 py-0 sm:gap-2 sm:px-2 lg:gap-2.5 lg:px-2.5">
                   <div className="relative size-3 overflow-hidden sm:size-4">
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-500">
-                      <span className="text-xs font-bold text-white">!</span>
-                    </div>
+                    <img
+                      src="/icons/voteSection-notify-icon.svg"
+                      alt="Notification Icon"
+                      className="h-full w-full"
+                    />
                   </div>
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-blue-700 sm:text-base">
+                <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-[#23272b] sm:text-base">
                   <p className="leading-normal break-words">
-                    현재 투표 가능한 애니메이션이 없습니다.
+                    마음에 든 애니메이션을 투표해주세요!
                   </p>
                 </div>
               </div>
-            )}
 
-            {/* 기존 툴팁 컴포넌트 재사용 - fallback 사용 시 숨김 */}
-            {!isUsingFallback && (
-              <>
-                <div className="mb-4 flex h-8 w-fit max-w-full items-center justify-start rounded-lg bg-[#f1f2f3] py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
-                  <div className="flex items-center justify-start gap-1 px-1 py-0 sm:gap-2 sm:px-2 lg:gap-2.5 lg:px-2.5">
-                    <div className="relative size-3 overflow-hidden sm:size-4">
-                      <img
-                        src="/icons/voteSection-notify-icon.svg"
-                        alt="Notification Icon"
-                        className="h-full w-full"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-[#23272b] sm:text-base">
-                    <p className="leading-normal break-words">
-                      마음에 든 애니메이션을 투표해주세요!
-                    </p>
-                  </div>
-                </div>
+              <div className="text-center text-gray-700 lg:text-right">
+                <p className="mb-2">
+                  <span className="sm:hidden">
+                    모든 후보는 방영 이후
+                    <br />
+                    36시간 이내에 투표할 수 있어요.
+                  </span>
+                  <span className="hidden sm:inline">
+                    모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.
+                  </span>
+                </p>
+                <p className="text-sm text-gray-500">
+                  <span className="sm:hidden">
+                    *덕스타 투표 시 중복 방지를 위해
+                    <br />
+                    쿠키와 암호화된 IP 정보가 사용됩니다.
+                  </span>
+                  <span className="hidden sm:inline">
+                    *덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가
+                    사용됩니다.
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
 
-                <div className="text-center text-gray-700">
-                  <p className="mb-2">
-                    <span className="sm:hidden">
-                      모든 후보는 방영 이후
-                      <br />
-                      36시간 이내에 투표할 수 있어요.
-                    </span>
-                    <span className="hidden sm:inline">
-                      모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.
-                    </span>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    <span className="sm:hidden">
-                      *덕스타 투표 시 중복 방지를 위해
-                      <br />
-                      쿠키와 암호화된 IP 정보가 사용됩니다.
-                    </span>
-                    <span className="hidden sm:inline">
-                      *덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가
-                      사용됩니다.
-                    </span>
-                  </p>
-                </div>
-              </>
-            )}
-
-            {/* 비로그인 투표 시 로그인 안내 버튼 - fallback 사용 시 숨김 */}
-            {!isAuthenticated && hasVotedEpisodes && !isUsingFallback && (
-              <div className="mt-4 flex justify-end">
-                <div className="group relative">
-                  <button
-                    onClick={openLoginModal}
-                    className="flex cursor-pointer items-center gap-1 text-base text-gray-500 transition-colors duration-200 hover:text-gray-700"
-                    style={{
-                      borderBottom: '1px solid #c4c7cc',
-                      lineHeight: '1.1',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderBottomColor = '#374151';
-                      const svg = e.currentTarget.querySelector('svg');
-                      if (svg) svg.style.stroke = '#374151';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderBottomColor = '#c4c7cc';
-                      const svg = e.currentTarget.querySelector('svg');
-                      if (svg) svg.style.stroke = '#9ca3af';
-                    }}
+          {/* 비로그인 투표 시 로그인 안내 버튼 - fallback 사용 시 숨김 */}
+          {!isAuthenticated && hasVotedEpisodes && !isUsingFallback && (
+            <div className="mt-4 flex w-full justify-center lg:justify-end lg:pr-10">
+              <div className="group relative">
+                <button
+                  onClick={openLoginModal}
+                  className="flex cursor-pointer items-center gap-1 text-base text-gray-500 transition-colors duration-200 hover:text-gray-700"
+                  style={{
+                    borderBottom: '1px solid #c4c7cc',
+                    lineHeight: '1.1',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderBottomColor = '#374151';
+                    const svg = e.currentTarget.querySelector('svg');
+                    if (svg) svg.style.stroke = '#374151';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderBottomColor = '#c4c7cc';
+                    const svg = e.currentTarget.querySelector('svg');
+                    if (svg) svg.style.stroke = '#9ca3af';
+                  }}
+                >
+                  로그인으로 투표 내역 저장하기
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="#9ca3af"
+                    viewBox="0 0 24 24"
                   >
-                    로그인으로 투표 내역 저장하기
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="#9ca3af"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
 
-                  {/* 툴팁 */}
-                  <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 transform rounded-lg bg-gray-800 px-3 py-2 text-sm whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:transform before:border-4 before:border-transparent before:border-t-gray-800 before:content-['']">
-                    현재까지 투표 내역 저장!
-                  </div>
+                {/* 툴팁 */}
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 transform rounded-lg bg-gray-800 px-3 py-2 text-sm whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:transform before:border-4 before:border-transparent before:border-t-gray-800 before:content-['']">
+                  현재까지 투표 내역 저장!
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
+      </div>
+
+      <div
+        className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
+      >
         {/* 검색창 섹션 */}
         <div
           data-search-bar
           className={`${
             isSearchBarSticky
-              ? `fixed top-[60px] left-1/2 z-10 w-full -translate-x-1/2 transform lg:left-[calc(50%+100px)] ${getOptimalContainerWidth(
-                  currentWeekLiveCandidates.length
-                )} rounded-b-lg bg-white/80 px-4 backdrop-blur-md`
+              ? `fixed top-[60px] left-1/2 z-10 w-full -translate-x-1/2 transform lg:left-[calc(50%+100px)] ${getOptimalContainerWidth()} rounded-b-lg bg-white/80 px-4 backdrop-blur-md`
               : 'rounded-lg'
           } mb-7 border border-gray-200 bg-white p-4 shadow-sm md:mb-8`}
         >
@@ -859,7 +846,7 @@ export default function VotePageContent() {
           <div className="mb-8 text-2xl font-bold">실시간 투표</div>
           {!isUsingFallback ? (
             <>
-              {renderCandidateList(
+              {renderLiveCandidates(
                 currentWeekLiveCandidates,
                 filteredcurrentWeekLiveCandidates
               )}
@@ -938,16 +925,13 @@ export default function VotePageContent() {
           )}
 
           {currentWeekLiveCandidates.length > 0 && (
-            <div
-              className={`w-full ${getOptimalContainerWidth(
-                currentWeekLiveCandidates.length
-              )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
-            >
+            <div>
               {!isLoading && voteInfo && (
                 <VoteCandidateList
                   year={voteInfo?.year}
                   quarter={voteInfo?.quarter}
                   week={voteInfo?.week}
+                  searchQuery={searchQuery}
                 />
               )}
             </div>
@@ -956,73 +940,65 @@ export default function VotePageContent() {
       </div>
 
       {/* 지난주차 실시간 투표 섹션 */}
-      {voteInfo && (
-        <VoteBanner
-          weekDto={{
-            year: voteInfo.year,
-            quarter: voteInfo.quarter,
-            week: voteInfo.week - 1,
-            startDate: format(
-              subDays(new Date(voteInfo.startDate), 7),
-              'yyyy-MM-dd'
-            ),
-            endDate: format(
-              subDays(new Date(voteInfo.endDate), 7),
-              'yyyy-MM-dd'
-            ),
-          }}
-          customTitle={`${voteInfo.year} ${getQuarterName(
-            voteInfo.quarter
-          )} 지난 주차 투표`}
-        />
-      )}
-
-      <div
-        className={`w-full ${getOptimalContainerWidth(
-          currentWeekLiveCandidates.length
-        )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
-      >
-        <h1 className="mb-8 text-2xl font-bold">지난 주 실시간 투표</h1>
-
-        {lastWeekLiveCandidates.length > 0 ? (
-          renderCandidateList(
-            lastWeekLiveCandidates,
-            filteredlastWeekLiveCandidates
-          )
-        ) : (
-          <div className="bg-white p-6">
-            <p className="text-center text-gray-600">
-              투표 가능한 애니메이션이 없습니다.
-            </p>
-          </div>
-        )}
-        {/* 검색 결과가 없는 경우 (지난주차만) */}
-        {searchQuery.trim() && filteredlastWeekLiveCandidates.length === 0 && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="text-center">
-              <p className="text-gray-600">
-                '{searchQuery}'에 대한 검색 결과가 없습니다.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
       {lastWeekLiveCandidates.length > 0 && (
-        <div
-          className={`w-full ${getOptimalContainerWidth(
-            currentWeekLiveCandidates.length
-          )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
-        >
-          <h1 className="text-2xl font-bold">지난 주 후보 목록</h1>
-          {!isLoading && voteInfo && (
-            <VoteCandidateList
-              year={voteInfo?.year}
-              quarter={voteInfo?.quarter}
-              week={voteInfo?.week - 1}
+        <>
+          {voteInfo && (
+            <VoteBanner
+              weekDto={{
+                year: voteInfo.year,
+                quarter: voteInfo.quarter,
+                week: voteInfo.week - 1,
+                startDate: format(
+                  subDays(new Date(voteInfo.startDate), 7),
+                  'yyyy-MM-dd'
+                ),
+                endDate: format(
+                  subDays(new Date(voteInfo.endDate), 7),
+                  'yyyy-MM-dd'
+                ),
+              }}
+              customTitle={`${voteInfo.year} ${getQuarterName(
+                voteInfo.quarter
+              )} 지난 주차 투표`}
             />
           )}
-        </div>
+
+          <div
+            className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
+          >
+            <h1 className="mb-8 text-2xl font-bold">지난 주 실시간 투표</h1>
+
+            {renderLiveCandidates(
+              lastWeekLiveCandidates,
+              filteredlastWeekLiveCandidates
+            )}
+            {/* 검색 결과가 없는 경우 (지난주차만) */}
+            {searchQuery.trim() &&
+              filteredlastWeekLiveCandidates.length === 0 && (
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="text-center">
+                    <p className="text-gray-600">
+                      '{searchQuery}'에 대한 검색 결과가 없습니다.
+                    </p>
+                  </div>
+                </div>
+              )}
+          </div>
+
+          <div
+            className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
+          >
+            {!isLoading && voteInfo && (
+              <VoteCandidateList
+                title="지난 주 후보 목록"
+                year={voteInfo?.year}
+                quarter={voteInfo?.quarter}
+                week={voteInfo?.week - 1}
+                searchQuery={searchQuery}
+              />
+            )}
+          </div>
+        </>
       )}
     </div>
   );
