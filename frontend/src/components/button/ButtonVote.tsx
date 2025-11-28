@@ -22,8 +22,8 @@ export default function ButtonVote({
 }: ButtonVoteProps) {
   const router = useRouter();
   
-  // 현재 주차 찾기 (OPEN 상태인 주차)
-  const currentWeek = weekDtos.find(week => week.voteStatus === 'OPEN');
+  // 현재 주차 찾기 (첫 번째 주차)
+  const currentWeek = weekDtos[0];
   const isVoteOpen = !!currentWeek;
   
   // 투표 상태에 따른 텍스트 설정

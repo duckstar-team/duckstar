@@ -22,6 +22,7 @@ interface SmallCandidateProps {
     week: number;
   };
   starInfo?: StarInfoDto;
+  voterCount?: number; // 투표자 수
   onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void;
 }
 
@@ -88,6 +89,7 @@ export default function SmallCandidate({
   isCurrentSeason,
   voteInfo,
   starInfo,
+  voterCount,
   onVoteComplete
 }: SmallCandidateProps) {
   const router = useRouter();
@@ -109,7 +111,7 @@ export default function SmallCandidate({
     
     // isBlocked가 true이고 userStarScore가 있으면 가산 처리
     if (starInfo.isBlocked && starInfo.userStarScore !== undefined && starInfo.userStarScore > 0) {
-      const newVoterCount = starInfo.voterCount + 1;
+      const newVoterCount = (voterCount ?? 0) + 1;
       const newDistributionArray = [
         starInfo.star_0_5,
         starInfo.star_1_0,
@@ -136,8 +138,8 @@ export default function SmallCandidate({
   
   const [participantCount, setParticipantCount] = useState(
     starInfo && starInfo.isBlocked && starInfo.userStarScore !== undefined && starInfo.userStarScore > 0
-      ? starInfo.voterCount + 1
-      : (starInfo ? starInfo.voterCount : 0)
+      ? (voterCount ?? 0) + 1
+      : (voterCount ?? 0)
   );
   
   const [distribution, setDistribution] = useState(() => {
@@ -145,7 +147,7 @@ export default function SmallCandidate({
     
     // isBlocked가 true이고 userStarScore가 있으면 가산 처리
     if (starInfo.isBlocked && starInfo.userStarScore !== undefined && starInfo.userStarScore > 0) {
-      const newVoterCount = starInfo.voterCount + 1;
+      const newVoterCount = (voterCount ?? 0) + 1;
       const newDistributionArray = [
         starInfo.star_0_5,
         starInfo.star_1_0,
@@ -166,8 +168,8 @@ export default function SmallCandidate({
     }
     
     // 정상적인 경우
-    if (starInfo.voterCount > 0) {
-      const totalVotes = starInfo.voterCount;
+    if ((voterCount ?? 0) > 0) {
+      const totalVotes = voterCount ?? 0;
       return [
         starInfo.star_0_5 / totalVotes,
         starInfo.star_1_0 / totalVotes,
@@ -202,8 +204,11 @@ export default function SmallCandidate({
 
   // 별점 분포 업데이트 함수 (BigCandidate와 동일)
   const updateStarDistribution = (response: any, userStarScore?: number) => {
-    if (response.result) {
-      const { isBlocked, starAverage, voterCount, star_0_5, star_1_0, star_1_5, star_2_0, star_2_5, star_3_0, star_3_5, star_4_0, star_4_5, star_5_0 } = response.result;
+    if (response.result && response.result.info) {
+      const voteResult = response.result;
+      const starInfo = voteResult.info;
+      const voterCount = voteResult.voterCount;
+      const { isBlocked, starAverage, star_0_5, star_1_0, star_1_5, star_2_0, star_2_5, star_3_0, star_3_5, star_4_0, star_4_5, star_5_0 } = starInfo;
       
       // isBlocked가 true면 유저의 별점을 가산해서 계산 (사용자가 눈치채지 못하도록)
       if (isBlocked && userStarScore !== undefined) {

@@ -23,20 +23,22 @@ export interface ChartAnimeData {
     peakDate: string;
     weeksOnTop10: number;
   };
-  starInfoDto: {
-    userStarScore: number | null;
-    starAverage: number;
+  voteResultDto: {
     voterCount: number;
-    star_0_5: number;
-    star_1_0: number;
-    star_1_5: number;
-    star_2_0: number;
-    star_2_5: number;
-    star_3_0: number;
-    star_3_5: number;
-    star_4_0: number;
-    star_4_5: number;
-    star_5_0: number;
+    info: {
+      userStarScore: number | null;
+      starAverage: number;
+      star_0_5: number;
+      star_1_0: number;
+      star_1_5: number;
+      star_2_0: number;
+      star_2_5: number;
+      star_3_0: number;
+      star_3_5: number;
+      star_4_0: number;
+      star_4_5: number;
+      star_5_0: number;
+    };
   };
 }
 
@@ -57,7 +59,6 @@ export interface ChartResponse {
 }
 
 export interface WeekDto {
-  voteStatus: "OPEN" | "CLOSED";
   year: number;
   quarter: number;
   week: number;
