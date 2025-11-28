@@ -11,8 +11,6 @@ import React, {
 } from 'react';
 import { X } from 'lucide-react';
 import { FaCheckCircle } from 'react-icons/fa';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import StarRatingSimple from '../StarRatingSimple';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import CommentPostForm from '../anime/CommentPostForm';
@@ -21,11 +19,15 @@ import { CandidateDto } from '@/types/vote';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import StarDetailPopup from '@/components/star/StarDetailPopup';
 import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
+import { useModal } from '@/components/AppContainer';
+import { ApiResponse } from '@/types/api';
 
 interface VoteModalProps {
   episodeId: number;
   mainThumbnailUrl: string;
   titleKor: string;
+  year: number;
   quarter: number;
   week: number;
   hasVoted: boolean;
@@ -33,10 +35,25 @@ interface VoteModalProps {
   isOpen?: boolean;
 }
 
+const isApiErrorResponse = (
+  error: unknown
+): error is ApiResponse<{ body?: string }> => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  return (
+    'result' in error &&
+    'isSuccess' in error &&
+    'code' in error &&
+    'message' in error
+  );
+};
+
 export default function VoteModal({
   episodeId,
   mainThumbnailUrl,
   titleKor,
+  year,
   quarter,
   week,
   hasVoted,
@@ -44,6 +61,7 @@ export default function VoteModal({
   isOpen = true,
 }: VoteModalProps) {
   const { isAuthenticated } = useAuth();
+  const { isLoginModalOpen } = useModal();
   const modalRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const candidateQuery = useQuery<CandidateDto | null>({
@@ -58,8 +76,6 @@ export default function VoteModal({
   });
 
   const candidate = candidateQuery.data;
-  const isCandidateLoading = candidateQuery.isLoading;
-  const candidateError = candidateQuery.error;
   const starInfo = candidate?.result?.info ?? null;
   const userStarScore = starInfo?.userStarScore ?? null;
   const hasUserRating = Boolean(userStarScore && userStarScore > 0);
@@ -67,7 +83,7 @@ export default function VoteModal({
   const [phase, setPhase] = useState<'form' | 'summary'>(
     hasVoted ? 'summary' : 'form'
   );
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(userStarScore ? userStarScore / 2 : 0);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -77,7 +93,17 @@ export default function VoteModal({
     setHasSelfVoteRecorded(hasVoted);
   }, [episodeId, hasVoted]);
 
-  useOutsideClick(modalRef, onClose);
+  const handleOutsideClick = useCallback(
+    (_event: MouseEvent) => {
+      if (isLoginModalOpen) {
+        return;
+      }
+      onClose();
+    },
+    [isLoginModalOpen, onClose]
+  );
+
+  useOutsideClick(modalRef, handleOutsideClick);
 
   useEffect(() => {
     if (!isOpen) {
@@ -86,6 +112,9 @@ export default function VoteModal({
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (isLoginModalOpen) {
+          return;
+        }
         onClose();
       }
     };
@@ -98,7 +127,7 @@ export default function VoteModal({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = originalOverflow;
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, isLoginModalOpen, onClose]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -126,18 +155,22 @@ export default function VoteModal({
     if (phase !== 'form') return;
     if (hasUserRating && userStarScore) {
       setRating(userStarScore / 2);
-      // setShowCommentForm(true);
     } else {
       setRating(0);
-      // setShowCommentForm(false);
     }
   }, [phase, hasUserRating, userStarScore]);
 
-  const distribution = useMemo(() => {
+  const { distribution, participantCount, averageScore } = useMemo(() => {
+    const voterCount = candidate?.result?.voterCount ?? 0;
     if (!starInfo) {
-      return Array(10).fill(0);
+      return {
+        distribution: Array(10).fill(0),
+        participantCount: voterCount,
+        averageScore: 0,
+      };
     }
-    return [
+
+    const counts = [
       starInfo.star_0_5 ?? 0,
       starInfo.star_1_0 ?? 0,
       starInfo.star_1_5 ?? 0,
@@ -149,22 +182,53 @@ export default function VoteModal({
       starInfo.star_4_5 ?? 0,
       starInfo.star_5_0 ?? 0,
     ];
-  }, [starInfo]);
+
+    let totalVotes = voterCount;
+    let computedAverage = starInfo.starAverage ?? 0;
+
+    if (starInfo.isBlocked && starInfo.userStarScore > 0) {
+      totalVotes += 1;
+      const idx = starInfo.userStarScore - 1;
+      if (idx >= 0 && idx < counts.length) {
+        counts[idx] += 1;
+      }
+      const weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const weightedSum = counts.reduce(
+        (sum, count, index) => sum + weights[index] * count,
+        0
+      );
+      computedAverage = totalVotes > 0 ? weightedSum / totalVotes : 0;
+    }
+
+    const normalized =
+      totalVotes > 0
+        ? counts.map((count) => count / totalVotes)
+        : Array(10).fill(0);
+
+    return {
+      distribution: normalized,
+      participantCount: totalVotes,
+      averageScore: computedAverage,
+    };
+  }, [candidate?.result?.voterCount, starInfo]);
 
   const mutation = useMutation({
     mutationFn: (payload: Record<string, unknown>) => submitVoteForm(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['candidate', episodeId] });
+      queryClient.invalidateQueries({
+        queryKey: ['candidateList', year, quarter, week],
+      });
       setPhase('summary');
       setShowCommentForm(false);
       setIsEditing(false);
       setHasSelfVoteRecorded(true);
     },
     onError: (error) => {
+      const apiError = isApiErrorResponse(error) ? error : null;
       const message =
-        error instanceof Error
-          ? error.message
-          : '투표 정보를 저장하는 데 실패했습니다.';
+        (apiError as ApiResponse<{ body: string }>)?.result?.body ??
+        '투표 정보를 저장하는 데 실패했습니다.';
       setModalError(message);
     },
   });
@@ -197,17 +261,6 @@ export default function VoteModal({
     [episodeId, mutation, rating, starInfo]
   );
 
-  const participantCount = candidate?.result?.voterCount ?? 0;
-  const averageScore = starInfo?.starAverage ?? 0;
-  const formattedDate = candidate?.result?.voteUpdatedAt
-    ? format(
-        new Date(candidate.result.voteUpdatedAt),
-        'yyyy.MM.dd (eee) HH:mm',
-        {
-          locale: ko,
-        }
-      )
-    : '';
   const userComment = candidate?.result?.body?.trim() ?? '';
   const hasUserComment = Boolean(userComment);
   const commentSummaryText = hasUserComment
@@ -215,11 +268,8 @@ export default function VoteModal({
     : '아직 댓글을 작성하지 않았습니다.';
   const currentUserRating =
     hasUserRating && userStarScore ? userStarScore / 2 : 0;
-  const commentSubmitLabel = isEditing
-    ? '제출'
-    : hasVoted
-      ? '투표 완료'
-      : '작성';
+  const commentSubmitLabel =
+    isEditing && phase === 'form' ? '제출' : hasVoted ? '투표 완료' : '작성';
 
   return (
     <AnimatePresence>
@@ -229,7 +279,7 @@ export default function VoteModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex h-full w-full items-center justify-center bg-white/20 p-4"
+          className="fixed inset-0 z-50 flex h-full w-full items-center justify-center bg-white/20 p-4 lg:left-25"
         >
           <div className="fixed inset-0 bg-black/20" onClick={onClose} />
           <motion.div
@@ -250,7 +300,7 @@ export default function VoteModal({
               <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
                 {hasVoted ? (
                   <>
-                    <FaCheckCircle size={22} className="text-amber-400" />
+                    <FaCheckCircle size={24} className="text-amber-400" />
                     참여 완료
                   </>
                 ) : (
@@ -266,16 +316,21 @@ export default function VoteModal({
               className="grid grid-cols-[1fr_auto] items-start gap-6 transition-all duration-500 max-md:grid-cols-1"
             >
               <div className="flex h-fit w-full flex-col items-center gap-2 md:w-32">
-                <Image
-                  src={mainThumbnailUrl}
-                  alt={titleKor}
-                  width={100}
-                  height={100}
-                  className="h-48 w-32 rounded-2xl object-cover"
-                />
-                <span className="line-clamp-2 text-left text-sm font-semibold break-keep text-gray-900">
+                <Link href={`/animes/${candidate?.animeId}`}>
+                  <Image
+                    src={mainThumbnailUrl}
+                    alt={titleKor}
+                    width={100}
+                    height={100}
+                    className="h-48 w-32 rounded-lg object-cover"
+                  />
+                </Link>
+                <Link
+                  href={`/animes/${candidate?.animeId}`}
+                  className="line-clamp-2 text-left text-sm font-semibold text-gray-900 hover:text-[#990033]"
+                >
                   {titleKor}
-                </span>
+                </Link>
               </div>
               <motion.div
                 layout
@@ -305,6 +360,9 @@ export default function VoteModal({
                       onSubmit={handleVoteFormSubmit}
                       initialValue={commentSummaryText}
                       submitLabel={commentSubmitLabel}
+                      disabled={!isAuthenticated}
+                      phase="summary"
+                      voteUpdatedAt={candidate?.result.voteUpdatedAt}
                     />
                   </div>
                 ) : (
@@ -335,14 +393,17 @@ export default function VoteModal({
                         disabled={mutation.status === 'pending'}
                         initialValue={userComment}
                         submitLabel={commentSubmitLabel}
+                        placeholder="최소 5자 이상의 후기를 작성하면 투표가 완료됩니다."
+                        phase="form"
                       />
+                      {modalError && (
+                        <p className="mt-2 ml-2 text-sm text-red-600">
+                          {modalError}
+                        </p>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                {modalError && (
-                  <p className="text-sm text-red-600">{modalError}</p>
-                )}
               </motion.div>
             </motion.div>
           </motion.div>

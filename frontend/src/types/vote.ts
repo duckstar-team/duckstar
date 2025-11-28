@@ -9,12 +9,12 @@ export interface CandidateListDto {
 }
 
 export interface VoteResultDto {
-  isLateParticipating?: boolean | null;
+  isLateParticipating?: boolean;
   voterCount: number;
-  info?: StarInfoDto | null;
-  voteUpdatedAt?: string | null;
-  commentId?: number | null;
-  body?: string | null;
+  info?: StarInfoDto;
+  voteUpdatedAt?: string;
+  commentId?: number;
+  body?: string;
 }
 
 export interface CandidateDto {
