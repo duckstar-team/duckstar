@@ -1,22 +1,24 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   // 환경 변수 기본값 설정
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-    NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-FV68BFV3GX',
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+    NEXT_PUBLIC_GA_MEASUREMENT_ID:
+      process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-FV68BFV3GX',
   },
-  
+
   // ESLint 비활성화 (배포용)
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
+
   // TypeScript 에러 무시 (배포용)
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // 성능 최적화 설정
   experimental: {
     scrollRestoration: false,
@@ -28,21 +30,21 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production', // 프로덕션에서 console 제거
   },
-  
+
   // API 프록시 설정
   async rewrites() {
     return [
       {
-        source: "/oauth2/:path*",
-        destination: "http://localhost:8080/oauth2/:path*",
+        source: '/oauth2/:path*',
+        destination: 'http://localhost:8080/oauth2/:path*',
       },
       {
-        source: "/login/:path*",
-        destination: "http://localhost:8080/login/:path*",
+        source: '/login/:path*',
+        destination: 'http://localhost:8080/login/:path*',
       },
       {
-        source: "/api/:path*",
-        destination: "http://localhost:8080/api/:path*",
+        source: '/api/:path*',
+        destination: 'http://localhost:8080/api/:path*',
       },
     ];
   },
@@ -51,33 +53,34 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/api/:path*",
+        source: '/api/:path*',
         headers: [
           {
-            key: "Connection",
-            value: "keep-alive",
+            key: 'Connection',
+            value: 'keep-alive',
           },
           {
-            key: "Keep-Alive",
-            value: "timeout=5, max=1000",
-          },
-        ],
-      },
-      {
-        source: "/_next/image(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400", // 7일 캐시
+            key: 'Keep-Alive',
+            value: 'timeout=5, max=1000',
           },
         ],
       },
       {
-        source: "/banners/(.*)",
+        source: '/_next/image(.*)',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable", // 1년 캐시 (정적 리소스)
+            key: 'Cache-Control',
+            value:
+              'public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400', // 7일 캐시
+          },
+        ],
+      },
+      {
+        source: '/banners/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable', // 1년 캐시 (정적 리소스)
           },
         ],
       },
@@ -88,40 +91,46 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "data.onnada.com",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
       },
       {
-        protocol: "https",
-        hostname: "img.duckstar.kr",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'data.onnada.com',
+        port: '',
+        pathname: '/**',
       },
       {
-        protocol: "http",
-        hostname: "img1.kakaocdn.net",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'img.duckstar.kr',
+        port: '',
+        pathname: '/**',
       },
       {
-        protocol: "https",
-        hostname: "img1.kakaocdn.net",
-        port: "",
-        pathname: "/**",
+        protocol: 'http',
+        hostname: 'img1.kakaocdn.net',
+        port: '',
+        pathname: '/**',
       },
       {
-        protocol: "http",
-        hostname: "t1.kakaocdn.net",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'img1.kakaocdn.net',
+        port: '',
+        pathname: '/**',
       },
       {
-        protocol: "https",
-        hostname: "t1.kakaocdn.net",
-        port: "",
-        pathname: "/**",
+        protocol: 'http',
+        hostname: 't1.kakaocdn.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 't1.kakaocdn.net',
+        port: '',
+        pathname: '/**',
       },
     ],
     // 이미지 최적화 활성화 (WebP 최적화를 위해)

@@ -5,6 +5,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../AppContainer';
 import { useImageUpload, UploadedImage } from '../../hooks/useImageUpload';
 import ImageUploadPreview from '../common/ImageUploadPreview';
+import Image from 'next/image';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 const imgGroup = '/icons/picture-upload.svg';
 
@@ -16,7 +19,8 @@ interface CommentPostFormProps {
   disabled?: boolean;
   initialValue?: string;
   submitLabel?: string;
-  isVoteModal?: boolean;
+  phase?: 'summary' | 'form';
+  voteUpdatedAt?: string;
 }
 
 export default function CommentPostForm({
@@ -27,7 +31,8 @@ export default function CommentPostForm({
   disabled = false,
   initialValue = '',
   submitLabel,
-  isVoteModal = false,
+  phase = 'form',
+  voteUpdatedAt,
 }: CommentPostFormProps) {
   const { user, isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
@@ -232,7 +237,7 @@ export default function CommentPostForm({
                 : '로그인 후에 댓글을 남길 수 있습니다.'
             }
             maxLength={maxLength}
-            disabled={disabled}
+            disabled={disabled || phase === 'summary'}
             className="h-full w-full cursor-auto resize-none border-none bg-transparent px-1 text-base leading-normal font-normal text-black outline-none placeholder:text-[#c7c7cc] disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
@@ -257,36 +262,58 @@ export default function CommentPostForm({
             <div
               className={`box-border flex content-stretch justify-between ${footerSectionHeight} relative w-full items-center overflow-clip px-3`}
             >
-              {/* Upload Image Button */}
-              {isVoteModal ? (
-                <div className="flex flex-col items-center justify-center gap-1">
-                  <span>{user?.profileImageUrl}</span>
-                  <span>{user?.nickname}</span>
+              {phase === 'summary' || phase === 'form' ? (
+                <div className="flex items-center gap-2">
+                  {user && (
+                    <>
+                      <div className="flex-shrink-0">
+                        <Image
+                          src={user?.profileImageUrl!}
+                          alt="profile"
+                          width={24}
+                          height={24}
+                          className="h-full w-full rounded-full object-contain"
+                        />
+                      </div>
+                      <span className="text-sm font-bold text-[#8e8e93]">
+                        {user?.nickname}
+                      </span>
+                    </>
+                  )}
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleImageUpload}
-                  disabled={disabled}
-                  className="flex h-[22px] cursor-pointer items-center gap-1 transition-opacity duration-200 hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <div className="h-4 w-4 flex-shrink-0">
-                    <img
-                      alt=""
-                      className="h-full w-full object-contain"
-                      src={imgGroup}
-                    />
-                  </div>
-                  <div className="font-['Pretendard'] text-[15px] leading-snug font-normal text-[#8e8e93]">
-                    <p className="leading-[22px] whitespace-pre">사진</p>
-                  </div>
-                </button>
+                <>
+                  {/* Upload Image Button */}
+                  <button
+                    type="button"
+                    onClick={handleImageUpload}
+                    disabled={disabled}
+                    className="flex h-[22px] cursor-pointer items-center gap-1 transition-opacity duration-200 hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <div className="h-4 w-4 flex-shrink-0">
+                      <img
+                        alt=""
+                        className="h-full w-full object-contain"
+                        src={imgGroup}
+                      />
+                    </div>
+                    <div className="font-['Pretendard'] text-[15px] leading-snug font-normal text-[#8e8e93]">
+                      <p className="leading-[22px] whitespace-pre">사진</p>
+                    </div>
+                  </button>
+                </>
               )}
 
               {/* Character Count */}
               <div className="text-right font-['Pretendard'] text-[15px] leading-snug font-normal text-[#8e8e93]">
                 <p className="leading-[22px] whitespace-pre">
-                  ({comment.length}/{maxLength})
+                  {phase === 'summary' && voteUpdatedAt
+                    ? format(
+                        new Date(voteUpdatedAt),
+                        'yyyy.MM.dd (EEE) HH:mm',
+                        { locale: ko }
+                      )
+                    : `(${comment.length}/${maxLength})`}
                 </p>
               </div>
             </div>
@@ -299,8 +326,8 @@ export default function CommentPostForm({
           {/* Post Button */}
           <button
             onClick={handleSubmit}
-            disabled={isSubmitDisabled}
-            className={`w-20 ${buttonHeight} flex cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-br-[10px] border-t border-l border-[#adb5bd] bg-amber-400 px-8 transition-colors duration-200 hover:bg-[#FED783] disabled:cursor-not-allowed disabled:bg-[#FED783]`}
+            disabled={isSubmitDisabled || phase === 'summary'}
+            className={`w-20 ${buttonHeight} flex cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-br-[10px] border-t border-l border-[#adb5bd] bg-amber-400 px-8 transition-colors duration-200 hover:bg-[#FED783] disabled:cursor-not-allowed! disabled:bg-[#FED783]`}
           >
             {isSubmitting ? (
               <>

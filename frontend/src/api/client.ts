@@ -166,7 +166,9 @@ async function apiCall<T>(
   }
 
   if (!response.ok) {
-    throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
+    // 서버에서 표준 오류 포맷을 내려주면 그대로 throw하여 클라이언트에서 메시지를 활용
+    const errorPayload: ApiResponse<{ body: string }> = await response.json();
+    throw errorPayload;
   }
 
   return response.json();
@@ -404,10 +406,19 @@ export async function submitStarVote(
 
 // 투표 폼(모달) 투표/수정 API (로그인 ONLY)
 export async function submitVoteForm(voteData: Record<string, unknown>) {
-  return apiCall<ApiResponse<VoteResultDto>>('/api/v1/vote/star-form', {
-    method: 'POST',
-    body: JSON.stringify(voteData),
-  });
+  const response = await apiCall<ApiResponse<VoteResultDto>>(
+    '/api/v1/vote/star-form',
+    {
+      method: 'POST',
+      body: JSON.stringify(voteData),
+    }
+  );
+
+  if (!response.isSuccess) {
+    throw response;
+  }
+
+  return response;
 }
 
 // 실시간 투표 리스트 조회 API
