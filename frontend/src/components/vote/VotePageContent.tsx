@@ -254,8 +254,8 @@ export default function VotePageContent() {
     searchQuery
   );
 
-  // 후보자 목록 렌더링 함수
-  const renderCandidateList = (
+  // 실시간 투표 목록 렌더링 함수
+  const renderLiveCandidates = (
     candidates: LiveCandidateDto[],
     filteredCandidates: LiveCandidateDto[]
   ) => {
@@ -859,7 +859,7 @@ export default function VotePageContent() {
           <div className="mb-8 text-2xl font-bold">실시간 투표</div>
           {!isUsingFallback ? (
             <>
-              {renderCandidateList(
+              {renderLiveCandidates(
                 currentWeekLiveCandidates,
                 filteredcurrentWeekLiveCandidates
               )}
@@ -943,12 +943,6 @@ export default function VotePageContent() {
                 currentWeekLiveCandidates.length
               )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
             >
-              <div className="flex items-end gap-4">
-                <h1 className="text-2xl font-bold">이번 주 후보 목록</h1>
-                <span className="text-xs text-gray-400">
-                  총 {currentWeekLiveCandidates.length}개 작품
-                </span>
-              </div>
               {!isLoading && voteInfo && (
                 <VoteCandidateList
                   year={voteInfo?.year}
@@ -962,74 +956,69 @@ export default function VotePageContent() {
       </div>
 
       {/* 지난주차 실시간 투표 섹션 */}
-      {voteInfo && (
-        <VoteBanner
-          weekDto={{
-            year: voteInfo.year,
-            quarter: voteInfo.quarter,
-            week: voteInfo.week - 1,
-            startDate: format(
-              subDays(new Date(voteInfo.startDate), 7),
-              'yyyy-MM-dd'
-            ),
-            endDate: format(
-              subDays(new Date(voteInfo.endDate), 7),
-              'yyyy-MM-dd'
-            ),
-            voteStatus: voteInfo.voteStatus,
-          }}
-          customTitle={`${voteInfo.year} ${getQuarterName(
-            voteInfo.quarter
-          )} 지난 주차 투표`}
-        />
-      )}
-
-      <div
-        className={`w-full ${getOptimalContainerWidth(
-          currentWeekLiveCandidates.length
-        )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
-      >
-        <h1 className="mb-8 text-2xl font-bold">지난 주 실시간 투표</h1>
-
-        {lastWeekLiveCandidates.length > 0 ? (
-          renderCandidateList(
-            lastWeekLiveCandidates,
-            filteredlastWeekLiveCandidates
-          )
-        ) : (
-          <div className="bg-white p-6">
-            <p className="text-center text-gray-600">
-              투표 가능한 애니메이션이 없습니다.
-            </p>
-          </div>
-        )}
-        {/* 검색 결과가 없는 경우 (지난주차만) */}
-        {searchQuery.trim() && filteredlastWeekLiveCandidates.length === 0 && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="text-center">
-              <p className="text-gray-600">
-                '{searchQuery}'에 대한 검색 결과가 없습니다.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
       {lastWeekLiveCandidates.length > 0 && (
-        <div
-          className={`w-full ${getOptimalContainerWidth(
-            currentWeekLiveCandidates.length
-          )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
-        >
-          <h1 className="text-2xl font-bold">지난 주 후보 목록</h1>
-          {!isLoading && voteInfo && (
-            <VoteCandidateList
-              year={voteInfo?.year}
-              quarter={voteInfo?.quarter}
-              week={voteInfo?.week - 1}
+        <>
+          {voteInfo && (
+            <VoteBanner
+              weekDto={{
+                year: voteInfo.year,
+                quarter: voteInfo.quarter,
+                week: voteInfo.week - 1,
+                startDate: format(
+                  subDays(new Date(voteInfo.startDate), 7),
+                  'yyyy-MM-dd'
+                ),
+                endDate: format(
+                  subDays(new Date(voteInfo.endDate), 7),
+                  'yyyy-MM-dd'
+                ),
+                voteStatus: voteInfo.voteStatus,
+              }}
+              customTitle={`${voteInfo.year} ${getQuarterName(
+                voteInfo.quarter
+              )} 지난 주차 투표`}
             />
           )}
-        </div>
+
+          <div
+            className={`w-full ${getOptimalContainerWidth(
+              currentWeekLiveCandidates.length
+            )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
+          >
+            <h1 className="mb-8 text-2xl font-bold">지난 주 실시간 투표</h1>
+
+            {renderLiveCandidates(
+              lastWeekLiveCandidates,
+              filteredlastWeekLiveCandidates
+            )}
+            {/* 검색 결과가 없는 경우 (지난주차만) */}
+            {searchQuery.trim() &&
+              filteredlastWeekLiveCandidates.length === 0 && (
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="text-center">
+                    <p className="text-gray-600">
+                      '{searchQuery}'에 대한 검색 결과가 없습니다.
+                    </p>
+                  </div>
+                </div>
+              )}
+          </div>
+
+          <div
+            className={`w-full ${getOptimalContainerWidth(
+              currentWeekLiveCandidates.length
+            )} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
+          >
+            {!isLoading && voteInfo && (
+              <VoteCandidateList
+                title="지난 주 후보 목록"
+                year={voteInfo?.year}
+                quarter={voteInfo?.quarter}
+                week={voteInfo?.week - 1}
+              />
+            )}
+          </div>
+        </>
       )}
     </div>
   );

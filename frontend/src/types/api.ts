@@ -103,7 +103,7 @@ export interface LiveCandidateDto {
 
 export interface VoteResultDto {
   voterCount: number;
-  result: StarInfoDto;
+  info: StarInfoDto;
 }
 
 export type ApiResponseStarInfoDto = ApiResponse<VoteResultDto>;
