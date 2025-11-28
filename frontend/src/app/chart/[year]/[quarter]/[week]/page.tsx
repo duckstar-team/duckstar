@@ -46,9 +46,17 @@ function getRankDiffType(rankDiff: number | null, consecutiveWeeks: number = 0):
 }
 
 // 별점 분포 배열 생성 함수 (절대값을 비율로 변환)
-function createDistributionArray(starInfo: any, week: string): number[] {
-  const totalVoters = starInfo.voterCount;
-  if (totalVoters === 0) {
+function createDistributionArray(voteResult: any, week: string): number[] {
+  // voteResult가 없거나 voterCount가 없으면 빈 배열 반환
+  if (!voteResult || voteResult.voterCount === undefined || voteResult.voterCount === null) {
+    const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
+    return isIntegerMode ? [0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  }
+  
+  const totalVoters = voteResult.voterCount;
+  const starInfo = voteResult.info;
+  
+  if (totalVoters === 0 || !starInfo) {
     // 25년 4분기 1-2주차는 1점 단위 (5개), 나머지는 0.5점 단위 (10개)
     const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
     return isIntegerMode ? [0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -60,25 +68,25 @@ function createDistributionArray(starInfo: any, week: string): number[] {
   if (isIntegerMode) {
     // 1점 단위: 1점, 2점, 3점, 4점, 5점
     return [
-      starInfo.star_1_0 / totalVoters,
-      starInfo.star_2_0 / totalVoters,
-      starInfo.star_3_0 / totalVoters,
-      starInfo.star_4_0 / totalVoters,
-      starInfo.star_5_0 / totalVoters
+      (starInfo.star_1_0 ?? 0) / totalVoters,
+      (starInfo.star_2_0 ?? 0) / totalVoters,
+      (starInfo.star_3_0 ?? 0) / totalVoters,
+      (starInfo.star_4_0 ?? 0) / totalVoters,
+      (starInfo.star_5_0 ?? 0) / totalVoters
     ];
   } else {
     // 0.5점 단위: 0.5점, 1.0점, 1.5점, ..., 5.0점
     return [
-      starInfo.star_0_5 / totalVoters,
-      starInfo.star_1_0 / totalVoters,
-      starInfo.star_1_5 / totalVoters,
-      starInfo.star_2_0 / totalVoters,
-      starInfo.star_2_5 / totalVoters,
-      starInfo.star_3_0 / totalVoters,
-      starInfo.star_3_5 / totalVoters,
-      starInfo.star_4_0 / totalVoters,
-      starInfo.star_4_5 / totalVoters,
-      starInfo.star_5_0 / totalVoters
+      (starInfo.star_0_5 ?? 0) / totalVoters,
+      (starInfo.star_1_0 ?? 0) / totalVoters,
+      (starInfo.star_1_5 ?? 0) / totalVoters,
+      (starInfo.star_2_0 ?? 0) / totalVoters,
+      (starInfo.star_2_5 ?? 0) / totalVoters,
+      (starInfo.star_3_0 ?? 0) / totalVoters,
+      (starInfo.star_3_5 ?? 0) / totalVoters,
+      (starInfo.star_4_0 ?? 0) / totalVoters,
+      (starInfo.star_4_5 ?? 0) / totalVoters,
+      (starInfo.star_5_0 ?? 0) / totalVoters
     ];
   }
 }
@@ -101,7 +109,6 @@ export default function ChartPage() {
         year, 
         quarter, 
         week, 
-        voteStatus: 'CLOSED' as const,
         startDate: '',
         endDate: ''
       });
@@ -521,16 +528,16 @@ export default function ChartPage() {
             title={winnerAnime.rankPreviewDto.title}
             studio={winnerAnime.rankPreviewDto.subTitle}
             image={winnerAnime.rankPreviewDto.mainThumbnailUrl}
-            rating={Math.round(winnerAnime.starInfoDto.starAverage * 10) / 10}
+            rating={Math.round((winnerAnime.voteResultDto?.info?.starAverage ?? 0) * 10) / 10}
             debutRank={winnerAnime.animeStatDto.debutRank}
             debutDate={winnerAnime.animeStatDto.debutDate}
             peakRank={winnerAnime.animeStatDto.peakRank}
             peakDate={winnerAnime.animeStatDto.peakDate}
             top10Weeks={winnerAnime.animeStatDto.weeksOnTop10}
              week={`${year}년 ${quarter}분기 ${week}주차`}
-            averageRating={winnerAnime.starInfoDto.starAverage}
-            participantCount={winnerAnime.starInfoDto.voterCount}
-            distribution={createDistributionArray(winnerAnime.starInfoDto, `${year}년 ${quarter}분기 ${week}주차`)}
+            averageRating={winnerAnime.voteResultDto?.info?.starAverage ?? 0}
+            participantCount={winnerAnime.voteResultDto?.voterCount ?? 0}
+            distribution={createDistributionArray(winnerAnime.voteResultDto, `${year}년 ${quarter}분기 ${week}주차`)}
             animeId={winnerAnime.rankPreviewDto.contentId}
             hideMedalsOnMobile={true}
           />
@@ -565,16 +572,16 @@ export default function ChartPage() {
                 title={anime.rankPreviewDto.title}
                 studio={anime.rankPreviewDto.subTitle}
                 image={anime.rankPreviewDto.mainThumbnailUrl}
-                rating={Math.round(anime.starInfoDto.starAverage * 10) / 10}
+                rating={Math.round((anime.voteResultDto?.info?.starAverage ?? 0) * 10) / 10}
                 debutRank={anime.animeStatDto.debutRank}
                 debutDate={anime.animeStatDto.debutDate}
                 peakRank={anime.animeStatDto.peakRank}
                 peakDate={anime.animeStatDto.peakDate}
                 top10Weeks={anime.animeStatDto.weeksOnTop10}
                 week={`${year}년 ${quarter}분기 ${week}주차`}
-                averageRating={anime.starInfoDto.starAverage}
-                participantCount={anime.starInfoDto.voterCount}
-                distribution={createDistributionArray(anime.starInfoDto, `${year}년 ${quarter}분기 ${week}주차`)}
+                averageRating={anime.voteResultDto?.info?.starAverage ?? 0}
+                participantCount={anime.voteResultDto?.voterCount ?? 0}
+                distribution={createDistributionArray(anime.voteResultDto, `${year}년 ${quarter}분기 ${week}주차`)}
                 animeId={anime.rankPreviewDto.contentId}
                 hideMedalsOnMobile={true}
               />

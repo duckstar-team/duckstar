@@ -12,8 +12,8 @@ interface RightHeaderListProps {
 export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, className = "" }: RightHeaderListProps) {
   const [activeTab, setActiveTab] = useState<'anilab' | 'anime-corner'>('anilab');
   
-  // 현재 주차 찾기 (OPEN 상태인 주차)
-  const currentWeek = weekDtos.find(week => week.voteStatus === 'OPEN');
+  // 현재 주차 찾기 (첫 번째 주차)
+  const currentWeek = weekDtos[0];
   const currentWeekText = currentWeek 
     ? `${currentWeek.year}년 ${currentWeek.quarter}분기 ${currentWeek.week}주차`
     : '2025년 3분기 12주차';

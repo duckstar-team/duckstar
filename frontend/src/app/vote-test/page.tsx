@@ -196,7 +196,6 @@ export default function VoteTestPage() {
       <section className="w-full">
         <VoteBanner 
           weekDto={voteInfo ? {
-            voteStatus: 'OPEN' as const,
             year: voteInfo.year,
             quarter: voteInfo.quarter,
             week: voteInfo.week,

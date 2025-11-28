@@ -10,7 +10,6 @@ export interface ApiResponse<T> {
 
 // Week DTO
 export interface WeekDto {
-  voteStatus: VoteStatus;
   year: number;
   quarter: number;
   week: number;
