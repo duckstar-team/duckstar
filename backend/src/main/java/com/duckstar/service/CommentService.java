@@ -6,8 +6,10 @@ import com.duckstar.domain.Anime;
 import com.duckstar.domain.Member;
 import com.duckstar.domain.enums.CommentSortType;
 import com.duckstar.domain.enums.CommentStatus;
+import com.duckstar.domain.enums.EpEvaluateState;
 import com.duckstar.domain.mapping.CommentLike;
 import com.duckstar.domain.mapping.Episode;
+import com.duckstar.domain.mapping.EpisodeStar;
 import com.duckstar.domain.mapping.Reply;
 import com.duckstar.domain.mapping.comment.AnimeComment;
 import com.duckstar.repository.AnimeComment.AnimeCommentRepository;
@@ -15,10 +17,12 @@ import com.duckstar.repository.AnimeRepository;
 import com.duckstar.repository.AnimeVote.AnimeVoteRepository;
 import com.duckstar.repository.CommentLikeRepository;
 import com.duckstar.repository.Episode.EpisodeRepository;
+import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
 import com.duckstar.repository.Reply.ReplyRepository;
 import com.duckstar.s3.S3Uploader;
 import com.duckstar.security.MemberPrincipal;
 import com.duckstar.security.repository.MemberRepository;
+import com.duckstar.service.AnimeService.AnimeQueryService;
 import com.duckstar.web.dto.CommentResponseDto.CommentDto;
 import com.duckstar.web.dto.CommentResponseDto.DeleteResultDto;
 import com.duckstar.web.dto.PageInfo;
@@ -41,14 +45,14 @@ import static com.duckstar.web.dto.BoardRequestDto.*;
 public class CommentService {
 
     private final AnimeCommentRepository animeCommentRepository;
-    private final AnimeVoteRepository animeVoteRepository;
     private final EpisodeRepository episodeRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final MemberRepository memberRepository;
     private final AnimeRepository animeRepository;
 
-    private final AnimeService animeService;
+    private final AnimeQueryService animeQueryService;
     private final S3Uploader s3Uploader;
+    private final EpisodeStarRepository episodeStarRepository;
 
     @Transactional
     public CommentDto leaveAnimeComment(
@@ -67,8 +71,8 @@ public class CommentService {
         Member author = memberRepository.findById(memberId).orElseThrow(() ->
                 new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        int voteCount = animeVoteRepository
-                .countAllByAnimeCandidate_Anime_IdAndWeekVoteSubmission_Member_Id(
+        int voteCount = episodeStarRepository
+                .countAllByEpisode_Anime_IdAndWeekVoteSubmission_Member_Id(
                         animeId,
                         memberId
                 );
@@ -87,7 +91,7 @@ public class CommentService {
             }
         } else {
             LocalDateTime now = LocalDateTime.now();
-            episode = animeService.findCurrentEpisode(anime, now)
+            episode = animeQueryService.findCurrentEpisode(anime, now)
                     .orElse(null);
         }
 
@@ -168,12 +172,12 @@ public class CommentService {
             Long commentLikeId,
             MemberPrincipal principal
     ) {
-        AnimeComment comment = animeCommentRepository.findById(commentId).orElseThrow(() ->
-                new CommentHandler(ErrorStatus.COMMENT_NOT_FOUND));
-
         if (principal == null) {
             throw new AuthHandler(ErrorStatus.PRINCIPAL_NOT_FOUND);
         }
+
+        AnimeComment comment = animeCommentRepository.findById(commentId).orElseThrow(() ->
+                new CommentHandler(ErrorStatus.COMMENT_NOT_FOUND));
         Member member = memberRepository.findById(principal.getId()).orElseThrow(() ->
                 new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
@@ -207,12 +211,12 @@ public class CommentService {
             Long commentLikeId,
             MemberPrincipal principal
     ) {
-        AnimeComment comment = animeCommentRepository.findById(commentId).orElseThrow(() ->
-                new CommentHandler(ErrorStatus.COMMENT_NOT_FOUND));
-
         if (principal == null) {
             throw new AuthHandler(ErrorStatus.PRINCIPAL_NOT_FOUND);
         }
+
+        AnimeComment comment = animeCommentRepository.findById(commentId).orElseThrow(() ->
+                new CommentHandler(ErrorStatus.COMMENT_NOT_FOUND));
         Member member = memberRepository.findById(principal.getId()).orElseThrow(() ->
                 new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
@@ -240,12 +244,12 @@ public class CommentService {
             Long commentId,
             MemberPrincipal principal
     ) {
-        AnimeComment comment = animeCommentRepository.findById(commentId).orElseThrow(() ->
-                new CommentHandler(ErrorStatus.COMMENT_NOT_FOUND));
-
         if (principal == null) {
             throw new AuthHandler(ErrorStatus.DELETE_UNAUTHORIZED);
         }
+
+        AnimeComment comment = animeCommentRepository.findById(commentId).orElseThrow(() ->
+                new CommentHandler(ErrorStatus.COMMENT_NOT_FOUND));
 
         boolean isAuthor = Objects.equals(comment.getAuthor().getId(), principal.getId());
         boolean isAdmin = principal.isAdmin();
@@ -258,6 +262,12 @@ public class CommentService {
 
         } else {
             throw new CommentHandler(ErrorStatus.DELETE_UNAUTHORIZED);
+        }
+
+        //=== 만약 늦참에 의해 생성된 댓글이라면 별점도 회수 ===//
+        EpisodeStar episodeStar = comment.getEpisodeStar();
+        if (episodeStar.isLateParticipating()) {
+            episodeStar.withdrawScore();
         }
 
         return DeleteResultDto.builder()

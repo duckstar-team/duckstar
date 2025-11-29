@@ -1,8 +1,6 @@
 package com.duckstar.schedule;
 
-import com.duckstar.domain.Week;
-import com.duckstar.repository.Week.WeekRepository;
-import com.duckstar.service.AnimeService;
+import com.duckstar.service.AnimeService.AnimeCommandService;
 import com.duckstar.service.ChartService;
 import com.duckstar.service.WeekService;
 import lombok.RequiredArgsConstructor;
@@ -22,40 +20,44 @@ import static com.duckstar.util.QuarterUtil.getThisWeekRecord;
 @Component
 @RequiredArgsConstructor
 public class ScheduleHandler {
-    private final WeekRepository weekRepository;
-
     private final WeekService weekService;
     private final ChartService chartService;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private final AnimeService animeService;
     private final ScheduleState scheduleState;
+    private final AnimeCommandService animeCommandService;
 
     // 매 분마다 시작 or 종영 체크
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(cron = "0 * * * * *")
     public void checkAnimeStatus() {
         if (scheduleState.isAdminMode()) {
             return;
         }
 
-        animeService.updateAnimeStatusByMinute();
+        animeCommandService.updateStatesByWindows();
     }
 
     // 매주 월요일 18시
     @Scheduled(cron = "0 0 18 * * MON")
     public void startNewWeek() {
+
         // ** 어드민 모드와의 상태 충돌 해소 플래그 없음 주의
 
         LocalDateTime newWeekStartAt = LocalDateTime.of(
-                LocalDate.now()
-                , LocalTime.of(18, 0)
+                LocalDate.now(),
+                LocalTime.of(18, 0)
         );
 
-        Week lastWeek = weekService.getWeekByTime(newWeekStartAt.minusWeeks(1));
-        Long lastWeekId = lastWeek.getId();
+        LocalDateTime lastWeekStartedAt = newWeekStartAt.minusWeeks(1);
 
         YQWRecord newWeekRecord = getThisWeekRecord(newWeekStartAt);
-        weekService.setupWeeklyVote(lastWeekId, newWeekStartAt, newWeekRecord);  // 1. 새로운 주 생성
+
+        // 새로운 주 생성
+        weekService.setupWeeklyVote(
+                lastWeekStartedAt,
+                newWeekStartAt,
+                newWeekRecord
+        );
     }
 
     /**
@@ -77,26 +79,4 @@ public class ScheduleHandler {
 //            scheduleState.stopRunning();
 //        }
 //    }
-
-    public void closeOldWeek(LocalDateTime newWeekStartAt) {
-        log.info("✈️ 주간 마무리 작업 시작 - {}", newWeekStartAt.format(FORMATTER));
-        try {
-            Week lastWeek = weekService.getWeekByTime(newWeekStartAt.minusWeeks(1));
-            Long lastWeekId = lastWeek.getId();
-
-            // ** 이미 월요일 18시에 새로운 주 생성
-//            YQWRecord newWeekRecord = getThisWeekRecord(newWeekStartAt);
-//            weekService.setupWeeklyVote(lastWeekId, newWeekStartAt, newWeekRecord);
-
-            chartService.buildDuckstars(newWeekStartAt, lastWeekId);  // 2. 지난 주 덕스타 결과 분석
-
-            chartService.createBanners(lastWeekId);  // 3. 결과에 의한 배너 생성
-
-            //TODO 4. 해외 순위 수집
-
-            log.info("✅ 주간 마무리 작업 완료 - {}", newWeekStartAt.format(FORMATTER));
-        } catch (Exception e) {
-            log.error("❌ 주간 마무리 작업 실패 - {}", newWeekStartAt.format(FORMATTER), e);
-        }
-    }
 }

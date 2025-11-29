@@ -26,6 +26,8 @@ public enum ErrorStatus implements BaseErrorCode {
     ROTATION_POLICY_VIOLATION(HttpStatus.BAD_REQUEST, "WEEK4002", "초기화 시간 정책을 준수해주세요."),
     SCHEDULE_RUNNING(HttpStatus.BAD_REQUEST, "WEEK4003", "주간 초기화 작업이 진행 중입니다. 나중에 시도해 주세요."),
     ANNOUNCEMENT_NOT_PREPARED(HttpStatus.BAD_REQUEST, "WEEK4004", "해당 주차의 발표는 준비되지 않았습니다."),
+    WEEK_NOT_CLOSED(HttpStatus.BAD_REQUEST, "WEEK4005", "투표가 마감되지 않은 주차입니다."),
+    WEEK_ANNOUNCED_ALREADY(HttpStatus.BAD_REQUEST, "WEEK4006", "이미 발표가 완료된 주차입니다."),
 
     // 순위 정보
     MEDAL_TYPE_NOT_VALID(HttpStatus.BAD_REQUEST, "RANK4001", "허용되지 않는 메달 타입입니다."),
@@ -57,6 +59,9 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // (별점)
     STAR_NOT_FOUND(HttpStatus.BAD_REQUEST, "VOTE40014", "별점 투표 내역이 없습니다."),
+
+    STAR_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "VOTE4011", "잘못된 투표 접근입니다."),
+    LATE_STAR_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "VOTE4012", "투표 시간 이후의 참여 권한이 없습니다."),
 
     VOTE_HISTORY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "VOTE4031", "다른 사람의 투표 내역은 확인할 수 없습니다."),
 

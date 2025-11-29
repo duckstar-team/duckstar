@@ -2,18 +2,13 @@ package com.duckstar.service;
 
 import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.WeekHandler;
-import com.duckstar.domain.Anime;
 import com.duckstar.domain.HomeBanner;
 import com.duckstar.domain.Week;
 import com.duckstar.domain.enums.BannerType;
-import com.duckstar.domain.enums.Gender;
+import com.duckstar.domain.enums.EpEvaluateState;
 import com.duckstar.domain.mapping.Episode;
 import com.duckstar.domain.mapping.EpisodeStar;
-import com.duckstar.domain.mapping.legacy_vote.AnimeCandidate;
-import com.duckstar.domain.mapping.legacy_vote.AnimeVote;
 import com.duckstar.domain.vo.RankInfo;
-import com.duckstar.repository.AnimeCandidate.AnimeCandidateRepository;
-import com.duckstar.repository.AnimeVote.AnimeVoteRepository;
 import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
 import com.duckstar.repository.HomeBannerRepository;
@@ -30,12 +25,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChartService {
 
-    private final AnimeCandidateRepository animeCandidateRepository;
-    private final AnimeVoteRepository animeVoteRepository;
     private final WeekRepository weekRepository;
     private final EpisodeRepository episodeRepository;
     private final EpisodeStarRepository episodeStarRepository;
     private final HomeBannerRepository homeBannerRepository;
+    private final WeekService weekService;
 
 //    @Transactional
 //    public void buildDuckstars(LocalDateTime lastWeekEndAt, Long lastWeekId, Long secondLastWeekId) {
@@ -171,9 +165,28 @@ public class ChartService {
 //    }
 
     @Transactional
-    public void buildDuckstars(LocalDateTime lastWeekEndAt, Long lastWeekId) {
+    public void calculateRankByYQW(
+            Integer year,
+            Integer quarter,
+            Integer week
+    ) {
+        Long weekId = weekService.getWeekIdByYQW(year, quarter, week);
+
+        // 차트 계산, 발표 준비 완료
+        buildDuckstars(weekId, false);
+
+        // 배너 생성
+        createBanners(weekId);
+    }
+
+    @Transactional
+    public void buildDuckstars(Long lastWeekId, Boolean isForOrganizing) {
         Week lastWeek = weekRepository.findWeekById(lastWeekId).orElseThrow(() ->
                 new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
+
+        if (!isForOrganizing && lastWeek.getAnnouncePrepared()) {
+            throw new WeekHandler(ErrorStatus.WEEK_ANNOUNCED_ALREADY);
+        }
 
         //=== 회수된 표 제외 === //
         List<EpisodeStar> allEpisodeStars = episodeStarRepository.findAllEligibleByWeekId(lastWeekId);
@@ -186,7 +199,7 @@ public class ChartService {
                 .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
                         lastWeek.getStartDateTime(), lastWeek.getEndDateTime())
                 .stream()
-                .filter(e -> e.getIsBreak() == null || !e.getIsBreak())
+                .filter(e -> !e.isBreak())
                 .toList();
 
         List<Integer> voterCountList = new ArrayList<>();
@@ -194,11 +207,17 @@ public class ChartService {
             List<EpisodeStar> thisEpisodeStars =
                     episodeStarMap.get(episode.getId());
 
+            if (!isForOrganizing
+                    // 모든 에피소드가 주차 마감을 기다리는 상태여야 함
+                    && episode.getEvaluateState() != EpEvaluateState.LOGIN_REQUIRED) {
+                throw new WeekHandler(ErrorStatus.WEEK_NOT_CLOSED);
+            }
+
             if (thisEpisodeStars == null || thisEpisodeStars.isEmpty()) {
                 voterCountList.add(0);
 
             } else {
-                //=== 같은 ip 에서 같은 점수 3개 이상 준 경우 감지 ===//
+                //=== 같은 ip 에서 같은 점수 4개 이상 준 경우 감지 ===//
                 Map<String, List<Integer>> ipHashScoresMap = thisEpisodeStars.stream()
                         .collect(Collectors.groupingBy(
                                         es -> es.getWeekVoteSubmission().getIpHash(),
@@ -213,7 +232,7 @@ public class ChartService {
                             .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
 
                     boolean hasRepeatedScore = scoreCountMap.values().stream()
-                            .anyMatch(count -> count >= 3);
+                            .anyMatch(count -> count >= 4);
 
                     if (hasRepeatedScore) {
                         blockedIpHashes.add(entry.getKey());
@@ -237,6 +256,9 @@ public class ChartService {
                 }
 
                 episode.setStats(voterCount, scores);
+
+                // 투표 마감
+                episode.setEvaluateState(EpEvaluateState.ALWAYS_OPEN);
             }
         }
 
@@ -267,12 +289,18 @@ public class ChartService {
                 .mapToDouble(Episode::getWeightedSum)
                 .sum();  // 전체 합계 10점 만점 스케일로 맞춤
 
-        int size = votedEpisodes.size();
+        // === median 리스트 만들기 === //
+        List<Integer> medianList = votedEpisodes.stream()
+                .map(Episode::getVoterCount)
+                .sorted()
+                .toList();
 
-        int median = votedEpisodes.isEmpty() ? 0 :
+        int size = medianList.size();
+
+        int median = (size == 0) ? 0 :
                 (size % 2 == 1)
-                        ? votedCountList.get(size / 2)
-                        : (votedCountList.get(size / 2 - 1) + votedCountList.get(size / 2)) / 2;
+                        ? medianList.get(size / 2)
+                        : (medianList.get(size / 2 - 1) + medianList.get(size / 2)) / 2;
 
         double C = totalVotes == 0 ? 0.0 : weightedSum / totalVotes;
 
@@ -304,6 +332,7 @@ public class ChartService {
         //=== Anime 스트릭과 결합, RankInfo 셋팅 ===//
         for (Map.Entry<Integer, List<Episode>> entry : chart.entrySet()) {
             int rank = entry.getKey();
+            LocalDateTime lastWeekEndAt = lastWeek.getEndDateTime();
             for (Episode episode : entry.getValue()) {  // 동점자 각각 처리
                 RankInfo rankInfo = RankInfo.create(
                         episode.getAnime(),
@@ -316,6 +345,9 @@ public class ChartService {
                 episode.setRankInfo(lastWeek, rankInfo);
             }
         }
+
+        // 발표 준비 완료
+        lastWeek.setAnnouncePrepared(true);
     }
 
     private int computeP75(List<Integer> voterCountList) {

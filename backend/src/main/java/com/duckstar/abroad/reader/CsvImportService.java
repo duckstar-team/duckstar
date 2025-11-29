@@ -88,19 +88,19 @@ public class CsvImportService {
             Integer weekValue,
             AbroadRequestDto request
     ) throws IOException {
-        Long weekIdByYQW = weekService.getWeekIdByYQW(year, quarter, weekValue);
+        Long weekId = weekService.getWeekIdByYQW(year, quarter, weekValue);
 
-        Week week = weekRepository.findWeekById(weekIdByYQW)
-                .orElseThrow(() -> new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
-
-        importAnimeCorner(week, request.getAnimeCornerCsv());
-        importAnilab(week, request.getAnilabCsv());
+        importAnimeCorner(weekId, request.getAnimeCornerCsv());
+        importAnilab(weekId, request.getAnilabCsv());
     }
 
-    private void importAnimeCorner(Week week, MultipartFile animeCornerCsv) throws IOException {
+    private void importAnimeCorner(Long weekId, MultipartFile animeCornerCsv) throws IOException {
         if (animeCornerCsv == null || animeCornerCsv.isEmpty()) {
             return;
         }
+
+        Week week = weekRepository.findWeekById(weekId)
+                .orElseThrow(() -> new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
 
         Reader reader = new InputStreamReader(
                 new BOMInputStream(animeCornerCsv.getInputStream()), StandardCharsets.UTF_8);
@@ -165,10 +165,13 @@ public class CsvImportService {
         }
     }
 
-    private void importAnilab(Week week, MultipartFile anilabCsv) throws IOException {
+    private void importAnilab(Long weekId, MultipartFile anilabCsv) throws IOException {
         if (anilabCsv == null || anilabCsv.isEmpty()) {
             return;
         }
+
+        Week week = weekRepository.findWeekById(weekId)
+                .orElseThrow(() -> new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
 
         Reader reader = new InputStreamReader(anilabCsv.getInputStream(), StandardCharsets.UTF_8);
         CSVFormat format = CSVFormat.Builder
@@ -296,11 +299,14 @@ public class CsvImportService {
                 nextEpScheduledAt = null;
             }
 
+            boolean isLastEpisode = Boolean.parseBoolean(record.get("is_last_episode"));
+
             Episode episode = Episode.create(
                     animeMap.get(animeIdMap.get(Integer.valueOf(record.get("anime_id")))),
                     episodeNumber,
                     scheduledAt,
-                    nextEpScheduledAt
+                    nextEpScheduledAt,
+                    isLastEpisode
             );
             episodeRepository.save(episode);
         }

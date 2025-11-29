@@ -4,10 +4,9 @@ import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.WeekHandler;
 import com.duckstar.domain.HomeBanner;
 import com.duckstar.domain.Week;
-import com.duckstar.domain.enums.VoteStatus;
-import com.duckstar.repository.AnimeCandidate.AnimeCandidateRepository;
 import com.duckstar.repository.HomeBannerRepository;
 import com.duckstar.repository.Week.WeekRepository;
+import com.duckstar.service.AnimeService.AnimeQueryService;
 import com.duckstar.web.dto.HomeDto;
 import com.duckstar.web.dto.HomeDto.HomeBannerDto;
 import com.duckstar.web.dto.HomeDto.WeeklyTopDto;
@@ -29,7 +28,7 @@ public class HomeService {
     private final WeekRepository weekRepository;
     private final HomeBannerRepository homeBannerRepository;
 
-    private final AnimeService animeService;
+    private final AnimeQueryService animeQueryService;
 
     public HomeDto getHome(int size) {
         LocalDateTime now = LocalDateTime.now();
@@ -43,7 +42,7 @@ public class HomeService {
         Week currentWeek = nowToPast12Weeks.get(0);
 
         List<Week> pastWeeks = nowToPast12Weeks.stream()
-                .filter(week -> week.getStatus() == VoteStatus.CLOSED && week.getAnnouncePrepared())
+                .filter(Week::getAnnouncePrepared)
                 .toList();
         Week lastWeek = pastWeeks.stream()
                 .findFirst()
@@ -85,7 +84,7 @@ public class HomeService {
         if (!week.getAnnouncePrepared()) throw new WeekHandler(ErrorStatus.ANNOUNCEMENT_NOT_PREPARED);
 
         List<DuckstarRankPreviewDto> duckstarRankPreviews =
-                animeService.getAnimeRankPreviewsByWeekId(
+                animeQueryService.getAnimeRankPreviewsByWeekId(
                         weekId,
                         size
                 );
@@ -95,10 +94,10 @@ public class HomeService {
                         duckstarRankPreviews
                 )
                 .anilabRankPreviews(
-                        animeService.getAnilabPreviewsByWeekId(weekId, size)
+                        animeQueryService.getAnilabPreviewsByWeekId(weekId, size)
                 )
                 .animeCornerRankPreviews(
-                        animeService.getAnimeCornerPreviewsByWeekId(weekId, size)
+                        animeQueryService.getAnimeCornerPreviewsByWeekId(weekId, size)
                 )
                 .build();
     }

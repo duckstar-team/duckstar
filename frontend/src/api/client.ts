@@ -1,9 +1,13 @@
-import { 
-  ApiResponseAnimeCandidateListDto, 
-  ApiResponseAnimeVoteStatusDto, 
+import {
+  ApiResponse,
+  ApiResponseAnimeCandidateListDto,
+  ApiResponseAnimeVoteStatusDto,
+  ApiResponseLiveCandidateListDto,
+  ApiResponseStarInfoDto,
   ApiResponseVoteReceiptDto,
-  UpdateProfileResponseDto
+  UpdateProfileResponseDto,
 } from '@/types/api';
+import { CandidateDto, CandidateListDto, VoteResultDto } from '@/types/vote';
 
 // Next.js 프록시를 사용하므로 상대 경로 사용
 export const BASE_URL = '';
@@ -57,18 +61,20 @@ async function generateDeviceFingerprint(): Promise<string> {
       new Date().getTimezoneOffset().toString(),
       navigator.platform || '',
       navigator.hardwareConcurrency?.toString() || '',
-      navigator.deviceMemory?.toString() || '',
+      (navigator as any).deviceMemory?.toString() || '',
     ];
 
     const fingerprintString = components.join('|');
-    
+
     // Web Crypto API를 사용한 SHA-256 해시 생성
     const encoder = new TextEncoder();
     const data = encoder.encode(fingerprintString);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+
     // 최소 20자 이상이어야 하므로 전체 해시 반환 (64자)
     return hashHex;
   } catch (error) {
@@ -82,7 +88,9 @@ async function generateDeviceFingerprint(): Promise<string> {
         screen.height?.toString() || '',
       ];
       const fingerprintString = components.join('|');
-      return btoa(fingerprintString).replace(/[^a-zA-Z0-9]/g, '').substring(0, 64);
+      return btoa(fingerprintString)
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .substring(0, 64);
     } catch {
       return 'no-fp';
     }
@@ -101,7 +109,7 @@ const getDefaultOptions = (): RequestInit => {
 
 // API call helper function - 성능 최적화 및 토큰 만료 처리
 async function apiCall<T>(
-  endpoint: string, 
+  endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_CONFIG.baseUrl}${endpoint}`;
@@ -118,24 +126,26 @@ async function apiCall<T>(
   };
 
   const response = await fetch(url, config);
-  
+
   // 토큰 만료 감지 (401 Unauthorized)
   if (response.status === 401) {
     console.log('토큰 만료 감지, 갱신 시도');
-    
+
     // 리프레시 토큰으로 갱신 시도
     try {
       const refreshResponse = await fetch('/api/v1/auth/token/refresh', {
         method: 'POST',
         credentials: 'include',
       });
-      
+
       if (refreshResponse.ok) {
         console.log('토큰 갱신 성공, 원래 요청 재시도');
         // 토큰 갱신 성공, 원래 요청 재시도
         const retryResponse = await fetch(url, config);
         if (!retryResponse.ok) {
-          throw new Error(`API 호출 실패: ${retryResponse.status} ${retryResponse.statusText}`);
+          throw new Error(
+            `API 호출 실패: ${retryResponse.status} ${retryResponse.statusText}`
+          );
         }
         return retryResponse.json();
       } else {
@@ -154,11 +164,11 @@ async function apiCall<T>(
       throw error;
     }
   }
-  
+
   if (!response.ok) {
     throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
@@ -168,7 +178,7 @@ export function startKakaoLogin() {
   if (typeof window !== 'undefined') {
     const currentUrl = window.location.href;
     sessionStorage.setItem('returnUrl', currentUrl);
-    
+
     // 카카오 로그인 페이지로 이동
     window.location.href = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.kakaoLogin}`;
   }
@@ -179,7 +189,7 @@ export function startGoogleLogin() {
   if (typeof window !== 'undefined') {
     const currentUrl = window.location.href;
     sessionStorage.setItem('returnUrl', currentUrl);
-    
+
     // 구글 로그인 페이지로 이동
     window.location.href = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.googleLogin}`;
   }
@@ -190,7 +200,7 @@ export function startNaverLogin() {
   if (typeof window !== 'undefined') {
     const currentUrl = window.location.href;
     sessionStorage.setItem('returnUrl', currentUrl);
-    
+
     // 네이버 로그인 페이지로 이동
     window.location.href = `${API_CONFIG.baseUrl}${ENDPOINTS.auth.naverLogin}`;
   }
@@ -212,11 +222,11 @@ export async function withdraw(): Promise<void> {
   };
 
   const response = await fetch(url, config);
-  
+
   if (!response.ok) {
     throw new Error(`회원탈퇴 실패: ${response.status} ${response.statusText}`);
   }
-  
+
   // 응답이 비어있거나 JSON이 아닌 경우 처리
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
@@ -236,11 +246,13 @@ export async function withdrawKakao(): Promise<void> {
   };
 
   const response = await fetch(url, config);
-  
+
   if (!response.ok) {
-    throw new Error(`카카오 회원탈퇴 실패: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `카카오 회원탈퇴 실패: ${response.status} ${response.statusText}`
+    );
   }
-  
+
   // 응답이 비어있거나 JSON이 아닌 경우 처리
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
@@ -260,11 +272,13 @@ export async function withdrawGoogle(): Promise<void> {
   };
 
   const response = await fetch(url, config);
-  
+
   if (!response.ok) {
-    throw new Error(`구글 회원탈퇴 실패: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `구글 회원탈퇴 실패: ${response.status} ${response.statusText}`
+    );
   }
-  
+
   // 응답이 비어있거나 JSON이 아닌 경우 처리
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
@@ -284,11 +298,13 @@ export async function withdrawNaver(): Promise<void> {
   };
 
   const response = await fetch(url, config);
-  
+
   if (!response.ok) {
-    throw new Error(`네이버 회원탈퇴 실패: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `네이버 회원탈퇴 실패: ${response.status} ${response.statusText}`
+    );
   }
-  
+
   // 응답이 비어있거나 JSON이 아닌 경우 처리
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
@@ -300,14 +316,15 @@ export async function withdrawNaver(): Promise<void> {
   }
 }
 
-
 export async function getUserInfo(): Promise<Record<string, unknown>> {
   return apiCall(ENDPOINTS.auth.userInfo);
 }
 
-export async function updateProfile(formData: FormData): Promise<UpdateProfileResponseDto> {
+export async function updateProfile(
+  formData: FormData
+): Promise<UpdateProfileResponseDto> {
   const headers: Record<string, string> = {};
-  
+
   // localStorage에서 accessToken 가져오기
   if (typeof window !== 'undefined') {
     const accessToken = localStorage.getItem('accessToken');
@@ -315,18 +332,23 @@ export async function updateProfile(formData: FormData): Promise<UpdateProfileRe
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
   }
-  
-  const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.auth.updateProfile}`, {
-    method: 'PATCH',
-    headers,
-    credentials: API_CONFIG.credentials,
-    body: formData,
-  });
-  
+
+  const response = await fetch(
+    `${API_CONFIG.baseUrl}${ENDPOINTS.auth.updateProfile}`,
+    {
+      method: 'PATCH',
+      headers,
+      credentials: API_CONFIG.credentials,
+      body: formData,
+    }
+  );
+
   if (!response.ok) {
-    throw new Error(`프로필 업데이트 실패: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `프로필 업데이트 실패: ${response.status} ${response.statusText}`
+    );
   }
-  
+
   return response.json();
 }
 
@@ -346,17 +368,27 @@ export async function submitVote(voteData: Record<string, unknown>) {
   });
 }
 
-export async function revoteAnime(submissionId: number, voteData: Record<string, unknown>) {
-  return apiCall<ApiResponseVoid>(`${ENDPOINTS.vote.candidates}/${submissionId}`, {
-    method: 'POST',
-    body: JSON.stringify(voteData),
-  });
+export async function revoteAnime(
+  submissionId: number,
+  voteData: Record<string, unknown>
+) {
+  return apiCall<ApiResponse<void>>(
+    `${ENDPOINTS.vote.candidates}/${submissionId}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(voteData),
+    }
+  );
 }
 
-// 별점 투표 API
-export async function submitStarVote(episodeId: number, starScore: number) {
+// 별점 투표/수정 API (비로그인 허용)
+export async function submitStarVote(
+  episodeId: number,
+  starScore: number,
+  episodeStarId?: number
+) {
   const fingerprint = await generateDeviceFingerprint();
-  
+
   return apiCall<ApiResponseStarInfoDto>('/api/v1/vote/star', {
     method: 'POST',
     headers: {
@@ -364,21 +396,67 @@ export async function submitStarVote(episodeId: number, starScore: number) {
     },
     body: JSON.stringify({
       episodeId,
-      starScore
+      starScore,
+      episodeStarId,
     }),
   });
 }
 
-// 별점 투표 후보자 조회 API
+// 투표 폼(모달) 투표/수정 API (로그인 ONLY)
+export async function submitVoteForm(voteData: Record<string, unknown>) {
+  const response = await apiCall<ApiResponse<VoteResultDto>>(
+    '/api/v1/vote/star-form',
+    {
+      method: 'POST',
+      body: JSON.stringify(voteData),
+    }
+  );
+
+  if (!response.isSuccess) {
+    throw response;
+  }
+
+  return response;
+}
+
+// 실시간 투표 리스트 조회 API
 export async function getStarCandidates() {
-  return apiCall<ApiResponseStarCandidateListDto>('/api/v1/vote/star');
+  return apiCall<ApiResponseLiveCandidateListDto>('/api/v1/vote/star');
+}
+
+// 주차 후보 목록 조회 API
+export async function getCandidateList(
+  year: number,
+  quarter: number,
+  week: number
+) {
+  return apiCall<ApiResponse<CandidateListDto[]>>(
+    `/api/v1/vote/episodes/${year}/${quarter}/${week}`,
+    {
+      method: 'GET',
+    }
+  );
+}
+
+// 후보 단건 조회 API
+export async function getCandidate(episodeId: number) {
+  return apiCall<ApiResponse<CandidateDto>>(
+    `/api/v1/vote/episodes/${episodeId}`,
+    {
+      method: 'GET',
+    }
+  );
 }
 
 // 별점 회수 API
-export async function withdrawStar(episodeId: number) {
-  return apiCall<ApiResponseVoid>(`/api/v1/vote/withdraw/${episodeId}`, {
-    method: 'POST',
-  });
+export async function withdrawStar(episodeId: number, episodeStarId: number) {
+  // TODO: episodeStarId 필수 처리
+  return apiCall<ApiResponse<void>>(
+    `/api/v1/vote/withdraw/${episodeId}/${episodeStarId}`,
+    {
+      method: 'POST',
+    }
+  );
 }
 
 // Admin API functions
@@ -445,12 +523,14 @@ export async function getSubmissionCountGroupByIp(
     page: page.toString(),
     size: size.toString(),
   });
-  
+
   if (sort && sort.length > 0) {
-    sort.forEach(s => params.append('sort', s));
+    sort.forEach((s) => params.append('sort', s));
   }
-  
-  return apiCall<ApiResponseSubmissionCountSliceDto>(`/api/admin/submissions?${params.toString()}`);
+
+  return apiCall<ApiResponseSubmissionCountSliceDto>(
+    `/api/admin/submissions?${params.toString()}`
+  );
 }
 
 export async function getSubmissionsByWeekAndIp(
@@ -461,52 +541,64 @@ export async function getSubmissionsByWeekAndIp(
     weekId: weekId.toString(),
     ipHash: ipHash,
   });
-  
-  return apiCall<ApiResponseListEpisodeStarDto>(`/api/admin/ip?${params.toString()}`);
+
+  return apiCall<ApiResponseListEpisodeStarDto>(
+    `/api/admin/ip?${params.toString()}`
+  );
 }
 
 // IP 차단 토글
-export async function banIp(ipHash: string, enabled: boolean, reason: string): Promise<void> {
+export async function banIp(
+  ipHash: string,
+  enabled: boolean,
+  reason: string
+): Promise<void> {
   const params = new URLSearchParams({
     ipHash,
     enabled: enabled.toString(),
-    reason
+    reason,
   });
-  return apiCall<void>(
-    `/api/admin/ip/ban?${params.toString()}`,
-    { method: 'POST' }
-  );
+  return apiCall<void>(`/api/admin/ip/ban?${params.toString()}`, {
+    method: 'POST',
+  });
 }
 
 // 표 몰수
-export async function withdrawVotesByWeekAndIp(weekId: number, ipHash: string, reason: string): Promise<void> {
+export async function withdrawVotesByWeekAndIp(
+  weekId: number,
+  ipHash: string,
+  reason: string
+): Promise<void> {
   const params = new URLSearchParams({
     weekId: weekId.toString(),
     ipHash,
-    reason
+    reason,
   });
-  return apiCall<void>(
-    `/api/admin/ip/withdraw?${params.toString()}`,
-    { method: 'POST' }
-  );
+  return apiCall<void>(`/api/admin/ip/withdraw?${params.toString()}`, {
+    method: 'POST',
+  });
 }
 
 // 표 몰수 되돌리기
-export async function undoWithdrawnSubmissions(logId: number, weekId: number, ipHash: string, reason: string): Promise<void> {
+export async function undoWithdrawnSubmissions(
+  logId: number,
+  weekId: number,
+  ipHash: string,
+  reason: string
+): Promise<void> {
   if (!logId || !weekId || !ipHash || !reason) {
     throw new Error('필수 파라미터가 누락되었습니다.');
   }
-  
+
   const params = new URLSearchParams({
     logId: logId.toString(),
     weekId: weekId.toString(),
     ipHash,
-    reason
+    reason,
   });
-  return apiCall<void>(
-    `/api/admin/ip/withdraw/undo?${params.toString()}`,
-    { method: 'POST' }
-  );
+  return apiCall<void>(`/api/admin/ip/withdraw/undo?${params.toString()}`, {
+    method: 'POST',
+  });
 }
 
 // IP 관리 로그 관련 타입
@@ -548,20 +640,22 @@ export async function getAdminLogsOnIpManagement(
     page: page.toString(),
     size: size.toString(),
   });
-  
+
   if (sort && sort.length > 0) {
-    sort.forEach(s => params.append('sort', s));
+    sort.forEach((s) => params.append('sort', s));
   }
-  
-  return apiCall<ApiResponseIpManagementLogSliceDto>(`/api/admin/submissions/logs?${params.toString()}`);
+
+  return apiCall<ApiResponseIpManagementLogSliceDto>(
+    `/api/admin/submissions/logs?${params.toString()}`
+  );
 }
 
 export async function updateAnimeImage(animeId: number, imageFile: File) {
   const formData = new FormData();
   formData.append('mainImage', imageFile);
-  
+
   const headers: Record<string, string> = {};
-  
+
   // localStorage에서 accessToken 가져오기
   if (typeof window !== 'undefined') {
     const accessToken = localStorage.getItem('accessToken');
@@ -569,18 +663,23 @@ export async function updateAnimeImage(animeId: number, imageFile: File) {
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
   }
-  
-  const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.admin.animes}/${animeId}`, {
-    method: 'POST',
-    headers,
-    credentials: API_CONFIG.credentials,
-    body: formData,
-  });
-  
+
+  const response = await fetch(
+    `${API_CONFIG.baseUrl}${ENDPOINTS.admin.animes}/${animeId}`,
+    {
+      method: 'POST',
+      headers,
+      credentials: API_CONFIG.credentials,
+      body: formData,
+    }
+  );
+
   if (!response.ok) {
-    throw new Error(`애니메이션 이미지 수정 실패: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `애니메이션 이미지 수정 실패: ${response.status} ${response.statusText}`
+    );
   }
-  
+
   return response.json();
 }
 

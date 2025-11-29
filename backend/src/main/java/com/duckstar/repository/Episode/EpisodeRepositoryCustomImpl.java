@@ -3,17 +3,16 @@ package com.duckstar.repository.Episode;
 import com.duckstar.domain.QAnime;
 import com.duckstar.domain.QOtt;
 import com.duckstar.domain.QWeek;
+import com.duckstar.domain.Week;
 import com.duckstar.domain.enums.AnimeStatus;
-import com.duckstar.domain.enums.ContentType;
+import com.duckstar.domain.enums.EpEvaluateState;
 import com.duckstar.domain.enums.Medium;
-import com.duckstar.domain.mapping.Episode;
-import com.duckstar.domain.mapping.QAnimeOtt;
-import com.duckstar.domain.mapping.QEpisode;
+import com.duckstar.domain.mapping.*;
+import com.duckstar.domain.mapping.comment.QAnimeComment;
 import com.duckstar.domain.vo.RankInfo;
+import com.duckstar.service.AnimeService.AnimeCommandServiceImpl;
 import com.duckstar.util.QuarterUtil;
-import com.duckstar.web.dto.MedalDto;
 import com.duckstar.web.dto.OttDto;
-import com.duckstar.web.dto.RankInfoDto;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.group.GroupBy;
 import com.querydsl.core.types.Projections;
@@ -26,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.duckstar.web.dto.AnimeResponseDto.*;
@@ -45,6 +45,8 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
     private final QAnimeOtt animeOtt = QAnimeOtt.animeOtt;
     private final QOtt ott = QOtt.ott;
     private final QWeek week = QWeek.week;
+    private final QEpisodeStar episodeStar = QEpisodeStar.episodeStar;
+    private final QAnimeComment animeComment = QAnimeComment.animeComment;
 
     @Override
     public List<EpisodeDto> getEpisodeDtosByAnimeId(Long animeId) {
@@ -78,7 +80,7 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
     }
 
     @Override
-    public List<StarCandidateDto> getStarCandidatesByDuration(LocalDateTime weekStart, LocalDateTime weekEnd) {
+    public List<LiveCandidateDto> getLiveCandidateDtos(List<String> principalKeys) {
         List<Tuple> tuples = queryFactory.select(
                         anime.id,
                         anime.status,
@@ -88,15 +90,19 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                         anime.genre,
                         anime.medium,
                         anime.premiereDateTime,
-                        episode.id,
-                        episode.isBreak,
-                        episode.isRescheduled,
-                        episode.scheduledAt
+                        anime.airTime,
+                        episode,
+                        episodeStar,
+                        episodeStar.weekVoteSubmission.isBlocked
                 )
-                .from(anime)
-                .leftJoin(episode).on(episode.anime.id.eq(anime.id))
-                .where(episode.scheduledAt.between(weekStart, weekEnd)
-                                .and(episode.isVoteEnabled)
+                .from(episode)
+                .join(episode.anime, anime)
+                .leftJoin(episodeStar).on(
+                        episodeStar.episode.id.eq(episode.id),
+                        episodeStar.weekVoteSubmission.principalKey.in(principalKeys),
+                        episodeStar.starScore.isNotNull()
+                )
+                .where(episode.evaluateState.eq(EpEvaluateState.VOTING_WINDOW)
 
                         // 극장판은 일단 보류
 
@@ -104,11 +110,16 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                                 anime.status.eq(AnimeStatus.NOW_SHOWING)
                                         .and(anime.medium.eq(Medium.MOVIE))
                         )*/)
-                .orderBy(episode.scheduledAt.desc().nullsLast())
+                .orderBy(episode.scheduledAt.asc())
                 .fetch();
 
         return tuples.stream()
                 .map(t -> {
+                    Episode episode = t.get(this.episode);
+                    if (episode == null) {
+                        return null;
+                    }
+
                     Medium medium = t.get(anime.medium);
                     LocalDateTime time = t.get(anime.premiereDateTime);
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d");
@@ -118,35 +129,93 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                     }
                     AnimeStatus status = t.get(anime.status);
 
-                    String airTime = medium == Medium.MOVIE || status == AnimeStatus.UPCOMING ?
+                    String airTime = (medium == Medium.MOVIE || status == AnimeStatus.UPCOMING) ?
                             formatted :  // 영화일 때와 방영 전 TVA: 첫 방영(개봉) 날짜, 예: "8/22"
                             t.get(anime.airTime);  // TVA 일 때는 방영 시간, 예: "00:00"
 
-                    LocalDateTime scheduledAt = t.get(episode.scheduledAt);
-                    QuarterUtil.YQWRecord record = null;
-                    if (scheduledAt != null) {
-                        record = QuarterUtil.getThisWeekRecord(scheduledAt);
+                    //=== 에피소드가 속한 주 계산 ===//
+                    LocalDateTime scheduledAt = episode.getScheduledAt();
+                    QuarterUtil.YQWRecord record = scheduledAt != null ?
+                            QuarterUtil.getThisWeekRecord(scheduledAt) :
+                            null;
+
+                    // EpisodeStar 존재 시 별점 통계 셋팅
+                    StarInfoDto info = null;
+                    EpisodeStar episodeStar = t.get(this.episodeStar);
+                    if (episodeStar != null) {
+                        Boolean isBlocked = t.get(this.episodeStar.weekVoteSubmission.isBlocked);
+                        info = StarInfoDto.of(isBlocked, episodeStar, episode);
                     }
 
-                    return StarCandidateDto.builder()
+                    // VoteResultDto 구성
+                    VoteResultDto result = VoteResultDto.builder()
+                            .voterCount(episode.getVoterCount())
+                            .info(info)
+                            .build();
+
+                    // 최종 DTO 리턴
+                    return LiveCandidateDto.builder()
                             .year(record != null ? record.yearValue() : null)
                             .quarter(record != null ? record.quarterValue() : null)
                             .week(record != null ? record.weekValue() : null)
-                            .episodeId(t.get(episode.id))
+                            .episodeId(episode.getId())
                             .animeId(t.get(anime.id))
                             .mainThumbnailUrl(t.get(anime.mainThumbnailUrl))
-                            .status(status)
-                            .isBreak(t.get(episode.isBreak))
                             .titleKor(t.get(anime.titleKor))
                             .dayOfWeek(t.get(anime.dayOfWeek))
                             .scheduledAt(scheduledAt)
-                            .isRescheduled(t.get(episode.isRescheduled))
                             .airTime(airTime)
                             .genre(t.get(anime.genre))
                             .medium(medium)
+                            .result(result)
                             .build();
                 })
                 .toList();
+    }
+
+    @Override
+    public List<WeekCandidateDto> getWeekCandidateDtos(Long weekId, String principalKey) {
+        principalKey = principalKey == null ? "" : principalKey;
+
+        return queryFactory.select(
+                        Projections.constructor(
+                                WeekCandidateDto.class,
+                                episode.id,
+                                episode.evaluateState,
+                                episodeStar.starScore.isNotNull(),
+                                anime.mainThumbnailUrl,
+                                anime.titleKor
+                        )
+                )
+                .from(episode)
+                .join(episode.anime, anime)
+                .join(week)
+                    .on(week.id.eq(weekId))
+                .leftJoin(episodeStar)
+                    .on(
+                            episodeStar.episode.id.eq(episode.id),
+                            episodeStar.weekVoteSubmission.principalKey.eq(principalKey)
+                    )
+                .where(
+                        episode.scheduledAt.between(week.startDateTime, week.endDateTime)
+                )
+                .orderBy(episode.scheduledAt.asc())
+                .fetch();
+    }
+
+
+    @Override
+    public Boolean isHybridTime(Week currentWeek, LocalDateTime now) {
+        LocalDateTime lastWeekEndTime = currentWeek.getStartDateTime();
+        LocalDateTime lastWeekStartTime = lastWeekEndTime.minusWeeks(1);
+
+        LocalDateTime lastWeekMaxScheduledAt =
+                queryFactory.select(episode.scheduledAt.max())
+                .from(episode)
+                .where(episode.scheduledAt.between(lastWeekStartTime, lastWeekEndTime))
+                .fetchOne();
+
+        return now.isBefore(lastWeekMaxScheduledAt.plusHours(36));
     }
 
     @Override
@@ -295,10 +364,10 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
         return tuples.stream()
                 .map(t -> {
                     Long animeId = t.get(anime.id);
-                    Episode episodeEntity = t.get(episode);
-                    RankInfo rankInfo = episodeEntity != null ? episodeEntity.getRankInfo() : null;
+                    Episode episode = t.get(this.episode);
+                    RankInfo rankInfo = episode != null ? episode.getRankInfo() : null;
 
-                    RankPreviewDto rankPreviewDto = RankPreviewDto.of(episodeEntity);
+                    RankPreviewDto rankPreviewDto = RankPreviewDto.of(episode);
 
                     List<MedalPreviewDto> medalPreviews =
                             medalDtosMap.getOrDefault(animeId, List.of());
@@ -311,15 +380,133 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                             .weeksOnTop10(rankInfo != null ? rankInfo.getWeeksOnTop10() : null)
                             .build();
 
-                    StarInfoDto starInfoDto = StarInfoDto.of(null, null, episodeEntity);
+                    StarInfoDto starInfoDto = StarInfoDto.of(
+                            null,
+                            null,
+                            episode
+                    );
+
+                    VoteResultDto result = VoteResultDto.builder()
+                            .voterCount(episode != null ? episode.getVoterCount() : null)
+                            .info(starInfoDto)
+                            .build();
 
                     return AnimeRankDto.builder()
                             .rankPreviewDto(rankPreviewDto)
                             .medalPreviews(medalPreviews)
                             .animeStatDto(animeStatDto)
-                            .starInfoDto(starInfoDto)
+                            .voteResultDto(result)
                             .build();
                 })
                 .toList();
+    }
+
+    @Override
+    public List<AnimeCommandServiceImpl.PremieredEpRecord> findPremieredEpRecordsInWindow(LocalDateTime windowStart, LocalDateTime windowEnd) {
+        // 방영 종료 체크: scheduledAt + 24분이 윈도우 안에 있는 경우
+        // 즉, scheduledAt이 (windowStart - 24분) ~ (windowEnd - 24분) 범위에 있어야 함
+        LocalDateTime finishedEpWindowStart = windowStart.minusMinutes(24);
+        LocalDateTime finishedEpWindowEnd = windowEnd.minusMinutes(24);
+
+        // 실시간 투표 종료 체크 : scheduledAt + 36시간
+        LocalDateTime liveVoteFinishedEpWindowStart = windowStart.minusHours(36);
+        LocalDateTime liveVoteFinishedEpWindowEnd = windowEnd.minusHours(36);
+
+        return queryFactory.select(
+                        Projections.constructor(
+                                AnimeCommandServiceImpl.PremieredEpRecord.class,
+                                episode,
+                                episode.scheduledAt.eq(anime.premiereDateTime),  // 첫 번째 에피소드인지
+                                episode.isLastEpisode,  // 마지막 에피소드인지
+                                episode.scheduledAt.between(finishedEpWindowStart, finishedEpWindowEnd),
+                                episode.scheduledAt.between(liveVoteFinishedEpWindowStart, liveVoteFinishedEpWindowEnd),
+                                anime
+                        )
+                )
+                .from(episode)
+                .join(episode.anime, anime)
+                .where(
+                        episode.isBreak.isFalse(),
+                        // 방영 시작 체크: scheduledAt이 윈도우 안에 있음
+                        episode.scheduledAt.between(windowStart, windowEnd)
+                                // 방영 종료 체크: scheduledAt + 24분이 윈도우 안에 있음
+                                .or(episode.scheduledAt.between(finishedEpWindowStart, finishedEpWindowEnd))
+                                // 실시간 투표 종료 체크: scheduledAt + 36시간이 윈도우 안에 있음
+                                .or(episode.scheduledAt.between(liveVoteFinishedEpWindowStart, liveVoteFinishedEpWindowEnd))
+                )
+                .fetch();
+    }
+
+    @Override
+    public Optional<CandidateFormDto> getCandidateFormDto(Long episodeId, List<String> principalKeys) {
+        Tuple t = queryFactory.select(
+                        episode,
+                        episodeStar,
+                        episodeStar.weekVoteSubmission.isBlocked,
+                        anime.id,
+                        anime.mainThumbnailUrl,
+                        animeComment.id,
+                        animeComment.body
+                )
+                .from(episode)
+                .join(episode.anime, anime)
+                .leftJoin(episodeStar).on(
+                        episodeStar.episode.id.eq(episode.id),
+                        episodeStar.weekVoteSubmission.principalKey.in(principalKeys),
+                        episodeStar.starScore.isNotNull()
+                )
+                .leftJoin(animeComment).on(animeComment.episodeStar.id.eq(episodeStar.id))
+                .where(episode.id.eq(episodeId))
+                .fetchOne();
+
+        if (t == null) {
+            return Optional.empty();
+        }
+
+        // 에피소드 기본 정보
+        Episode episode = t.get(this.episode);
+        if (episode == null) {
+            return Optional.empty();
+        }
+        Integer voterCount = episode.getVoterCount();
+
+        // EpisodeStar 존재 시 별점 통계 등 셋팅
+        EpisodeStar episodeStar = t.get(this.episodeStar);
+
+        LocalDateTime voteUpdatedAt = null;
+        StarInfoDto info = null;
+        Boolean isLateParticipating = null;
+        if (episodeStar != null) {
+            voteUpdatedAt = episodeStar.getUpdatedAt();
+
+            info = StarInfoDto.of(
+                    t.get(this.episodeStar.weekVoteSubmission.isBlocked),
+                    episodeStar,
+                    episode
+            );
+
+            isLateParticipating = episodeStar.getIsLateParticipating();
+        }
+
+        // VoteFormResultDto 구성
+        VoteFormResultDto result = VoteFormResultDto.builder()
+                .isLateParticipating(isLateParticipating)
+                .voterCount(voterCount)
+                .info(info)
+                .voteUpdatedAt(voteUpdatedAt)
+                .commentId(t.get(animeComment.id))
+                .body(t.get(animeComment.body))
+                .build();
+
+        // 최종 DTO 리턴
+        return Optional.of(
+                CandidateFormDto.builder()
+                .episodeId(episodeId)
+                .voterCount(voterCount)
+                .animeId(t.get(anime.id))
+                .mainThumbnailUrl(t.get(anime.mainThumbnailUrl))
+                .result(result)
+                .build()
+        );
     }
 }

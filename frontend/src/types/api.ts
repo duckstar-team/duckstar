@@ -10,11 +10,10 @@ export interface ApiResponse<T> {
 
 // Week DTO
 export interface WeekDto {
-  voteStatus: VoteStatus;
   year: number;
   quarter: number;
   week: number;
-  weekNumber: number;
+  weekNumber?: number;
   startDate: string;
   endDate: string;
 }
@@ -22,13 +21,13 @@ export interface WeekDto {
 // Ballot Request DTO
 export interface BallotRequestDto {
   candidateId: number;
-  ballotType: "NORMAL" | "BONUS";
+  ballotType: 'NORMAL' | 'BONUS';
 }
 
 // Anime Vote Request
 export interface AnimeVoteRequest {
   weekId: number;
-  gender: "MALE" | "FEMALE" | "NONE";
+  gender: 'MALE' | 'FEMALE' | 'NONE';
   ballotRequests: BallotRequestDto[];
 }
 
@@ -36,7 +35,7 @@ export interface AnimeVoteRequest {
 export interface VoteReceiptDto {
   submissionId: number;
   weekDto: WeekDto;
-  category: "ANIME" | "HERO" | "HEROINE";
+  category: 'ANIME' | 'HERO' | 'HEROINE';
   normalCount: number;
   bonusCount: number;
   submittedAt: string;
@@ -52,10 +51,10 @@ export interface StarRequestDto {
 
 // Star Info DTO (새로운 구조)
 export interface StarInfoDto {
-  isBlocked?: boolean; // 별점이 DB에 반영되지 않았는지 여부
-  userStarScore?: number; // 사용자가 투표한 별점
+  isBlocked?: boolean; // 중복 투표 시도한 경우 차단 처리
+  episodeStarId: number; // 별점 투표 기록 ID
+  userStarScore: number; // 사용자가 투표한 별점
   starAverage: number;
-  voterCount: number;
   star_0_5: number;
   star_1_0: number;
   star_1_5: number;
@@ -68,38 +67,55 @@ export interface StarInfoDto {
   star_5_0: number;
 }
 
-// Star Candidate DTO (새로운 구조)
-export interface StarCandidateDto {
+// Episode State Enum
+export type EvaluateState =
+  | 'CLOSED'
+  | 'VOTING_WINDOW'
+  | 'LOGIN_REQUIRED'
+  | 'ALWAYS_OPEN';
+
+// Star Candidate DTO
+export interface LiveCandidateDto {
   year: number;
   quarter: number;
   week: number;
-  animeId: number;
   episodeId: number;
+  animeId: number;
   mainThumbnailUrl: string;
-  status: "UPCOMING" | "NOW_SHOWING" | "COOLING" | "ENDED";
-  isBreak: boolean;
   titleKor: string;
-  dayOfWeek: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "SPECIAL" | "NONE";
-  isRescheduled: boolean;
+  dayOfWeek:
+    | 'MON'
+    | 'TUE'
+    | 'WED'
+    | 'THU'
+    | 'FRI'
+    | 'SAT'
+    | 'SUN'
+    | 'SPECIAL'
+    | 'NONE';
   scheduledAt: string;
   airTime: string;
   genre: string;
-  medium: "TVA" | "MOVIE";
-  info: StarInfoDto;
-  userHistory: StarInfoDto;
-  isFallback?: boolean; // fallback 데이터 여부
+  medium: 'TVA' | 'MOVIE';
+  result: VoteResultDto;
 }
 
-export type ApiResponseStarInfoDto = ApiResponse<StarInfoDto>;
-export type ApiResponseListStarCandidateDto = ApiResponse<StarCandidateDto[]>;
+export interface VoteResultDto {
+  voterCount: number;
+  info: StarInfoDto;
+}
+
+export type ApiResponseStarInfoDto = ApiResponse<VoteResultDto>;
+export type ApiResponseListLiveCandidateDto = ApiResponse<LiveCandidateDto[]>;
 
 // Star Candidate List DTO (새로운 구조)
-export interface StarCandidateListDto {
+export interface LiveCandidateListDto {
   weekDto: WeekDto;
-  starCandidates: StarCandidateDto[];
+  currentWeekLiveCandidates: LiveCandidateDto[];
+  lastWeekLiveCandidates: LiveCandidateDto[];
 }
 
-export type ApiResponseStarCandidateListDto = ApiResponse<StarCandidateListDto>;
+export type ApiResponseLiveCandidateListDto = ApiResponse<LiveCandidateListDto>;
 
 // Comment Request DTO
 export interface CommentRequestDto {
@@ -115,7 +131,7 @@ export interface ReplyRequestDto {
 
 // Reply DTO
 export interface ReplyDto {
-  status: "NORMAL" | "DELETED" | "ADMIN_DELETED";
+  status: 'NORMAL' | 'DELETED' | 'ADMIN_DELETED';
   replyId: number;
   canDeleteThis: boolean;
   isLiked: boolean;
@@ -135,7 +151,7 @@ export type ApiResponseReplyDto = ApiResponse<ReplyDto>;
 
 // Comment DTO
 export interface CommentDto {
-  status: "NORMAL" | "DELETED" | "ADMIN_DELETED";
+  status: 'NORMAL' | 'DELETED' | 'ADMIN_DELETED';
   commentId: number;
   canDeleteThis: boolean;
   isLiked: boolean;
@@ -156,7 +172,7 @@ export type ApiResponseCommentDto = ApiResponse<CommentDto>;
 
 // Delete Result DTO
 export interface DeleteResultDto {
-  status: "NORMAL" | "DELETED" | "ADMIN_DELETED";
+  status: 'NORMAL' | 'DELETED' | 'ADMIN_DELETED';
   createdAt: string;
   deletedAt?: string;
 }
@@ -168,15 +184,15 @@ export interface AnimeCandidateDto {
   animeCandidateId: number;
   mainThumbnailUrl: string;
   titleKor: string;
-  medium: "TVA" | "MOVIE";
+  medium: 'TVA' | 'MOVIE';
 }
 
+// TODO: 삭제 예정
 // Vote Status Enum
-export type VoteStatus = "OPEN" | "PAUSED" | "CLOSED";
+export type VoteStatus = 'OPEN' | 'PAUSED' | 'CLOSED';
 
 // Anime Candidate List DTO
 export interface AnimeCandidateListDto {
-  status: VoteStatus;
   weekId: number;
   weekDto: WeekDto;
   animeCandidates: AnimeCandidateDto[];
@@ -184,13 +200,14 @@ export interface AnimeCandidateListDto {
   memberGender?: 'MALE' | 'FEMALE' | 'UNKNOWN';
 }
 
-export type ApiResponseAnimeCandidateListDto = ApiResponse<AnimeCandidateListDto>;
+export type ApiResponseAnimeCandidateListDto =
+  ApiResponse<AnimeCandidateListDto>;
 
 // Anime Vote History DTO
 export interface AnimeVoteHistoryDto {
   submissionId: number;
   weekDto: WeekDto;
-  category: "ANIME" | "HERO" | "HEROINE";
+  category: 'ANIME' | 'HERO' | 'HEROINE';
   submittedAt: string;
   ballotRequests: BallotRequestDto[];
 }
@@ -201,8 +218,8 @@ export interface VoteHistoryBallotDto {
   animeCandidateId: number;
   mainThumbnailUrl: string;
   titleKor: string;
-  medium: "TVA" | "MOVIE";
-  ballotType: "NORMAL" | "BONUS";
+  medium: 'TVA' | 'MOVIE';
+  ballotType: 'NORMAL' | 'BONUS';
   totalEpisodes?: number;
 }
 
@@ -210,14 +227,15 @@ export interface VoteHistoryBallotDto {
 export interface VoteHistoryResponseDto {
   submissionId: number;
   weekDto: WeekDto;
-  category: "ANIME" | "HERO" | "HEROINE";
+  category: 'ANIME' | 'HERO' | 'HEROINE';
   submittedAt: string;
   normalCount: number;
   bonusCount: number;
   ballotRequests: VoteHistoryBallotDto[];
 }
 
-export type ApiResponseVoteHistoryResponseDto = ApiResponse<VoteHistoryResponseDto>;
+export type ApiResponseVoteHistoryResponseDto =
+  ApiResponse<VoteHistoryResponseDto>;
 
 export type ApiResponseAnimeVoteHistoryDto = ApiResponse<AnimeVoteHistoryDto>;
 
@@ -228,7 +246,7 @@ export interface AnimeVoteStatusDto {
   nickName?: string;
   submissionId: number;
   weekDto: WeekDto;
-  category: "ANIME" | "HERO" | "HEROINE";
+  category: 'ANIME' | 'HERO' | 'HEROINE';
   normalCount: number;
   bonusCount: number;
   submittedAt: string;
@@ -239,7 +257,7 @@ export type ApiResponseAnimeVoteStatusDto = ApiResponse<AnimeVoteStatusDto>;
 
 // OTT DTO
 export interface OttDto {
-  ottType: "LAFTEL" | "NETFLIX" | "WAVVE" | "TVING" | "WATCHA" | "PRIME";
+  ottType: 'LAFTEL' | 'NETFLIX' | 'WAVVE' | 'TVING' | 'WATCHA' | 'PRIME';
   watchUrl: string;
 }
 
@@ -248,15 +266,24 @@ export interface AnimePreviewDto {
   animeId: number;
   episodeId: number;
   mainThumbnailUrl: string;
-  status: "UPCOMING" | "NOW_SHOWING" | "COOLING" | "ENDED";
-  isBreak: boolean;
+  status?: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
+  isBreak?: boolean;
   titleKor: string;
-  dayOfWeek: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "SPECIAL" | "NONE";
+  dayOfWeek:
+    | 'MON'
+    | 'TUE'
+    | 'WED'
+    | 'THU'
+    | 'FRI'
+    | 'SAT'
+    | 'SUN'
+    | 'SPECIAL'
+    | 'NONE';
   scheduledAt: string;
-  isRescheduled: boolean;
-  airTime: string;  // 방영시간 (HH:mm 형식)
+  isRescheduled?: boolean;
+  airTime: string; // 방영시간 (HH:mm 형식)
   genre: string;
-  medium: "TVA" | "MOVIE" | "OVA" | "SPECIAL";
+  medium: 'TVA' | 'MOVIE' | 'OVA' | 'SPECIAL';
   ottDtos: OttDto[];
 }
 
@@ -276,7 +303,6 @@ export interface AnimeSearchListDto {
 
 export type ApiResponseAnimePreviewListDto = ApiResponse<AnimePreviewListDto>;
 
-
 // Duckstar Rank Preview DTO
 export interface DuckstarRankPreviewDto {
   votePercent: number;
@@ -285,8 +311,8 @@ export interface DuckstarRankPreviewDto {
 
 // Home Banner DTO
 export interface HomeBannerDto {
-  bannerType: "HOT" | "NOTICEABLE";
-  contentType: "ANIME" | "HERO" | "HEROINE";
+  bannerType: 'HOT' | 'NOTICEABLE';
+  contentType: 'ANIME' | 'HERO' | 'HEROINE';
   animeId: number;
   characterId: number;
   mainTitle: string;
@@ -295,10 +321,9 @@ export interface HomeBannerDto {
   characterImageUrl: string;
 }
 
-
 // Rank Preview DTO
 export interface RankPreviewDto {
-  type: "ANIME" | "HERO" | "HEROINE";
+  type: 'ANIME' | 'HERO' | 'HEROINE';
   contentId: number;
   rank: number;
   rankDiff: number | null;
@@ -325,8 +350,8 @@ export interface WeeklyTopDto {
 
 // Home Banner DTO
 export interface HomeBannerDto {
-  bannerType: "HOT" | "NOTICEABLE";
-  contentType: "ANIME" | "HERO" | "HEROINE";
+  bannerType: 'HOT' | 'NOTICEABLE';
+  contentType: 'ANIME' | 'HERO' | 'HEROINE';
   animeId: number;
   characterId: number;
   mainTitle: string;
@@ -378,11 +403,12 @@ export interface CharacterRankSliceDto {
   pageInfo: PageInfo;
 }
 
-export type ApiResponseCharacterRankSliceDto = ApiResponse<CharacterRankSliceDto>;
+export type ApiResponseCharacterRankSliceDto =
+  ApiResponse<CharacterRankSliceDto>;
 
 // Medal Preview DTO
 export interface MedalPreviewDto {
-  type: "GOLD" | "SILVER" | "BRONZE" | "NONE";
+  type: 'GOLD' | 'SILVER' | 'BRONZE' | 'NONE';
   rank: number;
   year: number;
   quarter: number;
@@ -427,18 +453,27 @@ export type ApiResponseAnimeRankSliceDto = ApiResponse<AnimeRankSliceDto>;
 // Season DTO
 export interface SeasonDto {
   year: number;
-  seasonType: "SPRING" | "SUMMER" | "AUTUMN" | "WINTER";
+  seasonType: 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER';
 }
 
 // Anime Info DTO
 export interface AnimeInfoDto {
-  medium: "TVA" | "MOVIE";
-  status: "UPCOMING" | "NOW_SHOWING" | "COOLING" | "ENDED";
+  medium: 'TVA' | 'MOVIE';
+  status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
   totalEpisodes: number;
   premiereDateTime: string;
   titleKor: string;
   titleOrigin: string;
-  dayOfWeek: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "SPECIAL" | "NONE";
+  dayOfWeek:
+    | 'MON'
+    | 'TUE'
+    | 'WED'
+    | 'THU'
+    | 'FRI'
+    | 'SAT'
+    | 'SUN'
+    | 'SPECIAL'
+    | 'NONE';
   airTime: string;
   synopsis: string;
   corp: string;
@@ -517,4 +552,5 @@ export interface UpdateProfileResponseDto {
   mePreviewDto: MePreviewDto;
 }
 
-export type ApiResponseUpdateProfileResponseDto = ApiResponse<UpdateProfileResponseDto>;
+export type ApiResponseUpdateProfileResponseDto =
+  ApiResponse<UpdateProfileResponseDto>;

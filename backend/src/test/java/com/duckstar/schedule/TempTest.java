@@ -12,7 +12,7 @@ import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.service.ChartService;
-import com.duckstar.service.VoteCommandService;
+import com.duckstar.service.VoteCommandServiceImpl;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 @SpringBootTest
 @Disabled("로컬 개발용 테스트")
-@ActiveProfiles("test-db")
+@ActiveProfiles("local-db")
 public class TempTest {
 
     @Autowired
@@ -43,7 +43,7 @@ public class TempTest {
     @Autowired
     private EpisodeStarRepository episodeStarRepository;
     @Autowired
-    private VoteCommandService voteCommandService;
+    private VoteCommandServiceImpl voteCommandServiceImpl;
 
     @Test
     @Transactional
@@ -51,13 +51,13 @@ public class TempTest {
     public void 에피소드_별점_리프레시() {
         Long weekId = 26L;
 
-        voteCommandService.refreshEpisodeStatsByWeekId(weekId);
+        voteCommandServiceImpl.refreshEpisodeStatsByWeekId(weekId);
     }
 
     @Test
     @Transactional
     public void 부정사용자_통계_출력() {
-        Long weekId = 26L;
+        Long weekId = 27L;
 
         Week lastWeek = weekRepository.findWeekById(weekId).orElseThrow(() ->
                 new WeekHandler(ErrorStatus.WEEK_NOT_FOUND));
@@ -82,7 +82,7 @@ public class TempTest {
                     episodeStarMap.get(episode.getId());
 
             if (thisEpisodeStars != null && !thisEpisodeStars.isEmpty())  {
-                //=== 같은 ip 에서 같은 점수 3개 이상 준 경우 감지 ===//
+                //=== 같은 ip 에서 같은 점수 4개 이상 준 경우 감지 ===//
                 Map<String, List<Integer>> ipHashToScoresMap = thisEpisodeStars.stream()
                         .collect(Collectors.groupingBy(
                                         es -> es.getWeekVoteSubmission().getIpHash(),
@@ -95,7 +95,7 @@ public class TempTest {
                             .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
 
                     boolean hasRepeatedScore = scoreCountMap.values().stream()
-                            .anyMatch(count -> count >= 3);
+                            .anyMatch(count -> count >= 4);
 
                     if (hasRepeatedScore) {
                         suspiciousMap
@@ -106,7 +106,7 @@ public class TempTest {
             }
         }
 
-        System.out.println("=== 동일 점수 3회 이상 반복해서 투표한 IP ===");
+        System.out.println("=== 동일 점수 4회 이상 반복해서 투표한 IP ===");
         AtomicInteger size = new AtomicInteger();
         suspiciousMap.forEach((anime, ipMap) -> {
             System.out.println("애니메이션: " + anime);
@@ -124,13 +124,7 @@ public class TempTest {
     @Transactional
     @Rollback(false)
     public void calculateRankManual() {
-        Long weekId = 26L;
-
-        Week week = weekRepository.findById(weekId).get();
-
-        chartService.buildDuckstars(week.getEndDateTime(), weekId);
-
-        chartService.createBanners(weekId);
+        chartService.calculateRankByYQW(2025, 4, 8);
     }
 
     @Test
@@ -173,74 +167,65 @@ public class TempTest {
             episode.setRankInfo(week2, newRankInfo);
         });
 
+        //=== 덕스타 런칭부터 임의의 주차까지의 week_id들 ===//
+        Long[] weekIdList = { 22L, 23L, 24L, 25L, 26L, 27L };
 
-        Week week3 = weekRepository.findById(22L).get();
+        for (Long weekId : weekIdList) {
+            Week week = weekRepository.findById(weekId).get();
 
-        List<Episode> week3Episodes = episodeRepository
-                .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
-                        week3.getStartDateTime(), week3.getEndDateTime()).stream()
-                .filter(e -> e.getRankInfo() != null && e.getRankInfo().getRank() != null)
-                .toList();
-        week3Episodes.forEach(episode -> episode.setRankInfo(null, null));
+            List<Episode> week3Episodes = episodeRepository
+                    .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
+                            week.getStartDateTime(), week.getEndDateTime()).stream()
+                    .filter(e -> e.getRankInfo() != null && e.getRankInfo().getRank() != null)
+                    .toList();
+            week3Episodes.forEach(episode -> episode.setRankInfo(null, null));
 
-        chartService.buildDuckstars(week3.getEndDateTime(), 22L);
-
-
-
-        Week week4 = weekRepository.findById(23L).get();
-
-        List<Episode> week4Episodes = episodeRepository
-                .findAllByScheduledAtGreaterThanEqualAndScheduledAtLessThan(
-                        week4.getStartDateTime(), week4.getEndDateTime()).stream()
-                .filter(e -> e.getRankInfo() != null && e.getRankInfo().getRank() != null)
-                .toList();
-        week4Episodes.forEach(episode -> episode.setRankInfo(null, null));
-
-        chartService.buildDuckstars(week4.getEndDateTime(), 23L);
+            chartService.buildDuckstars(weekId, true);
+        }
     }
 
-    @Test
-    @Transactional
-    @Rollback(false)
-    public void breakEpisode() {
-        // 관리자 화면, path variable 로 프론트에게 받는 id
-        Episode brokenEp = episodeRepository.findById(859L).get();
-        //=== 휴방으로 셋팅 ===//
-        brokenEp.setIsBreak(true);
-
-        LocalDateTime scheduledAt = brokenEp.getScheduledAt();
-        Anime anime = brokenEp.getAnime();
-        List<Episode> episodes = episodeRepository
-                .findAllByAnime_IdOrderByScheduledAtAsc(anime.getId());
-
-        int idx = 0;
-        for (Episode episode : episodes) {
-            if (episode.getScheduledAt().equals(scheduledAt)) break;
-            idx += 1;
-        }
-
-        /**
-         * ⚠️ 순위 발표 이후 휴방이 발견된 Case
-         *  복잡해서 순위는 새로 계산이 더 빠를 듯.
-         *  귀찮아지므로 이런 Case 없게 미리미리 휴방 파악해야.
-         */
-
-        //=== 남은 에피소드 한 주씩 미루기 ===//
-        Integer episodeNumber = brokenEp.getEpisodeNumber();
-        for (int i = idx + 1; i < episodes.size(); i++) {
-            episodes.get(i).setEpisodeNumber(episodeNumber);
-            episodeNumber += 1;
-        }
-        LocalDateTime nextEpScheduledAt = episodes.get(episodes.size() - 1).getNextEpScheduledAt();
-        episodeRepository.save(
-                Episode.create(
-                        anime,
-                        episodeNumber,
-                        nextEpScheduledAt,
-                        nextEpScheduledAt.plusWeeks(1)
-                )
-        );
-    }
+//    @Test
+//    @Transactional
+//    @Rollback(false)
+//    public void breakEpisode() {
+//        // 관리자 화면, path variable 로 프론트에게 받는 id
+//        Episode brokenEp = episodeRepository.findById(859L).get();
+//        //=== 휴방으로 셋팅 ===//
+//        brokenEp.setIsBreak(true);
+//
+//        LocalDateTime scheduledAt = brokenEp.getScheduledAt();
+//        Anime anime = brokenEp.getAnime();
+//        List<Episode> episodes = episodeRepository
+//                .findAllByAnime_IdOrderByScheduledAtAsc(anime.getId());
+//
+//        int idx = 0;
+//        for (Episode episode : episodes) {
+//            if (episode.getScheduledAt().equals(scheduledAt)) break;
+//            idx += 1;
+//        }
+//
+//        /**
+//         * ⚠️ 순위 발표 이후 휴방이 발견된 Case
+//         *  복잡해서 순위는 새로 계산이 더 빠를 듯.
+//         *  귀찮아지므로 이런 Case 없게 미리미리 휴방 파악해야.
+//         */
+//
+//        //=== 남은 에피소드 한 주씩 미루기 ===//
+//        Integer episodeNumber = brokenEp.getEpisodeNumber();
+//        for (int i = idx + 1; i < episodes.size(); i++) {
+//            episodes.get(i).setEpisodeNumber(episodeNumber);
+//            episodeNumber += 1;
+//        }
+//        LocalDateTime nextEpScheduledAt = episodes.get(episodes.size() - 1).getNextEpScheduledAt();
+//        episodeRepository.save(
+//                Episode.create(
+//                        anime,
+//                        episodeNumber,
+//                        nextEpScheduledAt,
+//                        nextEpScheduledAt.plusWeeks(1)
+//                )
+//        );
+//    }
 
     @Test
     @Transactional
