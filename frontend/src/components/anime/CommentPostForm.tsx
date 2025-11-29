@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../AppContainer';
 import { useImageUpload, UploadedImage } from '../../hooks/useImageUpload';
 import ImageUploadPreview from '../common/ImageUploadPreview';
-import Image from 'next/image';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -266,12 +265,10 @@ export default function CommentPostForm({
                 <div className="flex items-center gap-2">
                   {user && (
                     <>
-                      <div className="flex-shrink-0">
-                        <Image
+                      <div className="flex-shrink-0 size-6">
+                        <img
                           src={user?.profileImageUrl!}
                           alt="profile"
-                          width={24}
-                          height={24}
                           className="h-full w-full rounded-full object-contain"
                         />
                       </div>
