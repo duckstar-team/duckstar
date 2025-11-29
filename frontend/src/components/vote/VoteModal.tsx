@@ -1,7 +1,6 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import React, {
   useCallback,
   useEffect,
@@ -330,14 +329,12 @@ export default function VoteModal({
                   href={`/animes/${candidate?.animeId}`}
                   className="relative"
                 >
-                  <Image
+                  <img
                     src={mainThumbnailUrl}
                     alt={titleKor}
-                    width={100}
-                    height={100}
                     className="h-48 w-32 rounded-lg object-cover"
                   />
-                  {!isAuthenticated ||
+                  {localVoterCount > 0 &&
                     (phase === 'form' && (
                       <span className="absolute top-1 left-1 rounded-md bg-gray-800 px-2 py-1 text-xs font-semibold text-white">
                         {localVoterCount}명 참여
