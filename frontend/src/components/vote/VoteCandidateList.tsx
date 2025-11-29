@@ -1,7 +1,6 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Image from 'next/image';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import VoteModal from './VoteModal';
@@ -45,13 +44,10 @@ const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
           />
         </div>
       )}
-      <Image
+      <img
         src={candidate.mainThumbnailUrl}
         alt={candidate.titleKor}
-        width={100}
-        height={100}
         className={`aspect-[2/3] w-full rounded-md object-cover shadow-lg ${candidate.state !== 'CLOSED' && 'transition-all duration-200 hover:scale-105'}`}
-        priority={false}
         style={{
           filter: candidate.state === 'CLOSED' ? 'grayscale(100%)' : 'none',
         }}
