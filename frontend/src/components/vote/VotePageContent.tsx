@@ -508,46 +508,89 @@ export default function VotePageContent() {
   }, []);
 
   // 검색바 스티키 처리 (이번주차와 지난주차 모두 처리)
-  useEffect(() => {
-    const currentBar = currentWeekSearchBarRef.current;
-    if (!currentBar) return;
+  const lastScrollYRef = useRef(0);
+  const currentStickyStartYRef = useRef<number | null>(null);
+  const lastStickyStartYRef = useRef<number | null>(null);
 
-    const lastBar = lastWeekSearchBarRef.current;
+  useEffect(() => {
     const headerOffset = 60;
 
-    // 초기 위치 한 번만 계산 (문서 기준 Y 좌표)
-    const currentRect = currentBar.getBoundingClientRect();
-    const currentTop = currentRect.top + window.scrollY - headerOffset; // 이번주차 검색창이 헤더 바로 아래에 올 위치
-
-    const lastTop =
-      lastBar != null
-        ? lastBar.getBoundingClientRect().top + window.scrollY - headerOffset // 지난주차 검색창 위치
-        : Infinity;
-
-    let lastCurrentSticky = false;
-    let lastLastSticky = false;
-
     const handleStickyScroll = () => {
+      const currentBar = currentWeekSearchBarRef.current;
+      const lastBar = lastWeekSearchBarRef.current;
       const scrollY = window.scrollY;
 
-      let nextCurrentSticky = false;
-      let nextLastSticky = false;
+      const isScrollingDown = scrollY > lastScrollYRef.current;
+      lastScrollYRef.current = scrollY;
 
-      // 지난주차 검색창 기준선에 도달하면 지난주차만 스티키
-      if (scrollY >= lastTop && lastTop !== Infinity && scrollY > 100) {
-        nextLastSticky = true;
-      }
-      // 그 전 구간에서는 이번주차만 스티키
-      else if (scrollY >= currentTop && scrollY > 100) {
-        nextCurrentSticky = true;
+      let nextCurrentSticky = isCurrentWeekSearchBarSticky;
+      let nextLastSticky = isLastWeekSearchBarSticky;
+
+      const currentRectTop = currentBar
+        ? currentBar.getBoundingClientRect().top
+        : Infinity;
+      const lastRectTop = lastBar
+        ? lastBar.getBoundingClientRect().top
+        : Infinity;
+
+      if (isScrollingDown) {
+        // 아래로 스크롤: 이번주차 → 지난주차 순서로 스티키 전환
+        if (
+          !isLastWeekSearchBarSticky &&
+          lastBar &&
+          lastRectTop <= headerOffset
+        ) {
+          // 지난주차 스티키 ON, 이번주차 OFF
+          nextLastSticky = true;
+          nextCurrentSticky = false;
+          lastStickyStartYRef.current = scrollY;
+        } else if (
+          !nextLastSticky &&
+          !isCurrentWeekSearchBarSticky &&
+          currentBar &&
+          currentRectTop <= headerOffset
+        ) {
+          // 이번주차 스티키 ON
+          nextCurrentSticky = true;
+          if (currentStickyStartYRef.current == null) {
+            currentStickyStartYRef.current = scrollY;
+          }
+        }
+      } else {
+        // 위로 스크롤: 지난주차 스티키 해제 → 이번주차 스티키 → 이번주차 스티키 해제
+        if (
+          isLastWeekSearchBarSticky &&
+          lastStickyStartYRef.current != null &&
+          scrollY < lastStickyStartYRef.current
+        ) {
+          // 지난주차 스티키 해제
+          nextLastSticky = false;
+
+          // 해제 시점에서, 이번주차 위치가 헤더에 도달해 있다면 이번주차 스티키
+          if (currentBar && currentRectTop <= headerOffset) {
+            nextCurrentSticky = true;
+            if (currentStickyStartYRef.current == null) {
+              currentStickyStartYRef.current = scrollY;
+            }
+          }
+        } else if (
+          isCurrentWeekSearchBarSticky &&
+          currentStickyStartYRef.current != null &&
+          scrollY < currentStickyStartYRef.current
+        ) {
+          // 이번주차 스티키 해제 (더 위로 올라왔을 때)
+          nextCurrentSticky = false;
+        } else if (scrollY === 0) {
+          // 맨 위로 올라오면 모두 해제
+          nextCurrentSticky = false;
+          nextLastSticky = false;
+        }
       }
 
-      if (nextCurrentSticky !== lastCurrentSticky) {
-        lastCurrentSticky = nextCurrentSticky;
+      if (nextCurrentSticky !== isCurrentWeekSearchBarSticky) {
         setIsCurrentWeekSearchBarSticky(nextCurrentSticky);
       }
-      if (nextLastSticky !== lastLastSticky) {
-        lastLastSticky = nextLastSticky;
+      if (nextLastSticky !== isLastWeekSearchBarSticky) {
         setIsLastWeekSearchBarSticky(nextLastSticky);
       }
     };
@@ -559,7 +602,12 @@ export default function VotePageContent() {
     return () => {
       window.removeEventListener('scroll', handleStickyScroll);
     };
-  }, [currentWeekLiveCandidates.length, lastWeekLiveCandidates.length]);
+  }, [
+    isCurrentWeekSearchBarSticky,
+    isLastWeekSearchBarSticky,
+    currentWeekLiveCandidates.length,
+    lastWeekLiveCandidates.length,
+  ]);
 
   // 비회원 투표 내역 업데이트
   useEffect(() => {
@@ -752,71 +800,51 @@ export default function VotePageContent() {
             isUsingFallback ? 'mb-0' : 'mb-2'
           } flex flex-col items-center`}
         >
-          {/* Fallback 데이터 사용 시 알림 */}
-          {isUsingFallback && (
-            <div className="mb-4 flex h-8 w-fit max-w-full items-center justify-start rounded-lg border border-blue-200 bg-blue-50 py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
+          {/* 투표 안내 텍스트 */}
+          <div className="flex w-full items-center justify-between gap-4 px-10 max-lg:flex-col">
+            <div className="flex h-8 w-fit max-w-full items-center justify-start rounded-lg bg-[#f1f2f3] py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
               <div className="flex items-center justify-start gap-1 px-1 py-0 sm:gap-2 sm:px-2 lg:gap-2.5 lg:px-2.5">
                 <div className="relative size-3 overflow-hidden sm:size-4">
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-500">
-                    <span className="text-xs font-bold text-white">!</span>
-                  </div>
+                  <img
+                    src="/icons/voteSection-notify-icon.svg"
+                    alt="Notification Icon"
+                    className="h-full w-full"
+                  />
                 </div>
               </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-blue-700 sm:text-base">
+              <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-[#23272b] sm:text-base">
                 <p className="leading-normal break-words">
-                  현재 투표 가능한 애니메이션이 없습니다.
+                  마음에 든 애니메이션을 투표해주세요!
                 </p>
               </div>
             </div>
-          )}
 
-          {/* 기존 툴팁 컴포넌트 재사용 - fallback 사용 시 숨김 */}
-          {!isUsingFallback && (
-            <div className="flex w-full items-center justify-between gap-4 px-10 max-lg:flex-col">
-              <div className="flex h-8 w-fit max-w-full items-center justify-start rounded-lg bg-[#f1f2f3] py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
-                <div className="flex items-center justify-start gap-1 px-1 py-0 sm:gap-2 sm:px-2 lg:gap-2.5 lg:px-2.5">
-                  <div className="relative size-3 overflow-hidden sm:size-4">
-                    <img
-                      src="/icons/voteSection-notify-icon.svg"
-                      alt="Notification Icon"
-                      className="h-full w-full"
-                    />
-                  </div>
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-[#23272b] sm:text-base">
-                  <p className="leading-normal break-words">
-                    마음에 든 애니메이션을 투표해주세요!
-                  </p>
-                </div>
-              </div>
-
-              <div className="text-center text-gray-700 lg:text-right">
-                <p className="mb-2">
-                  <span className="sm:hidden">
-                    모든 후보는 방영 이후
-                    <br />
-                    36시간 이내에 투표할 수 있어요.
-                  </span>
-                  <span className="hidden sm:inline">
-                    모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.
-                  </span>
-                </p>
-                <p className="text-sm text-gray-500">
-                  <span className="sm:hidden">
-                    *덕스타 투표 시 중복 방지를 위해
-                    <br />
-                    쿠키와 암호화된 IP 정보가 사용됩니다.
-                  </span>
-                  <span className="hidden sm:inline">
-                    *덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가
-                    사용됩니다.
-                  </span>
-                </p>
-              </div>
+            <div className="text-center text-gray-700 lg:text-right">
+              <p className="mb-2">
+                <span className="sm:hidden">
+                  모든 후보는 방영 이후
+                  <br />
+                  36시간 이내에 투표할 수 있어요.
+                </span>
+                <span className="hidden sm:inline">
+                  모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.
+                </span>
+              </p>
+              <p className="text-sm text-gray-500">
+                <span className="sm:hidden">
+                  *덕스타 투표 시 중복 방지를 위해
+                  <br />
+                  쿠키와 암호화된 IP 정보가 사용됩니다.
+                </span>
+                <span className="hidden sm:inline">
+                  *덕스타 투표 시 중복 방지를 위해 쿠키와 암호화된 IP 정보가
+                  사용됩니다.
+                </span>
+              </p>
             </div>
-          )}
+          </div>
 
-          {/* 비로그인 투표 시 로그인 안내 버튼 - fallback 사용 시 숨김 */}
+          {/* 비로그인 투표 시 로그인 안내 버튼 */}
           {!isAuthenticated && hasVotedEpisodes && !isUsingFallback && (
             <div className="mt-4 flex w-full justify-center lg:justify-end lg:pr-10">
               <div className="group relative">
@@ -887,33 +915,31 @@ export default function VotePageContent() {
           </div>
 
           {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
-          {((currentWeekLiveCandidates.length > 0 &&
-            filteredcurrentWeekLiveCandidates.length > 0) ||
-            (lastWeekLiveCandidates.length > 0 &&
-              filteredlastWeekLiveCandidates.length > 0)) && (
-            <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
-              <button
-                onClick={() => handleCurrentViewModeChange('large')}
-                className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
-                  currentViewMode === 'large'
-                    ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                크게 보기
-              </button>
-              <button
-                onClick={() => handleCurrentViewModeChange('small')}
-                className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
-                  currentViewMode === 'small'
-                    ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                작게 보기
-              </button>
-            </div>
-          )}
+          {currentWeekLiveCandidates.length > 0 &&
+            filteredcurrentWeekLiveCandidates.length > 0 && (
+              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+                <button
+                  onClick={() => handleCurrentViewModeChange('large')}
+                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                    currentViewMode === 'large'
+                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  크게 보기
+                </button>
+                <button
+                  onClick={() => handleCurrentViewModeChange('small')}
+                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                    currentViewMode === 'small'
+                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  작게 보기
+                </button>
+              </div>
+            )}
         </div>
       </div>
       {/* 스티키 검색창 placeholder - 레이아웃 점프 방지 */}
@@ -929,7 +955,7 @@ export default function VotePageContent() {
       >
         {/* 이번주차 실시간 투표 섹션 */}
         <div className="mb-8">
-          <div className="mb-8 text-2xl font-bold">실시간 투표</div>
+          <div className="mb-8 text-2xl font-bold text-black">실시간 투표</div>
           {!isUsingFallback ? (
             <>
               {renderLiveCandidates(
@@ -949,29 +975,19 @@ export default function VotePageContent() {
                   </div>
                 )}
               {/* 투표 가능한 애니메이션이 없는 경우 (이번주차만) */}
-              {currentWeekLiveCandidates.length === 0 &&
-                !currentWeekSearchQuery.trim() && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                    <div className="text-center">
-                      <p className="text-gray-600">
-                        현재 투표 가능한 애니메이션이 없습니다.
-                      </p>
-                    </div>
-                  </div>
-                )}
             </>
           ) : (
             <>
               {/* Fallback 데이터 섹션 (검색화면 컴포넌트 사용) */}
               {fallbackAnimes.length > 0 && (
                 <div className="mb-8">
-                  <div className="mb-6 rounded-lg border border-gray-200 bg-white px-1 pt-6 shadow-sm">
-                    <div className="mb-6 text-center">
-                      <h3 className="mb-2 text-lg font-semibold text-gray-900">
-                        곧 시작하는 애니메이션
+                  <div className="mb-6">
+                    <div className="mb-6 flex items-end gap-2">
+                      <h3 className="text-xl font-semibold text-black">
+                        이번 주차 곧 시작!
                       </h3>
-                      <p className="text-sm text-gray-600">
-                        12시간 이내 방영 예정인 애니메이션들입니다
+                      <p className="text-sm text-gray-500">
+                        12시간 이내 방영 예정인 애니메이션입니다.
                       </p>
                     </div>
 
@@ -1077,33 +1093,31 @@ export default function VotePageContent() {
               </div>
 
               {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
-              {((currentWeekLiveCandidates.length > 0 &&
-                filteredcurrentWeekLiveCandidates.length > 0) ||
-                (lastWeekLiveCandidates.length > 0 &&
-                  filteredlastWeekLiveCandidates.length > 0)) && (
-                <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
-                  <button
-                    onClick={() => handleLastViewModeChange('large')}
-                    className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
-                      lastViewMode === 'large'
-                        ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    크게 보기
-                  </button>
-                  <button
-                    onClick={() => handleLastViewModeChange('small')}
-                    className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
-                      lastViewMode === 'small'
-                        ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    작게 보기
-                  </button>
-                </div>
-              )}
+              {lastWeekLiveCandidates.length > 0 &&
+                filteredlastWeekLiveCandidates.length > 0 && (
+                  <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+                    <button
+                      onClick={() => handleLastViewModeChange('large')}
+                      className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                        lastViewMode === 'large'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      크게 보기
+                    </button>
+                    <button
+                      onClick={() => handleLastViewModeChange('small')}
+                      className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                        lastViewMode === 'small'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      작게 보기
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
           {/* 스티키 검색창 placeholder - 레이아웃 점프 방지 */}
@@ -1117,7 +1131,9 @@ export default function VotePageContent() {
           <div
             className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
           >
-            <h1 className="mb-8 text-2xl font-bold">지난 주 실시간 투표</h1>
+            <h1 className="mb-8 text-2xl font-bold text-black">
+              지난 주 실시간 투표
+            </h1>
 
             {renderLiveCandidates(
               lastWeekLiveCandidates,
