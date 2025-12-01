@@ -25,7 +25,7 @@ interface SmallCandidateProps {
     quarter: number;
     week: number;
   };
-  starInfo?: StarInfoDto;
+  starInfo: StarInfoDto | null;
   voterCount: number;
   onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void;
 }
@@ -402,7 +402,7 @@ export default function SmallCandidate({
     response: ApiResponseStarInfoDto,
     userStarScore?: number
   ) => {
-    if (response.result) {
+    if (response.result.info) {
       const {
         isBlocked,
         starAverage,
