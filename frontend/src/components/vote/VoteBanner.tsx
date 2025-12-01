@@ -1,5 +1,6 @@
 import { WeekDto } from '@/types/api';
 import { getSeasonFromDate, getSeasonInKorean } from '@/lib/utils';
+import { format } from 'date-fns';
 
 // Types
 interface VoteBannerProps {
@@ -17,13 +18,6 @@ interface BannerData {
   season: string;
   seasonKorean: string;
 }
-
-// Constants
-const ASSETS = {
-  duckstarLogo: '/banners/vote-banner.svg',
-  star1: '/banners/star-1.svg',
-  star2: '/banners/star-2.svg',
-} as const;
 
 const BREAKPOINTS = {
   mobile: 320,
@@ -45,15 +39,14 @@ const STYLES = {
   textContent:
     'flex flex-col items-center justify-center text-white text-center relative shrink-0 gap-[5px]',
   titleContainer: 'flex flex-col justify-center mb-[-5px] relative shrink-0',
-  title:
-    'font-[Pretendard] font-bold leading-tight whitespace-pre text-lg sm:text-[33.833px]',
-  dateContainer: 'flex flex-col justify-center relative shrink-0',
+  title: ' font-bold leading-tight whitespace-pre text-lg sm:text-[33.833px]',
+  dateContainer: 'flex items-center gap-1 justify-center relative shrink-0',
   dateText:
-    'font-[Pretendard] font-normal text-sm sm:text-[16px] tracking-[0.8px] leading-[22px]',
+    ' font-normal text-sm sm:text-[16px] tracking-[0.8px] leading-[22px]',
   dateTextMobile:
-    'font-[Pretendard] font-normal text-sm sm:text-[16px] tracking-[0.8px] leading-[18px] -mt-1',
+    'font-normal text-sm sm:text-[16px] tracking-[0.8px] leading-[18px] -mt-1',
   dateTextDesktop:
-    'font-[Pretendard] font-normal text-sm sm:text-[16px] tracking-[0.8px] leading-[22px]',
+    ' font-normal text-sm sm:text-[16px] tracking-[0.8px] leading-[22px]',
   duckstarLogoContainer:
     'absolute top-[9.92px] left-[calc(50%-490px)] w-[88px] h-[79.164px] hidden lg:block',
   starContainer:
@@ -63,13 +56,8 @@ const STYLES = {
   starImage: 'flex-none rotate-[8.368deg] w-[147.837px] h-[147.837px]',
   starImageWrapper: 'relative w-full h-full',
   starImageContainer:
-    'absolute bottom-[9.55%] left-[2.45%] right-[2.45%] top-0',
+    'absolute bottom-[9.55%] left-[2.45%] right-[2.45%] top-0 z-10',
 } as const;
-
-// Utility functions
-const formatDate = (dateString: string): string => {
-  return dateString.replace(/-/g, '/');
-};
 
 const getTitleFontSize = (): string => {
   const { mobile, desktop } = TYPOGRAPHY.title;
@@ -111,8 +99,9 @@ const getDateText = (
   customSubtitle?: string
 ): string => {
   if (customSubtitle) return customSubtitle;
-  return `${formatDate(bannerData.startDate)} - ${formatDate(
-    bannerData.endDate
+  return `${format(bannerData.startDate, 'yyyy/MM/dd')} - ${format(
+    bannerData.endDate,
+    'yyyy/MM/dd'
   )}`;
 };
 
@@ -129,8 +118,9 @@ const getFullDateText = (
   customSubtitle?: string
 ): string => {
   if (customSubtitle) return customSubtitle;
-  return `${formatDate(bannerData.startDate)} - ${formatDate(
-    bannerData.endDate
+  return `${format(bannerData.startDate, 'yyyy/MM/dd')} - ${format(
+    bannerData.endDate,
+    'yyyy/MM/dd'
   )} (${bannerData.quarter}분기 ${bannerData.week}주차)`;
 };
 
@@ -161,58 +151,6 @@ const BannerDate = ({
     <p className={`${STYLES.dateTextDesktop} hidden sm:block`}>
       {fullDateText}
     </p>
-  </div>
-);
-
-const DuckstarLogo = () => (
-  <div className={STYLES.duckstarLogoContainer}>
-    <img
-      src={ASSETS.duckstarLogo}
-      alt="Duckstar Logo"
-      className="h-full w-full object-contain"
-    />
-  </div>
-);
-
-const StarImage = ({ src, alt }: { src: string; alt: string }) => (
-  <div className={STYLES.starImage}>
-    <div className={STYLES.starImageWrapper}>
-      <div className={STYLES.starImageContainer}>
-        <img src={src} alt={alt} className="h-full w-full object-contain" />
-      </div>
-    </div>
-  </div>
-);
-
-const StarContainer = () => (
-  <div className={STYLES.starContainer}>
-    <div className={STYLES.starWrapper}>
-      {/* First star */}
-      <div
-        className={STYLES.starItem}
-        style={{
-          left: '-5.13%',
-          right: '-33.52%',
-          top: '50%',
-          transform: 'translateY(-50%)',
-        }}
-      >
-        <StarImage src={ASSETS.star1} alt="Star" />
-      </div>
-
-      {/* Second star */}
-      <div
-        className={STYLES.starItem}
-        style={{
-          left: '-33.82%',
-          right: '-4.84%',
-          top: 'calc(50% + 16px)',
-          transform: 'translateY(-50%)',
-        }}
-      >
-        <StarImage src={ASSETS.star2} alt="Star" />
-      </div>
-    </div>
   </div>
 );
 
@@ -252,15 +190,13 @@ export default function VoteBanner({
   const fullDateText = getFullDateText(bannerData, customSubtitle);
 
   return (
-    <div className={STYLES.container}>
+    <div className="relative h-24 w-full overflow-hidden bg-[url(/banners/vote-banner-mobile.svg)] bg-cover bg-center xl:bg-[url(/banners/vote-banner.svg)]">
       <BannerContent
         title={title}
         dateText={dateText}
         quarterWeekText={quarterWeekText}
         fullDateText={fullDateText}
       />
-      {/* <DuckstarLogo /> */}
-      <StarContainer />
     </div>
   );
 }
