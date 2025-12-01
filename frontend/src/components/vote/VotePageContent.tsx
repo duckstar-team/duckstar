@@ -136,41 +136,64 @@ export default function VotePageContent() {
       ? queryError.message
       : '별점 투표 후보자를 불러오는데 실패했습니다.'
     : null;
-  const [searchQuery, setSearchQuery] = useState(''); // 검색 쿼리 상태
-  const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>(''); // 랜덤 애니메이션 제목
-  const [isSearchBarSticky, setIsSearchBarSticky] = useState(false); // 검색바 스티키 상태
-  const [viewMode, setViewMode] = useState<'large' | 'small'>('large'); // 뷰 모드 상태
+  const [currentWeekSearchQuery, setCurrentWeekSearchQuery] = useState(''); // 이번주차 검색 쿼리 상태
+  const [lastWeekSearchQuery, setLastWeekSearchQuery] = useState(''); // 지난주차 검색 쿼리 상태
+  const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>(''); // 랜덤 애니메이션 제목 (이번주차용)
+  const [lastWeekRandomTitle, setLastWeekRandomTitle] = useState<string>(''); // 랜덤 애니메이션 제목 (지난주차용)
+  const [isCurrentWeekSearchBarSticky, setIsCurrentWeekSearchBarSticky] =
+    useState(false); // 이번주차 검색바 스티키 상태
+  const [isLastWeekSearchBarSticky, setIsLastWeekSearchBarSticky] =
+    useState(false); // 지난주차 검색바 스티키 상태
+  const [currentWeekSearchBarHeight, setCurrentWeekSearchBarHeight] =
+    useState<number>(0); // 이번주차 검색창 높이
+  const [lastWeekSearchBarHeight, setLastWeekSearchBarHeight] =
+    useState<number>(0); // 지난주차 검색창 높이
+  const currentWeekSearchBarRef = useRef<HTMLDivElement | null>(null);
+  const lastWeekSearchBarRef = useRef<HTMLDivElement | null>(null);
+  const [currentViewMode, setCurrentViewMode] = useState<'large' | 'small'>(
+    'large'
+  ); // 이번주차 뷰 모드 상태
+  const [lastViewMode, setLastViewMode] = useState<'large' | 'small'>('large'); // 지난주차 뷰 모드 상태
   const [hasVotedCandidates, setHasVotedCandidates] = useState(false); // 중복 투표 방지 화면 표시 여부
   const [hasVotedEpisodes, setHasVotedEpisodes] = useState(false); // 비회원 투표 내역 로그인 버튼 표시 여부
   const [duplicatePreventionEndTime, setDuplicatePreventionEndTime] = useState<
     number | null
   >(null); // 중복 방지 종료 시간
 
-  // 뷰 모드 변경 핸들러
-  const handleViewModeChange = (mode: 'large' | 'small') => {
-    setViewMode(mode);
-    localStorage.setItem('voteViewMode', mode);
+  // 이번주차 뷰 모드 변경 핸들러
+  const handleCurrentViewModeChange = (mode: 'large' | 'small') => {
+    setCurrentViewMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('voteViewModeCurrent', mode);
+    }
+  };
+
+  // 지난주차 뷰 모드 변경 핸들러
+  const handleLastViewModeChange = (mode: 'large' | 'small') => {
+    setLastViewMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('voteViewModeLast', mode);
+    }
   };
 
   // 화면 크기에 따른 기본 뷰 모드 설정 및 저장된 뷰 모드 복원
   useEffect(() => {
     const handleResize = () => {
-      const savedViewMode = localStorage.getItem('voteViewMode') as
+      if (typeof window === 'undefined') return;
+
+      const savedCurrentViewMode = localStorage.getItem(
+        'voteViewModeCurrent'
+      ) as 'large' | 'small' | null;
+      const savedLastViewMode = localStorage.getItem('voteViewModeLast') as
         | 'large'
         | 'small'
         | null;
 
-      if (savedViewMode) {
-        // 저장된 뷰 모드가 있으면 사용
-        setViewMode(savedViewMode);
-      } else {
-        // 저장된 뷰 모드가 없으면 화면 크기에 따라 기본값 설정
-        if (window.innerWidth < 768) {
-          setViewMode('small');
-        } else {
-          setViewMode('large');
-        }
-      }
+      const defaultMode: 'large' | 'small' =
+        window.innerWidth < 768 ? 'small' : 'large';
+
+      setCurrentViewMode(savedCurrentViewMode || defaultMode);
+      setLastViewMode(savedLastViewMode || defaultMode);
     };
 
     // 초기 로드 시 체크
@@ -251,8 +274,12 @@ export default function VotePageContent() {
   };
 
   // 검색 쿼리 변경 핸들러
-  const handleSearchQueryChange = (query: string) => {
-    setSearchQuery(query);
+  const handleCurrentWeekSearchQueryChange = (query: string) => {
+    setCurrentWeekSearchQuery(query);
+  };
+
+  const handleLastWeekSearchQueryChange = (query: string) => {
+    setLastWeekSearchQuery(query);
   };
 
   // 검색 필터링 함수 (초성 검색 포함)
@@ -293,20 +320,21 @@ export default function VotePageContent() {
 
   // 필터링된 데이터
   const filteredcurrentWeekLiveCandidates = sortCandidatesByVoteTimeRemaining(
-    filterCandidates(currentWeekLiveCandidates, searchQuery)
+    filterCandidates(currentWeekLiveCandidates, currentWeekSearchQuery)
   );
   const filteredlastWeekLiveCandidates = sortCandidatesByVoteTimeRemaining(
-    filterCandidates(lastWeekLiveCandidates, searchQuery)
+    filterCandidates(lastWeekLiveCandidates, lastWeekSearchQuery)
   );
   const filteredFallbackAnimes = filterFallbackAnimes(
     fallbackAnimes,
-    searchQuery
+    currentWeekSearchQuery
   );
 
   // 후보자 목록 렌더링 함수
   const renderLiveCandidates = (
     candidates: LiveCandidateDto[],
-    filteredCandidates: LiveCandidateDto[]
+    filteredCandidates: LiveCandidateDto[],
+    viewMode: 'large' | 'small'
   ) => {
     if (candidates.length === 0) return null;
 
@@ -442,7 +470,7 @@ export default function VotePageContent() {
     }
   };
 
-  // 랜덤 placeholder 설정
+  // 랜덤 placeholder 설정 (이번주차용)
   useEffect(() => {
     if (currentWeekLiveCandidates.length > 0) {
       const placeholder = generateRandomPlaceholder(currentWeekLiveCandidates);
@@ -453,32 +481,85 @@ export default function VotePageContent() {
     }
   }, [currentWeekLiveCandidates, fallbackAnimes]);
 
-  // 검색바 스티키 처리
+  // 랜덤 placeholder 설정 (지난주차용)
   useEffect(() => {
+    if (lastWeekLiveCandidates.length > 0) {
+      const placeholder = generateRandomPlaceholder(lastWeekLiveCandidates);
+      setLastWeekRandomTitle(placeholder);
+    }
+  }, [lastWeekLiveCandidates]);
+
+  // 검색창 높이 측정 (한 번만)
+  useEffect(() => {
+    if (currentWeekSearchBarRef.current) {
+      const height =
+        currentWeekSearchBarRef.current.getBoundingClientRect().height;
+      if (height > 0) {
+        setCurrentWeekSearchBarHeight(height);
+      }
+    }
+    if (lastWeekSearchBarRef.current) {
+      const height =
+        lastWeekSearchBarRef.current.getBoundingClientRect().height;
+      if (height > 0) {
+        setLastWeekSearchBarHeight(height);
+      }
+    }
+  }, []);
+
+  // 검색바 스티키 처리 (이번주차와 지난주차 모두 처리)
+  useEffect(() => {
+    const currentBar = currentWeekSearchBarRef.current;
+    if (!currentBar) return;
+
+    const lastBar = lastWeekSearchBarRef.current;
+    const headerOffset = 60;
+
+    // 초기 위치 한 번만 계산 (문서 기준 Y 좌표)
+    const currentRect = currentBar.getBoundingClientRect();
+    const currentTop = currentRect.top + window.scrollY - headerOffset; // 이번주차 검색창이 헤더 바로 아래에 올 위치
+
+    const lastTop =
+      lastBar != null
+        ? lastBar.getBoundingClientRect().top + window.scrollY - headerOffset // 지난주차 검색창 위치
+        : Infinity;
+
+    let lastCurrentSticky = false;
+    let lastLastSticky = false;
+
     const handleStickyScroll = () => {
-      const searchBarElement = document.querySelector('[data-search-bar]');
-      if (!searchBarElement) return;
-
       const scrollY = window.scrollY;
-      const searchBarRect = searchBarElement.getBoundingClientRect();
-      const searchBarTop = searchBarRect.top + scrollY;
 
-      // 검색바가 화면 상단에서 60px 지점을 지나면 스티키
-      const shouldBeSticky =
-        scrollY >= searchBarTop - 60 && window.scrollY > 100;
+      let nextCurrentSticky = false;
+      let nextLastSticky = false;
 
-      if (shouldBeSticky !== isSearchBarSticky) {
-        setIsSearchBarSticky(shouldBeSticky);
+      // 지난주차 검색창 기준선에 도달하면 지난주차만 스티키
+      if (scrollY >= lastTop && lastTop !== Infinity && scrollY > 100) {
+        nextLastSticky = true;
+      }
+      // 그 전 구간에서는 이번주차만 스티키
+      else if (scrollY >= currentTop && scrollY > 100) {
+        nextCurrentSticky = true;
+      }
+
+      if (nextCurrentSticky !== lastCurrentSticky) {
+        lastCurrentSticky = nextCurrentSticky;
+        setIsCurrentWeekSearchBarSticky(nextCurrentSticky);
+      }
+      if (nextLastSticky !== lastLastSticky) {
+        lastLastSticky = nextLastSticky;
+        setIsLastWeekSearchBarSticky(nextLastSticky);
       }
     };
 
-    // 스크롤 이벤트 리스너
     window.addEventListener('scroll', handleStickyScroll, { passive: true });
+    // 첫 렌더 시에도 한 번 상태 맞춰줌
+    handleStickyScroll();
 
     return () => {
       window.removeEventListener('scroll', handleStickyScroll);
     };
-  }, [isSearchBarSticky]);
+  }, [currentWeekLiveCandidates.length, lastWeekLiveCandidates.length]);
 
   // 비회원 투표 내역 업데이트
   useEffect(() => {
@@ -665,7 +746,7 @@ export default function VotePageContent() {
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="mb-4 bg-white pt-1 md:pt-4 md:pb-2">
+      <div className="mb-4 bg-white pt-4 pb-2">
         <div
           className={`w-full ${getOptimalContainerWidth()} mx-auto ${
             isUsingFallback ? 'mb-0' : 'mb-2'
@@ -783,64 +864,69 @@ export default function VotePageContent() {
         </div>
       </div>
 
+      {/* 이번주차 검색창 섹션 */}
+      <div
+        ref={currentWeekSearchBarRef}
+        className={`p-4 shadow-sm ${
+          isCurrentWeekSearchBarSticky && !isLastWeekSearchBarSticky
+            ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px] lg:left-50'
+            : 'mb-7 bg-white md:mb-8'
+        }`}
+      >
+        <div
+          className={`mx-auto flex w-full items-center justify-between gap-2 sm:gap-4 ${getOptimalContainerWidth()} `}
+        >
+          <div className="flex min-w-0 flex-1 justify-between">
+            <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
+              <SearchBar
+                value={currentWeekSearchQuery}
+                onChange={handleCurrentWeekSearchQueryChange}
+                placeholder={randomAnimeTitle || '애니메이션 제목을 입력하세요'}
+              />
+            </div>
+          </div>
+
+          {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
+          {((currentWeekLiveCandidates.length > 0 &&
+            filteredcurrentWeekLiveCandidates.length > 0) ||
+            (lastWeekLiveCandidates.length > 0 &&
+              filteredlastWeekLiveCandidates.length > 0)) && (
+            <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+              <button
+                onClick={() => handleCurrentViewModeChange('large')}
+                className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                  currentViewMode === 'large'
+                    ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                크게 보기
+              </button>
+              <button
+                onClick={() => handleCurrentViewModeChange('small')}
+                className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                  currentViewMode === 'small'
+                    ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                작게 보기
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* 스티키 검색창 placeholder - 레이아웃 점프 방지 */}
+      {isCurrentWeekSearchBarSticky && !isLastWeekSearchBarSticky && (
+        <div
+          className="mb-7 md:mb-8"
+          style={{ height: `${currentWeekSearchBarHeight || 80}px` }}
+        ></div>
+      )}
+
       <div
         className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
       >
-        {/* 검색창 섹션 */}
-        <div
-          data-search-bar
-          className={`${
-            isSearchBarSticky
-              ? `fixed top-[60px] left-1/2 z-10 w-full -translate-x-1/2 transform lg:left-[calc(50%+100px)] ${getOptimalContainerWidth()} rounded-b-lg bg-white/80 px-4 backdrop-blur-md`
-              : 'rounded-lg'
-          } mb-7 border border-gray-200 bg-white p-4 shadow-sm md:mb-8`}
-        >
-          <div className="flex flex-row items-center gap-2 sm:gap-4">
-            <div className="flex min-w-0 flex-1 justify-center">
-              <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
-                <SearchBar
-                  value={searchQuery}
-                  onChange={handleSearchQueryChange}
-                  placeholder={
-                    randomAnimeTitle || '애니메이션 제목을 입력하세요'
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
-            {((currentWeekLiveCandidates.length > 0 &&
-              filteredcurrentWeekLiveCandidates.length > 0) ||
-              (lastWeekLiveCandidates.length > 0 &&
-                filteredlastWeekLiveCandidates.length > 0)) && (
-              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
-                <button
-                  onClick={() => handleViewModeChange('large')}
-                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
-                    viewMode === 'large'
-                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  크게 보기
-                </button>
-                <button
-                  onClick={() => handleViewModeChange('small')}
-                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
-                    viewMode === 'small'
-                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  작게 보기
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        {/* 스티키 검색창 placeholder - 레이아웃 점프 방지 */}
-        {isSearchBarSticky && <div className="mb-7 h-[80px] md:mb-8"></div>}
-
         {/* 이번주차 실시간 투표 섹션 */}
         <div className="mb-8">
           <div className="mb-8 text-2xl font-bold">실시간 투표</div>
@@ -848,22 +934,23 @@ export default function VotePageContent() {
             <>
               {renderLiveCandidates(
                 currentWeekLiveCandidates,
-                filteredcurrentWeekLiveCandidates
+                filteredcurrentWeekLiveCandidates,
+                currentViewMode
               )}
               {/* 검색 결과가 없는 경우 (이번주차만) */}
-              {searchQuery.trim() &&
+              {currentWeekSearchQuery.trim() &&
                 filteredcurrentWeekLiveCandidates.length === 0 && (
                   <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                     <div className="text-center">
                       <p className="text-gray-600">
-                        '{searchQuery}'에 대한 검색 결과가 없습니다.
+                        '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                       </p>
                     </div>
                   </div>
                 )}
               {/* 투표 가능한 애니메이션이 없는 경우 (이번주차만) */}
               {currentWeekLiveCandidates.length === 0 &&
-                !searchQuery.trim() && (
+                !currentWeekSearchQuery.trim() && (
                   <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                     <div className="text-center">
                       <p className="text-gray-600">
@@ -902,25 +989,27 @@ export default function VotePageContent() {
                 </div>
               )}
               {/* 검색 결과가 없는 경우 (fallback 데이터) */}
-              {searchQuery.trim() && filteredFallbackAnimes.length === 0 && (
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <div className="text-center">
-                    <p className="text-gray-600">
-                      '{searchQuery}'에 대한 검색 결과가 없습니다.
-                    </p>
+              {currentWeekSearchQuery.trim() &&
+                filteredFallbackAnimes.length === 0 && (
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="text-center">
+                      <p className="text-gray-600">
+                        '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               {/* Fallback 데이터도 비어있는 경우 */}
-              {fallbackAnimes.length === 0 && !searchQuery.trim() && (
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <div className="text-center">
-                    <p className="text-gray-600">
-                      곧 시작하는 애니메이션이 없습니다.
-                    </p>
+              {fallbackAnimes.length === 0 &&
+                !currentWeekSearchQuery.trim() && (
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="text-center">
+                      <p className="text-gray-600">
+                        곧 시작하는 애니메이션이 없습니다.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </>
           )}
 
@@ -931,7 +1020,7 @@ export default function VotePageContent() {
                   year={voteInfo?.year}
                   quarter={voteInfo?.quarter}
                   week={voteInfo?.week}
-                  searchQuery={searchQuery}
+                  searchQuery={currentWeekSearchQuery}
                 />
               )}
             </div>
@@ -963,6 +1052,68 @@ export default function VotePageContent() {
             />
           )}
 
+          {/* 지난주차 검색창 섹션 */}
+          <div
+            ref={lastWeekSearchBarRef}
+            className={`p-4 shadow-sm ${
+              isLastWeekSearchBarSticky
+                ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px] lg:left-50'
+                : 'mt-4 mb-7 bg-white md:mb-8'
+            }`}
+          >
+            <div
+              className={`mx-auto flex items-center justify-between gap-2 sm:gap-4 ${getOptimalContainerWidth()} `}
+            >
+              <div className="flex min-w-0 flex-1 justify-between">
+                <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
+                  <SearchBar
+                    value={lastWeekSearchQuery}
+                    onChange={handleLastWeekSearchQueryChange}
+                    placeholder={
+                      lastWeekRandomTitle || '애니메이션 제목을 입력하세요'
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
+              {((currentWeekLiveCandidates.length > 0 &&
+                filteredcurrentWeekLiveCandidates.length > 0) ||
+                (lastWeekLiveCandidates.length > 0 &&
+                  filteredlastWeekLiveCandidates.length > 0)) && (
+                <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+                  <button
+                    onClick={() => handleLastViewModeChange('large')}
+                    className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                      lastViewMode === 'large'
+                        ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    크게 보기
+                  </button>
+                  <button
+                    onClick={() => handleLastViewModeChange('small')}
+                    className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                      lastViewMode === 'small'
+                        ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    작게 보기
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* 스티키 검색창 placeholder - 레이아웃 점프 방지 */}
+          {isLastWeekSearchBarSticky && (
+            <div
+              className="mb-7 md:mb-8"
+              style={{ height: `${lastWeekSearchBarHeight || 80}px` }}
+            ></div>
+          )}
+
           <div
             className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
           >
@@ -970,15 +1121,16 @@ export default function VotePageContent() {
 
             {renderLiveCandidates(
               lastWeekLiveCandidates,
-              filteredlastWeekLiveCandidates
+              filteredlastWeekLiveCandidates,
+              lastViewMode
             )}
             {/* 검색 결과가 없는 경우 (지난주차만) */}
-            {searchQuery.trim() &&
+            {lastWeekSearchQuery.trim() &&
               filteredlastWeekLiveCandidates.length === 0 && (
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                   <div className="text-center">
                     <p className="text-gray-600">
-                      '{searchQuery}'에 대한 검색 결과가 없습니다.
+                      '{lastWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                     </p>
                   </div>
                 </div>
@@ -994,7 +1146,7 @@ export default function VotePageContent() {
                 year={voteInfo?.year}
                 quarter={voteInfo?.quarter}
                 week={voteInfo?.week - 1}
-                searchQuery={searchQuery}
+                searchQuery={lastWeekSearchQuery}
               />
             )}
           </div>

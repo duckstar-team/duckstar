@@ -22,7 +22,7 @@ interface BigCandidateProps {
   className?: string;
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   voteInfo?: { year: number; quarter: number; week: number } | null; // 투표 정보
-  starInfo?: StarInfoDto; // 별점 정보 (사용자 투표 이력 포함)
+  starInfo: StarInfoDto | null; // 별점 정보 (사용자 투표 이력 포함)
   voterCount: number;
   onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void; // 투표 완료 시 호출되는 콜백
 }
@@ -398,7 +398,7 @@ export default function BigCandidate({
     response: ApiResponseStarInfoDto,
     userStarScore?: number
   ) => {
-    if (response.result) {
+    if (response.result.info) {
       const {
         isBlocked,
         starAverage,
