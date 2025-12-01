@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
-import Script from 'next/script';
-import "./globals.css";
-import Footer from '@/components/Footer';
+import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import QueryProvider from '@/components/providers/QueryProvider';
 import MigrationToast from '@/components/common/MigrationToast';
@@ -35,12 +33,12 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "덕스타 - 애니메이션 투표 플랫폼",
-  description: "애니메이션 투표 및 차트 서비스",
+  title: '덕스타 - 애니메이션 투표 플랫폼',
+  description: '애니메이션 투표 및 차트 서비스',
   icons: {
-    icon: '/icons/favicon.svg',
-    shortcut: '/icons/favicon.svg',
-    apple: '/icons/favicon.svg',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
   },
 };
 
@@ -53,18 +51,15 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         {/* 반응형 뷰포트 설정 */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-        
-        {/* 투표 이미지 프리로딩 - 현재 사용하지 않음 */}
-        {/* <link rel="preload" href="/voted-normal-2025-autumn.svg" as="image" type="image/svg+xml" />
-        <link rel="preload" href="/voted-bonus-2025-autumn.svg" as="image" type="image/svg+xml" /> */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=no"
+        />
       </head>
-      <body
-        className={`${pretendard.variable} antialiased`}
-      >
+      <body className={`${pretendard.variable} antialiased`}>
         {/* Google Analytics 4 - 개발 환경에서는 로드하지 않음 */}
         <GoogleAnalytics />
-        
+
         {/* 페이지뷰 자동 추적 */}
         <Suspense fallback={null}>
           <PageViewTracker />
@@ -72,15 +67,13 @@ export default function RootLayout({
 
         <QueryProvider>
           <AuthProvider>
-            <ClientAppContainer>
-              {children}
-            </ClientAppContainer>
-            
+            <ClientAppContainer>{children}</ClientAppContainer>
+
             {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
             <Suspense fallback={null}>
               <MigrationToast />
             </Suspense>
-            
+
             {/* 토스트 컨테이너 - 모든 페이지에서 작동 */}
             <ToastContainer />
           </AuthProvider>
