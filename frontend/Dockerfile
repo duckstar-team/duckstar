@@ -27,6 +27,9 @@ ENV HOSTNAME="0.0.0.0"
 
 RUN addgroup --system nodejs && adduser --system nextjs
 
+# pm2 설치
+RUN npm install -g pm2
+
 # 정적 파일
 COPY --from=builder /app/public ./public
 
@@ -38,5 +41,8 @@ USER nextjs
 
 EXPOSE 3000
 
-# standalone 빌드 출력 기준 경로에서 server.js 실행
-CMD ["node", "server.js"]
+# PM2 클러스터 모드로 server.js 실행
+CMD ["pm2-runtime", "server.js", "-i", "max"]
+
+# # standalone 빌드 출력 기준 경로에서 server.js 실행
+# CMD ["node", "server.js"]
