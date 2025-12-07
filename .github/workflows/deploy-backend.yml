@@ -177,9 +177,9 @@ jobs:
             ATTEMPT=$((ATTEMPT + 1))
             echo "헬스체크 시도 $ATTEMPT/$MAX_ATTEMPTS..."
             
-            # Nginx 컨테이너를 통해 백엔드 헬스체크 (Docker 네트워크 내부에서 backend:8080 접근)
+            # backend 컨테이너 안에서 직접 헬스체크
             if ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
-              "docker exec duckstar-nginx curl -f -s http://backend:8080/actuator/health > /dev/null 2>&1"; then
+              "docker exec duckstar-backend curl -f -s http://backend:8080/actuator/health > /dev/null 2>&1"; then
               echo "✅ 헬스체크 성공!"
               echo "status=success" >> $GITHUB_OUTPUT
               exit 0
