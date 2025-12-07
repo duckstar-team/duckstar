@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Standalone 모드 활성화 (Docker 최적화)
+  output: 'standalone',
+
   // 환경 변수 기본값 설정
   env: {
     NEXT_PUBLIC_API_URL:
