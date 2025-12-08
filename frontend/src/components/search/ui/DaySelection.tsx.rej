@@ -1,9 +1,0 @@
-diff a/frontend/src/components/search/ui/DaySelection.tsx b/frontend/src/components/search/ui/DaySelection.tsx	(rejected hunks)
-@@ -379,6 +379,7 @@ export default function DaySelection({
-         data-day-selection
-         className={cn(
-           "relative hidden md:flex items-center justify-between gap-3 w-full",
-+          isSticky ? "lg:justify-center" : "",
-           className
-         )}
-         onMouseLeave={handleMouseLeave}
