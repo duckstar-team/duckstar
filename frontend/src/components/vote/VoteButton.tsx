@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useScrollOptimization } from '../../hooks/useScrollOptimization';
 
 export type VoteButtonVariant = 'next' | 'bonus' | 'submit';
 
@@ -31,35 +30,37 @@ const BUTTON_CONFIG = {
   },
 } as const;
 
-export default function VoteButton({ 
-  type, 
-  onClick, 
-  disabled = false, 
+export default function VoteButton({
+  type,
+  onClick,
+  disabled = false,
   showError = false,
-  isRevoteMode = false
+  isRevoteMode = false,
 }: VoteButtonProps) {
-  const { isScrolling } = useScrollOptimization();
   const config = BUTTON_CONFIG[type];
-  const baseClasses = "flex items-center justify-center pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 h-8 sm:h-10 rounded-lg font-['Pretendard',_sans-serif] font-bold text-sm sm:text-base text-white transition-all duration-200 hover:brightness-110 text-center";
-  
+  const baseClasses =
+    "flex items-center justify-center pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 h-8 sm:h-10 rounded-lg font-['Pretendard',_sans-serif] font-bold text-sm sm:text-base text-white transition-all duration-200 hover:brightness-110 text-center";
+
   const buttonClasses = `${baseClasses} ${config.gradient} ${config.width}`;
-  const disabledClasses = disabled ? 'opacity-50 hover:brightness-100' : 'cursor-pointer';
-  
+  const disabledClasses = disabled
+    ? 'opacity-50 hover:brightness-100'
+    : 'cursor-pointer';
+
   const getButtonContent = () => {
     if (type === 'next' && showError) {
       return (
         <img
           src="/icons/button-block.svg"
           alt="Block Icon"
-          className="w-4 h-4 sm:w-5 sm:h-5"
+          className="h-4 w-4 sm:h-5 sm:w-5"
         />
       );
     }
-    
+
     if (type === 'submit' && isRevoteMode) {
       return '재투표하기';
     }
-    
+
     return config.text;
   };
 
@@ -74,10 +75,8 @@ export default function VoteButton({
         key={showError ? 'error' : 'normal'}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ 
-          duration: isScrolling ? 0.1 : 0.2 // 스크롤 중일 때 더 빠르게
-        }}
-        className="flex items-center justify-center w-full text-center"
+        transition={{ duration: 0.2 }}
+        className="flex w-full items-center justify-center text-center"
         style={{
           willChange: 'transform, opacity',
           transform: 'translateZ(0)', // GPU 가속 강제 활성화

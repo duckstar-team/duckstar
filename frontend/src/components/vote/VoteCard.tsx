@@ -1,8 +1,8 @@
-import React, { useState, useEffect, memo, useCallback } from "react";
-import { motion } from "framer-motion";
-import VoteToggle from "./VoteToggle";
-import { WeekDto } from "@/types/api";
-import { getSeasonFromDate, getSeasonInKorean } from "@/lib/utils";
+import React, { useState, useEffect, memo, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import VoteToggle from './VoteToggle';
+import { WeekDto } from '@/types/api';
+import { getSeasonFromDate, getSeasonInKorean } from '@/lib/utils';
 
 interface VoteCardProps {
   thumbnailUrl: string;
@@ -16,10 +16,8 @@ interface VoteCardProps {
   bonusVotesUsed?: number;
   isBonusVote?: boolean;
   weekDto?: WeekDto;
-  medium?: "TVA" | "MOVIE";
   onMouseLeave?: () => void;
   disabled?: boolean;
-  showGenderSelection?: boolean;
   showDropdown?: boolean;
 }
 
@@ -35,10 +33,8 @@ const VoteCard = memo(function VoteCard({
   bonusVotesUsed = 0,
   isBonusVote = false,
   weekDto,
-  medium,
   onMouseLeave,
   disabled = false,
-  showGenderSelection = false,
   showDropdown = false,
 }: VoteCardProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -72,47 +68,53 @@ const VoteCard = memo(function VoteCard({
   }, [onMouseLeave]);
 
   // 카드 몸체에서 마우스 이동 시 좌우 구분 - 메모이제이션
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isHybridMode || disabled) return;
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    
-    // 기표칸의 중앙점이 카드 몸체에서 위치하는 지점 계산
-    // 썸네일(112px) + 갭(16px) + 제목영역(남은공간) + 갭(16px) + 기표칸중앙(48px)
-    // 실제로는 기표칸의 중앙이 카드의 오른쪽 끝에서 48px 지점
-    const stampCenterX = rect.width - 48; // 기표칸 중앙점
-    const isLeftSide = x < stampCenterX;
-    
-    setHoverSide(isLeftSide ? 'left' : 'right');
-  }, [isHybridMode, disabled]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isHybridMode || disabled) return;
 
-  // 카드 클릭 처리 - 메모이제이션
-  const handleCardClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!onChange) return; // disabled 상태에서는 클릭 무시
-    
-    if (isHybridMode) {
-      // 하이브리드 모드에서는 클릭 위치에 따라 일반/보너스 투표 구분
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      
+
       // 기표칸의 중앙점이 카드 몸체에서 위치하는 지점 계산
+      // 썸네일(112px) + 갭(16px) + 제목영역(남은공간) + 갭(16px) + 기표칸중앙(48px)
+      // 실제로는 기표칸의 중앙이 카드의 오른쪽 끝에서 48px 지점
       const stampCenterX = rect.width - 48; // 기표칸 중앙점
       const isLeftSide = x < stampCenterX;
-      
-      if (isLeftSide) {
-        // 왼쪽 영역 클릭: 일반 투표
-        onChange(false);
+
+      setHoverSide(isLeftSide ? 'left' : 'right');
+    },
+    [isHybridMode, disabled]
+  );
+
+  // 카드 클릭 처리 - 메모이제이션
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!onChange) return; // disabled 상태에서는 클릭 무시
+
+      if (isHybridMode) {
+        // 하이브리드 모드에서는 클릭 위치에 따라 일반/보너스 투표 구분
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+
+        // 기표칸의 중앙점이 카드 몸체에서 위치하는 지점 계산
+        const stampCenterX = rect.width - 48; // 기표칸 중앙점
+        const isLeftSide = x < stampCenterX;
+
+        if (isLeftSide) {
+          // 왼쪽 영역 클릭: 일반 투표
+          onChange(false);
+        } else {
+          // 오른쪽 영역 클릭: 보너스 투표
+          onChange(true);
+        }
       } else {
-        // 오른쪽 영역 클릭: 보너스 투표
-        onChange(true);
+        // 일반 모드 또는 풀 보너스 모드
+        const isFullBonusMode = isBonusMode && currentVotes >= maxVotes;
+        onChange(isFullBonusMode);
       }
-    } else {
-      // 일반 모드 또는 풀 보너스 모드
-      const isFullBonusMode = isBonusMode && currentVotes >= maxVotes;
-      onChange(isFullBonusMode);
-    }
-  }, [onChange, isHybridMode, isBonusMode, currentVotes, maxVotes]);
+    },
+    [onChange, isHybridMode, isBonusMode, currentVotes, maxVotes]
+  );
 
   // subTitle 생성 - 메모이제이션
   const getSubTitle = useCallback(() => {
@@ -123,28 +125,24 @@ const VoteCard = memo(function VoteCard({
       const week = weekDto.week;
       return `${year} ${seasonText} ${week}주차`;
     }
-    return ""; // 폴백으로 빈 문자열 반환
+    return ''; // 폴백으로 빈 문자열 반환
   }, [weekDto]);
 
   return (
     <div className="relative">
       <motion.div
-        className={`
-          w-full bg-white rounded-xl shadow border-2
-          transition-all duration-200 ease-in-out
-          ${disabled ? 'cursor-pointer' : 'cursor-pointer hover:shadow-lg'}
-          ${showError 
-            ? 'border-[#CB285E]/80 shadow-red-200/50' 
+        className={`w-full rounded-xl border-2 bg-white shadow transition-all duration-200 ease-in-out ${disabled ? 'cursor-pointer' : 'cursor-pointer hover:shadow-lg'} ${
+          showError
+            ? 'border-[#CB285E]/80 shadow-red-200/50'
             : 'border-gray-200'
-          }
-        `}
+        } `}
         initial={{ scale: 1 }}
-        animate={{ 
-          scale: 1
+        animate={{
+          scale: 1,
         }}
-        transition={{ 
+        transition={{
           duration: 0.2,
-          ease: "easeInOut"
+          ease: 'easeInOut',
         }}
         onMouseEnter={!disabled ? () => setIsHovered(true) : undefined}
         onMouseLeave={!disabled ? handleMouseLeave : undefined}
@@ -152,13 +150,13 @@ const VoteCard = memo(function VoteCard({
         onClick={!disabled ? handleCardClick : undefined}
       >
         {/* 데스크톱 레이아웃 (lg 이상) */}
-        <div className="hidden lg:flex items-center gap-4 p-4">
+        <div className="hidden items-center gap-4 p-4 lg:flex">
           {/* 썸네일 */}
-          <div className="relative w-28 h-36 flex-shrink-0">
+          <div className="relative h-36 w-28 flex-shrink-0">
             <img
               src={thumbnailUrl}
               alt={title}
-              className="w-full h-full object-cover rounded-md"
+              className="h-full w-full rounded-md object-cover"
               loading="lazy"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
@@ -168,11 +166,13 @@ const VoteCard = memo(function VoteCard({
           </div>
 
           {/* 제목 + 시즌 */}
-          <div className={`flex flex-col ${showDropdown ? 'flex-1 mr-4' : 'flex-1'}`}>
-            <div className="text-lg font-semibold text-gray-900 break-words leading-tight">
+          <div
+            className={`flex flex-col ${showDropdown ? 'mr-4 flex-1' : 'flex-1'}`}
+          >
+            <div className="text-lg leading-tight font-semibold break-words text-gray-900">
               {title}
             </div>
-            <div className="text-sm text-gray-500 mt-1">{getSubTitle()}</div>
+            <div className="mt-1 text-sm text-gray-500">{getSubTitle()}</div>
           </div>
 
           {/* 투표 토글 */}
@@ -199,14 +199,14 @@ const VoteCard = memo(function VoteCard({
         </div>
 
         {/* 모바일/태블릿 레이아웃 (lg 미만) */}
-        <div className="lg:hidden p-3 sm:p-4">
-          <div className="flex items-start gap-2 sm:gap-3 w-full min-w-0">
+        <div className="p-3 sm:p-4 lg:hidden">
+          <div className="flex w-full min-w-0 items-start gap-2 sm:gap-3">
             {/* 썸네일 */}
-            <div className="relative w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0">
+            <div className="relative h-20 w-16 flex-shrink-0 sm:h-24 sm:w-20">
               <img
                 src={thumbnailUrl}
                 alt={title}
-                className="w-full h-full object-cover rounded-md"
+                className="h-full w-full rounded-md object-cover"
                 loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -216,17 +216,17 @@ const VoteCard = memo(function VoteCard({
             </div>
 
             {/* 오른쪽 열: 제목 + 시즌 + 기표칸 */}
-            <div className="flex flex-col flex-1 min-w-0">
+            <div className="flex min-w-0 flex-1 flex-col">
               {/* 제목 */}
-              <div className="text-sm sm:text-base font-semibold text-gray-900 break-words leading-tight mb-1">
+              <div className="mb-1 text-sm leading-tight font-semibold break-words text-gray-900 sm:text-base">
                 {title}
               </div>
-              
+
               {/* 시즌 정보 */}
-              <div className="text-xs text-gray-500 mb-2 sm:mb-3">
+              <div className="mb-2 text-xs text-gray-500 sm:mb-3">
                 {getSubTitle()}
               </div>
-              
+
               {/* 기표칸 (우하단) */}
               <div className="flex justify-end">
                 <VoteToggle

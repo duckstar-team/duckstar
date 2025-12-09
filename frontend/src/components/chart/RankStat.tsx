@@ -1,8 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import RankHistory from './RankHistory';
-import Top10Achievement from './Top10Achievement';
 import WeekRatingStats from './WeekRatingStats';
 import MedalSection from './MedalSection';
 import { getThisWeekRecord } from '@/lib/quarterUtils';

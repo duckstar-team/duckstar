@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import BannerContent from './BannerContent';
-import BannerImage from './BannerImage';
 import BannerPagination from './BannerPagination';
 import { HomeBannerDto } from '@/types/api';
 

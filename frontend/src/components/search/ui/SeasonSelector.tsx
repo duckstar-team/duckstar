@@ -138,7 +138,7 @@ export default function SeasonSelector({
     <div className={cn('relative', className)} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative ml-2 box-border flex w-fit max-w-[280px] cursor-pointer content-stretch items-center justify-center gap-2 rounded-[12px] bg-white px-[8px] py-1 py-[6px] pr-[5px] transition-colors duration-200 hover:bg-gray-50 sm:max-w-[320px] sm:px-[10px]"
+        className="relative ml-2 box-border flex w-fit max-w-[280px] cursor-pointer content-stretch items-center justify-center gap-2 rounded-[12px] bg-white px-[8px] py-[6px] pr-[5px] transition-colors duration-200 hover:bg-gray-50 sm:max-w-[320px] sm:px-[10px]"
       >
         <div className="relative shrink-0 text-[16px] leading-[0] font-medium text-black not-italic sm:text-[18px]">
           <p className="truncate leading-[20px] sm:leading-[22px]">

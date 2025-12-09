@@ -3,12 +3,12 @@ import localFont from 'next/font/local';
 import { Suspense } from 'react';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
-import QueryProvider from '@/components/providers/QueryProvider';
+import QueryProvider from '@/providers/QueryProvider';
 import MigrationToast from '@/components/common/MigrationToast';
-import ClientAppContainer from '@/components/ClientAppContainer';
 import { ToastContainer } from '@/components/common/Toast';
 import PageViewTracker from '@/components/analytics/PageViewTracker';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
+import AppContainer from '@/components/AppContainer';
 
 // Pretendard 폰트만 사용 (성능 최적화)
 const pretendard = localFont({
@@ -67,7 +67,7 @@ export default function RootLayout({
 
         <QueryProvider>
           <AuthProvider>
-            <ClientAppContainer>{children}</ClientAppContainer>
+            <AppContainer>{children}</AppContainer>
 
             {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
             <Suspense fallback={null}>

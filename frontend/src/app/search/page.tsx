@@ -2,17 +2,12 @@
 
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import AnimeSearchBar from '@/components/search/ui/AnimeSearchBar';
 import AnimeCard from '@/components/anime/AnimeCard';
 import SmallCandidate from '@/components/anime/SmallCandidate';
 import DaySelection, { DayOfWeek } from '@/components/search/ui/DaySelection';
 import SearchFilters from '@/components/search/filters/SearchFilters';
 import SearchInput from '@/components/search/ui/SearchInput';
-import {
-  getCurrentSchedule,
-  getScheduleByYearAndQuarter,
-  searchAnimes,
-} from '@/api/search';
+import { getCurrentSchedule, searchAnimes } from '@/api/search';
 import SeasonSelector from '@/components/search/ui/SeasonSelector';
 import type {
   AnimePreviewDto,
@@ -20,11 +15,9 @@ import type {
   AnimeSearchListDto,
 } from '@/types/api';
 import { extractChosung } from '@/lib/searchUtils';
-// import { useScrollRestoration } from '@/hooks/useScrollRestoration'; // 제거: 직접 구현
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';
 import { useQuery } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
 import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
 import PreloadingProgress from '@/components/common/PreloadingProgress';
 
