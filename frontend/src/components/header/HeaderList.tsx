@@ -113,7 +113,7 @@ export default function HeaderList({
       <div className="size- dropdown-container relative flex items-center justify-end gap-1.5">
         <button
           onClick={handleDropdownToggle}
-          className="flex cursor-pointer items-center justify-start gap-1.5 text-right font-['Pretendard'] text-sm leading-loose font-normal whitespace-nowrap text-gray-400 hover:text-gray-600 sm:text-base md:text-lg"
+          className="flex cursor-pointer items-center justify-start gap-1.5 text-right text-sm leading-loose font-normal whitespace-nowrap text-gray-400 hover:text-gray-600 sm:text-base md:text-lg"
         >
           <span>{displayText}</span>
           {/* 드롭다운 아이콘 */}

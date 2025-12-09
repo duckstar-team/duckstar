@@ -19,11 +19,17 @@ interface SeasonOption {
   isThisWeek?: boolean;
 }
 
-export default function SeasonSelector({ onSeasonSelect, className, currentYear, currentQuarter }: SeasonSelectorProps) {
+export default function SeasonSelector({
+  onSeasonSelect,
+  className,
+  currentYear,
+  currentQuarter,
+}: SeasonSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedSeason, setSelectedSeason] = useState<SeasonOption | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState<SeasonOption | null>(
+    null
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
-
 
   // 시즌 목록 조회
   const { data: seasonsData, isLoading } = useQuery({
@@ -36,7 +42,10 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -49,23 +58,23 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
 
   // 시즌 옵션 생성
   const seasonOptions: SeasonOption[] = [];
-  
+
   // "이번 주" 옵션을 맨 위에 추가
   seasonOptions.push({
     label: '이번 주',
-    isThisWeek: true
+    isThisWeek: true,
   });
-  
+
   if (seasonsData) {
     Object.entries(seasonsData).forEach(([yearStr, seasons]) => {
       const year = parseInt(yearStr);
-      seasons.forEach(season => {
+      seasons.forEach((season) => {
         const quarter = getQuarterFromSeason(season);
         if (quarter) {
           seasonOptions.push({
             year,
             quarter,
-            label: `${year}년 ${getSeasonInKorean(season)} 애니메이션`
+            label: `${year}년 ${getSeasonInKorean(season)} 애니메이션`,
           });
         }
       });
@@ -73,17 +82,18 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
   }
 
   // 현재 선택된 시즌 표시
-  const currentSeasonLabel = currentYear && currentQuarter 
-    ? `${currentYear}년 ${getSeasonInKorean(getSeasonFromQuarter(currentQuarter))} 애니메이션`
-    : '이번 주';
+  const currentSeasonLabel =
+    currentYear && currentQuarter
+      ? `${currentYear}년 ${getSeasonInKorean(getSeasonFromQuarter(currentQuarter))} 애니메이션`
+      : '이번 주';
 
   // 시즌 타입을 분기로 변환
   function getQuarterFromSeason(season: string): number | null {
     const seasonMap: { [key: string]: number } = {
-      'WINTER': 1,  // 겨울
-      'SPRING': 2,  // 봄
-      'SUMMER': 3,  // 여름  
-      'AUTUMN': 4   // 가을
+      WINTER: 1, // 겨울
+      SPRING: 2, // 봄
+      SUMMER: 3, // 여름
+      AUTUMN: 4, // 가을
     };
     return seasonMap[season] || null;
   }
@@ -91,10 +101,10 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
   // 시즌 타입을 한글로 변환
   function getSeasonInKorean(season: string): string {
     const seasonMap: { [key: string]: string } = {
-      'SPRING': '봄',
-      'SUMMER': '여름',
-      'AUTUMN': '가을',
-      'WINTER': '겨울'
+      SPRING: '봄',
+      SUMMER: '여름',
+      AUTUMN: '가을',
+      WINTER: '겨울',
     };
     return seasonMap[season] || season;
   }
@@ -115,51 +125,68 @@ export default function SeasonSelector({ onSeasonSelect, className, currentYear,
 
   if (isLoading) {
     return (
-      <div className={cn("w-fit max-w-[280px] sm:max-w-[320px] h-10 sm:h-12 bg-gray-100 rounded-lg animate-pulse", className)} />
+      <div
+        className={cn(
+          'h-10 w-fit max-w-[280px] animate-pulse rounded-lg bg-gray-100 sm:h-12 sm:max-w-[320px]',
+          className
+        )}
+      />
     );
   }
 
   return (
-    <div className={cn("relative", className)} ref={dropdownRef}>
+    <div className={cn('relative', className)} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-white box-border content-stretch flex gap-2 items-center justify-center ml-2 pr-[5px] px-[8px] sm:px-[10px] py-1 relative rounded-[12px] w-fit max-w-[280px] sm:max-w-[320px] hover:bg-gray-50 transition-colors duration-200 cursor-pointer py-[6px]"
+        className="relative ml-2 box-border flex w-fit max-w-[280px] cursor-pointer content-stretch items-center justify-center gap-2 rounded-[12px] bg-white px-[8px] py-1 py-[6px] pr-[5px] transition-colors duration-200 hover:bg-gray-50 sm:max-w-[320px] sm:px-[10px]"
       >
-        <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[16px] sm:text-[18px] text-black">
-          <p className="leading-[20px] sm:leading-[22px] truncate">
+        <div className="relative shrink-0 text-[16px] leading-[0] font-medium text-black not-italic sm:text-[18px]">
+          <p className="truncate leading-[20px] sm:leading-[22px]">
             {currentSeasonLabel}
           </p>
         </div>
-        <svg 
+        <svg
           className={cn(
-            "w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ml-1 flex-shrink-0",
-            isOpen ? "rotate-180" : ""
-          )} 
-          fill="none" 
-          stroke="currentColor" 
+            'ml-1 h-3 w-3 flex-shrink-0 text-gray-400 transition-transform duration-200 sm:h-4 sm:w-4',
+            isOpen ? 'rotate-180' : ''
+          )}
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
-      
+
       {/* 드롭다운 메뉴 */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-full min-w-[200px] max-w-[280px] sm:max-w-[320px]">
+        <div className="absolute top-full left-0 z-50 mt-1 max-h-60 w-full max-w-[280px] min-w-[200px] overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg sm:max-w-[320px]">
           {seasonOptions.map((option, index) => (
             <button
-              key={option.isThisWeek ? 'this-week' : `${option.year}-${option.quarter}`}
+              key={
+                option.isThisWeek
+                  ? 'this-week'
+                  : `${option.year}-${option.quarter}`
+              }
               onClick={() => handleSeasonSelect(option)}
               className={cn(
-                "w-full px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer",
-                "border-b border-gray-100 last:border-b-0 text-sm sm:text-base",
+                'w-full cursor-pointer px-3 py-2.5 text-left transition-colors duration-150 hover:bg-gray-50',
+                'border-b border-gray-100 text-sm last:border-b-0 sm:text-base',
                 (option.isThisWeek && selectedSeason?.isThisWeek) ||
-                (option.year && option.quarter && selectedSeason?.year === option.year && selectedSeason?.quarter === option.quarter)
-                  ? "bg-[#990033] text-white hover:bg-[#990033]"
-                  : "text-gray-900"
+                  (option.year &&
+                    option.quarter &&
+                    selectedSeason?.year === option.year &&
+                    selectedSeason?.quarter === option.quarter)
+                  ? 'bg-[#990033] text-white hover:bg-[#990033]'
+                  : 'text-gray-900'
               )}
             >
-              <span className="font-medium truncate block">{option.label}</span>
+              <span className="block truncate font-medium">{option.label}</span>
             </button>
           ))}
         </div>

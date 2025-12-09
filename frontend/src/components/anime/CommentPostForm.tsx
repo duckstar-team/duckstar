@@ -265,7 +265,7 @@ export default function CommentPostForm({
                 <div className="flex items-center gap-2">
                   {user && (
                     <>
-                      <div className="flex-shrink-0 size-6">
+                      <div className="size-6 flex-shrink-0">
                         <img
                           src={user?.profileImageUrl!}
                           alt="profile"
@@ -294,7 +294,7 @@ export default function CommentPostForm({
                         src={imgGroup}
                       />
                     </div>
-                    <div className="font-['Pretendard'] text-[15px] leading-snug font-normal text-[#8e8e93]">
+                    <div className="text-[15px] leading-snug font-normal text-[#8e8e93]">
                       <p className="leading-[22px] whitespace-pre">사진</p>
                     </div>
                   </button>
@@ -302,7 +302,7 @@ export default function CommentPostForm({
               )}
 
               {/* Character Count */}
-              <div className="text-right font-['Pretendard'] text-[15px] leading-snug font-normal text-[#8e8e93]">
+              <div className="text-right text-[15px] leading-snug font-normal text-[#8e8e93]">
                 <p className="leading-[22px] whitespace-pre">
                   {phase === 'summary' && voteUpdatedAt
                     ? format(
@@ -345,12 +345,12 @@ export default function CommentPostForm({
             {isSubmitting ? (
               <>
                 <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent text-white"></div>
-                <span className="font-['Pretendard'] text-base leading-snug font-semibold whitespace-nowrap text-white">
+                <span className="text-base leading-snug font-semibold whitespace-nowrap text-white">
                   작성 중...
                 </span>
               </>
             ) : (
-              <span className="font-['Pretendard'] text-base leading-snug font-semibold whitespace-nowrap text-white">
+              <span className="text-base leading-snug font-semibold whitespace-nowrap text-white">
                 {submitLabel ?? '작성'}
               </span>
             )}

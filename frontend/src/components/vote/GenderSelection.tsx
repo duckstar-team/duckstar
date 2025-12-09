@@ -1,6 +1,5 @@
 'use client';
 
-
 // Types
 interface GenderSelectionProps {
   selectedGender: 'male' | 'female' | null;
@@ -37,63 +36,75 @@ const GENDER_OPTIONS: GenderOption[] = [
 ] as const;
 
 const STYLES = {
-  container: "flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-end w-full",
-  genderTogglesContainer: "flex gap-3.5 sm:gap-8 items-center justify-center relative shrink-0 mr-0 lg:mr-4 order-1 sm:order-none self-end sm:self-auto",
-  actionButtonsContainer: "flex gap-2 sm:gap-4 order-2 sm:order-none self-end",
-  genderToggle: "flex gap-1 items-center justify-start overflow-clip relative shrink-0",
-  genderLabel: "flex flex-col font-['Pretendard'] font-semibold justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-lg sm:text-[24px] text-nowrap",
-  genderButton: "block cursor-pointer overflow-visible relative shrink-0 size-5 sm:size-[22px]",
-  actionButton: "box-border flex gap-2 items-start justify-start pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 py-2 sm:py-2.5 relative rounded-lg shrink-0 font-['Pretendard'] font-bold text-[#ffffff] text-sm sm:text-[16px] text-nowrap",
-  actionButtonText: "flex flex-col justify-center leading-[0] not-italic relative shrink-0",
+  container:
+    'flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-end w-full',
+  genderTogglesContainer:
+    'flex gap-3.5 sm:gap-8 items-center justify-center relative shrink-0 mr-0 lg:mr-4 order-1 sm:order-none self-end sm:self-auto',
+  actionButtonsContainer: 'flex gap-2 sm:gap-4 order-2 sm:order-none self-end',
+  genderToggle:
+    'flex gap-1 items-center justify-start overflow-clip relative shrink-0',
+  genderLabel:
+    'flex flex-col  font-semibold justify-center leading-[0] not-italic relative shrink-0 text-[#000000] text-lg sm:text-[24px] text-nowrap',
+  genderButton:
+    'block cursor-pointer overflow-visible relative shrink-0 size-5 sm:size-[22px]',
+  actionButton:
+    'box-border flex gap-2 items-start justify-start pl-2 pr-2.5 sm:pl-2.5 sm:pr-3 py-2 sm:py-2.5 relative rounded-lg shrink-0  font-bold text-[#ffffff] text-sm sm:text-[16px] text-nowrap',
+  actionButtonText:
+    'flex flex-col justify-center leading-[0] not-italic relative shrink-0',
 } as const;
 
 const BUTTON_VARIANTS = {
-  back: "bg-gradient-to-r from-[#adb5bd] to-[#868e96] cursor-pointer",
+  back: 'bg-gradient-to-r from-[#adb5bd] to-[#868e96] cursor-pointer',
   submit: {
-    enabled: "bg-gradient-to-r from-[#cb285e] to-[#9c1f49] cursor-pointer",
-    disabled: "bg-gradient-to-r from-[#adb5bd] to-[#868e96] opacity-80 cursor-default"
-  }
+    enabled: 'bg-gradient-to-r from-[#cb285e] to-[#9c1f49] cursor-pointer',
+    disabled:
+      'bg-gradient-to-r from-[#adb5bd] to-[#868e96] opacity-80 cursor-default',
+  },
 } as const;
 
 // Utility functions
-const getActionButtonVariantClass = (variant: 'back' | 'submit', disabled: boolean): string => {
+const getActionButtonVariantClass = (
+  variant: 'back' | 'submit',
+  disabled: boolean
+): string => {
   if (variant === 'back') return BUTTON_VARIANTS.back;
-  return disabled ? BUTTON_VARIANTS.submit.disabled : BUTTON_VARIANTS.submit.enabled;
+  return disabled
+    ? BUTTON_VARIANTS.submit.disabled
+    : BUTTON_VARIANTS.submit.enabled;
 };
 
 const getGenderToggleImage = (isSelected: boolean): string => {
-  return isSelected ? "/icons/voteSection-selected.svg" : "/icons/voteSection-default.svg";
+  return isSelected
+    ? '/icons/voteSection-selected.svg'
+    : '/icons/voteSection-default.svg';
 };
 
 // Components
-const GenderToggle: React.FC<GenderToggleProps> = ({ 
-  gender, 
-  label, 
-  isSelected, 
-  onSelect 
+const GenderToggle: React.FC<GenderToggleProps> = ({
+  gender,
+  label,
+  isSelected,
+  onSelect,
 }) => (
   <div className={STYLES.genderToggle}>
     <div className={STYLES.genderLabel}>
       <p className="leading-[normal] whitespace-pre">{label}</p>
     </div>
-    <button 
-      className={STYLES.genderButton}
-      onClick={onSelect}
-    >
+    <button className={STYLES.genderButton} onClick={onSelect}>
       <img
         src={getGenderToggleImage(isSelected)}
         alt={`${label} ${isSelected ? 'Selected' : 'Default'}`}
-        className="w-full h-full"
+        className="h-full w-full"
       />
     </button>
   </div>
 );
 
-const ActionButton: React.FC<ActionButtonProps> = ({ 
-  onClick, 
-  disabled = false, 
-  variant, 
-  children 
+const ActionButton: React.FC<ActionButtonProps> = ({
+  onClick,
+  disabled = false,
+  variant,
+  children,
 }) => {
   const variantClass = getActionButtonVariantClass(variant, disabled);
 
@@ -109,9 +120,9 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   );
 };
 
-const GenderToggles = ({ 
-  selectedGender, 
-  onGenderSelect 
+const GenderToggles = ({
+  selectedGender,
+  onGenderSelect,
 }: {
   selectedGender: 'male' | 'female' | null;
   onGenderSelect: (gender: 'male' | 'female') => void;
@@ -129,12 +140,12 @@ const GenderToggles = ({
   </div>
 );
 
-const ActionButtons = ({ 
-  onBackClick, 
-  onSubmitClick, 
+const ActionButtons = ({
+  onBackClick,
+  onSubmitClick,
   selectedGender,
   isSubmitting = false,
-  isRevoteMode = false
+  isRevoteMode = false,
 }: {
   onBackClick: () => void;
   onSubmitClick: () => void;
@@ -146,19 +157,21 @@ const ActionButtons = ({
     <ActionButton variant="back" onClick={onBackClick} disabled={isSubmitting}>
       BACK
     </ActionButton>
-    
-    <ActionButton 
-      variant="submit" 
+
+    <ActionButton
+      variant="submit"
       onClick={onSubmitClick}
       disabled={!selectedGender || isSubmitting}
     >
       {isSubmitting ? (
         <>
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+          <div className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
           <span>제출 중...</span>
         </>
+      ) : isRevoteMode ? (
+        '재투표하기'
       ) : (
-        isRevoteMode ? '재투표하기' : '제출하기'
+        '제출하기'
       )}
     </ActionButton>
   </div>
@@ -171,7 +184,7 @@ export default function GenderSelection({
   onBackClick,
   onSubmitClick,
   isSubmitting = false,
-  isRevoteMode = false
+  isRevoteMode = false,
 }: GenderSelectionProps) {
   return (
     <div className={STYLES.container}>
@@ -189,4 +202,3 @@ export default function GenderSelection({
     </div>
   );
 }
-

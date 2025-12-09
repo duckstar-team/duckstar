@@ -7,20 +7,23 @@ interface CommentUploadButtonProps {
   disabled?: boolean;
 }
 
-export default function CommentUploadButton({ onClick, disabled = false }: CommentUploadButtonProps) {
+export default function CommentUploadButton({
+  onClick,
+  disabled = false,
+}: CommentUploadButtonProps) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-12 h-5 relative disabled:opacity-50 disabled:cursor-not-allowed"
+      className="relative h-5 w-12 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <div className="size-4 left-0 top-[3px] absolute overflow-hidden">
-        <div className="size-3.5 left-[15.44px] top-[15.43px] absolute origin-top-left rotate-180 outline outline-1 outline-offset-[-0.57px] outline-rose-800" />
-        <div className="size-1 left-[8.57px] top-[3.43px] absolute outline outline-1 outline-offset-[-0.57px] outline-rose-800" />
-        <div className="w-2.5 h-1.5 left-[0.57px] top-[8.57px] absolute outline outline-1 outline-offset-[-0.57px] outline-rose-800" />
-        <div className="w-1.5 h-[0.73px] left-[8.99px] top-[10.86px] absolute outline outline-1 outline-offset-[-0.57px] outline-rose-800" />
+      <div className="absolute top-[3px] left-0 size-4 overflow-hidden">
+        <div className="absolute top-[15.43px] left-[15.44px] size-3.5 origin-top-left rotate-180 outline outline-offset-[-0.57px] outline-rose-800" />
+        <div className="absolute top-[3.43px] left-[8.57px] size-1 outline outline-offset-[-0.57px] outline-rose-800" />
+        <div className="absolute top-[8.57px] left-[0.57px] h-1.5 w-2.5 outline outline-offset-[-0.57px] outline-rose-800" />
+        <div className="absolute top-[10.86px] left-[8.99px] h-[0.73px] w-1.5 outline outline-offset-[-0.57px] outline-rose-800" />
       </div>
-      <div className="left-[23px] top-0 absolute text-center justify-start text-Grays-Gray text-base font-normal font-['Pretendard'] leading-snug">
+      <div className="text-Grays-Gray absolute top-0 left-[23px] justify-start text-center text-base leading-snug font-normal">
         사
       </div>
     </button>

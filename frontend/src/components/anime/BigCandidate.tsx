@@ -665,7 +665,7 @@ export default function BigCandidate({
           {/* Title - 고정 높이로 2줄 기준 설정 */}
           <div className="relative h-[48px]">
             <h3
-              className="line-clamp-2 cursor-pointer font-['Pretendard'] text-[16px] leading-tight font-bold text-gray-900 transition-colors hover:text-[#990033]"
+              className="line-clamp-2 cursor-pointer text-[16px] leading-tight font-bold text-gray-900 transition-colors hover:text-[#990033]"
               onClick={() => router.push(`/animes/${animeId}`)}
             >
               {titleKor}
@@ -701,7 +701,7 @@ export default function BigCandidate({
 
                   return (
                     <div className="flex items-center gap-2">
-                      <span className="font-['Pretendard'] text-[14px] font-medium text-[#868E96]">
+                      <span className="text-[14px] font-medium text-[#868E96]">
                         {medium === 'MOVIE'
                           ? getDayInKorean(dayOfWeek) // 극장판은 요일만 표시
                           : medium === 'TVA' &&
@@ -709,10 +709,10 @@ export default function BigCandidate({
                             ? getDayInKorean(dayOfWeek)
                             : getDayInKorean(dayOfWeek)}
                       </span>
-                      <span className="rounded bg-black px-2 py-1 font-['Pretendard'] text-[13px] font-bold text-white">
+                      <span className="rounded bg-black px-2 py-1 text-[13px] font-bold text-white">
                         {airTimeText}
                       </span>
-                      <span className="font-['Pretendard'] text-[14px] font-medium text-[#868E96]">
+                      <span className="text-[14px] font-medium text-[#868E96]">
                         {getTimeFromScheduledAt(scheduledAt)}
                       </span>
                     </div>
@@ -720,14 +720,14 @@ export default function BigCandidate({
                 } else {
                   // 일반적인 airTime 표시
                   return (
-                    <span className="font-['Pretendard'] text-[14px] font-medium text-[#868E96]">
+                    <span className="text-[14px] font-medium text-[#868E96]">
                       {formatAirTime(scheduledAt, anime.airTime)}
                     </span>
                   );
                 }
               })()}
               {isRescheduled && (
-                <span className="rounded bg-orange-100 px-2 py-1 font-['Pretendard'] text-xs text-orange-600">
+                <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-600">
                   편성 변경
                 </span>
               )}
@@ -737,7 +737,7 @@ export default function BigCandidate({
             <div
               className={`flex items-center rounded-md px-2 py-0.5 ${getVoteTimeRemaining() === '종료' ? 'bg-black' : 'bg-[#990033]'}`}
             >
-              <span className="flex items-center gap-1 font-['Pretendard'] text-[13px] font-bold text-white">
+              <span className="flex items-center gap-1 text-[13px] font-bold text-white">
                 <Clock size={14} /> 투표: {getVoteTimeRemaining()}{' '}
                 {getVoteTimeRemaining() === '종료' ? '' : '남음'}
               </span>
@@ -746,7 +746,7 @@ export default function BigCandidate({
 
           {/* Genres - 제목 섹션에 포함 */}
           <div className="mt-[5px]">
-            <span className="font-['Pretendard'] text-[13px] font-medium text-[#868E96]">
+            <span className="text-[13px] font-medium text-[#868E96]">
               {genre}
             </span>
           </div>

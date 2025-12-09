@@ -79,7 +79,7 @@ export default function StarDetailPopup({
               background: 'linear-gradient(to right, #495057, #343A40)',
             }}
           >
-            <div className="justify-center text-right font-['Pretendard'] text-[10px] font-bold whitespace-nowrap text-white">
+            <div className="justify-center text-right text-[10px] font-bold whitespace-nowrap text-white">
               수정
             </div>
           </button>

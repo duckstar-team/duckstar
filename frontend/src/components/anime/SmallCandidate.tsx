@@ -696,7 +696,7 @@ export default function SmallCandidate({
             }}
             aria-label="수정"
           >
-            <div className="justify-center text-right font-['Pretendard'] text-[10px] font-bold whitespace-nowrap text-white">
+            <div className="justify-center text-right text-[10px] font-bold whitespace-nowrap text-white">
               수정
             </div>
           </button>
@@ -713,7 +713,7 @@ export default function SmallCandidate({
                     />
                   </div>
                   <div className="flex items-center justify-center gap-2.5 pt-0.5">
-                    <div className="justify-start text-center font-['Pretendard'] text-2xl leading-snug font-semibold text-white">
+                    <div className="justify-start text-center text-2xl leading-snug font-semibold text-white">
                       {averageRating.toFixed(1)}
                     </div>
                   </div>

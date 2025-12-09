@@ -9,12 +9,19 @@ interface RightHeaderListProps {
   className?: string;
 }
 
-export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, className = "" }: RightHeaderListProps) {
-  const [activeTab, setActiveTab] = useState<'anilab' | 'anime-corner'>('anilab');
-  
+export default function RightHeaderList({
+  weekDtos,
+  selectedTab,
+  onTabChange,
+  className = '',
+}: RightHeaderListProps) {
+  const [activeTab, setActiveTab] = useState<'anilab' | 'anime-corner'>(
+    'anilab'
+  );
+
   // 현재 주차 찾기 (첫 번째 주차)
   const currentWeek = weekDtos[0];
-  const currentWeekText = currentWeek 
+  const currentWeekText = currentWeek
     ? `${currentWeek.year}년 ${currentWeek.quarter}분기 ${currentWeek.week}주차`
     : '2025년 3분기 12주차';
 
@@ -49,39 +56,41 @@ export default function RightHeaderList({ weekDtos, selectedTab, onTabChange, cl
     onTabChange?.(tab);
   };
   return (
-    <div className={`self-stretch h-12 inline-flex justify-center items-center ${className}`}>
+    <div
+      className={`inline-flex h-12 items-center justify-center self-stretch ${className}`}
+    >
       {/* Anime Corner 탭 (첫 번째) */}
-      <button 
+      <button
         onClick={() => handleTabClick('anime-corner')}
-        className={`w-32 sm:w-36 md:w-40 lg:w-44 px-2.5 py-2 sm:py-2 md:py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
-          activeTab === 'anime-corner' 
-            ? 'border-b-2 border-rose-800' 
-            : ''
+        className={`inline-flex w-32 cursor-pointer flex-col items-center justify-center overflow-hidden px-2.5 py-2 sm:w-36 sm:py-2 md:w-40 md:py-3 lg:w-44 ${
+          activeTab === 'anime-corner' ? 'border-b-2 border-rose-800' : ''
         }`}
       >
-        <div className={`self-stretch justify-start text-sm sm:text-base md:text-xl font-['Pretendard'] leading-[18px] sm:leading-[20px] md:leading-snug whitespace-nowrap ${
-          activeTab === 'anime-corner' 
-            ? 'text-rose-800 font-semibold' 
-            : 'text-gray-400 font-normal'
-        }`}>
+        <div
+          className={`justify-start self-stretch text-sm leading-[18px] whitespace-nowrap sm:text-base sm:leading-[20px] md:text-xl md:leading-snug ${
+            activeTab === 'anime-corner'
+              ? 'font-semibold text-rose-800'
+              : 'font-normal text-gray-400'
+          }`}
+        >
           Anime Corner 🇺🇸
         </div>
       </button>
-      
+
       {/* AniLab 탭 (두 번째) */}
-      <button 
+      <button
         onClick={() => handleTabClick('anilab')}
-        className={`w-32 sm:w-36 md:w-40 lg:w-44 px-9 py-2 sm:py-2 md:py-3 inline-flex flex-col justify-center items-center overflow-hidden cursor-pointer ${
-          activeTab === 'anilab' 
-            ? 'border-b-2 border-rose-800' 
-            : ''
+        className={`inline-flex w-32 cursor-pointer flex-col items-center justify-center overflow-hidden px-9 py-2 sm:w-36 sm:py-2 md:w-40 md:py-3 lg:w-44 ${
+          activeTab === 'anilab' ? 'border-b-2 border-rose-800' : ''
         }`}
       >
-        <div className={`self-stretch text-center justify-start text-sm sm:text-base md:text-xl font-['Pretendard'] leading-[18px] sm:leading-[20px] md:leading-snug whitespace-nowrap ${
-          activeTab === 'anilab' 
-            ? 'text-rose-800 font-semibold' 
-            : 'text-gray-400 font-normal'
-        }`}>
+        <div
+          className={`justify-start self-stretch text-center text-sm leading-[18px] whitespace-nowrap sm:text-base sm:leading-[20px] md:text-xl md:leading-snug ${
+            activeTab === 'anilab'
+              ? 'font-semibold text-rose-800'
+              : 'font-normal text-gray-400'
+          }`}
+        >
           AniLab 🇯🇵
         </div>
       </button>

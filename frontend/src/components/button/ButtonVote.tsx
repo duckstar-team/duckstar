@@ -49,10 +49,10 @@ export default function ButtonVote({
     >
       {/* 텍스트 영역 */}
       <div className="inline-flex h-20 flex-col items-start justify-center sm:h-24">
-        <div className="text-md font-['Pretendard'] leading-snug font-semibold whitespace-nowrap text-white sm:text-2xl">
+        <div className="text-md leading-snug font-semibold whitespace-nowrap text-white sm:text-2xl">
           {voteTitle}
         </div>
-        <div className="font-['Pretendard'] text-xs leading-snug font-medium text-white sm:text-sm">
+        <div className="text-xs leading-snug font-medium text-white sm:text-sm">
           {voteSubtitle}
         </div>
       </div>

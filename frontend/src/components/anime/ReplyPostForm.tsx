@@ -6,7 +6,7 @@ import { useModal } from '../AppContainer';
 import { useImageUpload, UploadedImage } from '../../hooks/useImageUpload';
 import ImageUploadPreview from '../common/ImageUploadPreview';
 
-const imgGroup = "/icons/picture-upload.svg";
+const imgGroup = '/icons/picture-upload.svg';
 
 interface ReplyPostFormProps {
   onSubmit?: (comment: string, images?: File[]) => Promise<void>;
@@ -18,14 +18,14 @@ interface ReplyPostFormProps {
   listenerId?: number;
 }
 
-export default function ReplyPostForm({ 
+export default function ReplyPostForm({
   onSubmit,
   onImageUpload,
   placeholder = '답글을 입력하세요...',
   maxLength = 1000,
   disabled = false,
   commentId,
-  listenerId
+  listenerId,
 }: ReplyPostFormProps) {
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
@@ -36,22 +36,32 @@ export default function ReplyPostForm({
   const isSubmittingRef = useRef(false);
   const commentRef = useRef('');
   const uploadedImagesRef = useRef<UploadedImage[]>([]);
-  
+
   // 이미지 업로드 훅 사용
-  const { uploadedImages, uploadImage, removeImage, formatFileSize, setUploadedImages, finishUpload, canUpload, startUpload } = useImageUpload();
-  
+  const {
+    uploadedImages,
+    uploadImage,
+    removeImage,
+    formatFileSize,
+    setUploadedImages,
+    finishUpload,
+    canUpload,
+    startUpload,
+  } = useImageUpload();
+
   // 고유한 컴포넌트 ID 생성 (commentId와 listenerId 기반으로 안정적 생성)
-  const componentId = useRef(`reply-form-${commentId || 'unknown'}-${listenerId || 'main'}`).current;
-  
+  const componentId = useRef(
+    `reply-form-${commentId || 'unknown'}-${listenerId || 'main'}`
+  ).current;
+
   // 전역 상태로 입력 내용 관리 (컴포넌트 리마운트에도 보존)
   const globalKey = `reply-form-${commentId || 'unknown'}-${listenerId || 'main'}`;
-  
+
   // 컴포넌트 타입을 명시적으로 구분
   const componentType = 'reply-form';
-  
+
   // 디버깅을 위한 로그
-  useEffect(() => {
-  }, [componentId]);
+  useEffect(() => {}, [componentId]);
 
   // 컴포넌트 마운트 상태 추적
   useEffect(() => {
@@ -69,8 +79,7 @@ export default function ReplyPostForm({
       if (savedComment && savedComment.trim()) {
         setComment(savedComment);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }, [globalKey]);
 
   // 입력 내용 변경 시 실시간 저장
@@ -81,8 +90,7 @@ export default function ReplyPostForm({
       } else {
         sessionStorage.removeItem(globalKey);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }, [comment, globalKey]);
 
   // 컴포넌트 언마운트 시 저장된 내용 정리
@@ -90,11 +98,9 @@ export default function ReplyPostForm({
     return () => {
       try {
         sessionStorage.removeItem(globalKey);
-      } catch (error) {
-      }
+      } catch (error) {}
     };
   }, [globalKey]);
-
 
   // 컴포넌트가 마운트될 때 포커스 설정
   useEffect(() => {
@@ -106,12 +112,12 @@ export default function ReplyPostForm({
       }, 100);
     }
   }, []);
-  
+
   // ref 동기화
   useEffect(() => {
     commentRef.current = comment;
   }, [comment]);
-  
+
   useEffect(() => {
     uploadedImagesRef.current = uploadedImages;
   }, [uploadedImages]);
@@ -121,17 +127,17 @@ export default function ReplyPostForm({
     if (isSubmittingRef.current || isSubmitting) {
       return;
     }
-    
+
     const currentComment = commentRef.current;
     const currentImages = uploadedImagesRef.current;
-    
+
     if ((currentComment.trim() || currentImages.length > 0) && onSubmit) {
       // 댓글당 이미지 1개 제한 체크
       if (currentImages.length > 1) {
         alert('댓글당 이미지는 1개까지만 업로드할 수 있습니다.');
         return;
       }
-      
+
       // 이미지가 있는 경우 업로드 제한 체크
       if (currentImages.length > 0) {
         const uploadCheck = canUpload();
@@ -140,14 +146,14 @@ export default function ReplyPostForm({
           return;
         }
       }
-      
+
       // 제출 중 플래그 설정
       isSubmittingRef.current = true;
       setIsSubmitting(true);
-      
-      const imageFiles = currentImages.map(img => img.file);
+
+      const imageFiles = currentImages.map((img) => img.file);
       const commentText = currentComment;
-      
+
       // 이미지가 있는 경우 업로드 시작 처리
       if (currentImages.length > 0) {
         const uploadStart = startUpload();
@@ -158,7 +164,7 @@ export default function ReplyPostForm({
           return;
         }
       }
-      
+
       // onSubmit 호출 (Promise 기반으로 완료 감지)
       Promise.resolve(onSubmit(commentText, imageFiles))
         .then(() => {
@@ -173,13 +179,12 @@ export default function ReplyPostForm({
           // 상태 초기화 (텍스트와 이미지 모두)
           setComment('');
           setUploadedImages([]);
-          
+
           // 제출 후 저장된 내용 삭제
           try {
             sessionStorage.removeItem(globalKey);
-          } catch (error) {
-          }
-          
+          } catch (error) {}
+
           // 제출 완료 후 플래그 리셋
           isSubmittingRef.current = false;
           setIsSubmitting(false);
@@ -196,7 +201,7 @@ export default function ReplyPostForm({
     input.onchange = (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (files) {
-        Array.from(files).forEach(file => {
+        Array.from(files).forEach((file) => {
           uploadImage(file);
           // 기존 onImageUpload 콜백도 호출 (하위 호환성)
           if (onImageUpload) {
@@ -208,7 +213,10 @@ export default function ReplyPostForm({
     input.click();
   };
 
-  const isSubmitDisabled = disabled || isSubmitting || (!comment.trim() && uploadedImages.length === 0);
+  const isSubmitDisabled =
+    disabled ||
+    isSubmitting ||
+    (!comment.trim() && uploadedImages.length === 0);
 
   // 답글 폼 전용 스타일 설정 (기존 variant="forReply"와 동일)
   const containerWidth = 'w-[494px]';
@@ -219,8 +227,14 @@ export default function ReplyPostForm({
   const buttonHeight = 'h-[35px]';
 
   return (
-    <form className={`bg-white relative rounded-[8px] ${containerWidth}`} onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-      <div className="content-stretch flex flex-col items-center justify-center overflow-clip relative size-full">
+    <form
+      className={`relative rounded-[8px] bg-white ${containerWidth}`}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <div className="relative flex size-full flex-col content-stretch items-center justify-center overflow-clip">
         {/* Input Area */}
         <div className={`${inputAreaHeight} shrink-0 ${inputAreaWidth} p-2.5`}>
           <textarea
@@ -234,76 +248,102 @@ export default function ReplyPostForm({
             onChange={(e) => setComment(e.target.value)}
             onClick={() => {
               if (!isAuthenticated) {
-                const shouldLogin = confirm('로그인 후에 답글을 남길 수 있습니다. 로그인하시겠습니까?');
+                const shouldLogin = confirm(
+                  '로그인 후에 답글을 남길 수 있습니다. 로그인하시겠습니까?'
+                );
                 if (shouldLogin) {
                   openLoginModal();
                 }
               }
             }}
-            placeholder={isAuthenticated ? placeholder : '로그인 후에 답글을 남길 수 있습니다'}
+            placeholder={
+              isAuthenticated
+                ? placeholder
+                : '로그인 후에 답글을 남길 수 있습니다'
+            }
             maxLength={maxLength}
             disabled={disabled}
-            className="w-full h-full px-1 resize-none border-none outline-none bg-transparent text-base font-normal font-['Pretendard'] leading-normal placeholder:text-[#c7c7cc] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-full w-full resize-none border-none bg-transparent px-1 text-base leading-normal font-normal outline-none placeholder:text-[#c7c7cc] disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
-        
+
         {/* 이미지 미리보기 */}
         {uploadedImages.length > 0 && (
           <div className="w-full px-2.5 pb-2">
-            <ImageUploadPreview 
+            <ImageUploadPreview
               images={uploadedImages}
               onRemove={removeImage}
               formatFileSize={formatFileSize}
             />
           </div>
         )}
-        
+
         {/* Action Bar */}
-        <div className="content-stretch flex items-center justify-between relative shrink-0 w-full">
+        <div className="relative flex w-full shrink-0 content-stretch items-center justify-between">
           {/* Section with upload button and character count */}
-          <div className={`${footerSectionHeight} relative shrink-0 ${footerSectionWidth}`}>
-            <div className={`box-border content-stretch flex justify-between ${footerSectionHeight} items-center overflow-clip px-3 relative w-full`}>
+          <div
+            className={`${footerSectionHeight} relative shrink-0 ${footerSectionWidth}`}
+          >
+            <div
+              className={`box-border flex content-stretch justify-between ${footerSectionHeight} relative w-full items-center overflow-clip px-3`}
+            >
               {/* Upload Image Button */}
               <button
                 type="button"
                 onClick={handleImageUpload}
                 disabled={disabled}
-                className="h-[22px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:opacity-70 transition-opacity duration-200 flex items-center gap-1"
+                className="flex h-[22px] cursor-pointer items-center gap-1 transition-opacity duration-200 hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <div className="w-4 h-4 flex-shrink-0">
-                  <img alt="" className="w-full h-full object-contain" src={imgGroup} />
+                <div className="h-4 w-4 flex-shrink-0">
+                  <img
+                    alt=""
+                    className="h-full w-full object-contain"
+                    src={imgGroup}
+                  />
                 </div>
-                <div className="text-[#8e8e93] text-[15px] font-normal font-['Pretendard'] leading-snug">
+                <div className="text-[15px] leading-snug font-normal text-[#8e8e93]">
                   <p className="leading-[22px] whitespace-pre">사진</p>
                 </div>
               </button>
-              
+
               {/* Character Count */}
-              <div className="text-[#8e8e93] text-[15px] font-normal font-['Pretendard'] leading-snug text-right">
-                <p className="leading-[22px] whitespace-pre">({comment.length}/{maxLength})</p>
+              <div className="text-right text-[15px] leading-snug font-normal text-[#8e8e93]">
+                <p className="leading-[22px] whitespace-pre">
+                  ({comment.length}/{maxLength})
+                </p>
               </div>
             </div>
-            <div aria-hidden="true" className="absolute border-[#adb5bd] border-[1px_0px_0px] border-solid inset-0 pointer-events-none" />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 border-[1px_0px_0px] border-solid border-[#adb5bd]"
+            />
           </div>
-          
+
           {/* Post Button */}
           <button
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
-            className={`w-20 ${buttonHeight} px-8 bg-[#FED783]/70 border-l border-t border-[#adb5bd] flex justify-center items-center gap-2.5 overflow-hidden rounded-br-[10px] cursor-pointer hover:bg-[#FED783] transition-colors duration-200`}
+            className={`w-20 ${buttonHeight} flex cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-br-[10px] border-t border-l border-[#adb5bd] bg-[#FED783]/70 px-8 transition-colors duration-200 hover:bg-[#FED783]`}
           >
             {isSubmitting ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
-                <span className="text-white text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">작성 중...</span>
+                <div className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                <span className="text-base leading-snug font-semibold whitespace-nowrap text-white">
+                  작성 중...
+                </span>
               </>
             ) : (
-              <span className="text-white text-base font-semibold font-['Pretendard'] leading-snug whitespace-nowrap">작성</span>
+              <span className="text-base leading-snug font-semibold whitespace-nowrap text-white">
+                작성
+              </span>
             )}
           </button>
         </div>
       </div>
-      <div aria-hidden="true" className="absolute border border-[#adb5bd] border-solid inset-0 pointer-events-none rounded-[8px]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-[8px] border border-solid border-[#adb5bd]"
+      />
     </form>
   );
 }

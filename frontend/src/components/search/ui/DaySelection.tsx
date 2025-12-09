@@ -4,7 +4,16 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
-export type DayOfWeek = '곧 시작' | '월' | '화' | '수' | '목' | '금' | '토' | '일' | '특별편성 및 극장판';
+export type DayOfWeek =
+  | '곧 시작'
+  | '월'
+  | '화'
+  | '수'
+  | '목'
+  | '금'
+  | '토'
+  | '일'
+  | '특별편성 및 극장판';
 
 interface DaySelectionProps {
   selectedDay: DayOfWeek;
@@ -28,19 +37,10 @@ const getDays = (isThisWeek: boolean): DayOfWeek[] => {
       '금',
       '토',
       '일',
-      '특별편성 및 극장판'
+      '특별편성 및 극장판',
     ];
   } else {
-    return [
-      '월',
-      '화',
-      '수',
-      '목',
-      '금',
-      '토',
-      '일',
-      '특별편성 및 극장판'
-    ];
+    return ['월', '화', '수', '목', '금', '토', '일', '특별편성 및 극장판'];
   }
 };
 
@@ -80,32 +80,42 @@ export default function DaySelection({
 }: DaySelectionProps) {
   const [hoveredDay, setHoveredDay] = useState<DayOfWeek | null>(null);
   const [showTooltip, setShowTooltip] = useState<DayOfWeek | null>(null);
-  const [showStickyTooltip, setShowStickyTooltip] = useState<DayOfWeek | null>(null);
+  const [showStickyTooltip, setShowStickyTooltip] = useState<DayOfWeek | null>(
+    null
+  );
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  const [stickyTooltipPosition, setStickyTooltipPosition] = useState({ top: 0, left: 0 });
+  const [stickyTooltipPosition, setStickyTooltipPosition] = useState({
+    top: 0,
+    left: 0,
+  });
   const [selectedBarStyle, setSelectedBarStyle] = useState({
     width: '0px',
     left: '0px',
     opacity: 0,
-    transition: 'all 0.3s ease-out'
+    transition: 'all 0.3s ease-out',
   });
   const [hoveredBarStyle, setHoveredBarStyle] = useState({
     width: '0px',
     left: '0px',
     opacity: 0,
-    transition: 'all 0.3s ease-out'
+    transition: 'all 0.3s ease-out',
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const tabRefs = useRef<{ [key in DayOfWeek]: HTMLButtonElement | null }>({} as Record<DayOfWeek, HTMLButtonElement | null>);
+  const tabRefs = useRef<{ [key in DayOfWeek]: HTMLButtonElement | null }>(
+    {} as Record<DayOfWeek, HTMLButtonElement | null>
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -129,10 +139,15 @@ export default function DaySelection({
   // 네비게이션 바 위치 업데이트
   const updateNavigationBar = (day: DayOfWeek | null, immediate = false) => {
     if (!day || !containerRef.current) {
-      setSelectedBarStyle({ width: '0px', left: '0px', opacity: 0, transition: 'all 0.3s ease-out' });
+      setSelectedBarStyle({
+        width: '0px',
+        left: '0px',
+        opacity: 0,
+        transition: 'all 0.3s ease-out',
+      });
       return;
     }
-    
+
     // tabRefs가 아직 설정되지 않은 경우 지연 실행
     if (!tabRefs.current[day]) {
       setTimeout(() => {
@@ -143,21 +158,21 @@ export default function DaySelection({
 
     const tabElement = tabRefs.current[day];
     const containerElement = containerRef.current;
-    
+
     // DOM이 완전히 렌더링된 후 위치 계산
     requestAnimationFrame(() => {
       const tabRect = tabElement.getBoundingClientRect();
       const containerRect = containerElement.getBoundingClientRect();
-      
+
       // 컨테이너의 왼쪽 경계를 기준으로 한 상대적 위치 계산
       const left = tabRect.left - containerRect.left;
       const width = tabRect.width;
-      
+
       setSelectedBarStyle({
         width: `${width}px`,
         left: `${left}px`,
         opacity: 1,
-        transition: immediate ? 'none' : 'all 0.3s ease-out'
+        transition: immediate ? 'none' : 'all 0.3s ease-out',
       });
     });
   };
@@ -165,56 +180,61 @@ export default function DaySelection({
   // 호버된 네비게이션 바 위치 업데이트
   const updateHoveredBar = (day: DayOfWeek | null, immediate = false) => {
     if (!day || !tabRefs.current[day] || !containerRef.current) {
-      setHoveredBarStyle({ width: '0px', left: '0px', opacity: 0, transition: 'all 0.3s ease-out' });
+      setHoveredBarStyle({
+        width: '0px',
+        left: '0px',
+        opacity: 0,
+        transition: 'all 0.3s ease-out',
+      });
       return;
     }
 
     const tabElement = tabRefs.current[day];
     const containerElement = containerRef.current;
-    
+
     // getBoundingClientRect를 사용하되, 컨테이너 기준으로 정확히 계산
     const tabRect = tabElement.getBoundingClientRect();
     const containerRect = containerElement.getBoundingClientRect();
-    
+
     // 컨테이너의 왼쪽 경계를 기준으로 한 상대적 위치 계산
     const left = tabRect.left - containerRect.left;
     const width = tabRect.width;
-    
+
     setHoveredBarStyle({
       width: `${width}px`,
       left: `${left}px`,
       opacity: 1,
-      transition: immediate ? 'none' : 'all 0.3s ease-out'
+      transition: immediate ? 'none' : 'all 0.3s ease-out',
     });
   };
 
   // 호버 이벤트 핸들러
   const handleMouseEnter = (day: DayOfWeek) => {
     if (day === selectedDay) return;
-    
+
     setHoveredDay(day);
-    
+
     // 호버 시: 선택된 요일의 n은 그대로 유지하고, 호버된 요일의 n만 나타남
     updateHoveredBar(day);
-    
+
     // 비어있는 요일인 경우 툴팁 표시
     if (emptyDays.has(day) && day !== '곧 시작') {
       const buttonElement = tabRefs.current[day];
       if (buttonElement) {
         const rect = buttonElement.getBoundingClientRect();
-        
+
         if (isSticky) {
           // 스티키 요소의 툴팁
           setStickyTooltipPosition({
             top: rect.top - 30,
-            left: rect.left + rect.width / 2
+            left: rect.left + rect.width / 2,
           });
           setShowStickyTooltip(day);
         } else {
           // 기본 요소의 툴팁
           setTooltipPosition({
             top: rect.top + window.scrollY - 30,
-            left: rect.left + rect.width / 2
+            left: rect.left + rect.width / 2,
           });
           setShowTooltip(day);
         }
@@ -224,10 +244,10 @@ export default function DaySelection({
 
   const handleMouseLeave = () => {
     setHoveredDay(null);
-    
+
     // 호버 종료 시: 호버된 요일의 n만 서서히 사라짐
-    setHoveredBarStyle(prev => ({ ...prev, opacity: 0 }));
-    
+    setHoveredBarStyle((prev) => ({ ...prev, opacity: 0 }));
+
     // 툴팁도 함께 숨기기
     setShowTooltip(null);
     setShowStickyTooltip(null);
@@ -246,7 +266,7 @@ export default function DaySelection({
           updateNavigationBar(selectedDay);
         }
       }, 0);
-      
+
       return () => clearTimeout(timeout);
     }
   }, [initialPosition]); // initialPosition이 변경될 때도 실행
@@ -258,12 +278,12 @@ export default function DaySelection({
       const timeout = setTimeout(() => {
         updateNavigationBar(selectedDay);
       }, 100);
-      
+
       // 호버된 상태라면 호버된 바도 업데이트
       if (hoveredDay) {
         updateHoveredBar(hoveredDay);
       }
-      
+
       return () => clearTimeout(timeout);
     }
   }, [selectedDay]);
@@ -299,7 +319,7 @@ export default function DaySelection({
       if (day && !isSticky) {
         // 기본 요소에서 빈 섹션 알림 표시
         setShowTooltip(day);
-        
+
         // 3초 후 알림 숨기기
         setTimeout(() => {
           setShowTooltip(null);
@@ -307,10 +327,16 @@ export default function DaySelection({
       }
     };
 
-    window.addEventListener('showEmptySectionMessage', handleShowEmptySectionMessage as EventListener);
-    
+    window.addEventListener(
+      'showEmptySectionMessage',
+      handleShowEmptySectionMessage as EventListener
+    );
+
     return () => {
-      window.removeEventListener('showEmptySectionMessage', handleShowEmptySectionMessage as EventListener);
+      window.removeEventListener(
+        'showEmptySectionMessage',
+        handleShowEmptySectionMessage as EventListener
+      );
     };
   }, [isSticky]);
 
@@ -318,35 +344,45 @@ export default function DaySelection({
     <>
       {/* 모바일: 두 버튼을 같은 줄에 배치 */}
       <div className="md:hidden">
-        <div className="flex gap-2 items-center justify-between w-full max-w-[320px] mx-auto" ref={dropdownRef}>
+        <div
+          className="mx-auto flex w-full max-w-[320px] items-center justify-between gap-2"
+          ref={dropdownRef}
+        >
           {/* 요일 선택 드롭다운 버튼 */}
           <div className="relative flex-1">
             <div className="w-full">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`w-full bg-white box-border content-stretch flex gap-2 items-center justify-center pr-[5px] px-[8px] sm:px-[10px] py-1.5 relative rounded-[12px] hover:bg-gray-50 transition-colors duration-200 cursor-pointer`}
+                className={`relative box-border flex w-full cursor-pointer content-stretch items-center justify-center gap-2 rounded-[12px] bg-white px-[8px] py-1.5 pr-[5px] transition-colors duration-200 hover:bg-gray-50 sm:px-[10px]`}
               >
-                <div className="font-['Pretendard'] font-medium leading-[0] not-italic relative shrink-0 text-[16px] sm:text-[18px] text-black flex-1 text-left">
-                  <p className="leading-[20px] sm:leading-[22px] truncate">
+                <div className="relative flex-1 shrink-0 text-left text-[16px] leading-[0] font-medium text-black not-italic sm:text-[18px]">
+                  <p className="truncate leading-[20px] sm:leading-[22px]">
                     {selectedDay}
                   </p>
                 </div>
-                <svg 
+                <svg
                   className={cn(
-                    `w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ml-1 flex-shrink-0`,
-                    isDropdownOpen ? "rotate-180" : ""
-                  )} 
-                  fill="none" 
-                  stroke="currentColor" 
+                    `ml-1 h-3 w-3 flex-shrink-0 text-gray-400 transition-transform duration-200 sm:h-4 sm:w-4`,
+                    isDropdownOpen ? 'rotate-180' : ''
+                  )}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
-              
+
               {/* 드롭다운 메뉴 */}
               {isDropdownOpen && (
-                <div className={`absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto w-full ${isSticky ? 'min-w-[160px] max-w-[200px]' : 'min-w-[200px] max-w-[280px] sm:max-w-[320px]'}`}>
+                <div
+                  className={`absolute top-full left-0 z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg ${isSticky ? 'max-w-[200px] min-w-[160px]' : 'max-w-[280px] min-w-[200px] sm:max-w-[320px]'}`}
+                >
                   {getDays(isThisWeek || false).map((day) => (
                     <button
                       key={day}
@@ -355,24 +391,35 @@ export default function DaySelection({
                         setIsDropdownOpen(false);
                         // 스크롤 기능 추가
                         if (onScrollToSection) {
-                          const sectionId = day === '곧 시작' ? 'upcoming' : 
-                                           day === '특별편성 및 극장판' ? 'special' : 
-                                           day === '일' ? 'sun' : 
-                                           day === '월' ? 'mon' : 
-                                           day === '화' ? 'tue' : 
-                                           day === '수' ? 'wed' : 
-                                           day === '목' ? 'thu' : 
-                                           day === '금' ? 'fri' : 
-                                           day === '토' ? 'sat' : 'upcoming';
+                          const sectionId =
+                            day === '곧 시작'
+                              ? 'upcoming'
+                              : day === '특별편성 및 극장판'
+                                ? 'special'
+                                : day === '일'
+                                  ? 'sun'
+                                  : day === '월'
+                                    ? 'mon'
+                                    : day === '화'
+                                      ? 'tue'
+                                      : day === '수'
+                                        ? 'wed'
+                                        : day === '목'
+                                          ? 'thu'
+                                          : day === '금'
+                                            ? 'fri'
+                                            : day === '토'
+                                              ? 'sat'
+                                              : 'upcoming';
                           onScrollToSection(sectionId);
                         }
                       }}
                       className={cn(
-                        `w-full px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150 cursor-pointer`,
-                        `border-b border-gray-100 last:border-b-0 text-sm sm:text-base font-['Pretendard']`,
+                        `w-full cursor-pointer px-3 py-2.5 text-left transition-colors duration-150 hover:bg-gray-50`,
+                        `border-b border-gray-100 text-sm last:border-b-0 sm:text-base`,
                         selectedDay === day
-                          ? "bg-[#990033] text-white font-medium"
-                          : "text-gray-700 hover:text-gray-900"
+                          ? 'bg-[#990033] font-medium text-white'
+                          : 'text-gray-700 hover:text-gray-900'
                       )}
                     >
                       {day}
@@ -386,22 +433,20 @@ export default function DaySelection({
       </div>
 
       {/* 태블릿/데스크톱: 기존 탭 형태 (점진적으로 작아짐) */}
-      <div 
+      <div
         ref={containerRef}
         data-day-selection
         className={cn(
-          "relative hidden md:flex items-center justify-center gap-1 lg:gap-2 lg:w-[1050px] w-full overflow-x-auto",
-          isSticky ? "lg:justify-center" : "",
+          'relative hidden w-full items-center justify-center gap-1 overflow-x-auto md:flex lg:w-[1050px] lg:gap-2',
+          isSticky ? 'lg:justify-center' : '',
           className
         )}
-        style={{ 
-          scrollbarWidth: 'none', 
-          msOverflowStyle: 'none'
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
         }}
         onMouseLeave={handleMouseLeave}
       >
-
-        
         {/* 선택된 요일의 네비게이션 바 */}
         <div
           className="absolute bottom-0 h-[1.856px] bg-[#990033]"
@@ -409,7 +454,7 @@ export default function DaySelection({
             width: selectedBarStyle.width,
             left: selectedBarStyle.left,
             opacity: selectedBarStyle.opacity,
-            transition: selectedBarStyle.transition
+            transition: selectedBarStyle.transition,
           }}
         />
 
@@ -420,92 +465,103 @@ export default function DaySelection({
             width: hoveredBarStyle.width,
             left: hoveredBarStyle.left,
             opacity: hoveredBarStyle.opacity,
-            transition: hoveredBarStyle.transition
+            transition: hoveredBarStyle.transition,
           }}
         />
 
         {getDays(isThisWeek).map((day) => {
           const isSelected = selectedDay === day;
           const isHovered = hoveredDay === day;
-          const isEmpty = emptyDays ? (Array.isArray(emptyDays) ? emptyDays.includes(day) : emptyDays.has(day)) : false;
+          const isEmpty = emptyDays
+            ? Array.isArray(emptyDays)
+              ? emptyDays.includes(day)
+              : emptyDays.has(day)
+            : false;
           const dayWidth = getDayWidth(day, isSticky);
-          
+
           return (
             <div key={day} className="relative">
               <button
-                ref={(el) => { tabRefs.current[day] = el; }}
+                ref={(el) => {
+                  tabRefs.current[day] = el;
+                }}
                 onClick={() => {
                   onDaySelect(day);
                   updateNavigationBar(day, true); // 클릭 시 즉시 이동 (애니메이션 없음)
-                  
+
                   // 비어있는 요일인 경우 스크롤 이동하지 않음
                   if (isEmpty && day !== '곧 시작') {
                     return; // 스크롤 이동하지 않음
                   }
-                  
                 }}
                 onMouseEnter={() => handleMouseEnter(day)}
                 className={cn(
-                  "h-11 px-4 py-2.5 flex items-center justify-center transition-all duration-200 cursor-pointer",
-                  "relative",
+                  'flex h-11 cursor-pointer items-center justify-center px-4 py-2.5 transition-all duration-200',
+                  'relative',
                   dayWidth
                 )}
               >
-                <span className={cn(
-                  "text-lg leading-none whitespace-nowrap transition-colors duration-200",
-                  isSelected || isHovered
-                    ? "text-[#990033] font-semibold"
-                    : "text-[#adb5bd] font-normal"
-                )}>
+                <span
+                  className={cn(
+                    'text-lg leading-none whitespace-nowrap transition-colors duration-200',
+                    isSelected || isHovered
+                      ? 'font-semibold text-[#990033]'
+                      : 'font-normal text-[#adb5bd]'
+                  )}
+                >
                   {day}
                 </span>
               </button>
-              
+
               {/* 기본 요소 툴팁 */}
-              {showTooltip === day && typeof window !== 'undefined' && createPortal(
-                <div 
-                  className="absolute bg-white px-2 py-1 text-xs font-medium text-[#990033] transition-opacity duration-300 ease-in-out whitespace-nowrap border border-gray-200 rounded shadow-sm pointer-events-none"
-                  style={{ 
-                    zIndex: 999999,
-                    top: `${tooltipPosition.top}px`,
-                    left: `${tooltipPosition.left}px`,
-                    transform: 'translateX(-50%)'
-                  }}
-                  onMouseEnter={() => {
-                    // 툴팁에 마우스가 올라가면 유지
-                  }}
-                  onMouseLeave={() => {
-                    // 툴팁에서 마우스가 벗어나면 숨기기
-                    setShowTooltip(null);
-                  }}
-                >
-                  이번 주 없음
-                </div>,
-                document.body
-              )}
-              
+              {showTooltip === day &&
+                typeof window !== 'undefined' &&
+                createPortal(
+                  <div
+                    className="pointer-events-none absolute rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium whitespace-nowrap text-[#990033] shadow-sm transition-opacity duration-300 ease-in-out"
+                    style={{
+                      zIndex: 999999,
+                      top: `${tooltipPosition.top}px`,
+                      left: `${tooltipPosition.left}px`,
+                      transform: 'translateX(-50%)',
+                    }}
+                    onMouseEnter={() => {
+                      // 툴팁에 마우스가 올라가면 유지
+                    }}
+                    onMouseLeave={() => {
+                      // 툴팁에서 마우스가 벗어나면 숨기기
+                      setShowTooltip(null);
+                    }}
+                  >
+                    이번 주 없음
+                  </div>,
+                  document.body
+                )}
+
               {/* 스티키 요소 툴팁 */}
-              {showStickyTooltip === day && typeof window !== 'undefined' && createPortal(
-                <div 
-                  className="fixed bg-white px-2 py-1 text-xs font-medium text-[#990033] transition-opacity duration-300 ease-in-out whitespace-nowrap border border-gray-200 rounded shadow-sm pointer-events-none"
-                  style={{ 
-                    zIndex: 999999,
-                    top: `60px`,
-                    left: `${stickyTooltipPosition.left}px`,
-                    transform: 'translateX(-50%)'
-                  }}
-                  onMouseEnter={() => {
-                    // 툴팁에 마우스가 올라가면 유지
-                  }}
-                  onMouseLeave={() => {
-                    // 툴팁에서 마우스가 벗어나면 숨기기
-                    setShowStickyTooltip(null);
-                  }}
-                >
-                  이번 주 없음
-                </div>,
-                document.body
-              )}
+              {showStickyTooltip === day &&
+                typeof window !== 'undefined' &&
+                createPortal(
+                  <div
+                    className="pointer-events-none fixed rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium whitespace-nowrap text-[#990033] shadow-sm transition-opacity duration-300 ease-in-out"
+                    style={{
+                      zIndex: 999999,
+                      top: `60px`,
+                      left: `${stickyTooltipPosition.left}px`,
+                      transform: 'translateX(-50%)',
+                    }}
+                    onMouseEnter={() => {
+                      // 툴팁에 마우스가 올라가면 유지
+                    }}
+                    onMouseLeave={() => {
+                      // 툴팁에서 마우스가 벗어나면 숨기기
+                      setShowStickyTooltip(null);
+                    }}
+                  >
+                    이번 주 없음
+                  </div>,
+                  document.body
+                )}
             </div>
           );
         })}

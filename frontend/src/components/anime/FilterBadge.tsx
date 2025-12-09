@@ -8,11 +8,17 @@ interface FilterBadgeProps {
   className?: string;
 }
 
-export default function FilterBadge({ episodeNumber, onRemove, className = '' }: FilterBadgeProps) {
+export default function FilterBadge({
+  episodeNumber,
+  onRemove,
+  className = '',
+}: FilterBadgeProps) {
   return (
-    <div className={`bg-[#990033] flex gap-[7px] items-center justify-center px-[7.712px] py-[2.203px] rounded-[8.814px] ${className}`}>
-      <div className="flex gap-[5px] items-center justify-start px-px py-0">
-        <div className="font-['Pretendard'] leading-[0] not-italic text-[12px] text-white whitespace-nowrap">
+    <div
+      className={`flex items-center justify-center gap-[7px] rounded-[8.814px] bg-[#990033] px-[7.712px] py-[2.203px] ${className}`}
+    >
+      <div className="flex items-center justify-start gap-[5px] px-px py-0">
+        <div className="text-[12px] leading-[0] whitespace-nowrap text-white not-italic">
           <p className="leading-[normal]">
             <span className="font-semibold">{episodeNumber}화</span>
             <span> / 방영주</span>
@@ -21,7 +27,7 @@ export default function FilterBadge({ episodeNumber, onRemove, className = '' }:
       </div>
       <button
         onClick={onRemove}
-        className="overflow-hidden relative shrink-0 w-[8.814px] h-[8.814px] hover:opacity-70 transition-opacity"
+        className="relative h-[8.814px] w-[8.814px] shrink-0 overflow-hidden transition-opacity hover:opacity-70"
         aria-label="필터 제거"
       >
         <div className="absolute inset-[3.58%]">

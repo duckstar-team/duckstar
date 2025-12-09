@@ -1,7 +1,7 @@
 import React from 'react';
 
 // 이미지 assets
-const img = "/icons/vote-icon.svg";
+const img = '/icons/vote-icon.svg';
 
 interface VoteCountProps {
   voteCount: number;
@@ -9,14 +9,14 @@ interface VoteCountProps {
 
 const VoteCount: React.FC<VoteCountProps> = ({ voteCount }) => {
   const element = (
-    <div className="justify-start text-[#adb5bd] text-[14px] font-normal font-['Pretendard'] leading-snug">
+    <div className="justify-start text-[14px] leading-snug font-normal text-[#adb5bd]">
       <p className="leading-[22px] whitespace-pre">·</p>
     </div>
   );
 
   const iconVote = (
-    <div className="relative shrink-0 size-[22px]">
-      <img alt="투표 아이콘" className="block max-w-none size-full" src={img} />
+    <div className="relative size-[22px] shrink-0">
+      <img alt="투표 아이콘" className="block size-full max-w-none" src={img} />
     </div>
   );
 
@@ -24,15 +24,15 @@ const VoteCount: React.FC<VoteCountProps> = ({ voteCount }) => {
   if (voteCount > 3) {
     const remainingCount = voteCount - 3;
     return (
-      <div className="content-stretch flex gap-[5px] items-center justify-start relative size-full">
+      <div className="relative flex size-full content-stretch items-center justify-start gap-[5px]">
         {element}
-        <div className="content-stretch flex items-center justify-start relative shrink-0">
+        <div className="relative flex shrink-0 content-stretch items-center justify-start">
           {iconVote}
           {iconVote}
           {iconVote}
-          <div className="box-border content-stretch flex flex-col gap-2.5 items-end justify-center pl-0.5 pr-0 py-0 relative shrink-0">
-            <div className="bg-[#990033] box-border content-stretch flex gap-2.5 h-4 items-center justify-center px-1 py-0 relative rounded-[6px] shrink-0">
-              <div className="justify-start text-white text-[13px] font-semibold font-['Pretendard'] leading-snug">
+          <div className="relative box-border flex shrink-0 flex-col content-stretch items-end justify-center gap-2.5 py-0 pr-0 pl-0.5">
+            <div className="relative box-border flex h-4 shrink-0 content-stretch items-center justify-center gap-2.5 rounded-[6px] bg-[#990033] px-1 py-0">
+              <div className="justify-start text-[13px] leading-snug font-semibold text-white">
                 +{remainingCount}
               </div>
             </div>
@@ -44,12 +44,16 @@ const VoteCount: React.FC<VoteCountProps> = ({ voteCount }) => {
 
   // 3개 이하인 경우 아이콘만 표시
   return (
-    <div className="content-stretch flex gap-[5px] items-center justify-start relative size-full">
+    <div className="relative flex size-full content-stretch items-center justify-start gap-[5px]">
       {element}
-      <div className="content-stretch flex items-center justify-start relative shrink-0">
+      <div className="relative flex shrink-0 content-stretch items-center justify-start">
         {Array.from({ length: Math.min(voteCount, 3) }, (_, index) => (
-          <div key={index} className="relative shrink-0 size-[22px]">
-            <img alt="투표 아이콘" className="block max-w-none size-full" src={img} />
+          <div key={index} className="relative size-[22px] shrink-0">
+            <img
+              alt="투표 아이콘"
+              className="block size-full max-w-none"
+              src={img}
+            />
           </div>
         ))}
       </div>

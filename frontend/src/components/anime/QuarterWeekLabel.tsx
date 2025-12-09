@@ -1,5 +1,5 @@
 interface QuarterWeekLabelProps {
-  variant?: "past" | "current" | "future";
+  variant?: 'past' | 'current' | 'future';
   quarter?: string;
   week?: string;
   episodeNumber?: number;
@@ -13,10 +13,10 @@ interface QuarterWeekLabelProps {
   disableCursor?: boolean; // 커서 비활성화 옵션
 }
 
-export default function QuarterWeekLabel({ 
-  variant = "past", 
-  quarter = "3분기",
-  week = "7주차",
+export default function QuarterWeekLabel({
+  variant = 'past',
+  quarter = '3분기',
+  week = '7주차',
   episodeNumber = 1,
   isLast = false,
   isSelected = false,
@@ -25,83 +25,134 @@ export default function QuarterWeekLabel({
   onMouseMove,
   onMouseLeave,
   onClick,
-  disableCursor = false
+  disableCursor = false,
 }: QuarterWeekLabelProps) {
   // past variant
-  if (variant === "past") {
+  if (variant === 'past') {
     return (
-      <div 
-        className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
+      <div
+        className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} inline-flex h-auto items-center justify-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
       >
-                               <div 
-          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
-          onMouseEnter={(e) => { e.stopPropagation(); onMouseEnter?.(); }}
-          onMouseMove={(e) => { e.stopPropagation(); onMouseMove?.(e); }}
-          onMouseLeave={(e) => { e.stopPropagation(); onMouseLeave?.(); }}
+        <div
+          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} relative z-10 text-center transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
+          onMouseEnter={(e) => {
+            e.stopPropagation();
+            onMouseEnter?.();
+          }}
+          onMouseMove={(e) => {
+            e.stopPropagation();
+            onMouseMove?.(e);
+          }}
+          onMouseLeave={(e) => {
+            e.stopPropagation();
+            onMouseLeave?.();
+          }}
         >
-          <span className={`text-sm font-['Pretendard'] ${
-            isSelected ? 'font-semibold text-[#990033] underline decoration-solid' : 'font-light text-black'
-          }`}>{quarter}<br/></span><span className={`text-base font-['Pretendard'] ${
-            isSelected ? 'font-semibold text-[#990033] underline decoration-solid' : 'font-medium text-black'
-          }`}>{week}</span>
+          <span
+            className={`text-sm ${
+              isSelected
+                ? 'font-semibold text-[#990033] underline decoration-solid'
+                : 'font-light text-black'
+            }`}
+          >
+            {quarter}
+            <br />
+          </span>
+          <span
+            className={`text-base ${
+              isSelected
+                ? 'font-semibold text-[#990033] underline decoration-solid'
+                : 'font-medium text-black'
+            }`}
+          >
+            {week}
+          </span>
         </div>
-        <div className="w-8 h-full pointer-events-none bg-transparent opacity-0">
-          <div className="w-full h-full bg-gray-300 pointer-events-none"></div>
+        <div className="pointer-events-none h-full w-8 bg-transparent opacity-0">
+          <div className="pointer-events-none h-full w-full bg-gray-300"></div>
         </div>
       </div>
     );
   }
 
   // current variant
-  if (variant === "current") {
+  if (variant === 'current') {
     return (
-      <div 
-        className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-center items-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
+      <div
+        className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} inline-flex h-auto items-center justify-center pt-[12px] ${disableCursor ? '' : 'cursor-pointer'}`}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
       >
-                               <div 
-          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
-          onMouseEnter={(e) => { e.stopPropagation(); onMouseEnter?.(); }}
-          onMouseMove={(e) => { e.stopPropagation(); onMouseMove?.(e); }}
-          onMouseLeave={(e) => { e.stopPropagation(); onMouseLeave?.(); }}
+        <div
+          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} relative z-10 text-center transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
+          onMouseEnter={(e) => {
+            e.stopPropagation();
+            onMouseEnter?.();
+          }}
+          onMouseMove={(e) => {
+            e.stopPropagation();
+            onMouseMove?.(e);
+          }}
+          onMouseLeave={(e) => {
+            e.stopPropagation();
+            onMouseLeave?.();
+          }}
         >
-          <span className={`text-sm font-['Pretendard'] ${
-            isSelected ? 'font-semibold text-[#990033] underline decoration-solid' : 'font-light'
-          }`} 
-          style={{ color: isSelected ? '#990033' : '#FFB310' }}>{quarter}<br/></span><span className={`text-base font-semibold font-['Pretendard'] ${
-            isSelected ? 'text-[#990033] underline decoration-solid' : ''
-          }`} 
-          style={{ color: isSelected ? '#990033' : '#FFB310' }}>{week}</span>
+          <span
+            className={`text-sm ${
+              isSelected
+                ? 'font-semibold text-[#990033] underline decoration-solid'
+                : 'font-light'
+            }`}
+            style={{ color: isSelected ? '#990033' : '#FFB310' }}
+          >
+            {quarter}
+            <br />
+          </span>
+          <span
+            className={`text-base font-semibold ${
+              isSelected ? 'text-[#990033] underline decoration-solid' : ''
+            }`}
+            style={{ color: isSelected ? '#990033' : '#FFB310' }}
+          >
+            {week}
+          </span>
         </div>
-        <div className="w-8 h-full pointer-events-none bg-transparent opacity-0">
-          <div className="w-full h-full bg-gray-300 pointer-events-none"></div>
+        <div className="pointer-events-none h-full w-8 bg-transparent opacity-0">
+          <div className="pointer-events-none h-full w-full bg-gray-300"></div>
         </div>
       </div>
     );
   }
 
   // future variant
-  if (variant === "future") {
+  if (variant === 'future') {
     return (
-      <div className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-start items-center pt-[12px] cursor-default`}>
-        <div 
-          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center transition-transform duration-200 relative z-10 ${isHovered ? 'scale-110' : ''}`}
+      <div
+        className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} inline-flex h-auto cursor-default items-center justify-start pt-[12px]`}
+      >
+        <div
+          className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} relative z-10 text-center transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
           onMouseEnter={onMouseEnter}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
         >
-          <span className="text-sm font-light font-['Pretendard']" style={{ color: '#CED4DA' }}>{quarter}<br/></span>
-          <span className="text-base font-medium font-['Pretendard']" style={{ color: '#CED4DA' }}>{week}</span>
+          <span className="text-sm font-light" style={{ color: '#CED4DA' }}>
+            {quarter}
+            <br />
+          </span>
+          <span className="text-base font-medium" style={{ color: '#CED4DA' }}>
+            {week}
+          </span>
         </div>
-        <div className="w-8 h-full pointer-events-none bg-transparent opacity-0">
-          <div className="w-full h-full bg-gray-300 pointer-events-none"></div>
+        <div className="pointer-events-none h-full w-8 bg-transparent opacity-0">
+          <div className="pointer-events-none h-full w-full bg-gray-300"></div>
         </div>
       </div>
     );
@@ -109,10 +160,17 @@ export default function QuarterWeekLabel({
 
   // 기본값 (past)
   return (
-    <div className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} h-auto inline-flex justify-start items-center gap-2.5`}>
-      <div className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} text-center justify-start pointer-events-none`}>
-        <span className="text-black text-sm font-light font-['Pretendard']">{quarter}<br/></span>
-        <span className="text-black text-base font-medium font-['Pretendard']">{week}</span>
+    <div
+      className={`${episodeNumber % 6 === 0 ? 'w-16 pl-1' : 'w-20'} inline-flex h-auto items-center justify-start gap-2.5`}
+    >
+      <div
+        className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} pointer-events-none justify-start text-center`}
+      >
+        <span className="text-sm font-light text-black">
+          {quarter}
+          <br />
+        </span>
+        <span className="text-base font-medium text-black">{week}</span>
       </div>
     </div>
   );

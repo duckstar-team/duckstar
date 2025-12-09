@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import BigCandidate from '@/components/anime/BigCandidate';
 import SmallCandidate from '@/components/anime/SmallCandidate';
 import AnimeCard from '@/components/anime/AnimeCard';
-import SearchBar from '@/components/legacy-vote/SearchBar';
 import { searchMatch, extractChosung } from '@/lib/searchUtils';
 import { getStarCandidates } from '@/api/client';
 import { LiveCandidateDto } from '@/types/api';
@@ -22,6 +21,7 @@ import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
+import SearchBar from './SearchBar';
 
 export default function VotePageContent() {
   const { openLoginModal } = useModal();
@@ -681,7 +681,7 @@ export default function VotePageContent() {
               {/* 배너 텍스트 오버레이 */}
               <div className="absolute inset-0 inline-flex flex-col items-center justify-center gap-1 sm:gap-0">
                 <div
-                  className="justify-center font-['Pretendard'] text-xl leading-tight font-bold text-white sm:text-2xl sm:leading-[1.2] md:text-3xl md:leading-[1.3] lg:text-4xl lg:leading-[50.75px]"
+                  className="justify-center text-xl leading-tight font-bold text-white sm:text-2xl sm:leading-[1.2] md:text-3xl md:leading-[1.3] lg:text-4xl lg:leading-[50.75px]"
                   style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}
                 >
                   {voteInfo
@@ -691,7 +691,7 @@ export default function VotePageContent() {
                     : '애니메이션 투표'}
                 </div>
                 <div
-                  className="-mt-[5px] h-6 justify-center self-stretch text-center font-['Pretendard'] text-sm font-light tracking-wide text-white sm:text-sm md:text-base"
+                  className="-mt-[5px] h-6 justify-center self-stretch text-center text-sm font-light tracking-wide text-white sm:text-sm md:text-base"
                   style={{ textShadow: '0 0 1px rgba(0,0,0,0.8)' }}
                 >
                   {voteInfo
@@ -768,7 +768,7 @@ export default function VotePageContent() {
             {/* 배너 텍스트 오버레이 */}
             <div className="absolute inset-0 inline-flex flex-col items-center justify-center gap-1 sm:gap-0">
               <div
-                className="justify-center font-['Pretendard'] text-xl leading-tight font-bold text-white sm:text-2xl sm:leading-[1.2] md:text-3xl md:leading-[1.3] lg:text-4xl lg:leading-[50.75px]"
+                className="justify-center text-xl leading-tight font-bold text-white sm:text-2xl sm:leading-[1.2] md:text-3xl md:leading-[1.3] lg:text-4xl lg:leading-[50.75px]"
                 style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}
               >
                 {voteInfo
@@ -778,7 +778,7 @@ export default function VotePageContent() {
                   : '애니메이션 투표'}
               </div>
               <div
-                className="-mt-[5px] h-6 justify-center self-stretch text-center font-['Pretendard'] text-sm font-light tracking-wide text-white sm:text-sm md:text-base"
+                className="-mt-[5px] h-6 justify-center self-stretch text-center text-sm font-light tracking-wide text-white sm:text-sm md:text-base"
                 style={{ textShadow: '0 0 1px rgba(0,0,0,0.8)' }}
               >
                 {voteInfo

@@ -17,23 +17,24 @@ export default function WeekRatingStats({
   averageRating,
   participantCount,
   distribution,
-  className = ""
+  className = '',
 }: WeekRatingStatsProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [tooltipVisible, setTooltipVisible] = useState(false);
-  
+
   // 25년 4분기 1-2주차인지 확인 (1점 단위 모드)
-  const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
-  
+  const isIntegerMode =
+    week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
+
   // 평균 별점을 정수 부분과 소수 부분으로 분리 (소수점 첫째 자리)
   const integerPart = Math.floor(averageRating);
   const decimalPart = Math.floor((averageRating - integerPart) * 10) / 10;
   const decimalString = decimalPart.toFixed(1).substring(1); // ".7" 형태
-  
+
   // 실제 전체 점수 (소수점 셋째자리까지 반올림, 항상 표시)
   const fullRating = (Math.round(averageRating * 1000) / 1000).toFixed(3);
-  
+
   // 딜레이 후 서서히 보이게
   useEffect(() => {
     if (showTooltip) {
@@ -47,18 +48,21 @@ export default function WeekRatingStats({
   }, [showTooltip]);
 
   return (
-    <div className={`inline-flex flex-col items-center sm:items-end gap-1 min-w-0 flex-shrink-0 ${className}`}>
+    <div
+      className={`inline-flex min-w-0 flex-shrink-0 flex-col items-center gap-1 sm:items-end ${className}`}
+    >
       {/* 주차 정보 */}
-      <div className="text-left sm:text-right text-white text-sm xs:text-lg sm:text-lg font-normal font-['Pretendard'] ml-2 sm:ml-0">
-        {week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차') ? (
-          <div className="flex sm:hidden items-start gap-4">
+      <div className="xs:text-lg ml-2 text-left text-sm font-normal text-white sm:ml-0 sm:text-right sm:text-lg">
+        {week.includes('25년 4분기 1주차') ||
+        week.includes('25년 4분기 2주차') ? (
+          <div className="flex items-start gap-4 sm:hidden">
             <div className="flex-shrink-0">
               <div>{week.split(' ').slice(0, 2).join(' ')}</div>
               <div>{week.split(' ').slice(2).join(' ')}</div>
             </div>
-            <div className="inline-flex flex-col items-end gap-0.5 -mt-3">
-              <div 
-                className="inline-flex items-center gap-1.5 cursor-pointer"
+            <div className="-mt-3 inline-flex flex-col items-end gap-0.5">
+              <div
+                className="inline-flex cursor-pointer items-center gap-1.5"
                 onMouseEnter={(e) => {
                   setTooltipPosition({ x: e.clientX, y: e.clientY });
                   setShowTooltip(true);
@@ -67,30 +71,36 @@ export default function WeekRatingStats({
                   setShowTooltip(false);
                 }}
               >
-                <div className="size-6 relative">
-                  <img 
-                    src="/icons/star/star-Selected.svg" 
-                    alt="별" 
-                    className="w-6 h-6"
+                <div className="relative size-6">
+                  <img
+                    src="/icons/star/star-Selected.svg"
+                    alt="별"
+                    className="h-6 w-6"
                   />
                 </div>
                 <div className="text-center">
-                  <span className="text-white text-2xl font-semibold font-['Pretendard'] leading-loose tracking-widest">{integerPart}</span>
-                  <span className="text-white text-xl font-semibold font-['Pretendard'] leading-loose tracking-widest">{decimalString}</span>
+                  <span className="text-2xl leading-loose font-semibold tracking-widest text-white">
+                    {integerPart}
+                  </span>
+                  <span className="text-xl leading-loose font-semibold tracking-widest text-white">
+                    {decimalString}
+                  </span>
                 </div>
               </div>
-              <div className="text-right text-gray-400 text-sm font-medium font-['Pretendard'] leading-loose -mt-3 sm:mt-0">{participantCount}명 참여</div>
+              <div className="-mt-3 text-right text-sm leading-loose font-medium text-gray-400 sm:mt-0">
+                {participantCount}명 참여
+              </div>
             </div>
           </div>
         ) : (
-          <div className="flex sm:hidden items-start gap-2">
+          <div className="flex items-start gap-2 sm:hidden">
             <div className="flex-shrink-0">
               <div>{week.split(' ').slice(0, 2).join(' ')}</div>
               <div>{week.split(' ').slice(2).join(' ')}</div>
             </div>
             <div className="inline-flex flex-col items-end gap-0.5">
-              <div 
-                className="inline-flex items-center gap-1.5 cursor-pointer"
+              <div
+                className="inline-flex cursor-pointer items-center gap-1.5"
                 onMouseEnter={(e) => {
                   setTooltipPosition({ x: e.clientX, y: e.clientY });
                   setShowTooltip(true);
@@ -99,29 +109,38 @@ export default function WeekRatingStats({
                   setShowTooltip(false);
                 }}
               >
-                <div className="size-6 relative">
-                  <img 
-                    src="/icons/star/star-Selected.svg" 
-                    alt="별" 
-                    className="w-6 h-6"
+                <div className="relative size-6">
+                  <img
+                    src="/icons/star/star-Selected.svg"
+                    alt="별"
+                    className="h-6 w-6"
                   />
                 </div>
                 <div className="text-center">
-                  <span className="text-white text-2xl font-semibold font-['Pretendard'] leading-loose tracking-widest">{integerPart}</span>
-                  <span className="text-white text-xl font-semibold font-['Pretendard'] leading-loose tracking-widest">{decimalString}</span>
+                  <span className="text-2xl leading-loose font-semibold tracking-widest text-white">
+                    {integerPart}
+                  </span>
+                  <span className="text-xl leading-loose font-semibold tracking-widest text-white">
+                    {decimalString}
+                  </span>
                 </div>
               </div>
-              <div className="text-right text-gray-400 text-sm font-medium font-['Pretendard'] leading-loose -mt-3 sm:mt-0">{participantCount}명 참여</div>
+              <div className="-mt-3 text-right text-sm leading-loose font-medium text-gray-400 sm:mt-0">
+                {participantCount}명 참여
+              </div>
             </div>
           </div>
         )}
         <div className="hidden sm:block">{week}</div>
       </div>
-      
+
       {/* 별점 통계 */}
-      <div className="inline-flex items-start gap-[2px] xs:gap-4 sm:gap-4">
+      <div className="xs:gap-4 inline-flex items-start gap-[2px] sm:gap-4">
         {/* 별점 분산 차트 */}
-        <div className="w-24 xs:w-32 sm:w-32 relative mt-[3px] xs:mt-[32px] sm:mt-[44px]" style={{ height: '38.72px' }}>
+        <div
+          className="xs:w-32 xs:mt-[32px] relative mt-[3px] w-24 sm:mt-[44px] sm:w-32"
+          style={{ height: '38.72px' }}
+        >
           <StarDistributionChart
             distribution={distribution}
             totalVoters={participantCount}
@@ -135,11 +154,11 @@ export default function WeekRatingStats({
             className="absolute inset-0"
           />
         </div>
-        
+
         {/* 평균 별점 및 참여자 수 - 640px 이상에서만 표시 */}
-        <div className="hidden sm:inline-flex flex-col items-end">
-          <div 
-            className="inline-flex items-center gap-1.5 xs:gap-2 sm:gap-2 cursor-pointer"
+        <div className="hidden flex-col items-end sm:inline-flex">
+          <div
+            className="xs:gap-2 inline-flex cursor-pointer items-center gap-1.5 sm:gap-2"
             onMouseEnter={(e) => {
               setTooltipPosition({ x: e.clientX, y: e.clientY });
               setShowTooltip(true);
@@ -148,37 +167,45 @@ export default function WeekRatingStats({
               setShowTooltip(false);
             }}
           >
-            <div className="size-6 xs:size-8 sm:size-8 relative">
-              <img 
-                src="/icons/star/star-Selected.svg" 
-                alt="별" 
-                className="w-6 h-6 xs:w-8 xs:h-8 sm:w-8 sm:h-8"
+            <div className="xs:size-8 relative size-6 sm:size-8">
+              <img
+                src="/icons/star/star-Selected.svg"
+                alt="별"
+                className="xs:w-8 xs:h-8 h-6 w-6 sm:h-8 sm:w-8"
               />
             </div>
             <div className="text-center">
-              <span className="text-white text-2xl xs:text-4xl sm:text-4xl font-semibold font-['Pretendard'] leading-loose tracking-widest">{integerPart}</span>
-              <span className="text-white text-xl xs:text-2xl sm:text-2xl font-semibold font-['Pretendard'] leading-loose tracking-widest">{decimalString}</span>
+              <span className="xs:text-4xl text-2xl leading-loose font-semibold tracking-widest text-white sm:text-4xl">
+                {integerPart}
+              </span>
+              <span className="xs:text-2xl text-xl leading-loose font-semibold tracking-widest text-white sm:text-2xl">
+                {decimalString}
+              </span>
             </div>
           </div>
-          <div className="text-right text-gray-400 text-sm xs:text-lg sm:text-lg font-medium font-['Pretendard'] leading-loose -mt-[10px] xs:-mt-[14px] sm:-mt-[14px]">{participantCount}명 참여</div>
+          <div className="xs:text-lg xs:-mt-[14px] -mt-[10px] text-right text-sm leading-loose font-medium text-gray-400 sm:-mt-[14px] sm:text-lg">
+            {participantCount}명 참여
+          </div>
         </div>
       </div>
-      
+
       {/* 툴팁 포털 */}
-      {showTooltip && typeof window !== 'undefined' && createPortal(
-        <div 
-          className={`fixed px-2 py-1 bg-gray-700/60 text-white text-xs rounded shadow-lg pointer-events-none whitespace-nowrap z-50 transition-opacity duration-300 ${
-            tooltipVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-          style={{
-            left: tooltipPosition.x + 10,
-            top: tooltipPosition.y + 10
-          }}
-        >
-          ★ {fullRating} / 10
-        </div>,
-        document.body
-      )}
+      {showTooltip &&
+        typeof window !== 'undefined' &&
+        createPortal(
+          <div
+            className={`pointer-events-none fixed z-50 rounded bg-gray-700/60 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg transition-opacity duration-300 ${
+              tooltipVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              left: tooltipPosition.x + 10,
+              top: tooltipPosition.y + 10,
+            }}
+          >
+            ★ {fullRating} / 10
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

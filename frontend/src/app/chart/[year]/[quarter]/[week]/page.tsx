@@ -11,60 +11,84 @@ import { queryConfig } from '@/lib/queryConfig';
 import { useChart } from '@/components/AppContainer';
 
 // 메달 타입 변환 함수
-function convertMedalType(apiType: string): "Gold" | "Silver" | "Bronze" | "None" {
+function convertMedalType(
+  apiType: string
+): 'Gold' | 'Silver' | 'Bronze' | 'None' {
   switch (apiType) {
-    case "GOLD": return "Gold";
-    case "SILVER": return "Silver";
-    case "BRONZE": return "Bronze";
-    case "NONE": return "None";
-    default: return "None";
+    case 'GOLD':
+      return 'Gold';
+    case 'SILVER':
+      return 'Silver';
+    case 'BRONZE':
+      return 'Bronze';
+    case 'NONE':
+      return 'None';
+    default:
+      return 'None';
   }
 }
 
 // 순위 변동 타입 결정 함수
-function getRankDiffType(rankDiff: number | null, consecutiveWeeks: number = 0): "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "new" | "Zero" {
-  if (rankDiff === null) return "new";
-  
+function getRankDiffType(
+  rankDiff: number | null,
+  consecutiveWeeks: number = 0
+):
+  | 'up-greater-equal-than-5'
+  | 'up-less-than-5'
+  | 'down-less-than-5'
+  | 'down-greater-equal-than-5'
+  | 'same-rank'
+  | 'new'
+  | 'Zero' {
+  if (rankDiff === null) return 'new';
+
   // rankDiff가 0이 아니면 up/down 우선 처리
   if (rankDiff > 0) {
-    return rankDiff >= 5 ? "up-greater-equal-than-5" : "up-less-than-5";
+    return rankDiff >= 5 ? 'up-greater-equal-than-5' : 'up-less-than-5';
   }
   if (rankDiff < 0) {
-    return rankDiff <= -5 ? "down-greater-equal-than-5" : "down-less-than-5";
+    return rankDiff <= -5 ? 'down-greater-equal-than-5' : 'down-less-than-5';
   }
-  
+
   // rankDiff가 0인 경우 consecutiveWeeks로 판단
   if (consecutiveWeeks >= 2) {
-    return "same-rank";
+    return 'same-rank';
   }
-  
+
   if (consecutiveWeeks === 1) {
-    return "new";
+    return 'new';
   }
-  
-  return "Zero";
+
+  return 'Zero';
 }
 
 // 별점 분포 배열 생성 함수 (절대값을 비율로 변환)
 function createDistributionArray(voteResult: any, week: string): number[] {
   // voteResult가 없거나 voterCount가 없으면 빈 배열 반환
-  if (!voteResult || voteResult.voterCount === undefined || voteResult.voterCount === null) {
-    const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
+  if (
+    !voteResult ||
+    voteResult.voterCount === undefined ||
+    voteResult.voterCount === null
+  ) {
+    const isIntegerMode =
+      week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
     return isIntegerMode ? [0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   }
-  
+
   const totalVoters = voteResult.voterCount;
   const starInfo = voteResult.info;
-  
+
   if (totalVoters === 0 || !starInfo) {
     // 25년 4분기 1-2주차는 1점 단위 (5개), 나머지는 0.5점 단위 (10개)
-    const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
+    const isIntegerMode =
+      week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
     return isIntegerMode ? [0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   }
-  
+
   // 25년 4분기 1-2주차는 1점 단위 데이터 사용
-  const isIntegerMode = week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
-  
+  const isIntegerMode =
+    week.includes('25년 4분기 1주차') || week.includes('25년 4분기 2주차');
+
   if (isIntegerMode) {
     // 1점 단위: 1점, 2점, 3점, 4점, 5점
     return [
@@ -72,7 +96,7 @@ function createDistributionArray(voteResult: any, week: string): number[] {
       (starInfo.star_2_0 ?? 0) / totalVoters,
       (starInfo.star_3_0 ?? 0) / totalVoters,
       (starInfo.star_4_0 ?? 0) / totalVoters,
-      (starInfo.star_5_0 ?? 0) / totalVoters
+      (starInfo.star_5_0 ?? 0) / totalVoters,
     ];
   } else {
     // 0.5점 단위: 0.5점, 1.0점, 1.5점, ..., 5.0점
@@ -86,7 +110,7 @@ function createDistributionArray(voteResult: any, week: string): number[] {
       (starInfo.star_3_5 ?? 0) / totalVoters,
       (starInfo.star_4_0 ?? 0) / totalVoters,
       (starInfo.star_4_5 ?? 0) / totalVoters,
-      (starInfo.star_5_0 ?? 0) / totalVoters
+      (starInfo.star_5_0 ?? 0) / totalVoters,
     ];
   }
 }
@@ -96,21 +120,23 @@ export default function ChartPage() {
   const year = parseInt(params.year as string);
   const quarter = parseInt(params.quarter as string);
   const week = parseInt(params.week as string);
-  
+
   const { selectedWeek, setSelectedWeek, weeks } = useChart();
-  const [activeView, setActiveView] = useState<'duckstar' | 'anime-corner' | 'anilab'>('duckstar');
+  const [activeView, setActiveView] = useState<
+    'duckstar' | 'anime-corner' | 'anilab'
+  >('duckstar');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  
+
   // URL 파라미터를 기반으로 selectedWeek 설정 (새로고침 시에도 유지)
   useEffect(() => {
     if (year && quarter && week) {
-      setSelectedWeek({ 
-        year, 
-        quarter, 
-        week, 
+      setSelectedWeek({
+        year,
+        quarter,
+        week,
         startDate: '',
-        endDate: ''
+        endDate: '',
       });
     }
   }, [year, quarter, week, setSelectedWeek]);
@@ -120,18 +146,18 @@ export default function ChartPage() {
     const checkScreenSize = () => {
       const wasDesktop = isDesktop;
       const nowDesktop = window.innerWidth >= 1280;
-      
+
       setIsDesktop(nowDesktop);
-      
+
       // 데스크톱에서 모바일로 전환될 때 덕스타 순위로 리셋
       if (wasDesktop && !nowDesktop) {
         setActiveView('duckstar');
       }
     };
-    
+
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
-    
+
     return () => window.removeEventListener('resize', checkScreenSize);
   }, [isDesktop]);
 
@@ -149,18 +175,23 @@ export default function ChartPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
-  
+
   // 분기 이름 매핑 (영어 대문자)
   const getQuarterName = (quarter: number) => {
     switch (quarter) {
-      case 1: return 'SPRING';
-      case 2: return 'SUMMER';
-      case 3: return 'AUTUMN';
-      case 4: return 'AUTUMN'; // 4분기도 AUTUMN
-      default: return 'SUMMER';
+      case 1:
+        return 'SPRING';
+      case 2:
+        return 'SUMMER';
+      case 3:
+        return 'AUTUMN';
+      case 4:
+        return 'AUTUMN'; // 4분기도 AUTUMN
+      default:
+        return 'SUMMER';
     }
   };
-  
+
   // 주간 정보 조회
   const { data: weeksData } = useQuery({
     queryKey: ['weeks'],
@@ -170,7 +201,10 @@ export default function ChartPage() {
 
   // 현재 주차 정보 찾기
   const currentWeekInfo = weeksData?.result?.find(
-    (weekData) => weekData.year === year && weekData.quarter === quarter && weekData.week === week
+    (weekData) =>
+      weekData.year === year &&
+      weekData.quarter === quarter &&
+      weekData.week === week
   );
 
   // 무한 스크롤을 위한 useInfiniteQuery 사용
@@ -183,7 +217,8 @@ export default function ChartPage() {
     isLoading,
   } = useInfiniteQuery({
     queryKey: ['chart', year, quarter, week],
-    queryFn: ({ pageParam = 0 }) => getChartData(year, quarter, week, pageParam as number),
+    queryFn: ({ pageParam = 0 }) =>
+      getChartData(year, quarter, week, pageParam as number),
     initialPageParam: 0,
     getNextPageParam: (lastPage: any) => {
       if (lastPage.result.pageInfo.hasNext) {
@@ -201,17 +236,17 @@ export default function ChartPage() {
       const formatDate = (dateStr: string) => {
         return dateStr.replace(/-/g, '/');
       };
-      
+
       return {
         start: formatDate(currentWeekInfo.startDate),
-        end: formatDate(currentWeekInfo.endDate)
+        end: formatDate(currentWeekInfo.endDate),
       };
     }
-    
+
     // 기본값
     return { start: `${year}/06/29`, end: `${year}/07/06` };
   };
-  
+
   const quarterName = getQuarterName(quarter);
   const dateRange = getDateRangeFromData();
 
@@ -219,9 +254,11 @@ export default function ChartPage() {
   const isDesktopAbroadTabActive = (tab: 'anime-corner' | 'anilab') => {
     return isDesktop && activeView === tab;
   };
-  
+
   // 버튼 활성화 상태 확인
-  const isButtonActive = (buttonType: 'duckstar' | 'anime-corner' | 'anilab') => {
+  const isButtonActive = (
+    buttonType: 'duckstar' | 'anime-corner' | 'anilab'
+  ) => {
     if (isDesktop) {
       // 1280px 이상: DUCKSTAR 항상 활성화, 해외 순위만 탭 전환
       return buttonType === 'duckstar' || activeView === buttonType;
@@ -230,8 +267,6 @@ export default function ChartPage() {
       return activeView === buttonType;
     }
   };
-
-  
 
   // 무한 스크롤 트리거
   const handleScroll = useCallback(() => {
@@ -255,10 +290,10 @@ export default function ChartPage() {
     if (data?.pages?.[0]?.result && isDesktop) {
       const animeCornerData = data.pages[0].result.animeTrendRankPreviews || [];
       const anilabData = data.pages[0].result.aniLabRankPreviews || [];
-      
+
       const hasAnilab = anilabData.length > 0;
       const hasAnimeCorner = animeCornerData.length > 0;
-      
+
       if (hasAnilab && !hasAnimeCorner) {
         // Anilab만 있는 경우 - Anilab 탭 활성화
         setActiveView('anilab');
@@ -275,8 +310,8 @@ export default function ChartPage() {
 
   if (isLoading) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-800"></div>
+      <div className="flex items-center justify-center bg-gray-50 py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
         <span className="ml-3 text-gray-600">차트 데이터 로딩 중...</span>
       </div>
     );
@@ -284,14 +319,18 @@ export default function ChartPage() {
 
   if (error) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center py-20">
+      <div className="flex items-center justify-center bg-gray-50 py-20">
         <div className="text-center">
-          <div className="text-red-500 text-4xl mb-2">⚠️</div>
-          <h3 className="text-lg font-semibold text-red-600 mb-2">데이터 로딩 실패</h3>
-          <p className="text-sm text-gray-600 mb-4">차트 데이터를 불러올 수 없습니다.</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-rose-500 text-white rounded hover:bg-rose-600 text-sm"
+          <div className="mb-2 text-4xl text-red-500">⚠️</div>
+          <h3 className="mb-2 text-lg font-semibold text-red-600">
+            데이터 로딩 실패
+          </h3>
+          <p className="mb-4 text-sm text-gray-600">
+            차트 데이터를 불러올 수 없습니다.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded bg-rose-500 px-4 py-2 text-sm text-white hover:bg-rose-600"
           >
             다시 시도
           </button>
@@ -302,16 +341,23 @@ export default function ChartPage() {
 
   // 덕스타 차트와 해외 차트 데이터 확인
   const duckstarData = data?.pages?.[0]?.result?.animeRankDtos || [];
-  const animeCornerData = data?.pages?.[0]?.result?.animeTrendRankPreviews || [];
+  const animeCornerData =
+    data?.pages?.[0]?.result?.animeTrendRankPreviews || [];
   const anilabData = data?.pages?.[0]?.result?.aniLabRankPreviews || [];
-  
+
   // 모든 차트 데이터가 없는 경우에만 "데이터 없음" 표시
-  if (duckstarData.length === 0 && animeCornerData.length === 0 && anilabData.length === 0) {
+  if (
+    duckstarData.length === 0 &&
+    animeCornerData.length === 0 &&
+    anilabData.length === 0
+  ) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center py-20">
+      <div className="flex items-center justify-center bg-gray-50 py-20">
         <div className="text-center">
-          <div className="text-gray-500 text-4xl mb-2">📊</div>
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">데이터 없음</h3>
+          <div className="mb-2 text-4xl text-gray-500">📊</div>
+          <h3 className="mb-2 text-lg font-semibold text-gray-600">
+            데이터 없음
+          </h3>
           <p className="text-sm text-gray-500">차트 데이터가 없습니다.</p>
         </div>
       </div>
@@ -319,48 +365,53 @@ export default function ChartPage() {
   }
 
   // 모든 페이지의 애니메이션 데이터를 합치기
-  const allAnimeList = data?.pages?.flatMap(page => page.result.animeRankDtos || []) || [];
+  const allAnimeList =
+    data?.pages?.flatMap((page) => page.result.animeRankDtos || []) || [];
 
   // 1등 애니메이션 (Winner) - 첫 번째 페이지만
   const firstPageAnimes = data?.pages?.[0]?.result?.animeRankDtos || [];
   const winnerAnime = firstPageAnimes[0];
 
   // winnerAnime가 있을 때만 winnerMedals 생성
-  const winnerMedals = winnerAnime?.medalPreviews?.map((medal, index) => ({
-    id: `winner-medal-${index}`,
-    type: convertMedalType(medal.type),
-    title: winnerAnime.rankPreviewDto.title,
-    image: winnerAnime.rankPreviewDto.mainThumbnailUrl,
-    rank: medal.rank,
-    year: medal.year,
-    quarter: medal.quarter,
-    week: medal.week,
-  })) || [];
+  const winnerMedals =
+    winnerAnime?.medalPreviews?.map((medal, index) => ({
+      id: `winner-medal-${index}`,
+      type: convertMedalType(medal.type),
+      title: winnerAnime.rankPreviewDto.title,
+      image: winnerAnime.rankPreviewDto.mainThumbnailUrl,
+      rank: medal.rank,
+      year: medal.year,
+      quarter: medal.quarter,
+      week: medal.week,
+    })) || [];
 
   return (
     <div className="bg-gray-50">
       <div className="w-full">
         {/* 배너 */}
-        <div className="flex justify-center mb-4">
-          <div className="relative w-full h-[99px] overflow-hidden">
+        <div className="mb-4 flex justify-center">
+          <div className="relative h-[99px] w-full overflow-hidden">
             {/* 모바일/태블릿용 배너 */}
-            <img 
-              src="/banners/chart-banner-mobile.svg" 
-              alt="차트 배너" 
-              className="absolute inset-0 w-full h-full object-cover object-center xl:hidden"
+            <img
+              src="/banners/chart-banner-mobile.svg"
+              alt="차트 배너"
+              className="absolute inset-0 h-full w-full object-cover object-center xl:hidden"
             />
             {/* 데스크톱용 배너 */}
-            <img 
-              src="/banners/chart-banner.svg" 
-              alt="차트 배너" 
-              className="absolute inset-0 w-full h-full object-cover object-center hidden xl:block"
+            <img
+              src="/banners/chart-banner.svg"
+              alt="차트 배너"
+              className="absolute inset-0 hidden h-full w-full object-cover object-center xl:block"
             />
             {/* 배너 텍스트 오버레이 */}
-            <div className="absolute inset-0 inline-flex flex-col justify-center items-center gap-1 sm:gap-0">
-              <div className="justify-center text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-['Pretendard'] leading-tight sm:leading-[1.2] md:leading-[1.3] lg:leading-[50.75px] whitespace-nowrap" style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}>
+            <div className="absolute inset-0 inline-flex flex-col items-center justify-center gap-1 sm:gap-0">
+              <div
+                className="justify-center text-xl leading-tight font-bold whitespace-nowrap text-white sm:text-2xl sm:leading-[1.2] md:text-3xl md:leading-[1.3] lg:text-4xl lg:leading-[50.75px]"
+                style={{ textShadow: '0 0 2px rgba(0,0,0,0.8)' }}
+              >
                 {year} {quarterName} {week}주차 애니메이션 순위
               </div>
-              <div className="self-stretch h-6 text-center justify-center text-white text-base font-light font-['Pretendard'] -mt-[5px] tracking-wide">
+              <div className="-mt-[5px] h-6 justify-center self-stretch text-center text-base font-light tracking-wide text-white">
                 {dateRange.start} - {dateRange.end}
               </div>
             </div>
@@ -368,127 +419,154 @@ export default function ChartPage() {
         </div>
 
         {/* 차트 헤더 배경 */}
-        <div className="sticky top-[60px] z-40 flex justify-center mb-8">
-          <div className="relative w-full h-[48px] overflow-visible">
-            <img 
-              src="/banners/chart-header-bg.svg" 
-              alt="차트 헤더 배경" 
-              className="absolute inset-0 w-full h-full object-cover object-center"
+        <div className="sticky top-[60px] z-40 mb-8 flex justify-center">
+          <div className="relative h-[48px] w-full overflow-visible">
+            <img
+              src="/banners/chart-header-bg.svg"
+              alt="차트 헤더 배경"
+              className="absolute inset-0 h-full w-full object-cover object-center"
             />
-            
+
             {/* 홈페이지 헤더 컴포넌트들 오버레이 */}
             <div className="absolute inset-0 flex items-center justify-center">
               {/* 왼쪽 프레임 - 애니메이션 순위 (768px 너비) */}
-               <div className="w-[768px] flex justify-start items-center pl-2">
-                 <div className="w-44 h-12 relative overflow-hidden">
-                   <button 
-                     onClick={() => !isDesktop && setActiveView('duckstar')}
-                     className={`w-full h-full flex items-center justify-center ${
-                       isDesktop ? 'cursor-default' : 'cursor-pointer'
-                     }`}
-                     disabled={isDesktop}
-                   >
-                     <p className={`font-['Pretendard'] leading-tight md:leading-[22px] not-italic text-md md:text-[20px] text-center text-nowrap whitespace-pre ${
-                       isButtonActive('duckstar')
-                         ? 'font-semibold text-[#FED783]' 
-                         : 'font-normal text-gray-400'
-                     }`}>
-                       DUCK★STAR
-                     </p>
-                   </button>
-                   {isButtonActive('duckstar') && (
-                     <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FED783]"></div>
-                   )}
-                 </div>
-               </div>
-              
+              <div className="flex w-[768px] items-center justify-start pl-2">
+                <div className="relative h-12 w-44 overflow-hidden">
+                  <button
+                    onClick={() => !isDesktop && setActiveView('duckstar')}
+                    className={`flex h-full w-full items-center justify-center ${
+                      isDesktop ? 'cursor-default' : 'cursor-pointer'
+                    }`}
+                    disabled={isDesktop}
+                  >
+                    <p
+                      className={`text-md text-center leading-tight text-nowrap whitespace-pre not-italic md:text-[20px] md:leading-[22px] ${
+                        isButtonActive('duckstar')
+                          ? 'font-semibold text-[#FED783]'
+                          : 'font-normal text-gray-400'
+                      }`}
+                    >
+                      DUCK★STAR
+                    </p>
+                  </button>
+                  {isButtonActive('duckstar') && (
+                    <div className="absolute right-0 bottom-0 left-0 h-[3px] bg-[#FED783]"></div>
+                  )}
+                </div>
+              </div>
+
               {/* 간격 46px */}
               <div className="w-[48px]"></div>
-              
+
               {/* 오른쪽 프레임 - 해외 랭킹 메뉴들 (352px 너비) */}
-              <div className="w-[352px] flex justify-center items-center">
-                <div className="h-12 inline-flex justify-start items-center pl-2">
+              <div className="flex w-[352px] items-center justify-center">
+                <div className="inline-flex h-12 items-center justify-start pl-2">
                   {/* 500px 이상: 기존 탭들 */}
                   <div className="hidden min-[500px]:flex">
                     {/* Anime Corner 탭 */}
-                     <div className="w-44 h-12 relative">
-                       <button 
-                         onClick={() => setActiveView('anime-corner')}
-                         className="w-full h-full px-2.5 py-3 inline-flex flex-col justify-center items-center cursor-pointer"
-                       >
-                         <div className={`self-stretch justify-start text-md md:text-xl font-['Pretendard'] leading-tight md:leading-snug ${
-                           isButtonActive('anime-corner')
-                             ? 'text-[#FED783] font-semibold' 
-                             : 'text-gray-400 font-normal'
-                         }`}>
-                           Anime Corner
-                         </div>
-                       </button>
-                       {isButtonActive('anime-corner') && (
-                         <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FED783]"></div>
-                       )}
-                     </div>
-                    
-                    {/* AniLab 탭 */}
-                    <div className="w-44 h-12 relative">
-                      <button 
-                        onClick={() => setActiveView('anilab')}
-                        className="w-full h-full px-9 py-3 inline-flex flex-col justify-center items-center cursor-pointer"
+                    <div className="relative h-12 w-44">
+                      <button
+                        onClick={() => setActiveView('anime-corner')}
+                        className="inline-flex h-full w-full cursor-pointer flex-col items-center justify-center px-2.5 py-3"
                       >
-                        <div className={`self-stretch text-center justify-start text-md md:text-xl font-['Pretendard'] leading-tight md:leading-snug ${
-                          isButtonActive('anilab')
-                            ? 'text-[#FED783] font-semibold' 
-                            : 'text-gray-400 font-normal'
-                        }`}>
+                        <div
+                          className={`text-md justify-start self-stretch leading-tight md:text-xl md:leading-snug ${
+                            isButtonActive('anime-corner')
+                              ? 'font-semibold text-[#FED783]'
+                              : 'font-normal text-gray-400'
+                          }`}
+                        >
+                          Anime Corner
+                        </div>
+                      </button>
+                      {isButtonActive('anime-corner') && (
+                        <div className="absolute right-0 bottom-0 left-0 h-[3px] bg-[#FED783]"></div>
+                      )}
+                    </div>
+
+                    {/* AniLab 탭 */}
+                    <div className="relative h-12 w-44">
+                      <button
+                        onClick={() => setActiveView('anilab')}
+                        className="inline-flex h-full w-full cursor-pointer flex-col items-center justify-center px-9 py-3"
+                      >
+                        <div
+                          className={`text-md justify-start self-stretch text-center leading-tight md:text-xl md:leading-snug ${
+                            isButtonActive('anilab')
+                              ? 'font-semibold text-[#FED783]'
+                              : 'font-normal text-gray-400'
+                          }`}
+                        >
                           AniLab
                         </div>
                       </button>
                       {isButtonActive('anilab') && (
-                        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FED783]"></div>
+                        <div className="absolute right-0 bottom-0 left-0 h-[3px] bg-[#FED783]"></div>
                       )}
                     </div>
                   </div>
-                  
+
                   {/* 500px 미만: 드롭다운 메뉴 */}
-                  <div className="block min-[500px]:hidden relative" data-dropdown>
-                    <button 
+                  <div
+                    className="relative block min-[500px]:hidden"
+                    data-dropdown
+                  >
+                    <button
                       onClick={() => {
-                        console.log('Dropdown clicked, current state:', isDropdownOpen);
+                        console.log(
+                          'Dropdown clicked, current state:',
+                          isDropdownOpen
+                        );
                         setIsDropdownOpen(!isDropdownOpen);
                       }}
-                      className="flex items-center gap-2 px-3 py-2 text-gray-400 font-normal whitespace-nowrap"
+                      className="flex items-center gap-2 px-3 py-2 font-normal whitespace-nowrap text-gray-400"
                     >
-                      <span className={`whitespace-nowrap ${
-                        activeView === 'anime-corner' || activeView === 'anilab' 
-                          ? 'text-[#FED783] font-semibold' 
-                          : 'text-gray-400'
-                      }`}>
-                        {activeView === 'anime-corner' ? 'Anime Corner' : activeView === 'anilab' ? 'AniLab' : '해외 순위'}
-                      </span>
-                      <svg 
-                        className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''} ${
-                          activeView === 'anime-corner' || activeView === 'anilab' 
-                            ? 'text-[#FED783]' 
+                      <span
+                        className={`whitespace-nowrap ${
+                          activeView === 'anime-corner' ||
+                          activeView === 'anilab'
+                            ? 'font-semibold text-[#FED783]'
                             : 'text-gray-400'
                         }`}
-                        fill="none" 
-                        stroke="currentColor" 
+                      >
+                        {activeView === 'anime-corner'
+                          ? 'Anime Corner'
+                          : activeView === 'anilab'
+                            ? 'AniLab'
+                            : '해외 순위'}
+                      </span>
+                      <svg
+                        className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''} ${
+                          activeView === 'anime-corner' ||
+                          activeView === 'anilab'
+                            ? 'text-[#FED783]'
+                            : 'text-gray-400'
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </button>
-                    
+
                     {/* 드롭다운 메뉴 */}
                     {isDropdownOpen && (
-                      <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[70] w-fit">
+                      <div className="absolute top-full right-0 z-[70] mt-1 w-fit rounded-lg border border-gray-200 bg-white shadow-lg">
                         <button
                           onClick={() => {
                             setActiveView('anime-corner');
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left hover:bg-gray-50 whitespace-nowrap ${
-                            activeView === 'anime-corner' ? 'text-[#FED783] font-semibold' : 'text-gray-400'
+                          className={`w-full px-4 py-3 text-left whitespace-nowrap hover:bg-gray-50 ${
+                            activeView === 'anime-corner'
+                              ? 'font-semibold text-[#FED783]'
+                              : 'text-gray-400'
                           }`}
                         >
                           Anime Corner
@@ -498,8 +576,10 @@ export default function ChartPage() {
                             setActiveView('anilab');
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full px-4 py-3 text-left hover:bg-gray-50 whitespace-nowrap ${
-                            activeView === 'anilab' ? 'text-[#FED783] font-semibold' : 'text-gray-400'
+                          className={`w-full px-4 py-3 text-left whitespace-nowrap hover:bg-gray-50 ${
+                            activeView === 'anilab'
+                              ? 'font-semibold text-[#FED783]'
+                              : 'text-gray-400'
                           }`}
                         >
                           AniLab
@@ -513,144 +593,205 @@ export default function ChartPage() {
           </div>
         </div>
 
-         {/* 메인 컨텐츠 - 차트 리스트와 해외 랭킹 나란히 */}
-         <div className="flex flex-col xl:flex-row gap-[70px] items-center xl:items-start justify-center mt-[10px] sm:mt-[46px] pb-12">
-            {/* 차트 리스트 - 1등부터 쭉 간격 20 */}
-            <div className={`${isDesktop ? 'flex' : activeView === 'duckstar' ? 'flex' : 'hidden'} flex-col gap-5 items-center w-full max-w-[768px] px-4`}>
-          {/* 덕스타 차트가 있는 경우에만 Winner 표시, 없으면 스켈레톤 */}
-          {winnerAnime ? (
-            <Winner
-            medals={winnerMedals}
-            rank={winnerAnime.rankPreviewDto.rank}
-            rankDiff={winnerAnime.rankPreviewDto.rankDiff || 0}
-            rankDiffType={getRankDiffType(winnerAnime.rankPreviewDto.rankDiff, winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank)}
-            rankDiffValue={getRankDiffType(winnerAnime.rankPreviewDto.rankDiff, winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank) === "same-rank" ? winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank.toString() : (winnerAnime.rankPreviewDto.rankDiff || 0).toString()}
-            title={winnerAnime.rankPreviewDto.title}
-            studio={winnerAnime.rankPreviewDto.subTitle}
-            image={winnerAnime.rankPreviewDto.mainThumbnailUrl}
-            rating={Math.round((winnerAnime.voteResultDto?.info?.starAverage ?? 0) * 10) / 10}
-            debutRank={winnerAnime.animeStatDto.debutRank}
-            debutDate={winnerAnime.animeStatDto.debutDate}
-            peakRank={winnerAnime.animeStatDto.peakRank}
-            peakDate={winnerAnime.animeStatDto.peakDate}
-            top10Weeks={winnerAnime.animeStatDto.weeksOnTop10}
-             week={`${year}년 ${quarter}분기 ${week}주차`}
-            averageRating={winnerAnime.voteResultDto?.info?.starAverage ?? 0}
-            participantCount={winnerAnime.voteResultDto?.voterCount ?? 0}
-            distribution={createDistributionArray(winnerAnime.voteResultDto, `${year}년 ${quarter}분기 ${week}주차`)}
-            animeId={winnerAnime.rankPreviewDto.contentId}
-            hideMedalsOnMobile={true}
-          />
-          ) : (
-            /* 덕스타 차트가 없을 때 스켈레톤 */
-            <div className="w-full max-w-[768px] h-[200px] bg-gray-200 rounded-lg flex items-center justify-center">
-              <div className="text-gray-500">덕스타 차트 데이터 없음</div>
-            </div>
-          )}
-
-          {/* 2등 이하 RankCard들 - 덕스타 차트가 있는 경우에만 표시 */}
-          {allAnimeList.slice(1).map((anime, index) => {
-            const animeMedals = anime.medalPreviews.map((medal, medalIndex) => ({
-              id: `anime-${anime.rankPreviewDto.contentId}-medal-${medalIndex}`,
-              type: convertMedalType(medal.type),
-              title: anime.rankPreviewDto.title,
-              image: anime.rankPreviewDto.mainThumbnailUrl,
-              rank: medal.rank,
-              year: medal.year,
-              quarter: medal.quarter,
-              week: medal.week,
-            }));
-
-            return (
-              <RankCard
-                key={`${anime.rankPreviewDto.contentId}-${index}`}
-                medals={animeMedals}
-                rank={anime.rankPreviewDto.rank}
-                rankDiff={anime.rankPreviewDto.rankDiff || 0}
-                rankDiffType={getRankDiffType(anime.rankPreviewDto.rankDiff, anime.rankPreviewDto.consecutiveWeeksAtSameRank)}
-                rankDiffValue={getRankDiffType(anime.rankPreviewDto.rankDiff, anime.rankPreviewDto.consecutiveWeeksAtSameRank) === "same-rank" ? anime.rankPreviewDto.consecutiveWeeksAtSameRank.toString() : (anime.rankPreviewDto.rankDiff || 0).toString()}
-                title={anime.rankPreviewDto.title}
-                studio={anime.rankPreviewDto.subTitle}
-                image={anime.rankPreviewDto.mainThumbnailUrl}
-                rating={Math.round((anime.voteResultDto?.info?.starAverage ?? 0) * 10) / 10}
-                debutRank={anime.animeStatDto.debutRank}
-                debutDate={anime.animeStatDto.debutDate}
-                peakRank={anime.animeStatDto.peakRank}
-                peakDate={anime.animeStatDto.peakDate}
-                top10Weeks={anime.animeStatDto.weeksOnTop10}
+        {/* 메인 컨텐츠 - 차트 리스트와 해외 랭킹 나란히 */}
+        <div className="mt-[10px] flex flex-col items-center justify-center gap-[70px] pb-12 sm:mt-[46px] xl:flex-row xl:items-start">
+          {/* 차트 리스트 - 1등부터 쭉 간격 20 */}
+          <div
+            className={`${isDesktop ? 'flex' : activeView === 'duckstar' ? 'flex' : 'hidden'} w-full max-w-[768px] flex-col items-center gap-5 px-4`}
+          >
+            {/* 덕스타 차트가 있는 경우에만 Winner 표시, 없으면 스켈레톤 */}
+            {winnerAnime ? (
+              <Winner
+                medals={winnerMedals}
+                rank={winnerAnime.rankPreviewDto.rank}
+                rankDiff={winnerAnime.rankPreviewDto.rankDiff || 0}
+                rankDiffType={getRankDiffType(
+                  winnerAnime.rankPreviewDto.rankDiff,
+                  winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank
+                )}
+                rankDiffValue={
+                  getRankDiffType(
+                    winnerAnime.rankPreviewDto.rankDiff,
+                    winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank
+                  ) === 'same-rank'
+                    ? winnerAnime.rankPreviewDto.consecutiveWeeksAtSameRank.toString()
+                    : (winnerAnime.rankPreviewDto.rankDiff || 0).toString()
+                }
+                title={winnerAnime.rankPreviewDto.title}
+                studio={winnerAnime.rankPreviewDto.subTitle}
+                image={winnerAnime.rankPreviewDto.mainThumbnailUrl}
+                rating={
+                  Math.round(
+                    (winnerAnime.voteResultDto?.info?.starAverage ?? 0) * 10
+                  ) / 10
+                }
+                debutRank={winnerAnime.animeStatDto.debutRank}
+                debutDate={winnerAnime.animeStatDto.debutDate}
+                peakRank={winnerAnime.animeStatDto.peakRank}
+                peakDate={winnerAnime.animeStatDto.peakDate}
+                top10Weeks={winnerAnime.animeStatDto.weeksOnTop10}
                 week={`${year}년 ${quarter}분기 ${week}주차`}
-                averageRating={anime.voteResultDto?.info?.starAverage ?? 0}
-                participantCount={anime.voteResultDto?.voterCount ?? 0}
-                distribution={createDistributionArray(anime.voteResultDto, `${year}년 ${quarter}분기 ${week}주차`)}
-                animeId={anime.rankPreviewDto.contentId}
+                averageRating={
+                  winnerAnime.voteResultDto?.info?.starAverage ?? 0
+                }
+                participantCount={winnerAnime.voteResultDto?.voterCount ?? 0}
+                distribution={createDistributionArray(
+                  winnerAnime.voteResultDto,
+                  `${year}년 ${quarter}분기 ${week}주차`
+                )}
+                animeId={winnerAnime.rankPreviewDto.contentId}
                 hideMedalsOnMobile={true}
               />
-            );
-          })}
-          
-          {/* 로딩 인디케이터 */}
-          {isFetchingNextPage && (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-800"></div>
-              <span className="ml-3 text-gray-600">더 많은 데이터 로딩 중...</span>
-            </div>
-          )}
-          
-          {/* 더 이상 데이터가 없을 때 */}
-          {!hasNextPage && allAnimeList.length > 1 && (
-            <div className="text-center py-8 text-gray-500">
-              모든 차트 데이터를 불러왔습니다.
-            </div>
-          )}
+            ) : (
+              /* 덕스타 차트가 없을 때 스켈레톤 */
+              <div className="flex h-[200px] w-full max-w-[768px] items-center justify-center rounded-lg bg-gray-200">
+                <div className="text-gray-500">덕스타 차트 데이터 없음</div>
+              </div>
+            )}
+
+            {/* 2등 이하 RankCard들 - 덕스타 차트가 있는 경우에만 표시 */}
+            {allAnimeList.slice(1).map((anime, index) => {
+              const animeMedals = anime.medalPreviews.map(
+                (medal, medalIndex) => ({
+                  id: `anime-${anime.rankPreviewDto.contentId}-medal-${medalIndex}`,
+                  type: convertMedalType(medal.type),
+                  title: anime.rankPreviewDto.title,
+                  image: anime.rankPreviewDto.mainThumbnailUrl,
+                  rank: medal.rank,
+                  year: medal.year,
+                  quarter: medal.quarter,
+                  week: medal.week,
+                })
+              );
+
+              return (
+                <RankCard
+                  key={`${anime.rankPreviewDto.contentId}-${index}`}
+                  medals={animeMedals}
+                  rank={anime.rankPreviewDto.rank}
+                  rankDiff={anime.rankPreviewDto.rankDiff || 0}
+                  rankDiffType={getRankDiffType(
+                    anime.rankPreviewDto.rankDiff,
+                    anime.rankPreviewDto.consecutiveWeeksAtSameRank
+                  )}
+                  rankDiffValue={
+                    getRankDiffType(
+                      anime.rankPreviewDto.rankDiff,
+                      anime.rankPreviewDto.consecutiveWeeksAtSameRank
+                    ) === 'same-rank'
+                      ? anime.rankPreviewDto.consecutiveWeeksAtSameRank.toString()
+                      : (anime.rankPreviewDto.rankDiff || 0).toString()
+                  }
+                  title={anime.rankPreviewDto.title}
+                  studio={anime.rankPreviewDto.subTitle}
+                  image={anime.rankPreviewDto.mainThumbnailUrl}
+                  rating={
+                    Math.round(
+                      (anime.voteResultDto?.info?.starAverage ?? 0) * 10
+                    ) / 10
+                  }
+                  debutRank={anime.animeStatDto.debutRank}
+                  debutDate={anime.animeStatDto.debutDate}
+                  peakRank={anime.animeStatDto.peakRank}
+                  peakDate={anime.animeStatDto.peakDate}
+                  top10Weeks={anime.animeStatDto.weeksOnTop10}
+                  week={`${year}년 ${quarter}분기 ${week}주차`}
+                  averageRating={anime.voteResultDto?.info?.starAverage ?? 0}
+                  participantCount={anime.voteResultDto?.voterCount ?? 0}
+                  distribution={createDistributionArray(
+                    anime.voteResultDto,
+                    `${year}년 ${quarter}분기 ${week}주차`
+                  )}
+                  animeId={anime.rankPreviewDto.contentId}
+                  hideMedalsOnMobile={true}
+                />
+              );
+            })}
+
+            {/* 로딩 인디케이터 */}
+            {isFetchingNextPage && (
+              <div className="flex justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
+                <span className="ml-3 text-gray-600">
+                  더 많은 데이터 로딩 중...
+                </span>
+              </div>
+            )}
+
+            {/* 더 이상 데이터가 없을 때 */}
+            {!hasNextPage && allAnimeList.length > 1 && (
+              <div className="py-8 text-center text-gray-500">
+                모든 차트 데이터를 불러왔습니다.
+              </div>
+            )}
           </div>
 
-           {/* 해외 랭킹 리스트 */}
-           <div className={`${isDesktop ? 'flex' : activeView !== 'duckstar' ? 'flex' : 'hidden'} flex-col gap-5 items-center w-full max-w-[370px] px-4`}>
-             {(() => {
-               // 선택된 탭에 따라 모든 페이지의 데이터 합치기
-               const abroadData = activeView === 'anime-corner' 
-                 ? data?.pages?.flatMap(page => page.result?.animeTrendRankPreviews || []) || []
-                 : data?.pages?.flatMap(page => page.result?.aniLabRankPreviews || []) || [];
-              
+          {/* 해외 랭킹 리스트 */}
+          <div
+            className={`${isDesktop ? 'flex' : activeView !== 'duckstar' ? 'flex' : 'hidden'} w-full max-w-[370px] flex-col items-center gap-5 px-4`}
+          >
+            {(() => {
+              // 선택된 탭에 따라 모든 페이지의 데이터 합치기
+              const abroadData =
+                activeView === 'anime-corner'
+                  ? data?.pages?.flatMap(
+                      (page) => page.result?.animeTrendRankPreviews || []
+                    ) || []
+                  : data?.pages?.flatMap(
+                      (page) => page.result?.aniLabRankPreviews || []
+                    ) || [];
+
               // 데이터가 없을 때 스켈레톤 UI 표시
               if (abroadData.length === 0) {
                 return (
-                  <div className="w-full max-w-[370px] h-[220px] relative">
+                  <div className="relative h-[220px] w-full max-w-[370px]">
                     {/* 스켈레톤 UI (뒷배경) */}
-                    <div className="absolute inset-0 p-4 space-y-4">
+                    <div className="absolute inset-0 space-y-4 p-4">
                       {[...Array(8)].map((_, index) => (
-                        <div key={index} className="w-full h-24 bg-gray-10 rounded-xl opacity-50">
-                          <div className="flex items-center justify-center h-full p-4 space-x-4">
-                            <div className="w-5 h-5 bg-gray-100 rounded"></div>
-                            <div className="w-14 h-20 bg-gray-100 rounded-lg"></div>
+                        <div
+                          key={index}
+                          className="bg-gray-10 h-24 w-full rounded-xl opacity-50"
+                        >
+                          <div className="flex h-full items-center justify-center space-x-4 p-4">
+                            <div className="h-5 w-5 rounded bg-gray-100"></div>
+                            <div className="h-20 w-14 rounded-lg bg-gray-100"></div>
                             <div className="flex-1 space-y-2">
-                              <div className="h-4 bg-gray-100 rounded w-3/4"></div>
-                              <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                              <div className="h-4 w-3/4 rounded bg-gray-100"></div>
+                              <div className="h-3 w-1/2 rounded bg-gray-100"></div>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
-                    
+
                     {/* 블러 처리 레이어 */}
                     <div className="absolute inset-0 rounded-xl"></div>
-                    
-                     {/* 로딩 메시지 (앞배경) */}
-                     <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                       {activeView === 'anilab' ? (
+
+                    {/* 로딩 메시지 (앞배경) */}
+                    <div className="relative z-10 flex h-full flex-col items-center justify-center">
+                      {activeView === 'anilab' ? (
                         <>
-                          <div className="text-gray-400 text-6xl mb-4 opacity-90">🇯🇵</div>
-                          <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
-                          <p className="text-sm text-gray-500 text-center">
+                          <div className="mb-4 text-6xl text-gray-400 opacity-90">
+                            🇯🇵
+                          </div>
+                          <h3 className="mb-2 text-lg font-semibold text-gray-600">
+                            해외 순위 데이터 준비 중..
+                          </h3>
+                          <p className="text-center text-sm text-gray-500">
                             Anilab 순위는 일 22:00 공개
                           </p>
                         </>
                       ) : (
                         <>
-                          <div className="text-gray-400 text-6xl mb-4 opacity-90">🌍</div>
-                          <h3 className="text-lg font-semibold text-gray-600 mb-2">해외 순위 데이터 준비 중..</h3>
-                          <p className="text-sm text-gray-500 text-center">
-                            해당 주차의 해외 순위 데이터가<br />
+                          <div className="mb-4 text-6xl text-gray-400 opacity-90">
+                            🌍
+                          </div>
+                          <h3 className="mb-2 text-lg font-semibold text-gray-600">
+                            해외 순위 데이터 준비 중..
+                          </h3>
+                          <p className="text-center text-sm text-gray-500">
+                            해당 주차의 해외 순위 데이터가
+                            <br />
                             아직 준비되지 않았습니다.
                           </p>
                         </>
@@ -659,42 +800,66 @@ export default function ChartPage() {
                   </div>
                 );
               }
-              
+
               return abroadData.map((rankPreview, index) => {
                 const isWinner = index === 0; // 1등만 Winner
-                
+
                 // rankDiff 타입 결정 (기존 로직 재사용)
                 const safeRankDiff = rankPreview.rankDiff ?? 0;
-                const safeConsecutiveWeeks = rankPreview.consecutiveWeeksAtSameRank ?? 0;
-                 const isAnilab = activeView === 'anilab';
-                
-                const getRankDiffType = (rankDiff: number, consecutiveWeeks: number, isAnilab: boolean = false): "new" | "up-greater-equal-than-5" | "up-less-than-5" | "down-less-than-5" | "down-greater-equal-than-5" | "same-rank" | "Zero" => {
+                const safeConsecutiveWeeks =
+                  rankPreview.consecutiveWeeksAtSameRank ?? 0;
+                const isAnilab = activeView === 'anilab';
+
+                const getRankDiffType = (
+                  rankDiff: number,
+                  consecutiveWeeks: number,
+                  isAnilab: boolean = false
+                ):
+                  | 'new'
+                  | 'up-greater-equal-than-5'
+                  | 'up-less-than-5'
+                  | 'down-less-than-5'
+                  | 'down-greater-equal-than-5'
+                  | 'same-rank'
+                  | 'Zero' => {
                   if (rankDiff > 0) {
-                    return rankDiff >= 5 ? "up-greater-equal-than-5" : "up-less-than-5";
+                    return rankDiff >= 5
+                      ? 'up-greater-equal-than-5'
+                      : 'up-less-than-5';
                   }
                   if (rankDiff < 0) {
-                    return rankDiff <= -5 ? "down-greater-equal-than-5" : "down-less-than-5";
+                    return rankDiff <= -5
+                      ? 'down-greater-equal-than-5'
+                      : 'down-less-than-5';
                   }
-                  
+
                   if (consecutiveWeeks >= 2) {
-                    return "same-rank";
+                    return 'same-rank';
                   }
-                  
+
                   if (consecutiveWeeks === 1 && !isAnilab) {
-                    return "new";
+                    return 'new';
                   }
-                  
-                  return "Zero";
+
+                  return 'Zero';
                 };
-                
-                const finalRankDiffType = getRankDiffType(safeRankDiff, safeConsecutiveWeeks, isAnilab);
-                
+
+                const finalRankDiffType = getRankDiffType(
+                  safeRankDiff,
+                  safeConsecutiveWeeks,
+                  isAnilab
+                );
+
                 return (
                   <AbroadRankCard
                     key={rankPreview.contentId || `abroad-${index}`}
                     rank={rankPreview.rank}
                     rankDiff={finalRankDiffType}
-                    rankDiffValue={finalRankDiffType === "same-rank" ? safeConsecutiveWeeks.toString() : safeRankDiff.toString()}
+                    rankDiffValue={
+                      finalRankDiffType === 'same-rank'
+                        ? safeConsecutiveWeeks.toString()
+                        : safeRankDiff.toString()
+                    }
                     title={rankPreview.title}
                     studio={rankPreview.subTitle}
                     image={rankPreview.mainThumbnailUrl}
