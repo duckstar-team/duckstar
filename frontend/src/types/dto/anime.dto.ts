@@ -1,36 +1,5 @@
 import { Anime, MedalPreviewDto, OttDto, SeasonDto, WeekDto } from '@/types';
 
-// // Ballot Request DTO
-// export interface BallotRequestDto {
-//   candidateId: number;
-//   ballotType: 'NORMAL' | 'BONUS';
-// }
-
-// // Anime Vote Request
-// export interface AnimeVoteRequest {
-//   weekId: number;
-//   gender: 'MALE' | 'FEMALE' | 'NONE';
-//   ballotRequests: BallotRequestDto[];
-// }
-
-// // Vote Receipt DTO
-// export interface VoteReceiptDto {
-//   submissionId: number;
-//   weekDto: WeekDto;
-//   category: 'ANIME' | 'HERO' | 'HEROINE';
-//   normalCount: number;
-//   bonusCount: number;
-//   submittedAt: string;
-// }
-
-// // Anime Candidate DTO
-// export interface AnimeCandidateDto {
-//   animeCandidateId: number;
-//   mainThumbnailUrl: string;
-//   titleKor: string;
-//   medium: 'TVA' | 'MOVIE';
-// }
-
 // Anime Info DTO (home, detail)
 export interface AnimeInfoDto extends Anime {
   status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
@@ -50,7 +19,7 @@ export interface AnimeInfoDto extends Anime {
 
 // Anime Preview DTO (search)
 export interface AnimePreviewDto extends Anime {
-  animeId: number;
+  episodeId: number;
   status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
   isBreak: boolean;
   isRescheduled: boolean | null;

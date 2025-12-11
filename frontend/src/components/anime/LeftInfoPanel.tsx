@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import '../../styles/customScrollbar.css';
+import '@/styles/customScrollbar.css';
 import { cn } from '@/lib/utils';
 import CharacterList from './CharacterList';
 import { CharacterData } from './CharacterCard';
 import ImageModal from './ImageModal';
-import { useImageCache } from '../../hooks/useImageCache';
+import { useImageCache } from '@/hooks/useImageCache';
 import RightCommentPanel from './RightCommentPanel';
+import { AnimeInfoDto } from '@/types';
+import { format } from 'date-fns';
 
 export type TabOption = 'info' | 'characters' | 'performance' | 'comments';
 
@@ -32,41 +34,7 @@ interface LeftInfoPanelProps {
   isMobile?: boolean;
   animeId?: number; // 댓글 패널용 애니 ID
   rawAnimeData?: any; // 댓글 패널용 원본 데이터
-  anime: {
-    animeId: number;
-    mainThumbnailUrl: string;
-    mainImageUrl?: string; // 배경 이미지용 (optional로 변경)
-    thumbnailImageUrl?: string; // 배경용 썸네일
-    thumbnailPosterUrl?: string; // 포스터용 썸네일
-    titleKor: string;
-    titleJpn?: string;
-    status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
-    dayOfWeek:
-      | 'MON'
-      | 'TUE'
-      | 'WED'
-      | 'THU'
-      | 'FRI'
-      | 'SAT'
-      | 'SUN'
-      | 'SPECIAL'
-      | 'NONE';
-    scheduledAt: string;
-    genre: string;
-    medium: 'TVA' | 'MOVIE' | 'OVA' | 'SPECIAL';
-    year?: number;
-    quarter?: number;
-    seasons?: Array<{ year: number; seasonType: string }>; // 모든 시즌 정보
-    // 추가 정보들
-    studio?: string;
-    director?: string;
-    source?: string;
-    startDate?: string;
-    rating?: string;
-    synopsis?: string;
-    officialSite?: string | Record<string, string>; // 문자열 또는 객체
-    ottDtos?: { ottType: string; watchUrl?: string }[];
-  };
+  anime: AnimeInfoDto;
   characters?: CharacterData[];
 }
 
@@ -347,37 +315,33 @@ export default function LeftInfoPanel({
     );
   }
 
-  // anime 객체가 null일 경우를 대비한 기본값 설정
   const {
-    mainThumbnailUrl = '',
-    mainImageUrl = '',
-    thumbnailImageUrl = '',
-    thumbnailPosterUrl = '',
-    titleKor = '',
-    titleJpn = '',
-    status = '',
-    dayOfWeek = '',
-    scheduledAt = '',
-    genre = '',
-    medium = '',
-    year = 2025,
-    quarter = 2,
-    studio = '',
-    director = '',
-    source = '',
-    startDate = '',
-    rating = '',
-    synopsis = '',
-    officialSite,
-    ottDtos = [],
+    mainThumbnailUrl,
+    mainImageUrl,
+    titleKor,
+    titleOrigin,
+    dayOfWeek,
+    airTime,
+    genre,
+    medium,
+    corp,
+    author,
+    director,
+    synopsis,
+    officalSite: officialSite, // TODO: 응답 오타 수정 후 수정
+    ottDtos,
+    premiereDateTime,
+    minAge,
   } = anime;
+
+  const { year = 2025, seasonType: quarter } = anime.seasonDtos[0];
 
   // 이미지 로딩 상태 관리 (간소화)
   const [currentPosterImage, setCurrentPosterImage] = useState(
     mainThumbnailUrl || '/banners/duckstar-logo.svg'
   );
   const [currentBackgroundImage, setCurrentBackgroundImage] = useState(
-    mainThumbnailUrl || '/banners/duckstar-logo.svg'
+    mainImageUrl || '/banners/duckstar-logo.svg'
   );
   const [backgroundPosition, setBackgroundPosition] = useState('center center');
   const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
@@ -898,11 +862,11 @@ export default function LeftInfoPanel({
             </div>
 
             {/* 일본어 제목 */}
-            {titleJpn && (
+            {titleOrigin && (
               <div
                 className={`relative w-full shrink-0 text-[14.6px] leading-[0] font-medium text-white not-italic [text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] ${isMobile ? 'max-w-none' : 'max-w-[400px]'}`}
               >
-                <p className="leading-[normal]">{titleJpn}</p>
+                <p className="leading-[normal]">{titleOrigin}</p>
               </div>
             )}
 
@@ -911,17 +875,10 @@ export default function LeftInfoPanel({
               className={`relative w-full shrink-0 text-[14.6px] leading-[0] font-medium text-white not-italic [text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] ${isMobile ? 'max-w-none' : 'max-w-[400px]'}`}
             >
               <p className="leading-[normal]">
-                {anime.seasons && anime.seasons.length > 0
-                  ? anime.seasons
-                      .map(
-                        (season) =>
-                          `${season.year}년 ${getSeasonInKorean(season.seasonType)}`
-                      )
-                      .join(' · ')
-                  : `${year}년 ${getQuarterInKorean(quarter)}`}{' '}
-                · {medium === 'MOVIE' ? '극장판' : medium}
+                {`${year}년 ${getSeasonInKorean(quarter)}`} ·{' '}
+                {medium === 'MOVIE' ? '극장판' : medium}
                 {dayOfWeek !== 'NONE' &&
-                  ` · ${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt)}`}
+                  ` · ${getDayInKorean(dayOfWeek)} ${formatAirTime(airTime || '')}`}
               </p>
             </div>
 
@@ -1206,7 +1163,7 @@ export default function LeftInfoPanel({
                           <p
                             className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}
                           >
-                            {studio || ''}
+                            {corp ? corp : '정보 없음'}
                           </p>
                         </div>
                       </div>
@@ -1233,7 +1190,7 @@ export default function LeftInfoPanel({
                           <p
                             className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}
                           >
-                            {director || ''}
+                            {director ? director : '정보 없음'}
                           </p>
                         </div>
                       </div>
@@ -1286,7 +1243,7 @@ export default function LeftInfoPanel({
                           <p
                             className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}
                           >
-                            {source || ''}
+                            {author ? author : '정보 없음'}
                           </p>
                         </div>
                       </div>
@@ -1313,7 +1270,7 @@ export default function LeftInfoPanel({
                           <p
                             className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}
                           >
-                            {startDate || ''}
+                            {format(premiereDateTime, 'yyyy. MM. dd')}
                           </p>
                         </div>
                       </div>
@@ -1337,7 +1294,7 @@ export default function LeftInfoPanel({
                           <p
                             className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}
                           >
-                            {rating || ''}
+                            {minAge ? `${minAge}세 이상` : '전체 관람가'}
                           </p>
                         </div>
                       </div>
