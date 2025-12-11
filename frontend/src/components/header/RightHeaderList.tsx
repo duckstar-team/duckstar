@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { WeekDto } from '@/types/api';
+import { WeekDto } from '@/types';
 
 interface RightHeaderListProps {
   weekDtos: WeekDto[];

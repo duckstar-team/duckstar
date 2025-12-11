@@ -3,7 +3,6 @@
 import React, {
   useState,
   useEffect,
-  useLayoutEffect,
   useCallback,
   useRef,
   useMemo,
@@ -12,35 +11,30 @@ import EpisodeSection from './EpisodeSection';
 import CommentPostForm from './CommentPostForm';
 import ReplyForm from './ReplyForm';
 import CommentHeader from './CommentHeader';
-import CommentsBoard from '../CommentsBoard';
-import Comment from '../Comment';
-import Reply from '../Reply';
-import OpenOrFoldReplies from '../OpenOrFoldReplies';
-import SortingMenu from '../SortingMenu';
-import { SortOption } from '../SortingMenu';
-import { CommentDto, ReplyDto } from '../../api/comments';
-import { getThisWeekRecord } from '../../lib/quarterUtils';
-import { useAuth } from '../../context/AuthContext';
-import { useModal } from '../AppContainer';
-import EpisodeCommentModal from './EpisodeCommentModal';
+import Comment from '@/components/Comment';
+import Reply from '@/components/Reply';
+import OpenOrFoldReplies from '@/components/OpenOrFoldReplies';
+import SortingMenu from '@/components/SortingMenu';
+import { SortOption } from '@/components/SortingMenu';
 import {
-  EpisodeDto,
-  AnimeInfoDto,
-  AnimeStatDto,
-  AnimeHomeDto,
-  ApiResponse,
-} from './types';
-import { useComments } from '../../hooks/useComments';
+  CommentDto,
+  CommentRequestDto,
+  PageInfo,
+  ReplyDto,
+  ReplyRequestDto,
+} from '@/types';
+import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { useAuth } from '@/context/AuthContext';
+import { useModal } from '@/components/AppContainer';
+import EpisodeCommentModal from './EpisodeCommentModal';
+import { useComments } from '@/hooks/useComments';
 import {
   getReplies,
   createReply,
   deleteReply,
   likeReply,
   unlikeReply,
-  ReplyRequestDto,
-  CommentRequestDto,
-  PageInfo,
-} from '../../api/comments';
+} from '@/api/comment';
 
 interface RightCommentPanelProps {
   animeId?: number;

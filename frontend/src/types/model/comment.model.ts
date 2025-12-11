@@ -23,7 +23,7 @@ export interface ReplyDto {
   replyId: number;
   canDeleteThis: boolean;
   isLiked: boolean;
-  replyLikeId: number;
+  replyLikeId?: number;
   likeCount: number;
   authorId: number;
   nickname: string;

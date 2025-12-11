@@ -3,23 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { 
-  getSubmissionCountGroupByIp, 
+import {
+  getSubmissionCountGroupByIp,
   getSubmissionsByWeekAndIp,
   banIp,
   withdrawVotesByWeekAndIp,
   undoWithdrawnSubmissions,
   getAdminLogsOnIpManagement,
-  type SubmissionCountDto,
-  type EpisodeStarDto,
-  type IpManagementLogDto
-} from '@/api/client';
+} from '@/api/admin';
+import { IpManagementLogDto, OttDto, SubmissionCountDto } from '@/types';
 
 // 기존 AnimeData 인터페이스와 컴포넌트는 그대로 유지
-interface OttData {
-  ottType: 'LAFTEL' | 'NETFLIX' | 'WAVVE' | 'TVING' | 'WATCHA' | 'PRIME';
-  watchUrl: string;
-}
 
 interface AnimeData {
   titleKor: string;
@@ -45,17 +39,17 @@ interface AnimeData {
   };
   synopsis?: string;
   mainImage?: File;
-  ottDtos?: OttData[];
+  ottDtos?: OttDto[];
   otherSites?: string[];
 }
-
-type TabType = 'content' | 'submissions';
 
 export default function AdminPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('content');
-  
+  const [activeTab, setActiveTab] = useState<'content' | 'submissions'>(
+    'content'
+  );
+
   // 애니메이션 등록 관련 상태
   const [animeData, setAnimeData] = useState<AnimeData>({
     titleKor: '',
@@ -77,12 +71,12 @@ export default function AdminPage() {
       X: '',
       YOUTUBE: '',
       INSTAGRAM: '',
-      TIKTOK: ''
+      TIKTOK: '',
     },
     synopsis: '',
     mainImage: undefined,
     ottDtos: [],
-    otherSites: ['']
+    otherSites: [''],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -94,14 +88,14 @@ export default function AdminPage() {
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
+
   // IP 관리 로그 관련 상태
   const [logs, setLogs] = useState<IpManagementLogDto[]>([]);
   const [logsPage, setLogsPage] = useState(0);
   const [logsHasNextPage, setLogsHasNextPage] = useState(false);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [isLoadingMoreLogs, setIsLoadingMoreLogs] = useState(false);
-  
+
   // 스크롤 동기화를 위한 ref
   const leftScrollTopRef = useRef<HTMLDivElement>(null);
   const leftScrollBottomRef = useRef<HTMLDivElement>(null);
@@ -121,7 +115,7 @@ export default function AdminPage() {
       setSubmissions([]);
       setSubmissionsPage(0);
       loadSubmissions(0, true);
-      
+
       // 로그도 함께 로드
       setLogs([]);
       setLogsPage(0);
@@ -136,19 +130,32 @@ export default function AdminPage() {
     let isRequestingSubmissions = false;
 
     const handleScroll = async () => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      const { scrollTop, scrollHeight, clientHeight } =
+        document.documentElement;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
-      
+
       // 제출 현황 로드
-      if (isNearBottom && hasNextPage && !isLoadingMore && !isLoadingSubmissions && !isRequestingSubmissions) {
+      if (
+        isNearBottom &&
+        hasNextPage &&
+        !isLoadingMore &&
+        !isLoadingSubmissions &&
+        !isRequestingSubmissions
+      ) {
         isRequestingSubmissions = true;
         setIsLoadingMore(true);
         try {
-          const response = await getSubmissionCountGroupByIp(submissionsPage + 1, 50);
+          const response = await getSubmissionCountGroupByIp(
+            submissionsPage + 1,
+            50
+          );
           if (response.isSuccess) {
-            setSubmissions(prev => [...prev, ...response.result.submissionCountDtos]);
+            setSubmissions((prev) => [
+              ...prev,
+              ...response.result.submissionCountDtos,
+            ]);
             setHasNextPage(response.result.pageInfo.hasNext);
-            setSubmissionsPage(prev => prev + 1);
+            setSubmissionsPage((prev) => prev + 1);
           }
         } catch (error) {
           console.error('제출 현황 조회 실패:', error);
@@ -161,7 +168,13 @@ export default function AdminPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [activeTab, hasNextPage, isLoadingMore, isLoadingSubmissions, submissionsPage]);
+  }, [
+    activeTab,
+    hasNextPage,
+    isLoadingMore,
+    isLoadingSubmissions,
+    submissionsPage,
+  ]);
 
   // 로그 섹션 내부 스크롤 무한 스크롤 처리
   useEffect(() => {
@@ -175,17 +188,26 @@ export default function AdminPage() {
     const handleLogsScroll = async () => {
       const { scrollTop, scrollHeight, clientHeight } = logsScrollContainer;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      
+
       // 로그 로드
-      if (isNearBottom && logsHasNextPage && !isLoadingMoreLogs && !isLoadingLogs && !isRequestingLogs) {
+      if (
+        isNearBottom &&
+        logsHasNextPage &&
+        !isLoadingMoreLogs &&
+        !isLoadingLogs &&
+        !isRequestingLogs
+      ) {
         isRequestingLogs = true;
         setIsLoadingMoreLogs(true);
         try {
           const response = await getAdminLogsOnIpManagement(logsPage + 1, 10);
           if (response.isSuccess) {
-            setLogs(prev => [...prev, ...response.result.ipManagementLogDtos]);
+            setLogs((prev) => [
+              ...prev,
+              ...response.result.ipManagementLogDtos,
+            ]);
             setLogsHasNextPage(response.result.pageInfo.hasNext);
-            setLogsPage(prev => prev + 1);
+            setLogsPage((prev) => prev + 1);
           }
         } catch (error) {
           console.error('로그 조회 실패:', error);
@@ -197,14 +219,22 @@ export default function AdminPage() {
     };
 
     logsScrollContainer.addEventListener('scroll', handleLogsScroll);
-    return () => logsScrollContainer.removeEventListener('scroll', handleLogsScroll);
-  }, [activeTab, logsHasNextPage, isLoadingMoreLogs, isLoadingLogs, logsPage, logs]);
+    return () =>
+      logsScrollContainer.removeEventListener('scroll', handleLogsScroll);
+  }, [
+    activeTab,
+    logsHasNextPage,
+    isLoadingMoreLogs,
+    isLoadingLogs,
+    logsPage,
+    logs,
+  ]);
 
   // 왼쪽 패널 스크롤 동기화 및 너비 동기화
   useEffect(() => {
     const topScroll = leftScrollTopRef.current;
     const bottomScroll = leftScrollBottomRef.current;
-    
+
     if (!topScroll || !bottomScroll) return;
 
     // 테이블의 실제 너비를 계산하여 상단 스크롤 영역의 너비를 맞춤
@@ -250,7 +280,7 @@ export default function AdminPage() {
         if (reset) {
           setLogs(response.result.ipManagementLogDtos);
         } else {
-          setLogs(prev => [...prev, ...response.result.ipManagementLogDtos]);
+          setLogs((prev) => [...prev, ...response.result.ipManagementLogDtos]);
         }
         setLogsHasNextPage(response.result.pageInfo.hasNext);
         setLogsPage(page);
@@ -278,7 +308,10 @@ export default function AdminPage() {
         if (reset) {
           setSubmissions(response.result.submissionCountDtos);
         } else {
-          setSubmissions(prev => [...prev, ...response.result.submissionCountDtos]);
+          setSubmissions((prev) => [
+            ...prev,
+            ...response.result.submissionCountDtos,
+          ]);
         }
         setHasNextPage(response.result.pageInfo.hasNext);
         setSubmissionsPage(page);
@@ -294,19 +327,26 @@ export default function AdminPage() {
     }
   };
 
-  const handleBanIp = async (submission: SubmissionCountDto, e: React.MouseEvent) => {
+  const handleBanIp = async (
+    submission: SubmissionCountDto,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     const id = `${submission.weekId}-${submission.ipHash}`;
-    
+
     if (processingIds.has(id)) return;
-    
+
     const newBanStatus = !submission.isBlocked;
     const action = newBanStatus ? '차단' : '차단 해제';
-    
-    if (!confirm(`정말로 이 IP를 ${action}하시겠습니까?\n주차: ${formatDate(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}`)) {
+
+    if (
+      !confirm(
+        `정말로 이 IP를 ${action}하시겠습니까?\n주차: ${formatDate(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}`
+      )
+    ) {
       return;
     }
-    
+
     // reason 입력 받기
     const reason = prompt(`${action} 사유를 입력해주세요 (최대 300자):`, '');
     if (reason === null) {
@@ -316,28 +356,30 @@ export default function AdminPage() {
       alert('사유는 300자 이하여야 합니다.');
       return;
     }
-    
-    setProcessingIds(prev => new Set(prev).add(id));
-    
+
+    setProcessingIds((prev) => new Set(prev).add(id));
+
     try {
       await banIp(submission.ipHash, newBanStatus, reason);
-      
+
       // 로컬 상태 업데이트
-      setSubmissions(prev => prev.map(s => 
-        s.weekId === submission.weekId && s.ipHash === submission.ipHash
-          ? { ...s, isBlocked: newBanStatus }
-          : s
-      ));
-      
+      setSubmissions((prev) =>
+        prev.map((s) =>
+          s.weekId === submission.weekId && s.ipHash === submission.ipHash
+            ? { ...s, isBlocked: newBanStatus }
+            : s
+        )
+      );
+
       // 로그 새로고침
       await loadLogs(0, true);
-      
+
       setMessage(`IP가 ${action}되었습니다.`);
     } catch (error) {
       console.error('IP 차단 실패:', error);
       setMessage(`IP ${action}에 실패했습니다.`);
     } finally {
-      setProcessingIds(prev => {
+      setProcessingIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
         return next;
@@ -345,26 +387,33 @@ export default function AdminPage() {
     }
   };
 
-  const handleWithdrawVotes = async (submission: SubmissionCountDto, e: React.MouseEvent) => {
+  const handleWithdrawVotes = async (
+    submission: SubmissionCountDto,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     const id = `${submission.weekId}-${submission.ipHash}`;
-    
+
     if (processingIds.has(id)) return;
-    
+
     if (submission.isAllWithdrawn) {
       alert('이미 모든 표가 몰수되었습니다.');
       return;
     }
-    
+
     if (!submission.isBlocked) {
       alert('표 몰수는 차단된 IP에만 가능합니다. 먼저 IP를 차단해주세요.');
       return;
     }
-    
-    if (!confirm(`정말로 이 IP의 모든 표를 몰수하시겠습니까?\n주차: ${formatDate(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}\n제출 수: ${submission.count}`)) {
+
+    if (
+      !confirm(
+        `정말로 이 IP의 모든 표를 몰수하시겠습니까?\n주차: ${formatDate(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}\n제출 수: ${submission.count}`
+      )
+    ) {
       return;
     }
-    
+
     // reason 입력 받기
     const reason = prompt('표 몰수 사유를 입력해주세요 (최대 300자):', '');
     if (reason === null) {
@@ -374,11 +423,15 @@ export default function AdminPage() {
       alert('사유는 300자 이하여야 합니다.');
       return;
     }
-    
-    setProcessingIds(prev => new Set(prev).add(id));
-    
+
+    setProcessingIds((prev) => new Set(prev).add(id));
+
     try {
-      await withdrawVotesByWeekAndIp(submission.weekId, submission.ipHash, reason);
+      await withdrawVotesByWeekAndIp(
+        submission.weekId,
+        submission.ipHash,
+        reason
+      );
       setMessage('표가 성공적으로 몰수되었습니다.');
       // 목록 새로고침
       await loadSubmissions(0, true);
@@ -388,7 +441,7 @@ export default function AdminPage() {
       console.error('표 몰수 실패:', error);
       setMessage('표 몰수에 실패했습니다.');
     } finally {
-      setProcessingIds(prev => {
+      setProcessingIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
         return next;
@@ -396,18 +449,25 @@ export default function AdminPage() {
     }
   };
 
-  const handleUndoWithdraw = async (log: IpManagementLogDto, e: React.MouseEvent) => {
+  const handleUndoWithdraw = async (
+    log: IpManagementLogDto,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
-    
+
     if (!log.isUndoable || !log.weekId || !log.logId) {
       alert('되돌릴 수 없는 작업입니다.');
       return;
     }
-    
-    if (!confirm(`정말로 이 표 몰수를 되돌리시겠습니까?\n주차: ${log.year && log.quarter && log.week ? formatDate(log.year, log.quarter, log.week) : '알 수 없음'}\nIP: ${log.ipHash}`)) {
+
+    if (
+      !confirm(
+        `정말로 이 표 몰수를 되돌리시겠습니까?\n주차: ${log.year && log.quarter && log.week ? formatDate(log.year, log.quarter, log.week) : '알 수 없음'}\nIP: ${log.ipHash}`
+      )
+    ) {
       return;
     }
-    
+
     // reason 입력 받기
     const reason = prompt('되돌리기 사유를 입력해주세요 (최대 300자):', '');
     if (reason === null) {
@@ -417,7 +477,7 @@ export default function AdminPage() {
       alert('사유는 300자 이하여야 합니다.');
       return;
     }
-    
+
     try {
       await undoWithdrawnSubmissions(log.logId, log.weekId, log.ipHash, reason);
       setMessage('표 몰수가 성공적으로 되돌려졌습니다.');
@@ -438,7 +498,7 @@ export default function AdminPage() {
       'submissionDetail',
       'width=800,height=900,scrollbars=yes,resizable=yes'
     );
-    
+
     if (!popup) {
       alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
       return;
@@ -466,15 +526,22 @@ export default function AdminPage() {
     `);
 
     try {
-      const response = await getSubmissionsByWeekAndIp(submission.weekId, submission.ipHash);
+      const response = await getSubmissionsByWeekAndIp(
+        submission.weekId,
+        submission.ipHash
+      );
       if (response.isSuccess) {
         const episodeStars = response.result;
-        
+
         // 정렬 함수 (클라이언트 사이드)
-        const sortData = (data: typeof episodeStars, column: string, direction: 'asc' | 'desc') => {
+        const sortData = (
+          data: typeof episodeStars,
+          column: string,
+          direction: 'asc' | 'desc'
+        ) => {
           return [...data].sort((a, b) => {
             let aValue: any, bValue: any;
-            
+
             switch (column) {
               case 'titleKor':
                 aValue = a.titleKor;
@@ -499,15 +566,13 @@ export default function AdminPage() {
               default:
                 return 0;
             }
-            
+
             if (typeof aValue === 'string' && typeof bValue === 'string') {
-              return direction === 'asc' 
+              return direction === 'asc'
                 ? aValue.localeCompare(bValue, 'ko')
                 : bValue.localeCompare(aValue, 'ko');
             } else {
-              return direction === 'asc'
-                ? aValue - bValue
-                : bValue - aValue;
+              return direction === 'asc' ? aValue - bValue : bValue - aValue;
             }
           });
         };
@@ -519,7 +584,7 @@ export default function AdminPage() {
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
           });
         };
 
@@ -645,24 +710,28 @@ export default function AdminPage() {
                           </tr>
                         </thead>
                         <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
-                          ${episodeStars.length === 0 
-                            ? '<tr><td colSpan="5" class="px-4 py-8 text-center text-sm text-gray-500">제출 내역이 없습니다</td></tr>'
-                            : episodeStars.map((episode, index) => {
-                                return `
+                          ${
+                            episodeStars.length === 0
+                              ? '<tr><td colSpan="5" class="px-4 py-8 text-center text-sm text-gray-500">제출 내역이 없습니다</td></tr>'
+                              : episodeStars
+                                  .map((episode, index) => {
+                                    return `
                                   <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-sm text-gray-900" style="max-width: 300px; word-break: break-word; white-space: normal; min-width: 150px;">${episode.titleKor}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${episode.starScore}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm">
-                                      ${episode.isBlocked 
-                                        ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">차단됨</span>'
-                                        : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">정상</span>'
+                                      ${
+                                        episode.isBlocked
+                                          ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">차단됨</span>'
+                                          : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">정상</span>'
                                       }
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${formatDateTime(episode.createdAt)}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${formatDateTime(episode.updatedAt)}</td>
                                   </tr>
                                 `;
-                              }).join('')
+                                  })
+                                  .join('')
                           }
                         </tbody>
                       </table>
@@ -872,104 +941,118 @@ export default function AdminPage() {
     }
   };
 
-
   // 애니메이션 등록 관련 함수들
   const addOttData = () => {
-    setAnimeData(prev => ({
+    setAnimeData((prev) => ({
       ...prev,
-      ottDtos: [...(prev.ottDtos || []), { ottType: 'NETFLIX', watchUrl: '' }]
+      ottDtos: [...(prev.ottDtos || []), { ottType: 'NETFLIX', watchUrl: '' }],
     }));
   };
 
   const removeOttData = (index: number) => {
-    setAnimeData(prev => ({
+    setAnimeData((prev) => ({
       ...prev,
-      ottDtos: prev.ottDtos?.filter((_, i) => i !== index) || []
+      ottDtos: prev.ottDtos?.filter((_, i) => i !== index) || [],
     }));
   };
 
-  const updateOttData = (index: number, field: keyof OttData, value: string) => {
-    setAnimeData(prev => ({
+  const updateOttData = (index: number, field: keyof OttDto, value: string) => {
+    setAnimeData((prev) => ({
       ...prev,
-      ottDtos: prev.ottDtos?.map((ott, i) => 
-        i === index ? { ...ott, [field]: value } : ott
-      ) || []
+      ottDtos:
+        prev.ottDtos?.map((ott, i) =>
+          i === index ? { ...ott, [field]: value } : ott
+        ) || [],
     }));
   };
 
   const addOtherSite = () => {
-    setAnimeData(prev => ({
+    setAnimeData((prev) => ({
       ...prev,
-      otherSites: [...(prev.otherSites || []), '']
+      otherSites: [...(prev.otherSites || []), ''],
     }));
   };
 
   const removeOtherSite = (index: number) => {
-    setAnimeData(prev => ({
+    setAnimeData((prev) => ({
       ...prev,
-      otherSites: prev.otherSites?.filter((_, i) => i !== index) || []
+      otherSites: prev.otherSites?.filter((_, i) => i !== index) || [],
     }));
   };
 
   const updateOtherSite = (index: number, value: string) => {
-    setAnimeData(prev => ({
+    setAnimeData((prev) => ({
       ...prev,
-      otherSites: prev.otherSites?.map((site, i) => 
-        i === index ? value : site
-      ) || []
+      otherSites:
+        prev.otherSites?.map((site, i) => (i === index ? value : site)) || [],
     }));
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'file') {
       const fileInput = e.target as HTMLInputElement;
       const file = fileInput.files?.[0];
-      setAnimeData(prev => ({
+      setAnimeData((prev) => ({
         ...prev,
-        [name]: file
+        [name]: file,
       }));
     } else if (type === 'number') {
-      setAnimeData(prev => ({
+      setAnimeData((prev) => ({
         ...prev,
-        [name]: value ? parseInt(value) : undefined
+        [name]: value ? parseInt(value) : undefined,
       }));
     } else if (name.startsWith('officialSite.')) {
-      const siteType = name.split('.')[1] as keyof typeof animeData.officialSite;
-      setAnimeData(prev => ({
+      const siteType = name.split(
+        '.'
+      )[1] as keyof typeof animeData.officialSite;
+      setAnimeData((prev) => ({
         ...prev,
         officialSite: {
           ...prev.officialSite,
-          [siteType]: value
-        }
+          [siteType]: value,
+        },
       }));
     } else if (name === 'premiereDate' || name === 'premiereTime') {
-      setAnimeData(prev => {
+      setAnimeData((prev) => {
         const newData = { ...prev, [name]: value };
-        
+
         if (prev.medium !== 'MOVIE') {
           const date = name === 'premiereDate' ? value : prev.premiereDate;
           const time = name === 'premiereTime' ? value : prev.premiereTime;
-          
+
           if (date && time) {
             const fullDateTime = new Date(`${date}T${time}`);
-            const dayOfWeek = fullDateTime.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-            
+            const dayOfWeek = fullDateTime
+              .toLocaleDateString('en-US', { weekday: 'short' })
+              .toUpperCase();
+
             return {
               ...newData,
-              dayOfWeek: dayOfWeek as 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN',
-              airTime: time
+              dayOfWeek: dayOfWeek as
+                | 'MON'
+                | 'TUE'
+                | 'WED'
+                | 'THU'
+                | 'FRI'
+                | 'SAT'
+                | 'SUN',
+              airTime: time,
             };
           }
         }
-        
+
         return newData;
       });
     } else {
-      setAnimeData(prev => ({
+      setAnimeData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
@@ -985,7 +1068,7 @@ export default function AdminPage() {
         setIsLoading(false);
         return;
       }
-      
+
       if (!animeData.medium) {
         setMessage('매체는 필수입니다.');
         setIsLoading(false);
@@ -993,15 +1076,18 @@ export default function AdminPage() {
       }
 
       const formData = new FormData();
-      
+
       formData.append('titleKor', animeData.titleKor.trim());
       formData.append('medium', animeData.medium);
-      
-      if (animeData.titleOrigin) formData.append('titleOrigin', animeData.titleOrigin);
+
+      if (animeData.titleOrigin)
+        formData.append('titleOrigin', animeData.titleOrigin);
       if (animeData.titleEng) formData.append('titleEng', animeData.titleEng);
       if (animeData.airTime) formData.append('airTime', animeData.airTime);
       if (animeData.premiereDate && animeData.premiereTime) {
-        const fullDateTime = new Date(`${animeData.premiereDate}T${animeData.premiereTime}`);
+        const fullDateTime = new Date(
+          `${animeData.premiereDate}T${animeData.premiereTime}`
+        );
         const localDateTimeString = fullDateTime.toISOString().replace('Z', '');
         formData.append('premiereDateTime', localDateTimeString);
       } else if (animeData.premiereDate) {
@@ -1009,23 +1095,27 @@ export default function AdminPage() {
         const localDateTimeString = fullDateTime.toISOString().replace('Z', '');
         formData.append('premiereDateTime', localDateTimeString);
       }
-      if (animeData.dayOfWeek) formData.append('dayOfWeek', animeData.dayOfWeek);
-      if (animeData.totalEpisodes) formData.append('totalEpisodes', animeData.totalEpisodes.toString());
+      if (animeData.dayOfWeek)
+        formData.append('dayOfWeek', animeData.dayOfWeek);
+      if (animeData.totalEpisodes)
+        formData.append('totalEpisodes', animeData.totalEpisodes.toString());
       if (animeData.corp) formData.append('corp', animeData.corp);
       if (animeData.director) formData.append('director', animeData.director);
       if (animeData.genre) formData.append('genre', animeData.genre);
       if (animeData.author) formData.append('author', animeData.author);
-      if (animeData.minAge) formData.append('minAge', animeData.minAge.toString());
+      if (animeData.minAge)
+        formData.append('minAge', animeData.minAge.toString());
       if (animeData.synopsis) formData.append('synopsis', animeData.synopsis);
-      if (animeData.mainImage) formData.append('mainImage', animeData.mainImage);
-      
+      if (animeData.mainImage)
+        formData.append('mainImage', animeData.mainImage);
+
       if (animeData.ottDtos && animeData.ottDtos.length > 0) {
         animeData.ottDtos.forEach((ott, index) => {
           formData.append(`ottDtos[${index}].ottType`, ott.ottType);
           formData.append(`ottDtos[${index}].watchUrl`, ott.watchUrl);
         });
       }
-      
+
       if (animeData.officialSite) {
         const officialSiteMap: Record<string, string> = {};
         Object.entries(animeData.officialSite).forEach(([siteType, url]) => {
@@ -1033,9 +1123,11 @@ export default function AdminPage() {
             officialSiteMap[siteType] = url;
           }
         });
-        
+
         if (animeData.otherSites && animeData.otherSites.length > 0) {
-          const validOtherSites = animeData.otherSites.filter(site => site && site.trim());
+          const validOtherSites = animeData.otherSites.filter(
+            (site) => site && site.trim()
+          );
           if (validOtherSites.length > 0) {
             if (officialSiteMap.OTHERS) {
               officialSiteMap.OTHERS = `${officialSiteMap.OTHERS}, ${validOtherSites.join(', ')}`;
@@ -1044,9 +1136,12 @@ export default function AdminPage() {
             }
           }
         }
-        
+
         if (Object.keys(officialSiteMap).length > 0) {
-          formData.append('officialSiteString', JSON.stringify(officialSiteMap));
+          formData.append(
+            'officialSiteString',
+            JSON.stringify(officialSiteMap)
+          );
         }
       }
 
@@ -1059,11 +1154,13 @@ export default function AdminPage() {
       if (response.ok) {
         try {
           const result = await response.json();
-          setMessage(`애니메이션이 성공적으로 추가되었습니다. (ID: ${result.result})`);
+          setMessage(
+            `애니메이션이 성공적으로 추가되었습니다. (ID: ${result.result})`
+          );
         } catch (jsonError) {
           setMessage('애니메이션이 성공적으로 추가되었습니다.');
         }
-        
+
         setAnimeData({
           titleKor: '',
           titleOrigin: '',
@@ -1084,18 +1181,22 @@ export default function AdminPage() {
             X: '',
             YOUTUBE: '',
             INSTAGRAM: '',
-            TIKTOK: ''
+            TIKTOK: '',
           },
           synopsis: '',
           mainImage: undefined,
-          ottDtos: []
+          ottDtos: [],
         });
       } else {
         try {
           const errorData = await response.json();
-          setMessage(`오류: ${errorData.message || '애니메이션 추가에 실패했습니다.'}`);
+          setMessage(
+            `오류: ${errorData.message || '애니메이션 추가에 실패했습니다.'}`
+          );
         } catch (jsonError) {
-          setMessage(`오류: 애니메이션 추가에 실패했습니다. (상태 코드: ${response.status})`);
+          setMessage(
+            `오류: 애니메이션 추가에 실패했습니다. (상태 코드: ${response.status})`
+          );
         }
       }
     } catch (error) {
@@ -1113,7 +1214,7 @@ export default function AdminPage() {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -1125,9 +1226,9 @@ export default function AdminPage() {
   // 권한이 없는 경우 로딩 표시
   if (!isAuthenticated || user?.role !== 'ADMIN') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
           <p className="mt-2 text-gray-600">권한을 확인하는 중...</p>
         </div>
       </div>
@@ -1135,12 +1236,14 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 overflow-x-hidden">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+    <div className="min-h-screen overflow-x-hidden bg-gray-50 py-8">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* 헤더 */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">관리자 페이지</h1>
-          <p className="mt-2 text-gray-600">애니메이션 데이터와 제출 현황을 관리할 수 있습니다.</p>
+          <p className="mt-2 text-gray-600">
+            애니메이션 데이터와 제출 현황을 관리할 수 있습니다.
+          </p>
         </div>
 
         {/* 탭 */}
@@ -1148,20 +1251,20 @@ export default function AdminPage() {
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('content')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`border-b-2 px-1 py-4 text-sm font-medium ${
                 activeTab === 'content'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
               컨텐츠 관리
             </button>
             <button
               onClick={() => setActiveTab('submissions')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`border-b-2 px-1 py-4 text-sm font-medium ${
                 activeTab === 'submissions'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
               제출 현황 관리
@@ -1171,14 +1274,19 @@ export default function AdminPage() {
 
         {/* 컨텐츠 관리 탭 */}
         {activeTab === 'content' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">새 애니메이션 등록</h2>
-            
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-6 text-xl font-semibold text-gray-900">
+              새 애니메이션 등록
+            </h2>
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 기존 폼 내용은 그대로 유지 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label htmlFor="titleKor" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="titleKor"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     한국어 제목 *
                   </label>
                   <input
@@ -1188,13 +1296,16 @@ export default function AdminPage() {
                     value={animeData.titleKor}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="한국어 제목을 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="titleOrigin" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="titleOrigin"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     원제
                   </label>
                   <input
@@ -1203,13 +1314,16 @@ export default function AdminPage() {
                     name="titleOrigin"
                     value={animeData.titleOrigin}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="원제를 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="titleEng" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="titleEng"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     영어 제목
                   </label>
                   <input
@@ -1218,13 +1332,16 @@ export default function AdminPage() {
                     name="titleEng"
                     value={animeData.titleEng}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="영어 제목을 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="medium" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="medium"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     매체 *
                   </label>
                   <select
@@ -1233,7 +1350,7 @@ export default function AdminPage() {
                     value={animeData.medium}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="TVA">TV 애니메이션</option>
                     <option value="MOVIE">영화</option>
@@ -1241,45 +1358,75 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label htmlFor="premiereDateTime" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="premiereDateTime"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     첫 방영일시
                   </label>
                   <input
                     type="datetime-local"
                     id="premiereDateTime"
                     name="premiereDateTime"
-                    value={animeData.premiereDate && animeData.premiereTime ? `${animeData.premiereDate}T${animeData.premiereTime}` : ''}
+                    value={
+                      animeData.premiereDate && animeData.premiereTime
+                        ? `${animeData.premiereDate}T${animeData.premiereTime}`
+                        : ''
+                    }
                     onChange={(e) => {
                       const [date, time] = e.target.value.split('T');
-                      setAnimeData(prev => {
-                        const newData = { ...prev, premiereDate: date || '', premiereTime: time || '' };
-                        
+                      setAnimeData((prev) => {
+                        const newData = {
+                          ...prev,
+                          premiereDate: date || '',
+                          premiereTime: time || '',
+                        };
+
                         if (prev.medium !== 'MOVIE' && date && time) {
                           const fullDateTime = new Date(`${date}T${time}`);
-                          const dayOfWeek = fullDateTime.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-                          
+                          const dayOfWeek = fullDateTime
+                            .toLocaleDateString('en-US', { weekday: 'short' })
+                            .toUpperCase();
+
                           return {
                             ...newData,
-                            dayOfWeek: dayOfWeek as 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN',
-                            airTime: time
+                            dayOfWeek: dayOfWeek as
+                              | 'MON'
+                              | 'TUE'
+                              | 'WED'
+                              | 'THU'
+                              | 'FRI'
+                              | 'SAT'
+                              | 'SUN',
+                            airTime: time,
                           };
                         }
-                        
+
                         return newData;
                       });
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {animeData.medium === 'MOVIE' ? '극장판은 방영 시간과 요일이 자동 설정되지 않습니다' : '입력 시 방영 요일과 방영 시간이 자동으로 설정됩니다'}
+                  <p className="mt-1 text-xs text-gray-500">
+                    {animeData.medium === 'MOVIE'
+                      ? '극장판은 방영 시간과 요일이 자동 설정되지 않습니다'
+                      : '입력 시 방영 요일과 방영 시간이 자동으로 설정됩니다'}
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="airTime" className="block text-sm font-medium text-gray-700 mb-2">
-                    방영 시간 {animeData.medium === 'MOVIE' && <span className="text-gray-500">(극장판은 해당 없음)</span>}
+                  <label
+                    htmlFor="airTime"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    방영 시간{' '}
+                    {animeData.medium === 'MOVIE' && (
+                      <span className="text-gray-500">
+                        (극장판은 해당 없음)
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -1288,16 +1435,30 @@ export default function AdminPage() {
                     value={animeData.airTime}
                     onChange={handleInputChange}
                     disabled={animeData.medium === 'MOVIE'}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      animeData.medium === 'MOVIE' ? 'bg-gray-100 cursor-not-allowed' : ''
+                    className={`w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                      animeData.medium === 'MOVIE'
+                        ? 'cursor-not-allowed bg-gray-100'
+                        : ''
                     }`}
-                    placeholder={animeData.medium === 'MOVIE' ? '극장판은 해당 없음' : '예: 23:00'}
+                    placeholder={
+                      animeData.medium === 'MOVIE'
+                        ? '극장판은 해당 없음'
+                        : '예: 23:00'
+                    }
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="dayOfWeek" className="block text-sm font-medium text-gray-700 mb-2">
-                    방영 요일 {animeData.medium === 'MOVIE' && <span className="text-gray-500">(극장판은 해당 없음)</span>}
+                  <label
+                    htmlFor="dayOfWeek"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    방영 요일{' '}
+                    {animeData.medium === 'MOVIE' && (
+                      <span className="text-gray-500">
+                        (극장판은 해당 없음)
+                      </span>
+                    )}
                   </label>
                   <select
                     id="dayOfWeek"
@@ -1305,11 +1466,17 @@ export default function AdminPage() {
                     value={animeData.dayOfWeek || ''}
                     onChange={handleInputChange}
                     disabled={animeData.medium === 'MOVIE'}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      animeData.medium === 'MOVIE' ? 'bg-gray-100 cursor-not-allowed' : ''
+                    className={`w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                      animeData.medium === 'MOVIE'
+                        ? 'cursor-not-allowed bg-gray-100'
+                        : ''
                     }`}
                   >
-                    <option value="">{animeData.medium === 'MOVIE' ? '극장판은 해당 없음' : '선택하세요'}</option>
+                    <option value="">
+                      {animeData.medium === 'MOVIE'
+                        ? '극장판은 해당 없음'
+                        : '선택하세요'}
+                    </option>
                     <option value="MON">월요일</option>
                     <option value="TUE">화요일</option>
                     <option value="WED">수요일</option>
@@ -1321,8 +1488,16 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="totalEpisodes" className="block text-sm font-medium text-gray-700 mb-2">
-                    총 화수 {animeData.medium === 'MOVIE' && <span className="text-gray-500">(극장판은 해당 없음)</span>}
+                  <label
+                    htmlFor="totalEpisodes"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    총 화수{' '}
+                    {animeData.medium === 'MOVIE' && (
+                      <span className="text-gray-500">
+                        (극장판은 해당 없음)
+                      </span>
+                    )}
                   </label>
                   <input
                     type="number"
@@ -1331,17 +1506,26 @@ export default function AdminPage() {
                     value={animeData.totalEpisodes || ''}
                     onChange={handleInputChange}
                     disabled={animeData.medium === 'MOVIE'}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      animeData.medium === 'MOVIE' ? 'bg-gray-100 cursor-not-allowed' : ''
+                    className={`w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                      animeData.medium === 'MOVIE'
+                        ? 'cursor-not-allowed bg-gray-100'
+                        : ''
                     }`}
-                    placeholder={animeData.medium === 'MOVIE' ? '극장판은 해당 없음' : '예: 12'}
+                    placeholder={
+                      animeData.medium === 'MOVIE'
+                        ? '극장판은 해당 없음'
+                        : '예: 12'
+                    }
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label htmlFor="corp" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="corp"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     제작사
                   </label>
                   <input
@@ -1350,13 +1534,16 @@ export default function AdminPage() {
                     name="corp"
                     value={animeData.corp}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="제작사를 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="director" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="director"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     감독
                   </label>
                   <input
@@ -1365,13 +1552,16 @@ export default function AdminPage() {
                     name="director"
                     value={animeData.director}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="감독을 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="genre" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="genre"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     장르
                   </label>
                   <input
@@ -1380,13 +1570,16 @@ export default function AdminPage() {
                     name="genre"
                     value={animeData.genre}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="장르를 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="author"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     원작
                   </label>
                   <input
@@ -1395,13 +1588,16 @@ export default function AdminPage() {
                     name="author"
                     value={animeData.author}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="원작을 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="minAge" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="minAge"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
                     시청 등급
                   </label>
                   <select
@@ -1409,7 +1605,7 @@ export default function AdminPage() {
                     name="minAge"
                     value={animeData.minAge || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="">시청 등급을 선택하세요</option>
                     <option value="0">전체이용가</option>
@@ -1422,7 +1618,10 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label htmlFor="synopsis" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="synopsis"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   시놉시스
                 </label>
                 <textarea
@@ -1431,13 +1630,16 @@ export default function AdminPage() {
                   value={animeData.synopsis}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="시놉시스를 입력하세요"
                 />
               </div>
 
               <div>
-                <label htmlFor="mainImage" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="mainImage"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   메인 이미지
                 </label>
                 <input
@@ -1446,16 +1648,18 @@ export default function AdminPage() {
                   name="mainImage"
                   accept="image/*"
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
               {message && (
-                <div className={`p-4 rounded-md ${
-                  message.includes('성공') 
-                    ? 'bg-green-50 text-green-800 border border-green-200' 
-                    : 'bg-red-50 text-red-800 border border-red-200'
-                }`}>
+                <div
+                  className={`rounded-md p-4 ${
+                    message.includes('성공')
+                      ? 'border border-green-200 bg-green-50 text-green-800'
+                      : 'border border-red-200 bg-red-50 text-red-800'
+                  }`}
+                >
                   {message}
                 </div>
               )}
@@ -1464,7 +1668,7 @@ export default function AdminPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-md bg-blue-600 px-6 py-2 font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isLoading ? '등록 중...' : '애니메이션 등록'}
                 </button>
@@ -1477,81 +1681,126 @@ export default function AdminPage() {
         {activeTab === 'submissions' && (
           <div className="space-y-6">
             {/* IP 관리 로그 섹션 */}
-            <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-700 overflow-hidden">
-              <div className="bg-gray-800 px-4 py-2 border-b border-gray-700">
-                <h2 className="text-sm font-semibold text-gray-300">IP 관리 로그</h2>
+            <div className="overflow-hidden rounded-lg border border-gray-700 bg-gray-900 shadow-lg">
+              <div className="border-b border-gray-700 bg-gray-800 px-4 py-2">
+                <h2 className="text-sm font-semibold text-gray-300">
+                  IP 관리 로그
+                </h2>
               </div>
-              
+
               {isLoadingLogs ? (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-400"></div>
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-green-400"></div>
                 </div>
               ) : (
                 <div className="p-4 font-mono text-sm">
-                  <div ref={logsScrollRef} className="space-y-1 max-h-96 overflow-y-auto">
+                  <div
+                    ref={logsScrollRef}
+                    className="max-h-96 space-y-1 overflow-y-auto"
+                  >
                     {logs.length === 0 && !isLoadingLogs ? (
                       <div className="text-gray-500">로그가 없습니다.</div>
                     ) : (
                       logs.map((log, index) => {
-                        const taskTypeText = 
-                          log.taskType === 'BAN' ? '차단'
-                          : log.taskType === 'UNBAN' ? '차단 해제'
-                          : log.taskType === 'WITHDRAW' ? '표 몰수'
-                          : '표 몰수 롤백';
-                        
-                        const weekInfo = log.weekId && log.year && log.quarter && log.week
-                          ? formatDate(log.year, log.quarter, log.week)
-                          : '알 수 없음';
-                        
+                        const taskTypeText =
+                          log.taskType === 'BAN'
+                            ? '차단'
+                            : log.taskType === 'UNBAN'
+                              ? '차단 해제'
+                              : log.taskType === 'WITHDRAW'
+                                ? '표 몰수'
+                                : '표 몰수 롤백';
+
+                        const weekInfo =
+                          log.weekId && log.year && log.quarter && log.week
+                            ? formatDate(log.year, log.quarter, log.week)
+                            : '알 수 없음';
+
                         const dateTime = new Date(log.managedAt);
                         const formattedDate = `${dateTime.getFullYear()}.${String(dateTime.getMonth() + 1).padStart(2, '0')}.${String(dateTime.getDate()).padStart(2, '0')}.${String(dateTime.getHours()).padStart(2, '0')}:${String(dateTime.getMinutes()).padStart(2, '0')}`;
-                        
-                        const taskTypeColor = 
-                          log.taskType === 'BAN' ? 'text-red-400'
-                          : log.taskType === 'UNBAN' ? 'text-green-400'
-                          : log.taskType === 'WITHDRAW' ? 'text-orange-400'
-                          : 'text-blue-400';
-                        
+
+                        const taskTypeColor =
+                          log.taskType === 'BAN'
+                            ? 'text-red-400'
+                            : log.taskType === 'UNBAN'
+                              ? 'text-green-400'
+                              : log.taskType === 'WITHDRAW'
+                                ? 'text-orange-400'
+                                : 'text-blue-400';
+
                         return (
-                          <div key={`log-${index}`} className="text-gray-300 leading-relaxed">
+                          <div
+                            key={`log-${index}`}
+                            className="leading-relaxed text-gray-300"
+                          >
                             {log.profileImageUrl && (
-                              <img 
-                                src={log.profileImageUrl} 
+                              <img
+                                src={log.profileImageUrl}
                                 alt={log.managerNickname}
-                                className="w-4 h-4 rounded-full inline-block align-middle mr-1.5"
+                                className="mr-1.5 inline-block h-4 w-4 rounded-full align-middle"
                               />
                             )}
-                            <span className="text-green-400">{log.managerNickname}</span>
+                            <span className="text-green-400">
+                              {log.managerNickname}
+                            </span>
                             <span className="text-gray-400"> 님이 </span>
-                            <span className="text-cyan-400 font-mono">{log.ipHash}</span>
-                            {log.weekId && log.year && log.quarter && log.week && (
-                              <span className="text-gray-400"> ({weekInfo})</span>
-                            )}
+                            <span className="font-mono text-cyan-400">
+                              {log.ipHash}
+                            </span>
+                            {log.weekId &&
+                              log.year &&
+                              log.quarter &&
+                              log.week && (
+                                <span className="text-gray-400">
+                                  {' '}
+                                  ({weekInfo})
+                                </span>
+                              )}
                             <span className="text-gray-400">에 대해 </span>
-                            <span className={taskTypeColor}>{taskTypeText}</span>
+                            <span className={taskTypeColor}>
+                              {taskTypeText}
+                            </span>
                             <span className="text-gray-400"> 하였습니다. </span>
-                            <span className="text-gray-500">{formattedDate}</span>
+                            <span className="text-gray-500">
+                              {formattedDate}
+                            </span>
                             {log.taskType === 'WITHDRAW' && (
                               <button
                                 onClick={(e) => handleUndoWithdraw(log, e)}
-                                disabled={!log.isUndoable || !log.weekId || !log.logId}
-                                className={`ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full border transition-colors ${
+                                disabled={
+                                  !log.isUndoable || !log.weekId || !log.logId
+                                }
+                                className={`ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
                                   log.isUndoable && log.weekId
-                                    ? 'border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-gray-900 cursor-pointer'
-                                    : 'border-gray-600 text-gray-600 cursor-not-allowed opacity-50'
+                                    ? 'cursor-pointer border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-gray-900'
+                                    : 'cursor-not-allowed border-gray-600 text-gray-600 opacity-50'
                                 }`}
                                 title="되돌리기"
                               >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                <svg
+                                  className="h-3 w-3"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                  />
                                 </svg>
                               </button>
                             )}
                             {log.reason && (
                               <>
                                 <br />
-                                <span className="text-gray-500 ml-4">└ 사유: </span>
-                                <span className="text-gray-400">{log.reason}</span>
+                                <span className="ml-4 text-gray-500">
+                                  └ 사유:{' '}
+                                </span>
+                                <span className="text-gray-400">
+                                  {log.reason}
+                                </span>
                               </>
                             )}
                           </div>
@@ -1559,7 +1808,7 @@ export default function AdminPage() {
                       })
                     )}
                   </div>
-                  
+
                   {isLoadingMoreLogs && (
                     <div className="mt-2 text-gray-500">
                       <span className="animate-pulse">더 불러오는 중...</span>
@@ -1568,130 +1817,169 @@ export default function AdminPage() {
                 </div>
               )}
             </div>
-            
+
             {/* IP별 제출 수 테이블 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">IP별 제출 수</h2>
-              
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                IP별 제출 수
+              </h2>
+
               {isLoadingSubmissions ? (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
                 </div>
               ) : (
                 <>
                   <div className="relative">
                     {/* 가로 스크롤바를 상단에 표시 */}
-                    <div 
+                    <div
                       ref={leftScrollTopRef}
-                      className="overflow-x-auto mb-2" 
+                      className="mb-2 overflow-x-auto"
                       style={{ height: '17px' }}
                     >
                       <div style={{ height: '1px' }}></div>
                     </div>
-                    <div 
-                      ref={leftScrollBottomRef}
-                      className="overflow-x-auto"
-                    >
+                    <div ref={leftScrollBottomRef} className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50 sticky top-0 z-10">
+                        <thead className="sticky top-0 z-10 bg-gray-50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">주차</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-xs">IP Hash</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">제출 수</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">상태</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">첫 제출</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">마지막 제출</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">작업</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                              주차
+                            </th>
+                            <th className="max-w-xs px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                              IP Hash
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                              제출 수
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                              상태
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                              첫 제출
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                              마지막 제출
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                              작업
+                            </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                        {submissions.map((submission, index) => {
-                          // 주차가 변경되는지 확인
-                          const prevSubmission = index > 0 ? submissions[index - 1] : null;
-                          const isWeekChanged = prevSubmission && (
-                            prevSubmission.year !== submission.year ||
-                            prevSubmission.quarter !== submission.quarter ||
-                            prevSubmission.week !== submission.week
-                          );
-                          
-                          // 다음 행이 다른 주차인지 확인 (아래 선 제거용)
-                          const nextSubmission = index < submissions.length - 1 ? submissions[index + 1] : null;
-                          const isNextWeekDifferent = nextSubmission && (
-                            nextSubmission.year !== submission.year ||
-                            nextSubmission.quarter !== submission.quarter ||
-                            nextSubmission.week !== submission.week
-                          );
-                          
-                          return (
-                          <tr
-                            key={`${submission.weekId}-${submission.ipHash}-${index}`}
-                            onClick={() => handleSubmissionClick(submission)}
-                            className={`cursor-pointer hover:bg-gray-50 ${
-                              submission.isBlocked ? 'bg-red-50' : ''
-                            } ${isWeekChanged ? 'border-t-4 border-blue-500' : ''} ${
-                              isNextWeekDifferent ? 'border-b-0' : ''
-                            }`}
-                          >
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                              {formatDate(submission.year, submission.quarter, submission.week)}
-                            </td>
-                            <td className="px-4 py-3 text-sm font-mono text-gray-900 max-w-xs break-words">
-                              {submission.ipHash}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                              {submission.count}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm">
-                              {submission.isBlocked ? (
-                                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                  차단됨
-                                </span>
-                              ) : (
-                                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                  정상
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {formatDateTime(submission.firstCreatedAt)}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {formatDateTime(submission.lastCreatedAt)}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm">
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={(e) => handleBanIp(submission, e)}
-                                  disabled={processingIds.has(`${submission.weekId}-${submission.ipHash}`)}
-                                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
-                                    submission.isBlocked
-                                      ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                      : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                >
-                                  {submission.isBlocked ? '차단 해제' : '차단'}
-                                </button>
-                                <button
-                                  onClick={(e) => handleWithdrawVotes(submission, e)}
-                                  disabled={processingIds.has(`${submission.weekId}-${submission.ipHash}`) || !submission.isBlocked || submission.isAllWithdrawn}
-                                  className="px-4 py-2 text-sm font-medium rounded-md bg-orange-100 text-orange-700 hover:bg-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1"
-                                >
-                                  {submission.isAllWithdrawn ? '✅ 몰수 완료' : '표 몰수'}
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {submissions.map((submission, index) => {
+                            // 주차가 변경되는지 확인
+                            const prevSubmission =
+                              index > 0 ? submissions[index - 1] : null;
+                            const isWeekChanged =
+                              prevSubmission &&
+                              (prevSubmission.year !== submission.year ||
+                                prevSubmission.quarter !== submission.quarter ||
+                                prevSubmission.week !== submission.week);
+
+                            // 다음 행이 다른 주차인지 확인 (아래 선 제거용)
+                            const nextSubmission =
+                              index < submissions.length - 1
+                                ? submissions[index + 1]
+                                : null;
+                            const isNextWeekDifferent =
+                              nextSubmission &&
+                              (nextSubmission.year !== submission.year ||
+                                nextSubmission.quarter !== submission.quarter ||
+                                nextSubmission.week !== submission.week);
+
+                            return (
+                              <tr
+                                key={`${submission.weekId}-${submission.ipHash}-${index}`}
+                                onClick={() =>
+                                  handleSubmissionClick(submission)
+                                }
+                                className={`cursor-pointer hover:bg-gray-50 ${
+                                  submission.isBlocked ? 'bg-red-50' : ''
+                                } ${isWeekChanged ? 'border-t-4 border-blue-500' : ''} ${
+                                  isNextWeekDifferent ? 'border-b-0' : ''
+                                }`}
+                              >
+                                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-900">
+                                  {formatDate(
+                                    submission.year,
+                                    submission.quarter,
+                                    submission.week
+                                  )}
+                                </td>
+                                <td className="max-w-xs px-4 py-3 font-mono text-sm break-words text-gray-900">
+                                  {submission.ipHash}
+                                </td>
+                                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-900">
+                                  {submission.count}
+                                </td>
+                                <td className="px-4 py-3 text-sm whitespace-nowrap">
+                                  {submission.isBlocked ? (
+                                    <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800">
+                                      차단됨
+                                    </span>
+                                  ) : (
+                                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                                      정상
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-500">
+                                  {formatDateTime(submission.firstCreatedAt)}
+                                </td>
+                                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-500">
+                                  {formatDateTime(submission.lastCreatedAt)}
+                                </td>
+                                <td className="px-4 py-3 text-sm whitespace-nowrap">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      onClick={(e) =>
+                                        handleBanIp(submission, e)
+                                      }
+                                      disabled={processingIds.has(
+                                        `${submission.weekId}-${submission.ipHash}`
+                                      )}
+                                      className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                                        submission.isBlocked
+                                          ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                          : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                                    >
+                                      {submission.isBlocked
+                                        ? '차단 해제'
+                                        : '차단'}
+                                    </button>
+                                    <button
+                                      onClick={(e) =>
+                                        handleWithdrawVotes(submission, e)
+                                      }
+                                      disabled={
+                                        processingIds.has(
+                                          `${submission.weekId}-${submission.ipHash}`
+                                        ) ||
+                                        !submission.isBlocked ||
+                                        submission.isAllWithdrawn
+                                      }
+                                      className="flex cursor-pointer items-center gap-1 rounded-md bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 transition-colors hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      {submission.isAllWithdrawn
+                                        ? '✅ 몰수 완료'
+                                        : '표 몰수'}
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                  
+
                   {isLoadingMore && (
                     <div className="mt-4 text-center">
                       <div className="inline-flex items-center gap-2 text-sm text-gray-600">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-600"></div>
                         <span>더 불러오는 중...</span>
                       </div>
                     </div>

@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import VoteModal from './VoteModal';
-import { getCandidateList } from '@/api/client';
-import { CandidateListDto } from '@/types/vote';
+import { getCandidateList } from '@/api/vote';
+import { CandidateListDto } from '@/types';
 import { FaCheckCircle } from 'react-icons/fa';
-import { useModal } from '../AppContainer';
+import { useModal } from '@/components/AppContainer';
 import { searchMatch } from '@/lib/searchUtils';
 
 interface VoteCandidateListProps {

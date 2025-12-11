@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ChartHeader from './ChartHeader';
-import { WeekDto } from '@/types/api';
+import { WeekDto } from '@/types';
 
 interface HeaderListProps {
   weekDtos: WeekDto[];

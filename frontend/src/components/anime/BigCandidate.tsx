@@ -3,10 +3,10 @@
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimePreviewDto } from '@/components/search/types';
+import { LiveCandidateDto } from '@/types';
 import StarSubmissionBox from '@/components/star/StarSubmissionBox';
-import { submitStarVote, withdrawStar } from '@/api/client';
-import { ApiResponseStarInfoDto, StarInfoDto } from '@/types/api';
+import { submitStarVote, withdrawStar } from '@/api/vote';
+import { StarInfoDto, LiveVoteResultDto } from '@/types';
 import { addVotedEpisode } from '@/lib/voteStorage';
 import { Clock } from 'lucide-react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -16,9 +16,10 @@ import {
   differenceInMinutes,
   differenceInSeconds,
 } from 'date-fns';
+import { ApiResponse } from '@/api/http';
 
 interface BigCandidateProps {
-  anime: AnimePreviewDto;
+  anime: LiveCandidateDto;
   className?: string;
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   voteInfo?: { year: number; quarter: number; week: number } | null; // 투표 정보
@@ -395,7 +396,7 @@ export default function BigCandidate({
 
   // API 응답을 별점 분포로 변환하는 함수
   const updateStarDistribution = (
-    response: ApiResponseStarInfoDto,
+    response: ApiResponse<LiveVoteResultDto>,
     userStarScore?: number
   ) => {
     if (response.result.info) {
@@ -485,11 +486,9 @@ export default function BigCandidate({
   const {
     animeId,
     mainThumbnailUrl,
-    status,
     titleKor,
     dayOfWeek,
     scheduledAt,
-    isRescheduled,
     genre,
     medium,
   } = anime;
@@ -681,7 +680,10 @@ export default function BigCandidate({
           <div className="mt-[9px] flex items-center">
             <div className="flex items-center gap-2">
               {(() => {
-                const airTimeText = formatAirTime(scheduledAt, anime.airTime);
+                const airTimeText = formatAirTime(
+                  scheduledAt,
+                  anime.airTime || ''
+                );
                 const isUpcomingCountdown =
                   status === 'UPCOMING' && airTimeText.includes('D-');
 
@@ -721,16 +723,16 @@ export default function BigCandidate({
                   // 일반적인 airTime 표시
                   return (
                     <span className="text-[14px] font-medium text-[#868E96]">
-                      {formatAirTime(scheduledAt, anime.airTime)}
+                      {formatAirTime(scheduledAt, anime.airTime || '')}
                     </span>
                   );
                 }
               })()}
-              {isRescheduled && (
+              {/* {isRescheduled && (
                 <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-600">
                   편성 변경
                 </span>
-              )}
+              )} */}
             </div>
             {/* 투표 남은 시간 배지 */}
             <div className="w-[7px]"></div>

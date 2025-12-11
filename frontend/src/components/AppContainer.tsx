@@ -13,7 +13,8 @@ import Sidebar from '@/components/Sidebar';
 import ThinNav from '@/components/ThinNav';
 import ThinNavDetail from '@/components/ThinNavDetail';
 import LoginModal from '@/components/common/LoginModal';
-import { WeekDto, getWeeks } from '@/api/chart';
+import { getWeeks } from '@/api/chart';
+import { WeekDto } from '@/types';
 
 // 모달 상태를 관리하는 Context
 interface ModalContextType {

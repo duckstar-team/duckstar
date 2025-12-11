@@ -9,10 +9,16 @@ import HomeChart from '@/components/chart/HomeChart';
 import RightHeaderList from '@/components/header/RightHeaderList';
 import RightPanel from '@/components/chart/RightPanel';
 import { homeApi } from '@/api/home';
-import { WeekDto, RankPreviewDto, DuckstarRankPreviewDto } from '@/types/api';
+import {
+  WeekDto,
+  RankPreviewDto,
+  DuckstarRankPreviewDto,
+  HomeDto,
+} from '@/types';
 import { useSimpleScrollRestoration } from '@/hooks/useSimpleScrollRestoration';
 import { queryConfig } from '@/lib/queryConfig';
 import React from 'react';
+import { ApiResponse } from '@/api/http';
 
 export default function HomeClient() {
   // 홈페이지에서 모바일 뷰포트 사용을 위한 설정
@@ -96,7 +102,7 @@ export default function HomeClient() {
     data: homeData,
     error,
     isLoading,
-  } = useQuery({
+  } = useQuery<ApiResponse<HomeDto>>({
     queryKey: ['home'],
     queryFn: () => homeApi.getHome(10),
     ...queryConfig.home, // 통일된 홈 데이터 캐싱 전략 적용

@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { AnimePreviewDto } from '@/components/search/types';
+import { AnimePreviewDto } from '@/types';
 import { useNavigation } from '@/hooks/useNavigation';
 
 interface AnimeCardProps {
@@ -539,7 +539,10 @@ export default function AnimeCard({
           >
             <div className="flex items-center gap-2">
               {(() => {
-                const airTimeText = formatAirTime(scheduledAt, anime.airTime);
+                const airTimeText = formatAirTime(
+                  scheduledAt,
+                  anime.airTime || ''
+                );
                 const isUpcomingCountdown =
                   status === 'UPCOMING' && airTimeText.includes('D-');
 
@@ -580,11 +583,11 @@ export default function AnimeCard({
                   return (
                     <span className="text-[14px] font-medium text-[#868E96]">
                       {medium === 'MOVIE'
-                        ? formatAirTime(scheduledAt, anime.airTime) // 극장판은 요일 없이 시간만 표시
+                        ? formatAirTime(scheduledAt, anime.airTime || '') // 극장판은 요일 없이 시간만 표시
                         : medium === 'TVA' &&
                             (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL')
-                          ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime)}`
-                          : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime)}`}
+                          ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime || '')}`
+                          : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime || '')}`}
                     </span>
                   );
                 }
@@ -638,7 +641,10 @@ export default function AnimeCard({
           <div className="mt-[5px] flex items-center justify-between">
             {/* D-DAY 배지 */}
             {(() => {
-              const airTimeText = formatAirTime(scheduledAt, anime.airTime);
+              const airTimeText = formatAirTime(
+                scheduledAt,
+                anime.airTime || ''
+              );
               const isUpcomingCountdown =
                 status === 'UPCOMING' && airTimeText.includes('D-');
 

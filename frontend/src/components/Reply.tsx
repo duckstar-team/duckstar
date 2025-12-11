@@ -1,7 +1,7 @@
 import React from 'react';
-import { ReplyDto } from '@/api/comments';
+import { ReplyDto } from '@/types';
 import VoteCount from './VoteCount';
-import { useLazyImage } from '../hooks/useLazyImage';
+import { useLazyImage } from '@/hooks/useLazyImage';
 
 // 시간 포맷팅 유틸리티 함수
 const formatTimeAgo = (dateString: string): string => {

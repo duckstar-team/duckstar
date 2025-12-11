@@ -96,7 +96,7 @@ export async function submitVoteForm(voteData: Record<string, unknown>) {
 
 // 실시간 투표 리스트 조회 API
 export async function getStarCandidates() {
-  return apiCall<LiveCandidateListDto[]>('/api/v1/vote/star');
+  return apiCall<LiveCandidateListDto>('/api/v1/vote/star');
 }
 
 // 주차 후보 목록 조회 API

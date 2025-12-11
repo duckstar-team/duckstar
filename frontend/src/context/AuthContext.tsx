@@ -1,7 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getUserInfo, logout, withdraw, withdrawKakao, withdrawGoogle, withdrawNaver } from '../api/client';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import {
+  logout,
+  withdraw,
+  withdrawKakao,
+  withdrawGoogle,
+  withdrawNaver,
+} from '@/api/auth';
+import { getCurrentUser } from '@/api/member';
 import { setUserId } from '@/utils/gtag';
 
 interface User {
@@ -43,10 +56,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-  const [tokenExpiryTimer, setTokenExpiryTimer] = useState<NodeJS.Timeout | null>(null);
+  const [tokenExpiryTimer, setTokenExpiryTimer] =
+    useState<NodeJS.Timeout | null>(null);
   const [lastActivityTime, setLastActivityTime] = useState<number>(Date.now());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null);
+  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   const resetAuthState = () => {
     setUser(null);
@@ -71,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleUserActivity = async () => {
     const now = Date.now();
     setLastActivityTime(now);
-    
+
     // 비활성 타이머 재설정
     setupInactivityTimer();
   };
@@ -82,14 +98,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
     }
-    
+
     const inactivityTime = 60 * 60 * 1000; // 1시간
-    
+
     const timer = setTimeout(async () => {
       // 1시간 비활성 시 로그아웃
       logoutUser();
     }, inactivityTime);
-    
+
     setInactivityTimer(timer);
   };
 
@@ -103,10 +119,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // 운영 환경: 50분 후 자동 토큰 갱신 시도
     const refreshTime = 50 * 60 * 1000; // 50분
     const logoutTime = 60 * 60 * 1000; // 1시간
-    
+
     setTimeout(async () => {
       const refreshSuccess = await attemptTokenRefresh();
-      
+
       if (!refreshSuccess) {
         // 갱신 실패 시에만 사용자에게 알림
         if (typeof window !== 'undefined' && (window as any).showToast) {
@@ -135,7 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     setIsRefreshing(true);
-    
+
     try {
       const response = await fetch('/api/v1/auth/token/refresh', {
         method: 'POST',
@@ -177,7 +193,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // 수동 로그인의 경우 API에서 사용자 정보 가져오기
       setIsLoading(true);
       try {
-        const userData = await getUserInfo();
+        const userData = await getCurrentUser();
         const user = userData.result || userData;
         setUser(user as User);
         setIsAuthenticated(true);
@@ -187,7 +203,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUserId((user as User).id);
         // 토큰 만료 타이머 설정
         setupTokenExpiryTimer();
-        
+
         // 비활성 감지 타이머 설정
         setupInactivityTimer();
       } catch (error) {
@@ -205,15 +221,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         method: 'POST',
         credentials: 'include',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const timeLeftSec = data.result; // ApiResponseLong의 result 값
-        
+
         if (timeLeftSec > 0) {
           // 중복 투표 방지 시간을 localStorage에 저장
-          const blockUntil = Date.now() + (timeLeftSec * 1000);
-          localStorage.setItem('duckstar_vote_block_until', blockUntil.toString());
+          const blockUntil = Date.now() + timeLeftSec * 1000;
+          localStorage.setItem(
+            'duckstar_vote_block_until',
+            blockUntil.toString()
+          );
         } else {
           // 시간이 0이면 저장된 값 삭제
           localStorage.removeItem('duckstar_vote_block_until');
@@ -256,7 +275,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await withdraw();
       }
     } catch (error) {
-console.error('회원탈퇴 실패:', error);
+      console.error('회원탈퇴 실패:', error);
       throw error; // 에러를 다시 던져서 UI에서 처리할 수 있도록 함
     } finally {
       // localStorage에서 토큰 제거
@@ -274,7 +293,7 @@ console.error('회원탈퇴 실패:', error);
   // 프로필 설정 완료 후 인증 상태 재확인
   const refreshAuthStatus = async () => {
     try {
-      const userData = await getUserInfo();
+      const userData = await getCurrentUser();
       const user = userData.result || userData;
       setUser(user as User);
       setIsAuthenticated(true);
@@ -291,20 +310,27 @@ console.error('회원탈퇴 실패:', error);
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
+    const activityEvents = [
+      'mousedown',
+      'mousemove',
+      'keypress',
+      'scroll',
+      'touchstart',
+      'click',
+    ];
+
     const handleActivity = () => {
       handleUserActivity();
     };
 
     // 이벤트 리스너 등록
-    activityEvents.forEach(event => {
+    activityEvents.forEach((event) => {
       document.addEventListener(event, handleActivity, true);
     });
 
     return () => {
       // 이벤트 리스너 정리
-      activityEvents.forEach(event => {
+      activityEvents.forEach((event) => {
         document.removeEventListener(event, handleActivity, true);
       });
     };
@@ -317,59 +343,65 @@ console.error('회원탈퇴 실패:', error);
       // AUTH_STATUS 쿠키 체크 (백엔드에서 설정한 인증 상태 쿠키)
       const hasAuthStatus = document.cookie.includes('AUTH_STATUS=');
       const hasLoginState = document.cookie.includes('LOGIN_STATE=');
-      
+
       if (!hasAuthStatus && !hasLoginState) {
         setHasCheckedAuth(true);
         setIsLoading(false);
         return;
       }
-      
+
       setIsLoading(true);
       setHasCheckedAuth(true);
-      
+
       try {
-        const userData = await getUserInfo();
+        const userData = await getCurrentUser();
         const user = userData.result || userData;
         setUser(user as User);
         setIsAuthenticated(true);
         // GA4 사용자 ID 설정
         setUserId((user as User).id);
-        
+
         // OAuth 콜백 처리 (LOGIN_STATE 쿠키가 있을 때만)
         const hasLoginState = document.cookie.includes('LOGIN_STATE=');
         if (hasLoginState) {
           try {
             const loginStateCookie = document.cookie
               .split('; ')
-              .find(row => row.startsWith('LOGIN_STATE='));
-              
+              .find((row) => row.startsWith('LOGIN_STATE='));
+
             if (loginStateCookie) {
               const encoded = loginStateCookie.split('=')[1];
               const decoded = atob(encoded);
               const loginState = JSON.parse(decoded);
-              
+
               // returnUrl 처리
               const returnUrl = sessionStorage.getItem('returnUrl');
               if (returnUrl) {
-                if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
+                if (
+                  loginState.isNewUser &&
+                  window.location.pathname !== '/profile-setup'
+                ) {
                   window.location.href = '/profile-setup';
                   return;
                 }
-                
+
                 if (loginState.isMigrated) {
                   sessionStorage.setItem('migration_completed', 'true');
                 }
-                
+
                 sessionStorage.removeItem('returnUrl');
                 window.location.href = returnUrl;
                 return;
               }
-              
+
               if (loginState.isMigrated) {
                 sessionStorage.setItem('migration_completed', 'true');
               }
-              
-              if (loginState.isNewUser && window.location.pathname !== '/profile-setup') {
+
+              if (
+                loginState.isNewUser &&
+                window.location.pathname !== '/profile-setup'
+              ) {
                 window.location.href = '/profile-setup';
                 return;
               }
@@ -378,7 +410,6 @@ console.error('회원탈퇴 실패:', error);
             // LOGIN_STATE 쿠키 파싱 실패 시 조용히 처리
           }
         }
-        
       } catch (error) {
         resetAuthState();
       } finally {
@@ -388,7 +419,6 @@ console.error('회원탈퇴 실패:', error);
 
     checkAuthStatus();
   }, []);
-
 
   const contextValue: AuthContextType = {
     isAuthenticated,
@@ -402,8 +432,6 @@ console.error('회원탈퇴 실패:', error);
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };

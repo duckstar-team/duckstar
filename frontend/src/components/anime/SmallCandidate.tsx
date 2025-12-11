@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ApiResponseStarInfoDto, StarInfoDto } from '@/types/api';
+import { StarInfoDto, LiveVoteResultDto, AnimePreviewDto } from '@/types';
 import StarRatingSimple from '@/components/StarRatingSimple';
 import StarDistributionChart from '@/components/chart/StarDistributionChart';
-import { submitStarVote, withdrawStar } from '@/api/client';
+import { submitStarVote, withdrawStar } from '@/api/vote';
 import { addVotedEpisode } from '@/lib/voteStorage';
-import { AnimePreviewDto } from '@/types/api';
 import { Clock } from 'lucide-react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
@@ -16,6 +15,7 @@ import {
   differenceInMinutes,
   differenceInSeconds,
 } from 'date-fns';
+import { ApiResponse } from '@/api/http';
 
 interface SmallCandidateProps {
   anime: AnimePreviewDto;
@@ -399,7 +399,7 @@ export default function SmallCandidate({
 
   // 별점 분포 업데이트 함수 (BigCandidate와 동일)
   const updateStarDistribution = (
-    response: ApiResponseStarInfoDto,
+    response: ApiResponse<LiveVoteResultDto>,
     userStarScore?: number
   ) => {
     if (response.result.info) {

@@ -10,17 +10,16 @@ import React, {
 } from 'react';
 import { X } from 'lucide-react';
 import { FaCheckCircle } from 'react-icons/fa';
-import StarRatingSimple from '../StarRatingSimple';
+import StarRatingSimple from '@/components/StarRatingSimple';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
-import CommentPostForm from '../anime/CommentPostForm';
-import { getCandidate, submitVoteForm } from '@/api/client';
-import { CandidateDto } from '@/types/vote';
+import CommentPostForm from '@/components/anime/CommentPostForm';
+import { getCandidate, submitVoteForm } from '@/api/vote';
+import { CandidateDto } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import StarDetailPopup from '@/components/star/StarDetailPopup';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useModal } from '@/components/AppContainer';
-import { ApiResponse } from '@/types/api';
 
 interface VoteModalProps {
   episodeId: number;
@@ -334,12 +333,11 @@ export default function VoteModal({
                     alt={titleKor}
                     className="h-48 w-32 rounded-lg object-cover"
                   />
-                  {localVoterCount > 0 &&
-                    (phase === 'form' && (
-                      <span className="absolute top-1 left-1 rounded-md bg-gray-800 px-2 py-1 text-xs font-semibold text-white">
-                        {localVoterCount}명 참여
-                      </span>
-                    ))}
+                  {localVoterCount > 0 && phase === 'form' && (
+                    <span className="absolute top-1 left-1 rounded-md bg-gray-800 px-2 py-1 text-xs font-semibold text-white">
+                      {localVoterCount}명 참여
+                    </span>
+                  )}
                 </Link>
                 <Link
                   href={`/animes/${candidate?.animeId}`}

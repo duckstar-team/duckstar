@@ -5,8 +5,8 @@ import BigCandidate from '@/components/anime/BigCandidate';
 import SmallCandidate from '@/components/anime/SmallCandidate';
 import AnimeCard from '@/components/anime/AnimeCard';
 import { searchMatch, extractChosung } from '@/lib/searchUtils';
-import { getStarCandidates } from '@/api/client';
-import { LiveCandidateDto } from '@/types/api';
+import { getStarCandidates } from '@/api/vote';
+import { AnimePreviewDto, LiveCandidateDto } from '@/types';
 import {
   getVotedEpisodes,
   addVotedEpisodeWithTTL,
@@ -15,7 +15,6 @@ import {
 import { useModal } from '@/components/AppContainer';
 import { useAuth } from '@/context/AuthContext';
 import { getUpcomingAnimes } from '@/api/search';
-import { AnimePreviewDto } from '@/types/api';
 import VoteBanner from './VoteBanner';
 import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
@@ -354,10 +353,7 @@ export default function VotePageContent() {
           viewMode === 'large' ? (
             <BigCandidate
               key={candidate.episodeId}
-              anime={{
-                ...candidate,
-                ottDtos: [],
-              }}
+              anime={candidate}
               isCurrentSeason={true}
               voteInfo={{
                 year: candidate.year,
@@ -373,7 +369,15 @@ export default function VotePageContent() {
           ) : (
             <SmallCandidate
               key={candidate.episodeId}
-              anime={{ ...candidate, ottDtos: [] } as AnimePreviewDto}
+              anime={
+                {
+                  ...candidate,
+                  ottDtos: [],
+                  status: 'NOW_SHOWING' as const,
+                  isBreak: false,
+                  isRescheduled: null,
+                } as AnimePreviewDto
+              }
               isCurrentSeason={true}
               voteInfo={{
                 year: candidate.year,

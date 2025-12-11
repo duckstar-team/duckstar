@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import Winner from '@/components/chart/Winner';
 import RankCard from '@/components/chart/RankCard';
 import AbroadRankCard from '@/components/chart/AbroadRankCard';
-import { getChartData, ChartAnimeData, getWeeks } from '@/api/chart';
+import { getChartData, getWeeks } from '@/api/chart';
 import { queryConfig } from '@/lib/queryConfig';
 import { useChart } from '@/components/AppContainer';
 

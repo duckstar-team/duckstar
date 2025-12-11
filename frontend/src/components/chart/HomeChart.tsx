@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import HomeRankInfo from './HomeRankInfo';
 import HomeRankInfoMobile from './HomeRankInfoMobile';
-import { DuckstarRankPreviewDto, WeekDto } from '@/types/api';
+import { DuckstarRankPreviewDto, WeekDto } from '@/types';
 
 interface HomeChartProps {
   duckstarRankPreviews: DuckstarRankPreviewDto[];
@@ -167,7 +167,6 @@ export default function HomeChart({
                           medal={getMedalType(rank)}
                           type={type}
                           contentId={contentId}
-                          isPrepared={true}
                         />
                       </div>
 

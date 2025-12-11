@@ -13,7 +13,7 @@ import type {
   AnimePreviewDto,
   AnimePreviewListDto,
   AnimeSearchListDto,
-} from '@/types/api';
+} from '@/types';
 import { extractChosung } from '@/lib/searchUtils';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';

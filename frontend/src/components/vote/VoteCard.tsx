@@ -1,7 +1,7 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import VoteToggle from './VoteToggle';
-import { WeekDto } from '@/types/api';
+import { WeekDto } from '@/types';
 import { getSeasonFromDate, getSeasonInKorean } from '@/lib/utils';
 
 interface VoteCardProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CommentDto, ReplyDto } from '@/api/comments';
+import { CommentDto, ReplyDto } from '@/types';
 import SortingMenu, { SortOption } from './SortingMenu';
 import Comment from './Comment';
 import Reply from './Reply';
@@ -29,18 +29,20 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
   onCommentDelete,
   onReplyLike,
   onReplyReply,
-  onReplyDelete
+  onReplyDelete,
 }) => {
-  const [expandedReplies, setExpandedReplies] = useState<{ [commentId: number]: boolean }>({});
-  const [activeReplyForm, setActiveReplyForm] = useState<{ 
-    type: 'comment' | 'reply', 
-    targetId: number 
+  const [expandedReplies, setExpandedReplies] = useState<{
+    [commentId: number]: boolean;
+  }>({});
+  const [activeReplyForm, setActiveReplyForm] = useState<{
+    type: 'comment' | 'reply';
+    targetId: number;
   } | null>(null);
 
   const handleToggleReplies = (commentId: number) => {
-    setExpandedReplies(prev => ({
+    setExpandedReplies((prev) => ({
       ...prev,
-      [commentId]: !prev[commentId]
+      [commentId]: !prev[commentId],
     }));
   };
 
@@ -54,14 +56,17 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
 
   const handleReplyClick = (type: 'comment' | 'reply', targetId: number) => {
     // 이미 같은 대상에 대한 답글 폼이 활성화되어 있으면 닫기
-    if (activeReplyForm?.type === type && activeReplyForm.targetId === targetId) {
+    if (
+      activeReplyForm?.type === type &&
+      activeReplyForm.targetId === targetId
+    ) {
       setActiveReplyForm(null);
     } else {
       setActiveReplyForm({ type, targetId });
     }
   };
 
-  const handleReplySubmit = (content: string) => {
+  const handleReplySubmit = async (content: string) => {
     if (activeReplyForm) {
       if (activeReplyForm.type === 'comment') {
         onCommentReply?.(activeReplyForm.targetId);
@@ -78,9 +83,9 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
 
   // 답글 작성 폼 컴포넌트
   const ReplyForm = () => (
-    <div className="w-full h-auto flex flex-col justify-center items-end gap-2.5">
-      <div className="w-full h-auto px-[11px] pt-[10px] pb-[14px] bg-[#F8F9FA] flex flex-col justify-center items-end gap-[10px] overflow-hidden">
-        <CommentPostForm 
+    <div className="flex h-auto w-full flex-col items-end justify-center gap-2.5">
+      <div className="flex h-auto w-full flex-col items-end justify-center gap-[10px] overflow-hidden bg-[#F8F9FA] px-[11px] pt-[10px] pb-[14px]">
+        <CommentPostForm
           onSubmit={handleReplySubmit}
           onImageUpload={(file) => {
             // 이미지 업로드 기능은 현재 구현되지 않음
@@ -93,56 +98,58 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
 
   // 통합 리스트 생성 (댓글 + 답글)
   const createUnifiedList = () => {
-    const unifiedList: Array<{ type: 'comment' | 'reply' | 'toggle'; data: CommentDto | ReplyDto; parentCommentId?: number; replyCount?: number }> = [];
-    
-    comments.forEach(comment => {
+    const unifiedList: Array<{
+      type: 'comment' | 'reply' | 'toggle';
+      data: CommentDto | ReplyDto;
+      parentCommentId?: number;
+      replyCount?: number;
+    }> = [];
+
+    comments.forEach((comment) => {
       // 메인 댓글 추가
       unifiedList.push({ type: 'comment', data: comment });
-      
+
       // 답글들 추가 (펼쳐진 경우만)
       const commentReplies = replies[comment.commentId] || [];
       const isExpanded = isRepliesExpanded(comment.commentId);
       const replyCount = getReplyCount(comment.commentId);
-      
+
       if (isExpanded && commentReplies.length > 0) {
-        commentReplies.forEach(reply => {
-          unifiedList.push({ 
-            type: 'reply', 
-            data: reply, 
-            parentCommentId: comment.commentId 
+        commentReplies.forEach((reply) => {
+          unifiedList.push({
+            type: 'reply',
+            data: reply,
+            parentCommentId: comment.commentId,
           });
         });
       }
-      
+
       // 답글 펼치기/접기 버튼 추가 (답글이 있는 경우)
       if (replyCount > 0) {
-        unifiedList.push({ 
-          type: 'toggle', 
-          data: comment, 
+        unifiedList.push({
+          type: 'toggle',
+          data: comment,
           parentCommentId: comment.commentId,
-          replyCount: replyCount
+          replyCount: replyCount,
         });
       }
     });
-    
+
     return unifiedList;
   };
 
   const unifiedList = createUnifiedList();
 
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="flex h-full w-full flex-col bg-white">
       {/* Sticky 정렬 메뉴 */}
-      <div className="sticky top-0 z-10 bg-white pl-3.5 py-2 border-b border-gray-100">
-        <SortingMenu 
-          currentSort={currentSort}
-          onSortChange={onSortChange}
-        />
+      <div className="sticky top-0 z-10 border-b border-gray-100 bg-white py-2 pl-3.5">
+        <SortingMenu currentSort={currentSort} onSortChange={onSortChange} />
       </div>
-      
+
       {/* 댓글 목록 */}
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full flex flex-col justify-start items-start">
+        <div className="flex w-full flex-col items-start justify-start">
           {unifiedList.map((item, index) => {
             if (item.type === 'comment') {
               const comment = item.data as CommentDto;
@@ -152,13 +159,16 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
                     <Comment
                       comment={comment}
                       onLike={onCommentLike}
-                      onReply={() => handleReplyClick('comment', comment.commentId)}
+                      onReply={() =>
+                        handleReplyClick('comment', comment.commentId)
+                      }
                       onDelete={onCommentDelete}
                     />
                   </div>
-                  {activeReplyForm?.type === 'comment' && activeReplyForm.targetId === comment.commentId && (
-                    <ReplyForm />
-                  )}
+                  {activeReplyForm?.type === 'comment' &&
+                    activeReplyForm.targetId === comment.commentId && (
+                      <ReplyForm />
+                    )}
                 </React.Fragment>
               );
             } else if (item.type === 'reply') {
@@ -173,9 +183,8 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
                       onDelete={onReplyDelete}
                     />
                   </div>
-                  {activeReplyForm?.type === 'reply' && activeReplyForm.targetId === reply.replyId && (
-                    <ReplyForm />
-                  )}
+                  {activeReplyForm?.type === 'reply' &&
+                    activeReplyForm.targetId === reply.replyId && <ReplyForm />}
                 </React.Fragment>
               );
             } else if (item.type === 'toggle') {

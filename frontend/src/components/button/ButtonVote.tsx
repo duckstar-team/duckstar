@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { WeekDto } from '@/types/api';
+import { WeekDto } from '@/types';
 
 interface ButtonVoteProps {
   weekDtos: WeekDto[];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommentDto } from '@/api/comments';
+import { CommentDto } from '@/types';
 import VoteCount from './VoteCount';
 import { useLazyImage } from '../hooks/useLazyImage';
 
