@@ -1,6 +1,5 @@
 import {
   LiveCandidateListDto,
-  VoteReceiptDto,
   CandidateDto,
   CandidateListDto,
   LiveVoteResultDto,
@@ -59,32 +58,6 @@ async function generateDeviceFingerprint(): Promise<string> {
     }
   }
 }
-
-// Vote API functions
-// export async function getVoteCandidates() {
-//   return apiCall<AnimeCandidateListDto[]>('/api/v1/vote/anime');
-// }
-
-// export async function getVoteStatus() {
-//   return apiCall<AnimeVoteStatusDto>('/api/v1/vote/anime/status');
-// }
-
-export async function submitVote(voteData: Record<string, unknown>) {
-  return apiCall<VoteReceiptDto>('/api/v1/vote/anime', {
-    method: 'POST',
-    body: JSON.stringify(voteData),
-  });
-}
-
-// export async function revoteAnime(
-//   submissionId: number,
-//   voteData: Record<string, unknown>
-// ) {
-//   return apiCall<void>(`/api/v1/vote/anime/${submissionId}`, {
-//     method: 'POST',
-//     body: JSON.stringify(voteData),
-//   });
-// }
 
 // 별점 투표/수정 API (비로그인 허용)
 export async function submitStarVote(

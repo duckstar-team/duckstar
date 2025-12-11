@@ -8,4 +8,5 @@ export * from './dto/user.dto';
 export * from './dto/vote.dto';
 
 // Model
+export * from './model/anime.model';
 export * from './model/comment.model';

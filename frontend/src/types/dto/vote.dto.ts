@@ -1,4 +1,4 @@
-import { StarInfoDto, VoteResultDto, WeekDto } from './anime.dto';
+import { Anime, StarInfoDto, VoteResultDto, WeekDto } from '@/types';
 
 // 실시간 투표 후보자 목록 DTO
 export interface LiveCandidateListDto {
@@ -8,28 +8,14 @@ export interface LiveCandidateListDto {
 }
 
 // 실시간 투표 후보자 DTO
-export interface LiveCandidateDto {
+export interface LiveCandidateDto extends Anime {
   year: number;
   quarter: number;
   week: number;
   episodeId: number;
   animeId: number;
   mainThumbnailUrl: string;
-  titleKor: string;
-  dayOfWeek:
-    | 'MON'
-    | 'TUE'
-    | 'WED'
-    | 'THU'
-    | 'FRI'
-    | 'SAT'
-    | 'SUN'
-    | 'SPECIAL'
-    | 'NONE';
   scheduledAt: string;
-  airTime: string;
-  genre: string;
-  medium: 'TVA' | 'MOVIE';
   result: VoteResultDto;
 }
 

@@ -15,6 +15,25 @@ export interface WeekDto {
   endDate: string;
 }
 
+// Day of Week Enum
+export type DayOfWeek =
+  | 'UPCOMING'
+  | 'SUN'
+  | 'MON'
+  | 'TUE'
+  | 'WED'
+  | 'THU'
+  | 'FRI'
+  | 'SAT'
+  | 'SPECIAL'
+  | 'NONE';
+
+// Season DTO
+export interface SeasonDto {
+  year: number;
+  seasonType: 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER';
+}
+
 // OTT DTO
 export interface OttDto {
   ottType: 'LAFTEL' | 'NETFLIX' | 'WAVVE' | 'TVING' | 'WATCHA' | 'PRIME';

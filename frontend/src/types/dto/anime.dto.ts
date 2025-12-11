@@ -1,65 +1,67 @@
-import { MedalPreviewDto, OttDto, WeekDto } from '@/types';
+import { Anime, MedalPreviewDto, OttDto, SeasonDto, WeekDto } from '@/types';
 
-// Ballot Request DTO
-export interface BallotRequestDto {
-  candidateId: number;
-  ballotType: 'NORMAL' | 'BONUS';
+// // Ballot Request DTO
+// export interface BallotRequestDto {
+//   candidateId: number;
+//   ballotType: 'NORMAL' | 'BONUS';
+// }
+
+// // Anime Vote Request
+// export interface AnimeVoteRequest {
+//   weekId: number;
+//   gender: 'MALE' | 'FEMALE' | 'NONE';
+//   ballotRequests: BallotRequestDto[];
+// }
+
+// // Vote Receipt DTO
+// export interface VoteReceiptDto {
+//   submissionId: number;
+//   weekDto: WeekDto;
+//   category: 'ANIME' | 'HERO' | 'HEROINE';
+//   normalCount: number;
+//   bonusCount: number;
+//   submittedAt: string;
+// }
+
+// // Anime Candidate DTO
+// export interface AnimeCandidateDto {
+//   animeCandidateId: number;
+//   mainThumbnailUrl: string;
+//   titleKor: string;
+//   medium: 'TVA' | 'MOVIE';
+// }
+
+// Anime Info DTO (home, detail)
+export interface AnimeInfoDto extends Anime {
+  status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
+  totalEpisodes: number | null;
+  premiereDateTime: string;
+  titleOrigin: string;
+  synopsis: string | null;
+  corp: string;
+  director: string;
+  author: string;
+  minAge: number;
+  officalSite: Record<string, string>;
+  mainImageUrl: string;
+  seasonDtos: SeasonDto[];
+  ottDtos: OttDto[];
 }
 
-// Anime Vote Request
-export interface AnimeVoteRequest {
-  weekId: number;
-  gender: 'MALE' | 'FEMALE' | 'NONE';
-  ballotRequests: BallotRequestDto[];
-}
-
-// Vote Receipt DTO
-export interface VoteReceiptDto {
-  submissionId: number;
-  weekDto: WeekDto;
-  category: 'ANIME' | 'HERO' | 'HEROINE';
-  normalCount: number;
-  bonusCount: number;
-  submittedAt: string;
-}
-
-// Anime Candidate DTO
-export interface AnimeCandidateDto {
-  animeCandidateId: number;
-  mainThumbnailUrl: string;
-  titleKor: string;
-  medium: 'TVA' | 'MOVIE';
-}
-
-// Anime Preview DTO
-export interface AnimePreviewDto {
+// Anime Preview DTO (search)
+export interface AnimePreviewDto extends Anime {
   animeId: number;
-  episodeId: number;
-  mainThumbnailUrl: string;
-  status?: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
-  isBreak?: boolean;
-  titleKor: string;
-  dayOfWeek:
-    | 'MON'
-    | 'TUE'
-    | 'WED'
-    | 'THU'
-    | 'FRI'
-    | 'SAT'
-    | 'SUN'
-    | 'SPECIAL'
-    | 'NONE';
+  status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
+  isBreak: boolean;
+  isRescheduled: boolean | null;
   scheduledAt: string;
-  isRescheduled?: boolean;
-  airTime: string; // 방영시간 (HH:mm 형식)
-  genre: string;
-  medium: 'TVA' | 'MOVIE' | 'OVA' | 'SPECIAL';
   ottDtos: OttDto[];
 }
 
 // Anime Preview List DTO
 export interface AnimePreviewListDto {
-  weekDto: WeekDto;
+  year: number;
+  quarter: number;
   schedule: {
     [key: string]: AnimePreviewDto[];
   };
@@ -148,43 +150,6 @@ export interface AnimeRankDto {
   medalPreviews: MedalPreviewDto[];
   animeStatDto: AnimeStatDto;
   voteRatioDto: VoteRatioDto;
-}
-
-// Season DTO
-export interface SeasonDto {
-  year: number;
-  seasonType: 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER';
-}
-
-// Anime Info DTO
-export interface AnimeInfoDto {
-  medium: 'TVA' | 'MOVIE';
-  status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
-  totalEpisodes: number;
-  premiereDateTime: string;
-  titleKor: string;
-  titleOrigin: string;
-  dayOfWeek:
-    | 'MON'
-    | 'TUE'
-    | 'WED'
-    | 'THU'
-    | 'FRI'
-    | 'SAT'
-    | 'SUN'
-    | 'SPECIAL'
-    | 'NONE';
-  airTime: string;
-  corp: string;
-  director: string;
-  genre: string;
-  author: string;
-  minAge: number;
-  officalSite: Record<string, string>;
-  mainImageUrl: string;
-  mainThumbnailUrl: string;
-  seasonDtos: SeasonDto[];
-  ottDtos: OttDto[];
 }
 
 // Cast Preview DTO
