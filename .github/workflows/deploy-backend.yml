@@ -153,11 +153,15 @@ jobs:
             set -e
             cd /home/ubuntu/duckstar
 
-            echo "🛠 백엔드 빌드 시작"
-            docker compose up -d --build backend
+            echo "🧹 빌드 공간 확보: 오래된 도커 데이터 정리 (빌드 전)"
+            # 사용하지 않는 컨테이너, 네트워크, 이미지 모두 삭제 (실행 중인 건 건드리지 않음)
+            docker system prune -af
+            # 빌드 캐시 삭제 (이게 용량을 가장 많이 차지함)
+            docker builder prune -af
 
-            echo "🧹 이미지 정리"
-            docker image prune -f
+            echo "🛠 백엔드 빌드 시작"
+            # 이제 깨끗한 상태에서 빌드
+            docker compose up -d --build backend
 
             echo "📋 컨테이너 상태"
             docker ps -a
