@@ -1,12 +1,10 @@
-import { getCurrentYearAndQuarter } from '@/lib/quarterUtils';
-import type { AnimePreviewDto, OttDto, WeekDto, AnimePreviewListDto, AnimeSearchListDto, AnimeHomeDto } from '@/types/api';
-
-export interface ApiResponse<T> {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: T;
-}
+import type {
+  AnimePreviewListDto,
+  AnimeSearchListDto,
+  AnimeHomeDto,
+  EpisodeDto,
+} from '@/types';
+import { ApiResponse } from './http';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
 
@@ -21,20 +19,23 @@ export async function getScheduleByQuarter(
   quarter: number
 ): Promise<AnimePreviewListDto> {
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/search/${year}/${quarter}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/v1/search/${year}/${quarter}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const apiResponse: ApiResponse<AnimePreviewListDto> = await response.json();
-    
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
@@ -49,9 +50,10 @@ export async function getScheduleByQuarter(
  * 현재 분기의 편성표를 조회합니다.
  * @returns 현재 분기 애니메이션 편성표
  */
-export async function getCurrentSchedule(): Promise<AnimePreviewListDto> {
+export async function getCurrentSchedule() {
+  // '이번 주' 메뉴에서는 offset을 00시 00분으로 설정
+  // return apiCall<AnimePreviewListDto>(`/api/v1/search?hour=0&minute=0`);
   try {
-    // '이번 주' 메뉴에서는 offset을 00시 00분으로 설정
     const response = await fetch(`${BASE_URL}/api/v1/search?hour=0&minute=0`, {
       method: 'GET',
       headers: {
@@ -65,7 +67,7 @@ export async function getCurrentSchedule(): Promise<AnimePreviewListDto> {
     }
 
     const apiResponse: ApiResponse<AnimePreviewListDto> = await response.json();
-    
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
@@ -97,29 +99,35 @@ export async function getUpcomingAnimes(): Promise<AnimePreviewListDto> {
     }
 
     const apiResponse: ApiResponse<AnimePreviewListDto> = await response.json();
-    
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
 
     // 곧 시작 그룹만 필터링 (12시간 이내 방영 예정)
     const now = new Date();
-    const upcomingAnimes = Object.values(apiResponse.result.schedule).flat().filter(anime => {
-      if ((anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') || !anime.scheduledAt) return false;
-      
-      const scheduled = new Date(anime.scheduledAt);
-      if (isNaN(scheduled.getTime())) return false;
-      
-      // 12시간 이내 방영 예정인 애니메이션만 필터링
-      const timeDiff = scheduled.getTime() - now.getTime();
-      return timeDiff >= 0 && timeDiff <= 12 * 60 * 60 * 1000; // 12시간 = 12 * 60 * 60 * 1000ms
-    });
+    const upcomingAnimes = Object.values(apiResponse.result.schedule)
+      .flat()
+      .filter((anime) => {
+        if (
+          (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
+          !anime.scheduledAt
+        )
+          return false;
+
+        const scheduled = new Date(anime.scheduledAt);
+        if (isNaN(scheduled.getTime())) return false;
+
+        // 12시간 이내 방영 예정인 애니메이션만 필터링
+        const timeDiff = scheduled.getTime() - now.getTime();
+        return timeDiff >= 0 && timeDiff <= 12 * 60 * 60 * 1000; // 12시간 = 12 * 60 * 60 * 1000ms
+      });
 
     return {
       ...apiResponse.result,
       schedule: {
-        '곧 시작': upcomingAnimes
-      }
+        '곧 시작': upcomingAnimes,
+      },
     };
   } catch (error) {
     throw error;
@@ -135,7 +143,7 @@ export async function getUpcomingAnimes(): Promise<AnimePreviewListDto> {
 export async function getScheduleByYearAndQuarter(
   year: number,
   quarter: number
-): Promise<AnimePreviewListDto> {
+) {
   return getScheduleByQuarter(year, quarter);
 }
 
@@ -157,8 +165,9 @@ export async function getSeasons(): Promise<{ [year: number]: string[] }> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<{ [year: number]: string[] }> = await response.json();
-    
+    const apiResponse: ApiResponse<{ [year: number]: string[] }> =
+      await response.json();
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
@@ -176,20 +185,23 @@ export async function getSeasons(): Promise<{ [year: number]: string[] }> {
  */
 export async function searchAnimes(query: string): Promise<AnimeSearchListDto> {
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/search/animes?query=${encodeURIComponent(query)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/v1/search/animes?query=${encodeURIComponent(query)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const apiResponse: ApiResponse<AnimeSearchListDto> = await response.json();
-    
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
@@ -207,20 +219,23 @@ export async function searchAnimes(query: string): Promise<AnimeSearchListDto> {
  */
 export async function getAnimeEpisodes(animeId: number): Promise<EpisodeDto[]> {
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/animes/${animeId}/episodes`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/v1/animes/${animeId}/episodes`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const apiResponse: ApiResponse<EpisodeDto[]> = await response.json();
-    
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
@@ -237,23 +252,30 @@ export async function getAnimeEpisodes(animeId: number): Promise<EpisodeDto[]> {
  * @param totalEpisodes 총 화수
  * @returns 업데이트 결과
  */
-export async function updateAnimeTotalEpisodes(animeId: number, totalEpisodes: number): Promise<{ success: boolean; message: string }> {
+export async function updateAnimeTotalEpisodes(
+  animeId: number,
+  totalEpisodes: number
+): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await fetch(`${BASE_URL}/api/admin/${animeId}/total-episodes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ totalEpisodes }),
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/admin/${animeId}/total-episodes`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ totalEpisodes }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<{ success: boolean; message: string }> = await response.json();
-    
+    const apiResponse: ApiResponse<{ success: boolean; message: string }> =
+      await response.json();
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
@@ -269,22 +291,28 @@ export async function updateAnimeTotalEpisodes(animeId: number, totalEpisodes: n
  * @param animeId 애니메이션 ID
  * @returns 업데이트 결과
  */
-export async function setAnimeTotalEpisodesUnknown(animeId: number): Promise<{ success: boolean; message: string }> {
+export async function setAnimeTotalEpisodesUnknown(
+  animeId: number
+): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await fetch(`${BASE_URL}/api/admin/${animeId}/total-episodes/unknown`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/admin/${animeId}/total-episodes/unknown`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<{ success: boolean; message: string }> = await response.json();
-    
+    const apiResponse: ApiResponse<{ success: boolean; message: string }> =
+      await response.json();
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
@@ -315,7 +343,7 @@ export async function getAnimeDetail(animeId: number): Promise<AnimeHomeDto> {
     }
 
     const apiResponse: ApiResponse<AnimeHomeDto> = await response.json();
-    
+
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }

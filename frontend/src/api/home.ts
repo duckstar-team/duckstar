@@ -1,32 +1,13 @@
-import { ApiResponse, HomeDto, RankPreviewDto, WeeklyTopDto } from '@/types/api';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-export interface HomeApiResponse {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: HomeDto;
-}
+import { HomeDto, RankPreviewDto, WeeklyTopDto } from '@/types';
+import { apiCall } from './http';
 
 export const homeApi = {
   /**
    * 홈페이지 초기 데이터 조회
    * @param size - 조회할 데이터 개수 (기본값: 10, 최대: 50)
    */
-  async getHome(size: number = 10): Promise<HomeApiResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/home?size=${size}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+  async getHome(size: number = 10) {
+    return apiCall<HomeDto>(`/api/v1/home?size=${size}`);
   },
 
   /**
@@ -36,41 +17,32 @@ export const homeApi = {
    * @param week - 주차
    * @param size - 조회할 데이터 개수 (기본값: 10, 최대: 50)
    */
-  async getAnilabRank(year: number, quarter: number, week: number, size: number = 10): Promise<{ isSuccess: boolean; code: string; message: string; result: RankPreviewDto[] }> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/home/${year}/${quarter}/${week}/anilab?size=${size}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+  async getAnilabRank(
+    year: number,
+    quarter: number,
+    week: number,
+    size: number = 10
+  ) {
+    return apiCall<RankPreviewDto[]>(
+      `/api/v1/home/${year}/${quarter}/${week}/anilab?size=${size}`
+    );
   },
 
   /**
-   * Anime 순위 데이터 조회
+   * 주차별 덕스타 애니메이션 TOP N개 조회 API (with 해외 순위)
    * @param year - 년도
    * @param quarter - 분기
    * @param week - 주차
    * @param size - 조회할 데이터 개수 (기본값: 10, 최대: 50)
    */
-  async getAnimeRank(year: number, quarter: number, week: number, size: number = 10): Promise<{ isSuccess: boolean; code: string; message: string; result: WeeklyTopDto }> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/home/${year}/${quarter}/${week}/anime?size=${size}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+  async getAnimeRank(
+    year: number,
+    quarter: number,
+    week: number,
+    size: number = 10
+  ) {
+    return apiCall<WeeklyTopDto>(
+      `/api/v1/home/${year}/${quarter}/${week}/anime?size=${size}`
+    );
   },
-
 };
