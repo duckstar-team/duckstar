@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { StarInfoDto, LiveVoteResultDto, AnimePreviewDto } from '@/types';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
-import StarDistributionChart from '@/components/chart/StarDistributionChart';
+import StarDistributionChart from '@/components/domain/star/StarDistributionChart';
 import { submitStarVote, withdrawStar } from '@/api/vote';
 import { addVotedEpisode } from '@/lib/voteStorage';
 import { Clock } from 'lucide-react';

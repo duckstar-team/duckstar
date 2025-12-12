@@ -9,56 +9,7 @@ import { scrollToTop } from '@/utils/scrollUtils';
 import { useNavigationPrefetch } from '@/hooks/useNavigationPrefetch';
 import { useNavigationState } from '@/hooks/useNavigationState';
 import NavigationLoadingIndicator from '@/components/common/NavigationLoadingIndicator';
-
-// Navigation items configuration with local icon paths
-const NAV_ITEMS = [
-  {
-    label: '홈',
-    href: '/',
-    defaultIcon: '/icons/home-default.svg',
-    activeIcon: '/icons/home-active.svg',
-    iconSize: 'size-5',
-    iconClass: 'flex items-center justify-center size-full',
-    isBeta: false,
-  },
-  {
-    label: '주간 차트',
-    href: '/chart',
-    defaultIcon: '/icons/chart-default.svg',
-    activeIcon: '/icons/chart-active.svg',
-    iconSize: 'size-5',
-    iconClass: 'flex items-center justify-center size-full',
-    isBeta: false,
-  },
-  {
-    label: '투표하기',
-    href: '/vote',
-    defaultIcon: '/icons/vote-default.svg',
-    activeIcon: '/icons/vote-active.svg',
-    iconSize: 'size-5',
-    iconClass: 'flex items-center justify-center size-full',
-    isBeta: false,
-  },
-  {
-    label: '애니/시간표 검색',
-    href: '/search',
-    defaultIcon: '/icons/search-default.svg',
-    activeIcon: '/icons/search-active.svg',
-    iconSize: 'size-5',
-    iconClass: 'flex items-center justify-center size-full',
-    isBeta: false,
-  },
-  {
-    label: '마이페이지',
-    href: '/mypage',
-    defaultIcon: '/icons/mypage-default.svg',
-    activeIcon: '/icons/mypage-active.svg',
-    iconSize: 'size-5',
-    iconClass: 'flex items-center justify-center size-full',
-    isBeta: true,
-    badgeText: '준비중',
-  },
-];
+import { NAV_ITEMS } from './navItems';
 
 // Vote button variants based on Figma specifications
 const voteButtonVariants = cva(
@@ -281,8 +232,10 @@ export default function Sidebar() {
               label={item.label}
               defaultIcon={item.defaultIcon}
               activeIcon={item.activeIcon}
-              iconSize={item.iconSize}
-              iconClass={item.iconClass}
+              iconSize={item.iconSize || 'size-5'}
+              iconClass={
+                item.iconClass || 'flex items-center justify-center size-full'
+              }
               isActive={
                 item.href === '/search'
                   ? pathname === item.href || pathname.startsWith('/search/')
