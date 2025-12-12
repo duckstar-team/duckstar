@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import Winner from '@/components/chart/Winner';
-import RankCard from '@/components/chart/RankCard';
-import AbroadRankCard from '@/components/chart/AbroadRankCard';
+import Winner from '@/components/domain/chart/Winner';
+import RankCard from '@/components/domain/chart/RankCard';
+import AbroadRankCard from '@/components/domain/chart/AbroadRankCard';
 import { getChartData, getWeeks } from '@/api/chart';
 import { queryConfig } from '@/lib/queryConfig';
-import { useChart } from '@/components/AppContainer';
+import { useChart } from '@/components/layout/AppContainer';
 
 // 메달 타입 변환 함수
 function convertMedalType(
@@ -368,12 +368,12 @@ export default function ChartPage() {
   }
 
   // 모든 페이지의 애니메이션 데이터를 합치기
-  const allAnimeList = data.pages.flatMap(
+  const allAnimeList = data?.pages?.flatMap(
     (page) => page.result.animeRankDtos || []
   );
 
   // 1등 애니메이션 (Winner) - 첫 번째 페이지만
-  const firstPageAnimes = data.pages[0]?.result?.animeRankDtos || [];
+  const firstPageAnimes = data?.pages?.[0]?.result?.animeRankDtos || [];
   const winnerAnime = firstPageAnimes[0];
 
   // winnerAnime가 있을 때만 winnerMedals 생성
@@ -660,69 +660,70 @@ export default function ChartPage() {
             )}
 
             {/* 2등 이하 RankCard들 - 덕스타 차트가 있는 경우에만 표시 */}
-            {allAnimeList.slice(1).map((anime, index) => {
-              const animeMedals = anime.medalPreviews.map(
-                (medal, medalIndex) => ({
-                  id: `anime-${anime.rankPreviewDto.contentId}-medal-${medalIndex}`,
-                  type: convertMedalType(medal.type),
-                  title: anime.rankPreviewDto.title,
-                  image: anime.rankPreviewDto.mainThumbnailUrl,
-                  rank: medal.rank,
-                  year: medal.year,
-                  quarter: medal.quarter,
-                  week: medal.week,
-                })
-              );
+            {allAnimeList &&
+              allAnimeList.slice(1).map((anime, index) => {
+                const animeMedals = anime.medalPreviews.map(
+                  (medal, medalIndex) => ({
+                    id: `anime-${anime.rankPreviewDto.contentId}-medal-${medalIndex}`,
+                    type: convertMedalType(medal.type),
+                    title: anime.rankPreviewDto.title,
+                    image: anime.rankPreviewDto.mainThumbnailUrl,
+                    rank: medal.rank,
+                    year: medal.year,
+                    quarter: medal.quarter,
+                    week: medal.week,
+                  })
+                );
 
-              return (
-                <RankCard
-                  key={`${anime.rankPreviewDto.contentId}-${index}`}
-                  medals={animeMedals}
-                  rank={anime.rankPreviewDto.rank}
-                  rankDiff={anime.rankPreviewDto.rankDiff || 0}
-                  rankDiffType={getRankDiffType(
-                    anime.rankPreviewDto.rankDiff,
-                    anime.rankPreviewDto.consecutiveWeeksAtSameRank
-                  )}
-                  rankDiffValue={
-                    getRankDiffType(
+                return (
+                  <RankCard
+                    key={`${anime.rankPreviewDto.contentId}-${index}`}
+                    medals={animeMedals}
+                    rank={anime.rankPreviewDto.rank}
+                    rankDiff={anime.rankPreviewDto.rankDiff || 0}
+                    rankDiffType={getRankDiffType(
                       anime.rankPreviewDto.rankDiff,
                       anime.rankPreviewDto.consecutiveWeeksAtSameRank
-                    ) === 'same-rank'
-                      ? anime.rankPreviewDto.consecutiveWeeksAtSameRank.toString()
-                      : (anime.rankPreviewDto.rankDiff || 0).toString()
-                  }
-                  title={anime.rankPreviewDto.title}
-                  studio={anime.rankPreviewDto.subTitle}
-                  image={anime.rankPreviewDto.mainThumbnailUrl}
-                  rating={
-                    Math.round(
-                      (anime.voteResultDto?.info?.starAverage ?? 0) * 10
-                    ) / 10
-                  }
-                  debutRank={anime.animeStatDto.debutRank}
-                  debutDate={anime.animeStatDto.debutDate}
-                  peakRank={anime.animeStatDto.peakRank}
-                  peakDate={anime.animeStatDto.peakDate}
-                  top10Weeks={anime.animeStatDto.weeksOnTop10}
-                  week={
-                    selectedWeek
-                      ? `${selectedWeek.year}년 ${selectedWeek.quarter}분기 ${selectedWeek.week}주차`
-                      : '25년 4분기 1주차'
-                  }
-                  averageRating={anime.voteResultDto?.info?.starAverage ?? 0}
-                  participantCount={anime.voteResultDto?.voterCount ?? 0}
-                  distribution={createDistributionArray(
-                    anime.voteResultDto,
-                    selectedWeek
-                      ? `${selectedWeek.year}년 ${selectedWeek.quarter}분기 ${selectedWeek.week}주차`
-                      : '25년 4분기 1주차'
-                  )}
-                  animeId={anime.rankPreviewDto.contentId}
-                  hideMedalsOnMobile={true}
-                />
-              );
-            })}
+                    )}
+                    rankDiffValue={
+                      getRankDiffType(
+                        anime.rankPreviewDto.rankDiff,
+                        anime.rankPreviewDto.consecutiveWeeksAtSameRank
+                      ) === 'same-rank'
+                        ? anime.rankPreviewDto.consecutiveWeeksAtSameRank.toString()
+                        : (anime.rankPreviewDto.rankDiff || 0).toString()
+                    }
+                    title={anime.rankPreviewDto.title}
+                    studio={anime.rankPreviewDto.subTitle}
+                    image={anime.rankPreviewDto.mainThumbnailUrl}
+                    rating={
+                      Math.round(
+                        (anime.voteResultDto?.info?.starAverage ?? 0) * 10
+                      ) / 10
+                    }
+                    debutRank={anime.animeStatDto.debutRank}
+                    debutDate={anime.animeStatDto.debutDate}
+                    peakRank={anime.animeStatDto.peakRank}
+                    peakDate={anime.animeStatDto.peakDate}
+                    top10Weeks={anime.animeStatDto.weeksOnTop10}
+                    week={
+                      selectedWeek
+                        ? `${selectedWeek.year}년 ${selectedWeek.quarter}분기 ${selectedWeek.week}주차`
+                        : '25년 4분기 1주차'
+                    }
+                    averageRating={anime.voteResultDto?.info?.starAverage ?? 0}
+                    participantCount={anime.voteResultDto?.voterCount ?? 0}
+                    distribution={createDistributionArray(
+                      anime.voteResultDto,
+                      selectedWeek
+                        ? `${selectedWeek.year}년 ${selectedWeek.quarter}분기 ${selectedWeek.week}주차`
+                        : '25년 4분기 1주차'
+                    )}
+                    animeId={anime.rankPreviewDto.contentId}
+                    hideMedalsOnMobile={true}
+                  />
+                );
+              })}
 
             {/* 로딩 인디케이터 */}
             {isFetchingNextPage && (
@@ -735,7 +736,7 @@ export default function ChartPage() {
             )}
 
             {/* 더 이상 데이터가 없을 때 */}
-            {!hasNextPage && allAnimeList.length > 1 && (
+            {!hasNextPage && allAnimeList && allAnimeList.length > 1 && (
               <div className="py-8 text-center text-gray-500">
                 모든 차트 데이터를 불러왔습니다.
               </div>
@@ -750,15 +751,15 @@ export default function ChartPage() {
               // 선택된 탭에 따라 모든 페이지의 데이터 합치기
               const abroadData =
                 activeView === 'anime-corner'
-                  ? data.pages.flatMap(
+                  ? data?.pages.flatMap(
                       (page) => page.result?.animeTrendRankPreviews || []
                     )
-                  : data.pages.flatMap(
+                  : data?.pages.flatMap(
                       (page) => page.result?.aniLabRankPreviews || []
                     );
 
               // 데이터가 없을 때 스켈레톤 UI 표시
-              if (abroadData.length === 0) {
+              if (abroadData && abroadData.length === 0) {
                 return (
                   <div className="relative h-[220px] w-[370px]">
                     {/* 스켈레톤 UI (뒷배경) */}
@@ -817,74 +818,77 @@ export default function ChartPage() {
                 );
               }
 
-              return abroadData.map((rankPreview, index) => {
-                const isWinner = index === 0; // 1등만 Winner
+              return (
+                abroadData &&
+                abroadData.map((rankPreview, index) => {
+                  const isWinner = index === 0; // 1등만 Winner
 
-                // rankDiff 타입 결정 (기존 로직 재사용)
-                const safeRankDiff = rankPreview.rankDiff ?? 0;
-                const safeConsecutiveWeeks =
-                  rankPreview.consecutiveWeeksAtSameRank ?? 0;
-                const isAnilab = activeView === 'anilab';
+                  // rankDiff 타입 결정 (기존 로직 재사용)
+                  const safeRankDiff = rankPreview.rankDiff ?? 0;
+                  const safeConsecutiveWeeks =
+                    rankPreview.consecutiveWeeksAtSameRank ?? 0;
+                  const isAnilab = activeView === 'anilab';
 
-                const getRankDiffType = (
-                  rankDiff: number,
-                  consecutiveWeeks: number,
-                  isAnilab: boolean = false
-                ):
-                  | 'new'
-                  | 'up-greater-equal-than-5'
-                  | 'up-less-than-5'
-                  | 'down-less-than-5'
-                  | 'down-greater-equal-than-5'
-                  | 'same-rank'
-                  | 'Zero' => {
-                  if (rankDiff > 0) {
-                    return rankDiff >= 5
-                      ? 'up-greater-equal-than-5'
-                      : 'up-less-than-5';
-                  }
-                  if (rankDiff < 0) {
-                    return rankDiff <= -5
-                      ? 'down-greater-equal-than-5'
-                      : 'down-less-than-5';
-                  }
-
-                  if (consecutiveWeeks >= 2) {
-                    return 'same-rank';
-                  }
-
-                  if (consecutiveWeeks === 1 && !isAnilab) {
-                    return 'new';
-                  }
-
-                  return 'Zero';
-                };
-
-                const finalRankDiffType = getRankDiffType(
-                  safeRankDiff,
-                  safeConsecutiveWeeks,
-                  isAnilab
-                );
-
-                return (
-                  <AbroadRankCard
-                    key={rankPreview.contentId || `abroad-${index}`}
-                    rank={rankPreview.rank}
-                    rankDiff={finalRankDiffType}
-                    rankDiffValue={
-                      finalRankDiffType === 'same-rank'
-                        ? safeConsecutiveWeeks.toString()
-                        : safeRankDiff.toString()
+                  const getRankDiffType = (
+                    rankDiff: number,
+                    consecutiveWeeks: number,
+                    isAnilab: boolean = false
+                  ):
+                    | 'new'
+                    | 'up-greater-equal-than-5'
+                    | 'up-less-than-5'
+                    | 'down-less-than-5'
+                    | 'down-greater-equal-than-5'
+                    | 'same-rank'
+                    | 'Zero' => {
+                    if (rankDiff > 0) {
+                      return rankDiff >= 5
+                        ? 'up-greater-equal-than-5'
+                        : 'up-less-than-5';
                     }
-                    title={rankPreview.title}
-                    studio={rankPreview.subTitle}
-                    image={rankPreview.mainThumbnailUrl}
-                    weeks={safeConsecutiveWeeks}
-                    contentId={rankPreview.contentId}
-                    isWinner={isWinner}
-                  />
-                );
-              });
+                    if (rankDiff < 0) {
+                      return rankDiff <= -5
+                        ? 'down-greater-equal-than-5'
+                        : 'down-less-than-5';
+                    }
+
+                    if (consecutiveWeeks >= 2) {
+                      return 'same-rank';
+                    }
+
+                    if (consecutiveWeeks === 1 && !isAnilab) {
+                      return 'new';
+                    }
+
+                    return 'Zero';
+                  };
+
+                  const finalRankDiffType = getRankDiffType(
+                    safeRankDiff,
+                    safeConsecutiveWeeks,
+                    isAnilab
+                  );
+
+                  return (
+                    <AbroadRankCard
+                      key={rankPreview.contentId || `abroad-${index}`}
+                      rank={rankPreview.rank}
+                      rankDiff={finalRankDiffType}
+                      rankDiffValue={
+                        finalRankDiffType === 'same-rank'
+                          ? safeConsecutiveWeeks.toString()
+                          : safeRankDiff.toString()
+                      }
+                      title={rankPreview.title}
+                      studio={rankPreview.subTitle}
+                      image={rankPreview.mainThumbnailUrl}
+                      weeks={safeConsecutiveWeeks}
+                      contentId={rankPreview.contentId}
+                      isWinner={isWinner}
+                    />
+                  );
+                })
+              );
             })()}
           </div>
         </div>

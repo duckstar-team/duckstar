@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import AnimeCard from '@/components/anime/AnimeCard';
-import DaySelection, { DayOfWeek } from '@/components/search/ui/DaySelection';
-import SearchFilters from '@/components/search/filters/SearchFilters';
-import SearchInput from '@/components/search/ui/SearchInput';
+import AnimeCard from '@/components/domain/anime/AnimeCard';
+import DaySelection, {
+  DayOfWeek,
+} from '@/components/domain/search/DaySelection';
+import SearchFilters from '@/components/domain/search/SearchFilters';
+import SearchInput from '@/components/domain/search/SearchInput';
 import { getScheduleByYearAndQuarter } from '@/api/search';
-import SeasonSelector from '@/components/search/ui/SeasonSelector';
+import SeasonSelector from '@/components/domain/search/SeasonSelector';
 import type { AnimePreviewDto, AnimePreviewListDto } from '@/types';
 import { extractChosung } from '@/lib/searchUtils';
 import { useImagePreloading } from '@/hooks/useImagePreloading';

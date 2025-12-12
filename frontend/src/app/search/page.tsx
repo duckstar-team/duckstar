@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import AnimeCard from '@/components/anime/AnimeCard';
-import SmallCandidate from '@/components/anime/SmallCandidate';
-import DaySelection, { DayOfWeek } from '@/components/search/ui/DaySelection';
-import SearchFilters from '@/components/search/filters/SearchFilters';
-import SearchInput from '@/components/search/ui/SearchInput';
+import AnimeCard from '@/components/domain/anime/AnimeCard';
+import SmallCandidate from '@/components/domain/anime/SmallCandidate';
+import DaySelection, {
+  DayOfWeek,
+} from '@/components/domain/search/DaySelection';
+import SearchFilters from '@/components/domain/search/SearchFilters';
+import SearchInput from '@/components/domain/search/SearchInput';
 import { getCurrentSchedule, searchAnimes } from '@/api/search';
-import SeasonSelector from '@/components/search/ui/SeasonSelector';
+import SeasonSelector from '@/components/domain/search/SeasonSelector';
 import type {
   AnimePreviewDto,
   AnimePreviewListDto,

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import HomeBanner from '@/components/banner/HomeBanner';
-import ButtonVote from '@/components/button/ButtonVote';
-import HeaderList from '@/components/header/HeaderList';
-import HomeChart from '@/components/chart/HomeChart';
-import RightHeaderList from '@/components/header/RightHeaderList';
-import RightPanel from '@/components/chart/RightPanel';
+import HomeBanner from '@/components/ui/banner/HomeBanner';
+import ButtonVote from '@/components/ui/ButtonVote';
+import HeaderList from '@/components/layout/header/HeaderList';
+import HomeChart from '@/components/domain/chart/HomeChart';
+import RightHeaderList from '@/components/layout/header/RightHeaderList';
+import RightPanel from '@/components/domain/chart/RightPanel';
 import { homeApi } from '@/api/home';
 import {
   WeekDto,

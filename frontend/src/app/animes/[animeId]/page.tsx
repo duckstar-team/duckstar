@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import AnimeDetailClient from './AnimeDetailClient';
+import AnimeDetailClient from './_components/AnimeDetailClient';
 import { getAnimeDetail } from '@/api/search';
 import AnimeStructuredData from '@/components/seo/AnimeStructuredData';
 import { getAnimeOgImageUrl } from '@/lib/ogImage';

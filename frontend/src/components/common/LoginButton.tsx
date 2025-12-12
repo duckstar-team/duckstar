@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useModal } from '@/components/AppContainer';
+import { useModal } from '@/components/layout/AppContainer';
 
 interface LoginButtonProps {
   variant?: 'default' | 'compact';
@@ -11,10 +11,10 @@ interface LoginButtonProps {
   className?: string;
 }
 
-export default function LoginButton({ 
-  variant = 'default', 
+export default function LoginButton({
+  variant = 'default',
   showProfileImage = true,
-  className = '' 
+  className = '',
 }: LoginButtonProps) {
   const { isAuthenticated, isLoading, user, logout, withdraw } = useAuth();
   const { openLoginModal } = useModal();
@@ -41,7 +41,6 @@ export default function LoginButton({
     setIsDropdownOpen(false);
   };
 
-
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -49,7 +48,10 @@ export default function LoginButton({
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -64,8 +66,8 @@ export default function LoginButton({
   if (isLoading) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <div className="w-6 h-6 rounded-full bg-gray-200 animate-pulse"></div>
-        <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-6 w-6 animate-pulse rounded-full bg-gray-200"></div>
+        <div className="h-4 w-16 animate-pulse rounded bg-gray-200"></div>
       </div>
     );
   }
@@ -75,58 +77,65 @@ export default function LoginButton({
       <div className={`relative ${className}`} ref={dropdownRef}>
         <button
           onClick={toggleDropdown}
-          className="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors cursor-pointer"
+          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-gray-50"
         >
           {showProfileImage && user.profileImageUrl && (
-            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+            <div className="h-6 w-6 flex-shrink-0 overflow-hidden rounded-full">
               <img
                 src={user.profileImageUrl}
                 alt="프로필 이미지"
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
             </div>
           )}
-          <span className={`font-[Pretendard] font-semibold text-gray-700 truncate max-w-[80px] sm:max-w-[120px] ${
-            variant === 'compact' ? 'text-sm' : 'text-sm sm:text-base'
-          }`}>
+          <span
+            className={`max-w-[80px] truncate font-[Pretendard] font-semibold text-gray-700 sm:max-w-[120px] ${
+              variant === 'compact' ? 'text-sm' : 'text-sm sm:text-base'
+            }`}
+          >
             {user.nickname || '사용자'}
           </span>
-          <svg 
-            className={`w-4 h-4 text-gray-500 transition-transform ${
+          <svg
+            className={`h-4 w-4 text-gray-500 transition-transform ${
               isDropdownOpen ? 'rotate-180' : ''
-            }`} 
-            fill="none" 
-            stroke="currentColor" 
+            }`}
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
-          <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-fit">
+          <div className="absolute top-full right-0 z-50 mt-2 min-w-fit rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
             {/* 관리자 메뉴 - ADMIN 권한이 있는 경우에만 표시 */}
             {user.role === 'ADMIN' && (
               <>
                 <button
                   onClick={handleAdminMenuClick}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer"
+                  className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   관리자 메뉴
                 </button>
-                <div className="border-t border-gray-200 my-1"></div>
+                <div className="my-1 border-t border-gray-200"></div>
               </>
             )}
             <button
               onClick={handleProfileEditClick}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer"
+              className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50"
             >
               프로필 수정
             </button>
             <button
               onClick={handleLogoutClick}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer"
+              className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50"
             >
               로그아웃
             </button>
@@ -137,9 +146,9 @@ export default function LoginButton({
   }
 
   return (
-    <button 
+    <button
       onClick={handleLoginClick}
-      className={`font-[Pretendard] font-semibold text-[#8E8E93] hover:text-gray-600 transition-colors cursor-pointer ${
+      className={`cursor-pointer font-[Pretendard] font-semibold text-[#8E8E93] transition-colors hover:text-gray-600 ${
         variant === 'compact' ? 'text-sm' : 'text-sm sm:text-base'
       } ${className}`}
     >

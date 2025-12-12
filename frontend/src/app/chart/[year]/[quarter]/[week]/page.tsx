@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import Winner from '@/components/chart/Winner';
-import RankCard from '@/components/chart/RankCard';
-import AbroadRankCard from '@/components/chart/AbroadRankCard';
+import Winner from '@/components/domain/chart/Winner';
+import RankCard from '@/components/domain/chart/RankCard';
+import AbroadRankCard from '@/components/domain/chart/AbroadRankCard';
 import { getChartData, getWeeks } from '@/api/chart';
 import { queryConfig } from '@/lib/queryConfig';
-import { useChart } from '@/components/AppContainer';
+import { useChart } from '@/components/layout/AppContainer';
 
 // 메달 타입 변환 함수
 function convertMedalType(

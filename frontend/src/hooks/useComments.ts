@@ -8,8 +8,8 @@ import {
   unlikeComment,
   mapSortOptionToBackend,
 } from '@/api/comment';
-import { SortOption } from '@/components/SortingMenu';
-import { useModal } from '@/components/AppContainer';
+import { SortOption } from '@/components/ui/SortingMenu';
+import { useModal } from '@/components/layout/AppContainer';
 
 export function useComments(animeId: number) {
   const { openLoginModal } = useModal();

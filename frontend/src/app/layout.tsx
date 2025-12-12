@@ -8,7 +8,7 @@ import MigrationToast from '@/components/common/MigrationToast';
 import { ToastContainer } from '@/components/common/Toast';
 import PageViewTracker from '@/components/analytics/PageViewTracker';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
-import AppContainer from '@/components/AppContainer';
+import AppContainer from '@/components/layout/AppContainer';
 
 // Pretendard 폰트만 사용 (성능 최적화)
 const pretendard = localFont({
