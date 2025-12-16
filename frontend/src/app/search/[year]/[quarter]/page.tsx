@@ -12,12 +12,9 @@ import { getScheduleByYearAndQuarter } from '@/api/search';
 import SeasonSelector from '@/components/domain/search/SeasonSelector';
 import type { AnimePreviewDto, AnimePreviewListDto } from '@/types';
 import { extractChosung } from '@/lib/searchUtils';
-import { useImagePreloading } from '@/hooks/useImagePreloading';
-import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';
 import { useQuery } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
 import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
-import PreloadingProgress from '@/components/common/PreloadingProgress';
 
 function SeasonPageContent() {
   const router = useRouter();
@@ -78,14 +75,6 @@ function SeasonPageContent() {
 
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('월');
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
-  const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
-  const [isPreloading, setIsPreloading] = useState(false);
-  const [preloadingStatus, setPreloadingStatus] = useState({
-    total: 0,
-    loaded: 0,
-    active: 0,
-  });
-  const preloadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [showOnlyAiring, setShowOnlyAiring] = useState(false);
@@ -106,10 +95,6 @@ function SeasonPageContent() {
   const daySelectionRef = useRef<HTMLDivElement>(null);
   const seasonSelectorRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
-  // 이미지 프리로딩 훅
-  const { preloadAnimeDetails } = useImagePreloading();
-  const { getQueueStatus } = useSmartImagePreloader();
 
   // 초기화
   useEffect(() => {
@@ -137,7 +122,6 @@ function SeasonPageContent() {
     data: scheduleData,
     error,
     isLoading,
-    isFetching,
   } = useQuery<AnimePreviewListDto>({
     queryKey: ['schedule', year, quarter],
     queryFn: () => getScheduleByYearAndQuarter(year, quarter),
@@ -417,10 +401,6 @@ function SeasonPageContent() {
     }
   };
 
-  const handleSearchChange = (query: string) => {
-    setSearchInput(query);
-  };
-
   // 검색 초기화 핸들러
   const handleSearchReset = () => {
     // 검색 초기화 시 스티키 상태 초기화
@@ -543,15 +523,6 @@ function SeasonPageContent() {
 
       // 즉시 페이지 이동 (setTimeout 제거)
       router.push(`/search/${year}/${quarter}`);
-    }
-  };
-
-  // OTT 필터 핸들러
-  const handleOttServiceChange = (service: string, checked: boolean) => {
-    if (checked) {
-      setSelectedOttServices((prev) => [...prev, service]);
-    } else {
-      setSelectedOttServices((prev) => prev.filter((s) => s !== service));
     }
   };
 
@@ -823,9 +794,7 @@ function SeasonPageContent() {
                 value={searchInput}
                 onChange={handleSearchInputChange}
                 onSearch={handleSearch}
-                placeholder={
-                  randomAnimeTitle || '분기 신작 애니/캐릭터를 검색해보세요...'
-                }
+                placeholder="분기 신작 애니/캐릭터를 검색해보세요..."
                 className="h-[62px] w-full"
               />
             </div>
@@ -1528,15 +1497,6 @@ function SeasonPageContent() {
           )}
         </div>
       </div>
-
-      {/* 프리로딩 진행률 표시 */}
-      {isPreloading && (
-        <PreloadingProgress
-          total={preloadingStatus.total}
-          loaded={preloadingStatus.loaded}
-          active={preloadingStatus.active}
-        />
-      )}
     </main>
   );
 }

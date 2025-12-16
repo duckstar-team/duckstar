@@ -18,10 +18,9 @@ import type {
 } from '@/types';
 import { extractChosung } from '@/lib/searchUtils';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
-import { useSmartImagePreloader } from '@/hooks/useSmartImagePreloader';
+
 import { useQuery } from '@tanstack/react-query';
 import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
-import PreloadingProgress from '@/components/common/PreloadingProgress';
 
 // 애니메이션 데이터 (이제 별도 파일에서 import)
 
@@ -82,14 +81,7 @@ function SearchPageContentWithParams() {
   }, []);
   const [selectedOttServices, setSelectedOttServices] = useState<string[]>([]);
   const [randomAnimeTitle, setRandomAnimeTitle] = useState<string>('');
-  const [isPreloading, setIsPreloading] = useState(false);
   const [viewMode, setViewMode] = useState<'large' | 'small'>('large'); // 뷰 모드 상태
-  const [preloadingStatus, setPreloadingStatus] = useState({
-    total: 0,
-    loaded: 0,
-    active: 0,
-  });
-  const preloadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 분기 선택 상태
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -476,7 +468,6 @@ function SearchPageContentWithParams() {
 
   // 이미지 프리로딩 훅
   const { preloadSearchResults } = useImagePreloading();
-  const { getQueueStatus } = useSmartImagePreloader();
 
   // 분기 선택 핸들러
   const handleSeasonSelect = (year: number, quarter: number) => {
@@ -991,84 +982,6 @@ function SearchPageContentWithParams() {
       window.removeEventListener('resize', updateHeights);
     };
   }, [isSeasonSelectorSticky]);
-
-  // 프리로딩 상태 모니터링 (캐시 상태 고려)
-  useEffect(() => {
-    if (scheduleData) {
-      // 기존 인터벌 정리
-      if (preloadingIntervalRef.current) {
-        clearInterval(preloadingIntervalRef.current);
-      }
-
-      // 캐시된 데이터인지 확인 (isFetching이 false면 캐시된 데이터)
-      const isCachedData = !isFetching;
-
-      if (isCachedData) {
-        // 캐시된 데이터면 프리로딩 상태를 false로 설정
-        setIsPreloading(false);
-        setPreloadingStatus({ total: 0, loaded: 0, active: 0 });
-        return;
-      }
-
-      // 새로운 데이터면 프리로딩 시작
-      setIsPreloading(true);
-
-      // 1초마다 상태 확인
-      preloadingIntervalRef.current = setInterval(() => {
-        const status = getQueueStatus();
-        const isStillLoading = status.total > 0 || status.active > 0;
-
-        setIsPreloading(isStillLoading);
-        setPreloadingStatus({
-          total: status.total + status.loaded,
-          loaded: status.loaded,
-          active: status.active,
-        });
-
-        // 로딩 완료 시 인터벌 정리
-        if (!isStillLoading) {
-          if (preloadingIntervalRef.current) {
-            clearInterval(preloadingIntervalRef.current);
-            preloadingIntervalRef.current = null;
-          }
-        }
-      }, 1000);
-
-      // cleanup 함수
-      return () => {
-        if (preloadingIntervalRef.current) {
-          clearInterval(preloadingIntervalRef.current);
-          preloadingIntervalRef.current = null;
-        }
-      };
-    }
-  }, [scheduleData, isFetching]); // isFetching도 의존성에 추가
-
-  // 컴포넌트 언마운트 시 인터벌 정리
-  useEffect(() => {
-    return () => {
-      if (preloadingIntervalRef.current) {
-        clearInterval(preloadingIntervalRef.current);
-        preloadingIntervalRef.current = null;
-      }
-    };
-  }, []);
-
-  // 분기를 시즌으로 변환 (기존 형식 유지)
-  const getSeasonInKorean = (quarter: number): string => {
-    switch (quarter) {
-      case 1:
-        return '겨울';
-      case 2:
-        return '봄';
-      case 3:
-        return '여름';
-      case 4:
-        return '가을';
-      default:
-        return '알 수 없음';
-    }
-  };
 
   // 공통 로직의 extractChosung 함수 사용
 
@@ -1810,8 +1723,8 @@ function SearchPageContentWithParams() {
     router.push('/search');
   };
 
-  // 데이터 로딩 중이거나 (새로운 데이터를 가져오면서) 프리로딩 중일 때만 스켈레톤 UI 표시
-  if (currentIsLoading || (isFetching && isPreloading)) {
+  // 데이터 로딩 중일 때만 스켈레톤 UI 표시
+  if (currentIsLoading) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
         <SearchLoadingSkeleton
@@ -2717,15 +2630,6 @@ function SearchPageContentWithParams() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* 프리로딩 진행률 표시 (새로운 데이터를 가져올 때만) */}
-      {isFetching && isPreloading && (
-        <PreloadingProgress
-          total={preloadingStatus.total}
-          loaded={preloadingStatus.loaded}
-          active={preloadingStatus.active}
-        />
       )}
     </main>
   );

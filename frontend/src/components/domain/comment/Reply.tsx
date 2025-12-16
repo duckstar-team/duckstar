@@ -1,7 +1,6 @@
 import React from 'react';
 import { ReplyDto } from '@/types';
 import VoteCount from '@/components/domain/vote/VoteCount';
-import { useLazyImage } from '@/hooks/useLazyImage';
 
 // 시간 포맷팅 유틸리티 함수
 const formatTimeAgo = (dateString: string): string => {
@@ -47,18 +46,6 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
     listenerNickname,
     attachedImageUrl,
   } = reply;
-
-  // 답글 첨부 이미지 지연 로딩 (낮은 우선순위)
-  const {
-    imgRef: attachedImgRef,
-    isInView: isAttachedImageInView,
-    handleLoad: handleAttachedImageLoad,
-    handleError: handleAttachedImageError,
-  } = useLazyImage({
-    threshold: 0.1,
-    rootMargin: '100px', // 답글 이미지는 더 늦게 로딩
-    priority: false,
-  });
 
   return (
     <div className="flex w-full flex-col items-end justify-center gap-2.5 pr-[10px]">
@@ -154,25 +141,14 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
             {/* 첨부 이미지 */}
             {attachedImageUrl && (
               <div className="flex justify-start">
-                {isAttachedImageInView ? (
-                  <img
-                    ref={attachedImgRef}
-                    src={attachedImageUrl}
-                    alt="답글 첨부 이미지"
-                    className="max-h-[250px] max-w-[250px] cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-90"
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={handleAttachedImageLoad}
-                    onError={handleAttachedImageError}
-                    onClick={() => window.open(attachedImageUrl, '_blank')}
-                  />
-                ) : (
-                  <div className="flex max-h-[250px] max-w-[250px] items-center justify-center rounded-lg bg-gray-200">
-                    <span className="text-sm text-gray-400">
-                      이미지 로딩 중...
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={attachedImageUrl}
+                  alt="답글 첨부 이미지"
+                  className="max-h-[250px] max-w-[250px] cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-90"
+                  loading="lazy"
+                  decoding="async"
+                  onClick={() => window.open(attachedImageUrl, '_blank')}
+                />
               </div>
             )}
           </div>

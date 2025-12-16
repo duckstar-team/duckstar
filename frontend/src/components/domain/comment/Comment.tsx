@@ -1,7 +1,6 @@
 import React from 'react';
 import { CommentDto } from '@/types';
 import VoteCount from '@/components/domain/vote/VoteCount';
-import { useLazyImage } from '@/hooks/useLazyImage';
 
 // 시간 포맷팅 유틸리티 함수
 const formatTimeAgo = (dateString: string): string => {
@@ -54,18 +53,6 @@ const Comment: React.FC<CommentProps> = ({
     episodeNumber,
     attachedImageUrl,
   } = comment;
-
-  // 댓글 첨부 이미지 지연 로딩 (낮은 우선순위)
-  const {
-    imgRef: attachedImgRef,
-    isInView: isAttachedImageInView,
-    handleLoad: handleAttachedImageLoad,
-    handleError: handleAttachedImageError,
-  } = useLazyImage({
-    threshold: 0.1,
-    rootMargin: '100px', // 댓글 이미지는 더 늦게 로딩
-    priority: false,
-  });
 
   // 삭제된 댓글인지 확인
   const isDeleted = status !== 'NORMAL';
@@ -251,25 +238,14 @@ const Comment: React.FC<CommentProps> = ({
             {/* 첨부 이미지 */}
             {attachedImageUrl && (
               <div className="flex justify-start">
-                {isAttachedImageInView ? (
-                  <img
-                    ref={attachedImgRef}
-                    src={attachedImageUrl}
-                    alt="댓글 첨부 이미지"
-                    className="max-h-[300px] max-w-[300px] cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-90"
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={handleAttachedImageLoad}
-                    onError={handleAttachedImageError}
-                    onClick={() => window.open(attachedImageUrl, '_blank')}
-                  />
-                ) : (
-                  <div className="flex max-h-[300px] max-w-[300px] items-center justify-center rounded-lg bg-gray-200">
-                    <span className="text-sm text-gray-400">
-                      이미지 로딩 중...
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={attachedImageUrl}
+                  alt="댓글 첨부 이미지"
+                  className="max-h-[300px] max-w-[300px] cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-90"
+                  loading="lazy"
+                  decoding="async"
+                  onClick={() => window.open(attachedImageUrl, '_blank')}
+                />
               </div>
             )}
           </div>
