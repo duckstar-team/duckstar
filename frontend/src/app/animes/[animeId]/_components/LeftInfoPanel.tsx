@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import '@/styles/customScrollbar.css';
-import { cn } from '@/lib/utils';
+import { cn, getSeasonInKorean } from '@/lib/utils';
 import CharacterList from '@/components/domain/anime/CharacterList';
 import { Character } from '@/types';
 import ImageModal from '@/components/domain/anime/ImageModal';
@@ -37,17 +37,6 @@ interface LeftInfoPanelProps {
   anime: AnimeInfoDto;
   characters?: Character[];
 }
-
-// 시즌 타입을 한국어로 변환하는 함수
-const getSeasonInKorean = (seasonType: string): string => {
-  const seasonMap: { [key: string]: string } = {
-    SPRING: '봄',
-    SUMMER: '여름',
-    AUTUMN: '가을',
-    WINTER: '겨울',
-  };
-  return seasonMap[seasonType] || seasonType;
-};
 
 export default function LeftInfoPanel({
   anime,
