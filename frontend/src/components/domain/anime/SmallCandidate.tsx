@@ -6,7 +6,6 @@ import { StarInfoDto, LiveVoteResultDto, AnimePreviewDto } from '@/types';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import StarDistributionChart from '@/components/domain/star/StarDistributionChart';
 import { submitStarVote, withdrawStar } from '@/api/vote';
-import { addVotedEpisode } from '@/lib/voteStorage';
 import { Clock } from 'lucide-react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
@@ -128,7 +127,6 @@ export default function SmallCandidate({
       setShowBinIcon(true);
       setIsEditMode(false);
       updateStarDistribution(response, starScore);
-      addVotedEpisode(anime.episodeId);
 
       // 응답에서 episodeStarId 저장 (회수 시 사용)
       if (response.result?.info?.episodeStarId) {

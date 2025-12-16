@@ -7,7 +7,6 @@ import { LiveCandidateDto } from '@/types';
 import StarSubmissionBox from '@/components/domain/star/StarSubmissionBox';
 import { submitStarVote, withdrawStar } from '@/api/vote';
 import { StarInfoDto, LiveVoteResultDto } from '@/types';
-import { addVotedEpisode } from '@/lib/voteStorage';
 import { Clock } from 'lucide-react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
@@ -59,7 +58,6 @@ export default function BigCandidate({
       setIsPanelVisible(true);
       setShowBinIcon(true);
       updateStarDistribution(response, starScore);
-      addVotedEpisode(anime.episodeId);
 
       // 응답에서 episodeStarId 저장 (회수 시 사용)
       if (response.result?.info?.episodeStarId) {
