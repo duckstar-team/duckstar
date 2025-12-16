@@ -64,13 +64,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     null
   );
 
+  // user 상태 변경 시 GA 사용자 ID 자동 동기화
+  useEffect(() => {
+    if (user) {
+      setUserId(user.id);
+    } else {
+      setUserId(null);
+    }
+  }, [user]);
+
   const resetAuthState = () => {
     setUser(null);
     setIsAuthenticated(false);
     setIsLoading(false);
     setHasCheckedAuth(false);
-    // GA4 사용자 ID 제거
-    setUserId(null);
     // 토큰 만료 타이머 정리
     if (tokenExpiryTimer) {
       clearTimeout(tokenExpiryTimer);
@@ -184,8 +191,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
       // 중복 투표 방지 시간 초기화
       localStorage.removeItem('duckstar_vote_block_until');
-      // GA4 사용자 ID 설정
-      setUserId(userData.id);
       // 토큰 만료 타이머 설정
       console.log('로그인 성공, 토큰 만료 타이머 설정');
       setupTokenExpiryTimer();
@@ -199,8 +204,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         // 중복 투표 방지 시간 초기화
         localStorage.removeItem('duckstar_vote_block_until');
-        // GA4 사용자 ID 설정
-        setUserId((user as User).id);
         // 토큰 만료 타이머 설정
         setupTokenExpiryTimer();
 
@@ -298,8 +301,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(user as User);
       setIsAuthenticated(true);
       setHasCheckedAuth(true);
-      // GA4 사용자 ID 설정
-      setUserId((user as User).id);
     } catch (error) {
       resetAuthState();
     }
@@ -358,8 +359,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const user = userData.result || userData;
         setUser(user as User);
         setIsAuthenticated(true);
-        // GA4 사용자 ID 설정
-        setUserId((user as User).id);
 
         // OAuth 콜백 처리 (LOGIN_STATE 쿠키가 있을 때만)
         const hasLoginState = document.cookie.includes('LOGIN_STATE=');
