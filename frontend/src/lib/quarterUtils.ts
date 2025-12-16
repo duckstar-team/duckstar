@@ -38,18 +38,19 @@ function firstDayOfQuarter(year: number, quarter: number): Date {
 function anchorForQuarter(year: number, quarter: number): Date {
   const first = firstDayOfQuarter(year, quarter); // 1,4,7,10월 1일
   const dow = first.getDay(); // 0=일요일, 1=월요일, ..., 6=토요일
-  
+
   // previousOrSame(MONDAY) 로직: 월요일이면 그대로, 아니면 이전 월요일
   let daysToMonday: number;
-  if (dow === 1) { // 월요일
+  if (dow === 1) {
+    // 월요일
     daysToMonday = 0;
   } else {
     daysToMonday = dow === 0 ? 6 : dow - 1; // 이전 월요일까지의 일수
   }
-  
+
   const anchorDate = new Date(first);
   anchorDate.setDate(first.getDate() - daysToMonday);
-  
+
   // 18:00으로 설정
   anchorDate.setHours(18, 0, 0, 0);
   return anchorDate;
@@ -84,7 +85,9 @@ function resolveAnchor(time: Date): AnchorInfo {
  * 분기 주차: 앵커 기준 7일(=168시간) 단위, 1부터 시작
  */
 function weekOfQuarter(time: Date, anchor: Date): number {
-  const hours = Math.floor((time.getTime() - anchor.getTime()) / (1000 * 60 * 60));
+  const hours = Math.floor(
+    (time.getTime() - anchor.getTime()) / (1000 * 60 * 60)
+  );
   return Math.floor(hours / (7 * 24)) + 1; // 168시간 단위
 }
 
@@ -100,13 +103,4 @@ export function getThisWeekRecord(time: Date): YQWRecord {
   const quarterYear = ai.anchorStart.getFullYear();
 
   return { yearValue: quarterYear, quarterValue: ai.quarter, weekValue: week };
-}
-
-/**
- * 현재 날짜를 기반으로 연도와 분기를 계산합니다.
- */
-export function getCurrentYearAndQuarter(): { year: number; quarter: number } {
-  const now = new Date();
-  const record = getThisWeekRecord(now);
-  return { year: record.yearValue, quarter: record.quarterValue };
 }

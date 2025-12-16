@@ -3,14 +3,15 @@
  */
 
 // GA 측정 ID (환경 변수에서 가져오기)
-export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-FV68BFV3GX';
+export const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-FV68BFV3GX';
 
 // 개발 환경 감지 (로컬호스트 또는 개발 서버)
 export const isDevelopment = (): boolean => {
   if (typeof window === 'undefined') {
     return process.env.NODE_ENV === 'development';
   }
-  
+
   const hostname = window.location.hostname;
   return (
     process.env.NODE_ENV === 'development' ||
@@ -38,30 +39,13 @@ declare global {
 export const pageview = (url: string, title?: string) => {
   // 개발 환경에서는 추적하지 않음
   if (isDevelopment()) return;
-  
+
   if (typeof window === 'undefined' || !window.gtag) return;
-  
+
   window.gtag('config', GA_MEASUREMENT_ID, {
     page_path: url,
     page_title: title,
   });
-};
-
-/**
- * 커스텀 이벤트 추적
- * @param eventName 이벤트 이름
- * @param eventParams 이벤트 파라미터 (선택사항)
- */
-export const event = (
-  eventName: string,
-  eventParams?: Record<string, any>
-) => {
-  // 개발 환경에서는 추적하지 않음
-  if (isDevelopment()) return;
-  
-  if (typeof window === 'undefined' || !window.gtag) return;
-  
-  window.gtag('event', eventName, eventParams);
 };
 
 /**
@@ -71,9 +55,9 @@ export const event = (
 export const setUserId = (userId: string | number | null) => {
   // 개발 환경에서는 추적하지 않음
   if (isDevelopment()) return;
-  
+
   if (typeof window === 'undefined' || !window.gtag) return;
-  
+
   if (userId) {
     window.gtag('config', GA_MEASUREMENT_ID, {
       user_id: userId.toString(),
@@ -85,17 +69,3 @@ export const setUserId = (userId: string | number | null) => {
     });
   }
 };
-
-/**
- * 사용자 속성 설정
- * @param properties 사용자 속성 객체
- */
-export const setUserProperties = (properties: Record<string, any>) => {
-  // 개발 환경에서는 추적하지 않음
-  if (isDevelopment()) return;
-  
-  if (typeof window === 'undefined' || !window.gtag) return;
-  
-  window.gtag('set', 'user_properties', properties);
-};
-
