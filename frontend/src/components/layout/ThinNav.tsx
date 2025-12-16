@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { scrollToTop } from '@/utils/scrollUtils';
 
 // ThinNav용 네비게이션 아이템
 const THIN_NAV_ITEMS = [
@@ -87,15 +86,7 @@ export default function ThinNav({ onHover, isExpanded = false }: ThinNavProps) {
               onMouseEnter={() => setHoveredItem(item.href)}
               onMouseLeave={() => setHoveredItem(null)}
             >
-              <Link
-                href={item.href}
-                onClick={() => {
-                  if (item.href === '/') {
-                    scrollToTop();
-                  }
-                }}
-                className="block"
-              >
+              <Link href={item.href}>
                 <div
                   className={`relative flex h-[40px] items-center rounded-lg transition-all duration-300 ease-in-out ${
                     isExpanded

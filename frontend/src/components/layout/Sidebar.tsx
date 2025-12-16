@@ -5,10 +5,6 @@ import Link from 'next/link';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { scrollToTop } from '@/utils/scrollUtils';
-import { useNavigationPrefetch } from '@/hooks/useNavigationPrefetch';
-import { useNavigationState } from '@/hooks/useNavigationState';
-import NavigationLoadingIndicator from '@/components/common/NavigationLoadingIndicator';
 import { NAV_ITEMS } from './navItems';
 
 // Vote button variants based on Figma specifications
@@ -57,7 +53,6 @@ interface NavButtonProps extends VariantProps<typeof voteButtonVariants> {
   isHovered?: boolean;
   isBeta?: boolean;
   badgeText?: string;
-  pathname?: string;
 }
 
 function NavButton({
@@ -71,27 +66,10 @@ function NavButton({
   isHovered,
   isBeta = false,
   badgeText,
-  pathname,
 }: NavButtonProps) {
-  const { handleMouseEnter } = useNavigationPrefetch();
-  const { startNavigation } = useNavigationState();
   const state = isActive ? 'active' : isHovered ? 'hover' : 'default';
   // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
-
-  // 단순화된 네비게이션 클릭 핸들러
-  const handleNavigationClick = () => {
-    // 네비게이션 시작
-    startNavigation();
-
-    // 홈으로 이동할 때만 스크롤 탑으로 이동
-    if (href === '/') {
-      scrollToTop();
-    }
-
-    // 강제 새로고침 제거 - React 상태 관리로 해결
-    // search 화면에서의 상태 초기화는 컴포넌트 내부에서 처리
-  };
 
   return (
     <>
@@ -138,11 +116,7 @@ function NavButton({
           </div>
         </div>
       ) : (
-        <Link
-          href={href}
-          onClick={handleNavigationClick}
-          onMouseEnter={() => handleMouseEnter(href)}
-        >
+        <Link href={href}>
           <div className={cn(voteButtonVariants({ state }), 'relative')}>
             {/* Icon container */}
             <div className={cn(iconSize, 'relative')}>
@@ -176,7 +150,6 @@ export default function Sidebar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [windowHeight, setWindowHeight] = useState(0);
   const [windowWidth, setWindowWidth] = useState(0);
-  const { isNavigating } = useNavigationState();
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -221,7 +194,7 @@ export default function Sidebar() {
               : 'left-[8px] w-[40px] md:left-[16px] md:w-[167px]'
         } absolute top-[16px] flex flex-col items-start justify-start gap-[4px] pb-[4px] transition-all duration-300 ease-in-out group-hover:left-[16px] group-hover:w-[167px]`}
       >
-        {NAV_ITEMS.map((item, index) => (
+        {NAV_ITEMS.map((item) => (
           <div
             key={item.href}
             onMouseEnter={() => setHoveredItem(item.href)}
@@ -244,7 +217,6 @@ export default function Sidebar() {
               isHovered={hoveredItem === item.href && pathname !== item.href}
               isBeta={item.isBeta}
               badgeText={item.badgeText}
-              pathname={pathname}
             />
           </div>
         ))}
@@ -300,9 +272,6 @@ export default function Sidebar() {
           © 2025 DUCKSTAR
         </div>
       </div>
-
-      {/* 네비게이션 로딩 인디케이터 */}
-      <NavigationLoadingIndicator isNavigating={isNavigating} />
     </div>
   );
 }

@@ -1,44 +1,9 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { scrollToTop } from '@/utils/scrollUtils';
 import ThinNavMenuItem from '@/components/domain/chart/ThinNavMenuItem';
 import { WeekDto } from '@/types';
-
-// ThinNavDetail용 네비게이션 아이템
-const THIN_NAV_DETAIL_ITEMS = [
-  {
-    label: '홈',
-    href: '/',
-    icon: '/icons/home-default.svg',
-    activeIcon: '/icons/home-active.svg',
-  },
-  {
-    label: '주간 차트',
-    href: '/chart',
-    icon: '/icons/chart-default.svg',
-    activeIcon: '/icons/chart-active.svg',
-  },
-  {
-    label: '투표하기',
-    href: '/vote',
-    icon: '/icons/vote-default.svg',
-    activeIcon: '/icons/vote-active.svg',
-  },
-  {
-    label: '애니/시간표 검색',
-    href: '/search',
-    icon: '/icons/search-default.svg',
-    activeIcon: '/icons/search-active.svg',
-  },
-  {
-    label: '마이페이지',
-    href: '/mypage',
-    icon: '/icons/mypage-default.svg',
-    activeIcon: '/icons/mypage-active.svg',
-  },
-];
 
 interface ThinNavDetailProps {
   weeks?: WeekDto[];
@@ -51,9 +16,8 @@ export default function ThinNavDetail({
   selectedWeek,
   hideTextOnMobile = false,
 }: ThinNavDetailProps) {
-  const pathname = usePathname();
   const router = useRouter();
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
   const [expandedQuarters, setExpandedQuarters] = useState<Set<string>>(
     new Set()
   );
@@ -165,9 +129,7 @@ export default function ThinNavDetail({
     >
       {/* 차트 제목 */}
       <div className="absolute top-[24px] left-[20px]">
-        <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'white' }}>
-          차트
-        </h2>
+        <h2 className="text-xl font-semibold text-white">차트</h2>
       </div>
 
       {/* 시간 메뉴 아이템들 */}
@@ -188,7 +150,6 @@ export default function ThinNavDetail({
                 router.push(
                   `/chart/${item.weekData.year}/${item.weekData.quarter}/${item.weekData.week}`
                 );
-                scrollToTop();
               } else if (item.type === 'quarter' && item.quarterKey) {
                 // 분기 클릭 시 토글
                 const [year, quarter] = item.quarterKey.split('-').map(Number);

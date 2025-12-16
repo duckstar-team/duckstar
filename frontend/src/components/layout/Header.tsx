@@ -1,44 +1,22 @@
 'use client';
 
-import type { NextPage } from 'next';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import LoginButton from '@/components/common/LoginButton';
 import { useAuth } from '@/context/AuthContext';
-import { scrollToTop } from '@/utils/scrollUtils';
 import { Menu } from 'lucide-react';
 import MobileSidebar from './MobileSidebar';
+import { cn } from '@/lib/utils';
 
-export type HeaderType = {
-  className?: string;
-};
-
-const Header: NextPage<HeaderType> = ({ className = '' }) => {
+export default function Header() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
-
-  // 덕스타 로고 클릭 시 스크롤 탑으로 이동
-  const handleLogoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    sessionStorage.setItem('logo-navigation', 'true');
-    sessionStorage.setItem('home-scroll-top', 'true');
-    scrollToTop();
-
-    // 모바일에서 홈으로 이동 시 페이지 새로고침으로 레이아웃 전환
-    if (window.innerWidth < 768) {
-      window.location.href = '/';
-    } else {
-      router.push('/');
-    }
-  };
 
   // 검색 실행
   const handleSearch = (e: React.FormEvent) => {
@@ -82,20 +60,6 @@ const Header: NextPage<HeaderType> = ({ className = '' }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isSearchOpen]);
-
-  // 화면 크기 감지
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 375);
-    };
-
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-
-    return () => {
-      window.removeEventListener('resize', checkScreenSize);
-    };
-  }, []);
 
   // 외부 클릭 감지
   useEffect(() => {
@@ -145,44 +109,29 @@ const Header: NextPage<HeaderType> = ({ className = '' }) => {
 
   return (
     <>
-      <header
-        className={`relative h-[60px] w-full border-b border-[#DADCE0] backdrop-blur-[6px] ${className}`}
-      >
+      <header className="relative h-[60px] w-full border-b border-[#DADCE0] backdrop-blur-[6px]">
         {/* Background Layer */}
         <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
 
-        {/* Hamburger - vote, search, anime, chart, profile-setup, about, terms, privacy-policy pages mobile only, placed to the left of the logo */}
-        {(pathname === '/' ||
-          pathname === '/vote' ||
-          pathname === '/search' ||
-          pathname.startsWith('/search/') ||
-          pathname.startsWith('/animes/') ||
-          pathname === '/chart' ||
-          pathname.startsWith('/chart/') ||
-          pathname === '/profile-setup' ||
-          pathname === '/about' ||
-          pathname === '/terms' ||
-          pathname === '/privacy-policy') && (
-          <div
-            ref={menuContainerRef}
-            className="absolute top-1/2 left-1 z-10 -translate-y-1/2 lg:hidden"
+        {/* Hamburger Menu Button */}
+        <div
+          ref={menuContainerRef}
+          className="absolute top-1/2 left-1 z-10 -translate-y-1/2 lg:hidden"
+        >
+          <button
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={isMenuOpen}
+            onClick={toggleMenu}
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/80 backdrop-blur-[12px]"
           >
-            <button
-              type="button"
-              aria-label="Open menu"
-              aria-expanded={isMenuOpen}
-              onClick={toggleMenu}
-              className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/80 backdrop-blur-[12px]"
-            >
-              <Menu color="#990033" />
-            </button>
-          </div>
-        )}
+            <Menu color="#990033" />
+          </button>
+        </div>
 
         {/* Logo */}
         <Link
           href="/"
-          onClick={handleLogoClick}
           className="absolute top-0 left-[50px] z-10 h-[60px] w-[80px] cursor-pointer sm:left-[58px] sm:w-[93px] lg:left-[25px]"
         >
           <img
@@ -194,12 +143,10 @@ const Header: NextPage<HeaderType> = ({ className = '' }) => {
 
         {/* Right Section - Search Bar + Login Button */}
         <div
-          className={`absolute top-0 right-[25px] z-10 flex h-[60px] items-center sm:right-3 md:right-[25px] ${
-            isAuthenticated ? 'pr-[8px]' : 'pr-0'
-          }`}
-          style={{
-            gap: isSmallScreen ? '0px' : isAuthenticated ? '4px' : '25px',
-          }}
+          className={cn(
+            'absolute top-0 right-[25px] z-10 flex h-15 items-center gap-0 sm:right-3 md:right-[25px]',
+            isAuthenticated ? 'gap-1 pr-2' : 'gap-6 pr-0'
+          )}
         >
           {/* Desktop Search Bar */}
           <form
@@ -298,6 +245,4 @@ const Header: NextPage<HeaderType> = ({ className = '' }) => {
       />
     </>
   );
-};
-
-export default Header;
+}

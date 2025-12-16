@@ -2,11 +2,11 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { scrollToTop } from '@/utils/scrollUtils';
 import ThinNavDetail from './ThinNavDetail';
 import { useChart } from './AppContainer';
 import { NAV_ITEMS } from './navItems';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -40,19 +40,6 @@ export default function MobileSidebar({
 
   const isChartPage = pathname === '/chart' || pathname.startsWith('/chart/');
 
-  const handleNavClick = (href: string) => {
-    onClose();
-    // 모바일에서 홈으로 이동 시 페이지 새로고침으로 레이아웃 전환
-    if (href === '/' && window.innerWidth < 768) {
-      window.location.href = '/';
-    } else {
-      if (href === '/') {
-        scrollToTop();
-      }
-      router.push(href);
-    }
-  };
-
   return (
     <div data-mobile-sidebar className="fixed inset-0 z-[99999]">
       {/* Overlay background */}
@@ -85,21 +72,16 @@ export default function MobileSidebar({
           {/* Navigation items */}
           <nav className="flex flex-col gap-2">
             {NAV_ITEMS.map((item) => {
-              const isActive =
-                item.href === '/search'
-                  ? pathname === item.href || pathname.startsWith('/search/')
-                  : item.href === '/chart'
-                    ? pathname === item.href || pathname.startsWith('/chart/')
-                    : pathname === item.href;
+              const isActive = pathname === item.href;
 
               return (
                 <button
                   key={item.href}
                   data-menu-item
-                  onClick={() => handleNavClick(item.href)}
+                  onClick={() => router.push(item.href)}
                   disabled={item.isBeta}
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-lg border-none px-4 py-3 text-left text-base transition-all duration-200 outline-none',
+                    'relative flex w-full items-center gap-3 rounded-lg border-none px-4 py-3 text-left text-base transition-all duration-200 outline-none',
                     isActive
                       ? 'bg-gradient-to-r from-[#cb285e] to-[#9c1f49] font-bold text-white'
                       : 'bg-transparent font-medium text-[#586672] hover:bg-[#ffd4e2]',
@@ -115,21 +97,12 @@ export default function MobileSidebar({
                     )}
                   />
                   <span className={cn(isChartPage && 'hidden')}>
-                    {item.href === '/search' ? (
-                      <>
-                        <span className="md:hidden">시간표 검색</span>
-                        <span className="hidden md:inline">
-                          애니/시간표 검색
-                        </span>
-                      </>
-                    ) : (
-                      item.label
-                    )}
+                    {item.label}
                   </span>
                   {item.isBeta && (
                     <span
                       className={cn(
-                        'absolute top-[3.5px] -right-6 z-10 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600',
+                        'absolute top-1/2 right-0 z-10 -translate-y-1/2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600',
                         isChartPage && 'hidden'
                       )}
                     >
@@ -142,30 +115,30 @@ export default function MobileSidebar({
 
             {/* 푸터 항목들 */}
             <div className="absolute right-0 bottom-0 left-0 mt-auto flex flex-col gap-0 border-t border-gray-200 pt-6 pb-4">
-              <button
+              <Link
+                href="/about"
                 data-menu-item
-                onClick={() => handleNavClick('/about')}
                 className="flex w-full cursor-pointer items-center rounded-md border-none bg-transparent px-4 py-2 text-left text-sm font-normal text-gray-500 transition-all duration-200 outline-none hover:bg-gray-100 hover:text-gray-700"
               >
                 덕스타 소개
-              </button>
+              </Link>
 
               <div className="flex flex-nowrap items-center gap-2 px-4 whitespace-nowrap">
-                <button
+                <Link
+                  href="/terms"
                   data-menu-item
-                  onClick={() => handleNavClick('/terms')}
                   className="flex-shrink-0 cursor-pointer border-none bg-transparent py-2 text-left text-sm font-normal whitespace-nowrap text-gray-500 transition-colors duration-200 outline-none hover:text-gray-700"
                 >
                   이용약관
-                </button>
+                </Link>
                 <span className="flex-shrink-0 text-sm text-gray-300">·</span>
-                <button
+                <Link
+                  href="/privacy-policy"
                   data-menu-item
-                  onClick={() => handleNavClick('/privacy-policy')}
                   className="flex-shrink-0 cursor-pointer border-none bg-transparent py-2 text-left text-sm font-normal whitespace-nowrap text-gray-500 transition-colors duration-200 outline-none hover:text-gray-700"
                 >
                   개인정보처리방침
-                </button>
+                </Link>
               </div>
 
               <div className="px-4 text-left text-xs text-gray-400">
