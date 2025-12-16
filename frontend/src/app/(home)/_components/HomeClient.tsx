@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeBanner from '@/components/ui/banner/HomeBanner';
 import ButtonVote from '@/components/ui/ButtonVote';
-import HeaderList from '@/components/layout/header/HeaderList';
+import HeaderList from './HeaderList';
 import HomeChart from '@/components/domain/chart/HomeChart';
-import RightHeaderList from '@/components/layout/header/RightHeaderList';
+import RightHeaderList from './RightHeaderList';
 import RightPanel from '@/components/domain/chart/RightPanel';
 import { homeApi } from '@/api/home';
 import {
@@ -15,7 +15,7 @@ import {
   DuckstarRankPreviewDto,
   HomeDto,
 } from '@/types';
-import { useSimpleScrollRestoration } from '@/hooks/useSimpleScrollRestoration';
+import { scrollToTop } from '@/utils/scrollUtils';
 import { queryConfig } from '@/lib/queryConfig';
 import React from 'react';
 import { ApiResponse } from '@/api/http';
@@ -93,9 +93,6 @@ export default function HomeClient() {
     }
     return 'home-default';
   }, [selectedWeek]);
-
-  // 단순화된 스크롤 복원 훅 사용 (성능 최적화)
-  const { scrollToTop } = useSimpleScrollRestoration();
 
   // React Query를 사용한 홈 데이터 페칭 (통일된 캐싱 전략)
   const {
@@ -540,7 +537,6 @@ export default function HomeClient() {
               {/* Right Panel 헤더 - 해외 순위 (데스크톱에서만 같은 줄에 표시) */}
               <div className="hidden w-full xl:block xl:w-auto">
                 <RightHeaderList
-                  weekDtos={homeData.result.pastWeekDtos}
                   selectedTab={selectedRightTab}
                   onTabChange={handleRightPanelTabChange}
                 />
@@ -595,7 +591,6 @@ export default function HomeClient() {
                 <div className="mx-auto w-full rounded-lg bg-white py-1">
                   <div className="mx-auto flex justify-center">
                     <RightHeaderList
-                      weekDtos={homeData.result.pastWeekDtos}
                       selectedTab={selectedRightTab}
                       onTabChange={handleRightPanelTabChange}
                     />

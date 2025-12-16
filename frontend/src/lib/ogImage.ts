@@ -3,7 +3,7 @@
  * WebP 이미지를 JPG/PNG로 변환하는 API를 호출
  */
 
-import { getOgLogoUrl } from './logoImages';
+import { OG_LOGO_URL } from './constants';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
 
@@ -31,7 +31,7 @@ export function getOgImageUrl(
   // 이미지 URL이 없으면 기본 로고 사용
   if (!imageUrl || imageUrl.trim() === '') {
     // 기본 로고는 정적 파일이므로 직접 반환 (OG용 JPG 사용)
-    return getOgLogoUrl();
+    return OG_LOGO_URL;
   }
 
   // 상대 경로인 경우 절대 경로로 변환

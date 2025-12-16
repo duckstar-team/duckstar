@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ChartHeader from './ChartHeader';
 import { WeekDto } from '@/types';
 
 interface HeaderListProps {
@@ -102,10 +101,19 @@ export default function HeaderList({
     <div
       className={`inline-flex w-full max-w-sm items-end justify-between gap-18 pl-3 sm:max-w-md sm:gap-70 sm:px-4 md:max-w-lg md:justify-between md:gap-90 md:px-5 lg:max-w-xl lg:justify-start lg:gap-100 xl:w-[750px] xl:justify-between xl:gap-90 ${className}`}
     >
-      {/* 왼쪽 헤더 - ChartHeader 사용 */}
-      <div className="size- flex items-center justify-start">
+      {/* 왼쪽 헤더 */}
+      <div className="flex items-center justify-start">
         <div className="relative h-12 w-32 overflow-hidden sm:w-36 md:w-40 lg:w-44">
-          <ChartHeader property1="Selected-Default" />
+          <div
+            className="absolute left-1/2 translate-x-[-50%] text-center text-sm leading-[18px] font-semibold text-nowrap whitespace-pre text-[#990033] not-italic sm:text-base sm:leading-[20px] md:text-lg md:leading-[22px]"
+            style={{ top: 'calc(50% - 5px)' }}
+          >
+            애니메이션 순위 🇰🇷
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 border-[0px_0px_2px] border-solid border-[#990033]"
+          />
         </div>
       </div>
 

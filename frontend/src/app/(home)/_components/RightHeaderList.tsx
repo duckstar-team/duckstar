@@ -1,30 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { WeekDto } from '@/types';
 
 interface RightHeaderListProps {
-  weekDtos: WeekDto[];
   selectedTab?: 'anilab' | 'anime-corner';
   onTabChange?: (tab: 'anilab' | 'anime-corner') => void;
-  className?: string;
 }
 
 export default function RightHeaderList({
-  weekDtos,
   selectedTab,
   onTabChange,
-  className = '',
 }: RightHeaderListProps) {
   const [activeTab, setActiveTab] = useState<'anilab' | 'anime-corner'>(
     'anilab'
   );
-
-  // 현재 주차 찾기 (첫 번째 주차)
-  const currentWeek = weekDtos[0];
-  const currentWeekText = currentWeek
-    ? `${currentWeek.year}년 ${currentWeek.quarter}분기 ${currentWeek.week}주차`
-    : '2025년 3분기 12주차';
 
   // selectedTab prop이 변경될 때 내부 상태 동기화
   useEffect(() => {
@@ -57,9 +46,7 @@ export default function RightHeaderList({
     onTabChange?.(tab);
   };
   return (
-    <div
-      className={`inline-flex h-12 items-center justify-center self-stretch ${className}`}
-    >
+    <div className="inline-flex h-12 items-center justify-center self-stretch">
       {/* Anime Corner 탭 (첫 번째) */}
       <button
         onClick={() => handleTabClick('anime-corner')}
