@@ -3,42 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-
-// ThinNav용 네비게이션 아이템
-const THIN_NAV_ITEMS = [
-  {
-    label: '홈',
-    href: '/',
-    icon: '/icons/home-default.svg',
-    activeIcon: '/icons/home-active.svg',
-  },
-  {
-    label: '주간 차트',
-    href: '/chart',
-    icon: '/icons/chart-default.svg',
-    activeIcon: '/icons/chart-active.svg',
-  },
-  {
-    label: '투표하기',
-    href: '/vote',
-    icon: '/icons/vote-default.svg',
-    activeIcon: '/icons/vote-active.svg',
-  },
-  {
-    label: '애니/시간표 검색',
-    href: '/search',
-    icon: '/icons/search-default.svg',
-    activeIcon: '/icons/search-active.svg',
-  },
-  {
-    label: '마이페이지',
-    href: '/mypage',
-    icon: '/icons/mypage-default.svg',
-    activeIcon: '/icons/mypage-active.svg',
-    isBeta: true,
-    badgeText: '준비중',
-  },
-];
+import { NAV_ITEMS } from './navItems';
 
 interface ThinNavProps {
   onHover?: (isHovered: boolean) => void;
@@ -72,13 +37,15 @@ export default function ThinNav({ onHover, isExpanded = false }: ThinNavProps) {
     >
       {/* 네비게이션 아이템들 */}
       <div className="absolute top-[16px] flex w-full flex-col items-center justify-start gap-[4px] pb-[4px]">
-        {THIN_NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === '/search'
               ? pathname === item.href || pathname.startsWith('/search/')
-              : pathname === item.href;
+              : item.href === '/chart'
+                ? pathname.startsWith('/chart')
+                : pathname === item.href;
           const isHovered = hoveredItem === item.href && !isActive;
-          const iconSrc = isActive ? item.activeIcon : item.icon;
+          const iconSrc = isActive ? item.activeIcon : item.defaultIcon;
 
           return (
             <div

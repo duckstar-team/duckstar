@@ -1,14 +1,17 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { NAV_ITEMS } from './navItems';
+import { NAV_ITEMS, NavItem } from './navItems';
+import ThinNav from './ThinNav';
+import ThinNavDetail from './ThinNavDetail';
+import { useChart } from './AppContainer';
 
-// Vote button variants based on Figma specifications
-const voteButtonVariants = cva(
+// Button variants based on Figma specifications
+const buttonVariants = cva(
   // Base classes from Figma
   'w-[40px] md:w-[167px] h-[40px] py-[10px] pl-[10px] pr-[10px] md:pr-[12px] rounded-lg flex justify-start items-center gap-0 md:gap-[10px] transition-all duration-200 ease-in-out group-hover:w-[167px] group-hover:pr-[12px] group-hover:gap-[10px]',
   {
@@ -42,106 +45,54 @@ const textVariants = cva(
   }
 );
 
-interface NavButtonProps extends VariantProps<typeof voteButtonVariants> {
-  href: string;
-  label: string;
-  defaultIcon: string;
-  activeIcon: string;
-  iconSize: string;
-  iconClass: string;
+interface NavButtonProps {
+  item: NavItem;
   isActive?: boolean;
   isHovered?: boolean;
-  isBeta?: boolean;
-  badgeText?: string;
 }
 
-function NavButton({
-  href,
-  label,
-  defaultIcon,
-  activeIcon,
-  iconSize,
-  iconClass,
-  isActive,
-  isHovered,
-  isBeta = false,
-  badgeText,
-}: NavButtonProps) {
+function NavButton({ item, isActive, isHovered }: NavButtonProps) {
+  const { href, label, defaultIcon, activeIcon, isBeta } = item;
   const state = isActive ? 'active' : isHovered ? 'hover' : 'default';
-  // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
   const iconSrc = isActive ? activeIcon : defaultIcon;
+  const router = useRouter();
 
   return (
-    <>
-      {isBeta ? (
-        <div
-          className={cn(
-            voteButtonVariants({ state }),
-            'opacity-50',
-            'relative'
-          )}
-        >
-          {/* Icon container */}
-          <div className={cn(iconSize, 'relative')}>
-            <div className={iconClass}>
-              <img
-                src={iconSrc}
-                alt={label}
-                className="size-full object-contain"
-              />
-            </div>
-          </div>
-
-          {/* Text container */}
-          <div
-            className={cn(
-              textVariants({ state }),
-              'hidden group-hover:block md:block'
-            )}
-          >
-            <span>{label}</span>
-          </div>
-
-          {/* 베타 표시 */}
-          <div className="absolute -right-1 bottom-2 z-10 hidden group-hover:block md:block">
-            <span
-              className={`rounded px-1 py-0.5 text-[12px] ${
-                badgeText === '8/31 출시'
-                  ? 'bg-gray-200 text-gray-900'
-                  : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {badgeText || '준비중'}
-            </span>
-          </div>
-        </div>
-      ) : (
-        <Link href={href}>
-          <div className={cn(voteButtonVariants({ state }), 'relative')}>
-            {/* Icon container */}
-            <div className={cn(iconSize, 'relative')}>
-              <div className={iconClass}>
-                <img
-                  src={iconSrc}
-                  alt={label}
-                  className="size-full object-contain"
-                />
-              </div>
-            </div>
-
-            {/* Text container */}
-            <div
-              className={cn(
-                textVariants({ state }),
-                'hidden group-hover:block md:block'
-              )}
-            >
-              <span>{label}</span>
-            </div>
-          </div>
-        </Link>
+    <button
+      type="button"
+      className={cn(
+        buttonVariants({ state }),
+        'relative cursor-pointer disabled:cursor-not-allowed! disabled:opacity-50'
       )}
-    </>
+      onClick={() => !isBeta && router.push(href)}
+      disabled={isBeta}
+    >
+      {/* Icon container */}
+      <div className="relative">
+        <div className="flex items-center justify-center">
+          <img src={iconSrc} alt={label} className="size-4 object-contain" />
+        </div>
+      </div>
+
+      {/* Text container */}
+      <div
+        className={cn(
+          textVariants({ state }),
+          'hidden group-hover:block md:block'
+        )}
+      >
+        <span>{label}</span>
+      </div>
+
+      {/* 베타 표시 */}
+      {isBeta && (
+        <div className="absolute -right-1 bottom-2 z-10 hidden group-hover:block md:block">
+          <span className="rounded bg-gray-100 px-1 py-0.5 text-[10px] text-gray-600">
+            준비중
+          </span>
+        </div>
+      )}
+    </button>
   );
 }
 
@@ -150,6 +101,14 @@ export default function Sidebar() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [windowHeight, setWindowHeight] = useState(0);
   const [windowWidth, setWindowWidth] = useState(0);
+  const [isThinNavHovered, setIsThinNavHovered] = useState(false);
+  const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
+
+  // 차트 페이지 여부 확인
+  const isChartPage = pathname.startsWith('/chart');
+
+  // 차트 컨텍스트에서 weeks와 selectedWeek 가져오기
+  const { weeks, selectedWeek } = useChart();
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -161,6 +120,12 @@ export default function Sidebar() {
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+
+  // 페이지 이동 시 호버 상태 초기화
+  useEffect(() => {
+    setIsThinNavHovered(false);
+    setIsThinNavDetailHovered(false);
+  }, [pathname]);
 
   // Footer 위치 계산 (화면 높이에서 헤더 높이(56px)와 Footer 높이를 뺀 값)
   const headerHeight = 56; // 헤더 높이
@@ -174,6 +139,34 @@ export default function Sidebar() {
   const isNarrowDevice = windowWidth >= 280 && windowWidth < 400;
   const isVeryNarrowDevice = windowWidth < 280;
 
+  // 차트 페이지일 때 ThinNav와 ThinNavDetail 렌더링
+  if (isChartPage) {
+    return (
+      <>
+        <ThinNav
+          onHover={setIsThinNavHovered}
+          isExpanded={isThinNavHovered || isThinNavDetailHovered}
+        />
+        <div
+          className={`absolute top-0 transition-all duration-300 ease-in-out ${
+            isThinNavHovered || isThinNavDetailHovered
+              ? 'left-[200px]'
+              : 'left-[60px]'
+          }`}
+          onMouseEnter={() => {
+            if (isThinNavHovered) {
+              setIsThinNavDetailHovered(true);
+            }
+          }}
+          onMouseLeave={() => setIsThinNavDetailHovered(false)}
+        >
+          <ThinNavDetail weeks={weeks} selectedWeek={selectedWeek} />
+        </div>
+      </>
+    );
+  }
+
+  // 일반 페이지일 때 기존 Sidebar 렌더링
   return (
     <div
       className={`${
@@ -201,22 +194,13 @@ export default function Sidebar() {
             onMouseLeave={() => setHoveredItem(null)}
           >
             <NavButton
-              href={item.href}
-              label={item.label}
-              defaultIcon={item.defaultIcon}
-              activeIcon={item.activeIcon}
-              iconSize={item.iconSize || 'size-5'}
-              iconClass={
-                item.iconClass || 'flex items-center justify-center size-full'
-              }
+              item={item}
               isActive={
-                item.href === '/search'
-                  ? pathname === item.href || pathname.startsWith('/search/')
+                item.href === '/chart'
+                  ? pathname.startsWith('/chart')
                   : pathname === item.href
               }
               isHovered={hoveredItem === item.href && pathname !== item.href}
-              isBeta={item.isBeta}
-              badgeText={item.badgeText}
             />
           </div>
         ))}

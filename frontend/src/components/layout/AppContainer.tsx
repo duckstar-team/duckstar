@@ -10,8 +10,6 @@ import React, {
 import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
-import ThinNav from '@/components/layout/ThinNav';
-import ThinNavDetail from '@/components/layout/ThinNavDetail';
 import LoginModal from '@/components/common/LoginModal';
 import { getWeeks } from '@/api/chart';
 import { WeekDto } from '@/types';
@@ -59,8 +57,6 @@ interface AppContainerProps {
 export default function AppContainer({ children }: AppContainerProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
-  const [isThinNavHovered, setIsThinNavHovered] = useState(false);
-  const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
   const [weeks, setWeeks] = useState<WeekDto[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
   const pathname = usePathname();
@@ -81,14 +77,11 @@ export default function AppContainer({ children }: AppContainerProps) {
     setIsVoteModalOpen(false);
   };
 
-  // 페이지 이동 시 모달 자동 닫기 및 사이드바 상태 초기화
+  // 페이지 이동 시 모달 자동 닫기
   useEffect(() => {
     if (isLoginModalOpen) {
       closeLoginModal();
     }
-    // 페이지 이동 시 호버 상태 초기화
-    setIsThinNavHovered(false);
-    setIsThinNavDetailHovered(false);
   }, [pathname]);
 
   // 주간차트 페이지에서는 ThinNav 사용 (동적 라우팅 포함)
@@ -159,31 +152,7 @@ export default function AppContainer({ children }: AppContainerProps) {
           <div
             className={`fixed top-[60px] bottom-0 left-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy' ? 'hidden lg:block' : ''}`}
           >
-            {isChartPage ? (
-              <>
-                <ThinNav
-                  onHover={setIsThinNavHovered}
-                  isExpanded={isThinNavHovered || isThinNavDetailHovered}
-                />
-                <div
-                  className={`absolute top-0 transition-all duration-300 ease-in-out ${
-                    isThinNavHovered || isThinNavDetailHovered
-                      ? 'left-[200px]'
-                      : 'left-[60px]'
-                  }`}
-                  onMouseEnter={() => {
-                    if (isThinNavHovered) {
-                      setIsThinNavDetailHovered(true);
-                    }
-                  }}
-                  onMouseLeave={() => setIsThinNavDetailHovered(false)}
-                >
-                  <ThinNavDetail weeks={weeks} selectedWeek={selectedWeek} />
-                </div>
-              </>
-            ) : (
-              <Sidebar />
-            )}
+            <Sidebar />
           </div>
 
           {/* Main Content */}
