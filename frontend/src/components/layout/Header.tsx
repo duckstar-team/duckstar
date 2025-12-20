@@ -2,21 +2,17 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import LoginButton from '@/components/common/LoginButton';
 import { useAuth } from '@/context/AuthContext';
 import { Menu } from 'lucide-react';
-import MobileSidebar from './MobileSidebar';
 import { cn } from '@/lib/utils';
 
-export default function Header() {
+export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const menuContainerRef = useRef<HTMLDivElement>(null);
 
   // 검색 실행
   const handleSearch = (e: React.FormEvent) => {
@@ -90,68 +86,63 @@ export default function Header() {
     };
   }, [isSearchOpen]);
 
-  const toggleMenu = () => {
-    if (isMenuOpen) {
-      closeMenu();
-    } else {
-      setIsMenuOpen(true);
-      setIsClosing(false);
-    }
-  };
-
-  const closeMenu = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsMenuOpen(false);
-      setIsClosing(false);
-    }, 300); // 애니메이션 시간과 동일
-  };
-
   return (
-    <>
-      <header className="relative h-[60px] w-full border-b border-[#DADCE0] backdrop-blur-[6px]">
-        {/* Background Layer */}
-        <div className="absolute inset-0 bg-white opacity-80 backdrop-blur-[12px]"></div>
-
+    <header className="flex h-15 w-full items-center justify-between border-b border-[#DADCE0] bg-white/80 p-4 backdrop-blur-sm transition md:pr-6 md:pl-4">
+      <div className="flex items-center gap-3 md:gap-4">
         {/* Hamburger Menu Button */}
-        <div
-          ref={menuContainerRef}
-          className="absolute top-1/2 left-1 z-10 -translate-y-1/2 lg:hidden"
-        >
-          <button
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={isMenuOpen}
-            onClick={toggleMenu}
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/80 backdrop-blur-[12px]"
-          >
-            <Menu color="#990033" />
-          </button>
-        </div>
+        <button type="button" aria-label="Open menu" onClick={toggleMenu}>
+          <Menu className="text-brand" />
+        </button>
 
         {/* Logo */}
-        <Link
-          href="/"
-          className="absolute top-0 left-[50px] z-10 h-[60px] w-[80px] cursor-pointer sm:left-[58px] sm:w-[93px] lg:left-[25px]"
-        >
+        <Link href="/" className="h-full w-auto">
           <img
             src="/logo.svg"
             alt="Duckstar Logo"
             className="h-full w-full object-contain"
           />
         </Link>
+      </div>
 
-        {/* Right Section - Search Bar + Login Button */}
-        <div
-          className={cn(
-            'absolute top-0 right-[25px] z-10 flex h-15 items-center gap-0 sm:right-3 md:right-[25px]',
-            isAuthenticated ? 'gap-1 pr-2' : 'gap-6 pr-0'
-          )}
+      {/* Right Section - Search Bar + Login Button */}
+      <div
+        className={cn(
+          'flex h-15 items-center',
+          isAuthenticated ? 'gap-1 pr-2' : 'gap-6'
+        )}
+      >
+        {/* Desktop Search Bar */}
+        <form
+          onSubmit={handleSearch}
+          className="hidden w-[150px] items-center justify-start gap-4 overflow-hidden rounded-xl border border-[#E9ECEF] bg-[#F1F3F5] pt-[9px] pr-4 pb-[9px] pl-4 transition-opacity hover:opacity-100 sm:w-[200px] md:flex md:w-[248px]"
         >
-          {/* Desktop Search Bar */}
+          {/* Search Icon */}
+          <div className="relative h-5 w-5 overflow-hidden">
+            <img
+              src="/icons/header-search.svg"
+              alt="Search"
+              className="h-full w-full"
+            />
+          </div>
+
+          {/* Search Input */}
+          <div className="flex-1">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="제목, 초성으로 애니 찾기"
+              className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
+            />
+          </div>
+        </form>
+
+        {/* Mobile Search Bar */}
+        {isSearchOpen ? (
           <form
             onSubmit={handleSearch}
-            className="hidden w-[150px] items-center justify-start gap-4 overflow-hidden rounded-xl border border-[#E9ECEF] bg-[#F1F3F5] pt-[9px] pr-4 pb-[9px] pl-4 transition-opacity hover:opacity-100 sm:w-[200px] md:flex md:w-[248px]"
+            className="flex h-[50px] w-[160px] items-center justify-start gap-4 overflow-hidden rounded-xl border border-[#E9ECEF] bg-[#F1F3F5] pt-[9px] pr-4 pb-[9px] pl-4 sm:w-[200px] md:hidden"
           >
             {/* Search Icon */}
             <div className="relative h-5 w-5 overflow-hidden">
@@ -162,9 +153,6 @@ export default function Header() {
               />
             </div>
 
-            {/* Separator */}
-            <div className="h-4 w-px bg-[#CED4DA]"></div>
-
             {/* Search Input */}
             <div className="flex-1">
               <input
@@ -172,77 +160,33 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="제목, 초성으로 애니 찾기"
+                placeholder="애니 검색"
                 className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
+                autoFocus
               />
             </div>
           </form>
-
-          {/* Mobile Search Toggle Button */}
+        ) : (
           <button
             onClick={toggleSearch}
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-transparent md:hidden"
+            className="md:hidden"
             aria-label="검색"
           >
-            <img
-              src="/icons/header-search.svg"
-              alt="검색"
-              className="h-5 w-5 object-contain"
-            />
+            <img src="/icons/header-search.svg" alt="검색" />
           </button>
+        )}
 
-          {/* Mobile Search Bar */}
-          {isSearchOpen && (
-            <form
-              onSubmit={handleSearch}
-              className="absolute top-[6px] right-0 flex h-[50px] w-[160px] items-center justify-start gap-4 overflow-hidden rounded-xl border border-[#E9ECEF] bg-[#F1F3F5] pt-[9px] pr-4 pb-[9px] pl-4 sm:w-[200px] md:hidden"
-            >
-              {/* Search Icon */}
-              <div className="relative h-5 w-5 overflow-hidden">
-                <img
-                  src="/icons/header-search.svg"
-                  alt="Search"
-                  className="h-full w-full"
-                />
-              </div>
-
-              {/* Separator */}
-              <div className="h-4 w-px bg-[#CED4DA]"></div>
-
-              {/* Search Input */}
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="애니 검색"
-                  className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
-                  autoFocus
-                />
-              </div>
-            </form>
-          )}
-
-          {/* Login/Logout Button */}
-          <div
-            className={`flex items-center ${isSearchOpen ? 'hidden md:block' : ''}`}
-          >
-            <LoginButton
-              variant="default"
-              showProfileImage={true}
-              className="max-w-[120px] sm:max-w-[150px] md:max-w-[180px]"
-            />
-          </div>
+        {/* Login/Logout Button */}
+        <div
+          className={`flex items-center ${isSearchOpen ? 'hidden md:block' : ''}`}
+        >
+          <LoginButton
+            variant="default"
+            showProfileImage={true}
+            className="max-w-[120px] sm:max-w-[150px] md:max-w-[180px]"
+          />
         </div>
-      </header>
-
-      {/* Mobile Sidebar */}
-      <MobileSidebar
-        isOpen={isMenuOpen}
-        isClosing={isClosing}
-        onClose={closeMenu}
-      />
-    </>
+      </div>
+    </header>
   );
 }

@@ -4,7 +4,6 @@ export interface NavItem {
   href: string;
   defaultIcon: string;
   activeIcon: string;
-  isBeta?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -37,12 +36,5 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/award',
     defaultIcon: '/icons/award-default.svg',
     activeIcon: '/icons/award-active.svg',
-  },
-  {
-    label: '마이페이지',
-    href: '/mypage',
-    defaultIcon: '/icons/mypage-default.svg',
-    activeIcon: '/icons/mypage-active.svg',
-    isBeta: true,
   },
 ];

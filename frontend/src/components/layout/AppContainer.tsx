@@ -8,8 +8,9 @@ import React, {
   ReactNode,
 } from 'react';
 import { usePathname } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Sidebar from '@/components/layout/Sidebar';
+import { AnimatePresence, motion } from 'framer-motion';
+import Header from './Header';
+import Sidebar from './Sidebar';
 import LoginModal from '@/components/common/LoginModal';
 import { getWeeks } from '@/api/chart';
 import { WeekDto } from '@/types';
@@ -59,10 +60,12 @@ export default function AppContainer({ children }: AppContainerProps) {
   const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
   const [weeks, setWeeks] = useState<WeekDto[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
 
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
+    setIsSidebarOpen(false);
   };
 
   const closeLoginModal = () => {
@@ -77,10 +80,15 @@ export default function AppContainer({ children }: AppContainerProps) {
     setIsVoteModalOpen(false);
   };
 
-  // 페이지 이동 시 모달 자동 닫기
+  const toggleMenu = () => {
+    setIsSidebarOpen((prev) => !prev);
+    setIsLoginModalOpen(false);
+  };
+
+  // 페이지 이동 시 사이드바 자동 닫기
   useEffect(() => {
-    if (isLoginModalOpen) {
-      closeLoginModal();
+    if (isSidebarOpen) {
+      setIsSidebarOpen(false);
     }
   }, [pathname]);
 
@@ -145,44 +153,37 @@ export default function AppContainer({ children }: AppContainerProps) {
         <div className="min-h-screen bg-gray-50">
           {/* Fixed Header */}
           <div className="fixed top-0 right-0 left-0 z-[9999]">
-            <Header />
+            <Header toggleMenu={toggleMenu} />
           </div>
 
           {/* Fixed Sidebar */}
-          <div
-            className={`fixed top-[60px] bottom-0 left-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy' ? 'hidden lg:block' : ''}`}
-          >
-            <Sidebar />
-          </div>
+          <AnimatePresence>
+            {isSidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 top-15 z-[9999999] bg-black/50"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <motion.div
+                  initial={{ x: -400 }}
+                  animate={{ x: 0 }}
+                  exit={{ x: -400 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
+                  <Sidebar />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Main Content */}
-          <main
-            className={`bg-gray-50 pt-[60px] transition-all duration-300 ease-in-out ${
-              isChartPage
-                ? 'ml-0 lg:ml-[200px]' // 모바일에서는 마진 없음, 데스크톱에서만 ThinNav 마진
-                : pathname === '/vote' ||
-                    pathname === '/search' ||
-                    pathname.startsWith('/search/') ||
-                    pathname.startsWith('/animes/') ||
-                    pathname === '/profile-setup' ||
-                    pathname === '/about' ||
-                    pathname === '/terms' ||
-                    pathname === '/privacy-policy'
-                  ? 'ml-0 lg:ml-[200px]'
-                  : pathname === '/'
-                    ? 'ml-0 lg:ml-[200px]'
-                    : 'ml-[50px] overflow-x-hidden group-hover:ml-[200px] sm:ml-[55px] lg:ml-[200px]'
-            }`}
-          >
-            {children}
-          </main>
+          <main className="bg-gray-50 pt-15">{children}</main>
 
           {/* Global Modals - 전체 앱 레벨에서 관리 */}
-          <LoginModal
-            isOpen={isLoginModalOpen}
-            onClose={closeLoginModal}
-            backdropStyle="blur"
-          />
+          <LoginModal />
         </div>
       </ChartContext.Provider>
     </ModalContext.Provider>
