@@ -5,6 +5,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import { usePathname } from 'next/navigation';
@@ -61,6 +62,8 @@ export default function AppContainer({ children }: AppContainerProps) {
   const [weeks, setWeeks] = useState<WeekDto[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(0);
+  const sidebarRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
   const openLoginModal = () => {
@@ -132,6 +135,50 @@ export default function AppContainer({ children }: AppContainerProps) {
     }
   }, [isChartPage, pathname]);
 
+  /**
+   * 사이드바 너비 측정 (데스크톱에서만)
+   */
+  useEffect(() => {
+    if (!sidebarRef.current) return;
+
+    const updateWidth = () => {
+      if (sidebarRef.current) {
+        const width = sidebarRef.current.offsetWidth;
+        setSidebarWidth(width);
+      }
+    };
+
+    // ResizeObserver로 너비 변경 감지 (열릴 때와 닫힐 때 모두)
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(sidebarRef.current);
+
+    // 초기 너비 측정
+    updateWidth();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isSidebarOpen]);
+
+  /**
+   * 사이드바 Open/Close 상태 관리
+   * 데스크탑 초기 상태 Open
+   * 모바일 초기 상태 Closed
+   */
+  useEffect(() => {
+    const resizeSidebar = () => {
+      if (window.innerWidth > 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+    resizeSidebar();
+    window.addEventListener('resize', resizeSidebar);
+
+    return () => window.removeEventListener('resize', resizeSidebar);
+  }, []);
+
   const modalContextValue: ModalContextType = {
     isLoginModalOpen,
     openLoginModal,
@@ -150,37 +197,57 @@ export default function AppContainer({ children }: AppContainerProps) {
   return (
     <ModalContext.Provider value={modalContextValue}>
       <ChartContext.Provider value={chartContextValue}>
-        <div className="min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50">
           {/* Fixed Header */}
           <div className="fixed top-0 right-0 left-0 z-[9999]">
             <Header toggleMenu={toggleMenu} />
           </div>
 
-          {/* Fixed Sidebar */}
-          <AnimatePresence>
-            {isSidebarOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-0 top-15 z-[9999999] bg-black/50"
-                onClick={() => setIsSidebarOpen(false)}
-              >
+          {/* Sidebar */}
+          <>
+            {/* Mobile: Fixed overlay */}
+            <AnimatePresence>
+              {isSidebarOpen && (
                 <motion.div
-                  initial={{ x: -400 }}
-                  animate={{ x: 0 }}
-                  exit={{ x: -400 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="fixed inset-0 top-15 z-[9999999] bg-black/50 md:hidden"
+                  onClick={() => setIsSidebarOpen(false)}
                 >
-                  <Sidebar />
+                  <motion.div
+                    initial={{ x: -400 }}
+                    animate={{ x: 0 }}
+                    exit={{ x: -400 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  >
+                    <Sidebar />
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>
+
+            {/* Desktop: Fixed sidebar */}
+            <motion.aside
+              ref={sidebarRef}
+              animate={{ width: isSidebarOpen ? 'fit-content' : 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="fixed top-15 left-0 z-[9999999] hidden overflow-y-hidden border-r border-gray-200 md:block"
+            >
+              <Sidebar />
+            </motion.aside>
+          </>
 
           {/* Main Content */}
-          <main className="bg-gray-50 pt-15">{children}</main>
+          <main
+            className="w-full bg-gray-50 pt-15"
+            style={{
+              marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+            }}
+          >
+            {children}
+          </main>
 
           {/* Global Modals - 전체 앱 레벨에서 관리 */}
           <LoginModal />
