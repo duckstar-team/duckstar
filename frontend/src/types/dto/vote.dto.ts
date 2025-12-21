@@ -53,3 +53,122 @@ export interface LiveVoteResultDto {
   commentId?: number;
   body?: string;
 }
+
+/**
+ * AnimeVoteHistoryDto
+ */
+export interface AnimeVoteHistoryDto {
+  animeBallotDtos: AnimeBallotDto[];
+  bonusCount: number;
+  hasVoted: boolean;
+  memberId: number | null;
+  nickName: string | null;
+  normalCount?: number;
+  submissionId?: number | null;
+  submittedAt: string | Date;
+  type?: string;
+  year?: number;
+  weekDto?: WeekDto;
+  category?: 'ANIME' | 'HERO' | 'HEROINE';
+}
+
+/**
+ * AnimeBallotDto
+ */
+export interface AnimeBallotDto {
+  animeCandidateId: number;
+  animeId: number;
+  ballotType: BallotType;
+  mainThumbnailUrl: string;
+  titleKor: string;
+  totalEpisodes?: number | null;
+}
+
+export enum BallotType {
+  Bonus = 'BONUS',
+  Normal = 'NORMAL',
+}
+
+// 애니메이션 투표 상태 응답 DTO
+export interface ApiResponseAnimeVoteHistoryDto {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: AnimeVoteHistoryDto;
+}
+
+// 애니메이션 후보 목록 응답 DTO
+export interface ApiResponseAnimeCandidateListDto {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: AnimeCandidateListDto;
+}
+
+/**
+ * AnimeCandidateListDto
+ */
+export interface AnimeCandidateListDto {
+  animeCandidates: AnimeCandidateDto[];
+  candidatesCount: number;
+  memberGender: MemberGender;
+  memberAgeGroup?: MemberAgeGroup;
+}
+
+/**
+ * AnimeCandidateDto
+ */
+export interface AnimeCandidateDto {
+  animeCandidateId: number;
+  mainThumbnailUrl: string;
+  medium: Medium;
+  titleKor: string;
+}
+
+export enum Medium {
+  Movie = 'MOVIE',
+  Tva = 'TVA',
+}
+
+export enum MemberAgeGroup {
+  Age15_19 = 'AGE_15_19',
+  Age20_24 = 'AGE_20_24',
+  Age25_29 = 'AGE_25_29',
+  Age30_34 = 'AGE_30_34',
+  Over35 = 'OVER_35',
+  Under14 = 'UNDER_14',
+}
+
+export enum MemberGender {
+  Female = 'FEMALE',
+  Male = 'MALE',
+  Unknown = 'UNKNOWN',
+}
+
+/**
+ * SurveyDto
+ */
+export interface SurveyDto {
+  surveyId: number;
+  hasVoted: boolean;
+  status: VoteStatus;
+  year: number;
+  type: SurveyType;
+  startDate: string;
+  endDate: string;
+}
+
+export enum VoteStatus {
+  Closed = 'CLOSED',
+  Open = 'OPEN',
+  Paused = 'PAUSED',
+}
+
+export enum SurveyType {
+  Anticipated = 'ANTICIPATED',
+  Q1End = 'Q1_END',
+  Q2End = 'Q2_END',
+  Q3End = 'Q3_END',
+  Q4End = 'Q4_END',
+  YearEnd = 'YEAR_END',
+}

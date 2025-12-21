@@ -9,11 +9,23 @@
 
 /* Theme Configuration */
 @theme inline {
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Breakpoints */
+  --breakpoint-*: initial;
+  --breakpoint-xs: 23.438rem; /* 375px */
+  --breakpoint-sm: 40rem; /* 640px */
+  --breakpoint-md: 48rem; /* 768px */
+  --breakpoint-lg: 64rem; /* 1024px */
+  --breakpoint-xl: 80rem; /* 1280px */
+  --breakpoint-2xl: 96rem; /* 1536px */
 }
 
 /* Dark Mode Support */
@@ -140,4 +152,15 @@ button {
 
 .transition {
   transition: all 0.3s ease-out;
+}
+
+.max-width {
+  width: 100%;
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 24px;
+  padding-bottom: 24px;
 }
