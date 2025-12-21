@@ -15,10 +15,11 @@ export default function Sidebar() {
   const [isThinNavHovered, setIsThinNavHovered] = useState(false);
   const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
 
-  // 차트 페이지 여부 확인
-  const isChartPage = pathname.startsWith('/chart');
+  // ThinNav 여부 확인
+  const isThinNavPage =
+    pathname.startsWith('/chart') || pathname.startsWith('/award');
   const isExpanded = isThinNavHovered || isThinNavDetailHovered;
-  const isThinNav = isChartPage && !isExpanded;
+  const isThinNav = isThinNavPage && !isExpanded;
 
   // 차트 컨텍스트에서 weeks와 selectedWeek 가져오기
   const { weeks, selectedWeek } = useChart();
@@ -33,9 +34,11 @@ export default function Sidebar() {
     <div className="flex">
       <div
         className="flex h-screen flex-col justify-between bg-white px-2 py-3 pb-24 md:px-2.5"
-        onMouseEnter={isChartPage ? () => setIsThinNavHovered(true) : undefined}
+        onMouseEnter={
+          isThinNavPage ? () => setIsThinNavHovered(true) : undefined
+        }
         onMouseLeave={
-          isChartPage ? () => setIsThinNavHovered(false) : undefined
+          isThinNavPage ? () => setIsThinNavHovered(false) : undefined
         }
         onClick={(e) => e.stopPropagation()}
       >
@@ -99,7 +102,7 @@ export default function Sidebar() {
         </div>
 
         {/* Footer - 일반 페이지에만 표시 */}
-        {!isChartPage && (
+        {!isThinNavPage && (
           <footer className="ml-1 flex flex-col text-sm text-gray-500">
             {/* 상단 링크 */}
             <Link href="/about" className="hover:text-gray-800">
@@ -123,8 +126,8 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* ThinNavDetail - 차트 페이지에만 표시 */}
-      {isChartPage && (
+      {/* ThinNavDetail - Chart 또는 Award 페이지에만 표시 */}
+      {isThinNavPage && (
         <div
           onMouseEnter={() => {
             if (isThinNavHovered) {
@@ -134,7 +137,11 @@ export default function Sidebar() {
           onMouseLeave={() => setIsThinNavDetailHovered(false)}
           onClick={(e) => e.stopPropagation()}
         >
-          <ThinNavDetail weeks={weeks} selectedWeek={selectedWeek} />
+          <ThinNavDetail
+            weeks={weeks}
+            selectedWeek={selectedWeek}
+            mode={pathname.startsWith('/award') ? 'award' : 'chart'}
+          />
         </div>
       )}
     </div>

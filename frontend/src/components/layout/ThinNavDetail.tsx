@@ -2,25 +2,43 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import ThinNavMenuItem from '@/components/domain/chart/ThinNavMenuItem';
-import { WeekDto } from '@/types';
+import { WeekDto, SurveyDto } from '@/types';
+import { ApiResponse } from '@/api/http';
+import { getSurveyTypeLabel } from '@/lib/surveyUtils';
 
 interface ThinNavDetailProps {
   weeks?: WeekDto[];
   selectedWeek?: WeekDto | null;
   hideTextOnMobile?: boolean;
+  mode?: 'chart' | 'award';
+  selectedSurveyId?: number | null;
 }
 
 export default function ThinNavDetail({
   weeks = [],
   selectedWeek,
   hideTextOnMobile = false,
+  mode = 'chart',
+  selectedSurveyId = null,
 }: ThinNavDetailProps) {
   const router = useRouter();
 
   const [expandedQuarters, setExpandedQuarters] = useState<Set<string>>(
     new Set()
   );
+
+  // surveys API 호출 (award 모드일 때만)
+  const { data: surveysData } = useQuery<ApiResponse<SurveyDto[]>>({
+    queryKey: ['surveys'],
+    queryFn: async () => {
+      const response = await fetch('/api/v1/vote/surveys');
+      if (!response.ok) throw new Error('설문 조회 실패');
+      return await response.json();
+    },
+    enabled: mode === 'award',
+  });
 
   // 선택된 주차가 있는 분기를 자동으로 펼치기
   useEffect(() => {
@@ -44,8 +62,51 @@ export default function ThinNavDetail({
     });
   };
 
+  // award 모드용 메뉴 아이템 생성
+  const generateAwardMenuItems = () => {
+    if (!surveysData || surveysData.result.length === 0) return [];
+
+    const menuItems: any[] = [];
+
+    // 년도별로 그룹화
+    const groupedByYear = surveysData.result.reduce(
+      (acc, survey) => {
+        if (!acc[survey.year]) {
+          acc[survey.year] = [];
+        }
+        acc[survey.year].push(survey);
+        return acc;
+      },
+      {} as Record<number, SurveyDto[]>
+    );
+
+    // 각 년도별로 처리
+    Object.entries(groupedByYear).forEach(([year, yearSurveys]) => {
+      // 년도 헤더 추가
+      menuItems.push({
+        type: 'yearHeader' as const,
+        label: year,
+      });
+
+      // 각 설문을 메뉴 아이템으로 추가
+      yearSurveys.forEach((survey) => {
+        const surveyId = survey.surveyId;
+        const isSelected = selectedSurveyId === surveyId;
+        menuItems.push({
+          type: 'awardItem' as const,
+          label: getSurveyTypeLabel(survey.type),
+          state: isSelected ? ('selected' as const) : ('default' as const),
+          surveyId: surveyId,
+          survey: survey,
+        });
+      });
+    });
+
+    return menuItems;
+  };
+
   // weeks 데이터를 기반으로 메뉴 아이템 생성
-  const generateMenuItems = () => {
+  const generateChartMenuItems = () => {
     if (weeks.length === 0) return [];
 
     // 년도별로 그룹화
@@ -121,15 +182,24 @@ export default function ThinNavDetail({
     return menuItems;
   };
 
+  const generateMenuItems = () => {
+    if (mode === 'award') {
+      return generateAwardMenuItems();
+    }
+    return generateChartMenuItems();
+  };
+
   const menuItems = generateMenuItems();
 
   return (
     <div
-      className={`${hideTextOnMobile ? 'w-[60px] md:w-[143px]' : 'w-[143px]'} relative h-screen bg-[#212529]`}
+      className={`${hideTextOnMobile ? 'w-[60px] md:w-[143px]' : 'w-38'} relative h-screen bg-[#212529]`}
     >
-      {/* 차트 제목 */}
+      {/* 차트/결산 투표 제목 */}
       <div className="absolute top-[24px] left-[20px]">
-        <h2 className="text-xl font-semibold text-white">차트</h2>
+        <h2 className="text-xl font-semibold text-white">
+          {mode === 'award' ? '결산 투표' : '차트'}
+        </h2>
       </div>
 
       {/* 시간 메뉴 아이템들 */}
@@ -154,6 +224,18 @@ export default function ThinNavDetail({
                 // 분기 클릭 시 토글
                 const [year, quarter] = item.quarterKey.split('-').map(Number);
                 toggleQuarter(year, quarter);
+              } else if (
+                item.type === 'awardItem' &&
+                item.surveyId &&
+                item.survey
+              ) {
+                // award 아이템 클릭 시 라우팅
+                const surveyType = item.survey.type
+                  .toLowerCase()
+                  .replace(/_/g, '-');
+                router.push(
+                  `/award/${item.survey.year}/${surveyType}/${item.surveyId}`
+                );
               }
             }}
           />

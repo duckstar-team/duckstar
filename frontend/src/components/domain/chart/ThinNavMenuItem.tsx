@@ -12,6 +12,7 @@ const menuItemVariants = cva('transition-all duration-200', {
       quarter:
         'self-stretch inline-flex justify-start items-center gap-[1.50px]',
       week: 'pl-7 inline-flex justify-start items-center',
+      awardItem: 'pl-7 inline-flex justify-start items-center',
     },
     state: {
       default: '',
@@ -39,6 +40,7 @@ const textVariants = cva('text-base leading-[normal] whitespace-pre', {
       yearHeader: 'text-white font-semibold ',
       quarter: 'text-white font-medium',
       week: 'text-white',
+      awardItem: 'text-white',
     },
     state: {
       default: '',
@@ -57,6 +59,11 @@ const textVariants = cva('text-base leading-[normal] whitespace-pre', {
       type: 'week',
       state: 'selected',
       class: 'font-bold text-[#FED783] !text-[#FED783]',
+    },
+    {
+      type: 'awardItem',
+      state: 'selected',
+      class: 'text-white font-medium',
     },
   ],
   defaultVariants: {
@@ -201,6 +208,34 @@ export default function ThinNavMenuItem({
         {state === 'selected' && (
           <div className="-ml-[4px] h-0 w-[18px] rotate-90 rounded-full border-[2px] border-[#FED783]"></div>
         )}
+      </div>
+    );
+  }
+
+  if (type === 'awardItem') {
+    return (
+      <div
+        className={cn(menuItemVariants({ type, state }), className)}
+        onClick={onClick}
+      >
+        <div
+          className={cn(
+            'relative h-8 cursor-pointer rounded-lg px-3 py-1.5 transition-colors duration-200',
+            state === 'selected'
+              ? 'bg-[#FFB310] hover:bg-[#FFC633]'
+              : 'bg-transparent hover:bg-white/10'
+          )}
+        >
+          <div
+            className={cn(
+              'justify-center',
+              textVariants({ type, state }),
+              hideTextOnMobile ? 'hidden md:block' : ''
+            )}
+          >
+            {label}
+          </div>
+        </div>
       </div>
     );
   }
