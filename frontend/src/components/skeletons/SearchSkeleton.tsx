@@ -1,24 +1,19 @@
 import React from 'react';
+import BannerSkeleton from './BannerSkeleton';
 
 interface SearchLoadingSkeletonProps {
-  showBanner?: boolean;
   cardCount?: number;
   className?: string;
 }
 
 export default function SearchLoadingSkeleton({
-  showBanner = true,
   cardCount = 12,
   className = '',
 }: SearchLoadingSkeletonProps) {
   return (
     <div className={`w-full ${className}`}>
       {/* 상단 배너 스켈레톤 */}
-      {showBanner && (
-        <section>
-          <div className="h-24 w-full animate-pulse bg-gradient-to-r from-gray-200 to-gray-300" />
-        </section>
-      )}
+      <BannerSkeleton />
 
       {/* 메인 컨텐츠 영역 */}
       <div className="mx-auto w-full max-w-7xl px-6 py-6">
