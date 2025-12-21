@@ -1,6 +1,7 @@
 package com.duckstar.domain;
 
 import com.duckstar.domain.common.BaseEntity;
+import com.duckstar.domain.enums.AgeGroup;
 import com.duckstar.domain.enums.Gender;
 import com.duckstar.domain.mapping.CommentLike;
 import com.duckstar.security.domain.enums.MemberStatus;
@@ -40,6 +41,10 @@ public class Member extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(15)")
     private Gender gender = Gender.UNKNOWN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(20)")
+    private AgeGroup ageGroup;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(15)", nullable = false)
@@ -164,6 +169,10 @@ public class Member extends BaseEntity {
 
     public void setGender(Gender gender) {
         this.gender = gender;
+    }
+
+    public void setAgeGroup(AgeGroup ageGroup) {
+        this.ageGroup = ageGroup;
     }
 
 //    public void updateStreak(boolean isConsecutive, Long weekId) {
