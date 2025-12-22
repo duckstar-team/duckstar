@@ -3,25 +3,22 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import ThinNavMenuItem from '@/components/domain/chart/ThinNavMenuItem';
 import { WeekDto, SurveyDto } from '@/types';
 import { ApiResponse } from '@/api/http';
 import { getSurveyTypeLabel } from '@/lib/surveyUtils';
+import { useChart } from './AppContainer';
+import { ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ThinNavDetailProps {
-  weeks: WeekDto[];
-  selectedWeek: WeekDto | null;
   mode: 'chart' | 'award';
 }
 
-export default function ThinNavDetail({
-  weeks,
-  selectedWeek,
-  mode,
-}: ThinNavDetailProps) {
+export default function ThinNavDetail({ mode }: ThinNavDetailProps) {
   const router = useRouter();
   const params = useParams();
 
+  const { weeks, selectedWeek } = useChart();
   const [expandedQuarters, setExpandedQuarters] = useState<Set<string>>(
     new Set()
   );
@@ -81,7 +78,7 @@ export default function ThinNavDetail({
     Object.entries(groupedByYear).forEach(([year, yearSurveys]) => {
       // 년도 헤더 추가
       menuItems.push({
-        type: 'yearHeader' as const,
+        type: 'year' as const,
         label: year,
       });
 
@@ -124,7 +121,7 @@ export default function ThinNavDetail({
     Object.entries(groupedByYear).forEach(([year, yearWeeks]) => {
       // 년도 헤더 추가
       menuItems.push({
-        type: 'yearHeader' as const,
+        type: 'year' as const,
         label: year,
       });
 
@@ -188,46 +185,85 @@ export default function ThinNavDetail({
   const menuItems = generateMenuItems();
 
   return (
-    <div className="h-screen w-42 bg-[#212529] px-5 pt-6">
+    <div className="h-screen bg-[#212529] px-2 pt-6">
       {/* 차트/결산 투표 제목 */}
-      <h2 className="text-xl font-semibold text-white">
+      <h2 className="px-4 text-xl font-semibold text-white">
         {mode === 'award' ? '결산 투표' : '차트'}
       </h2>
 
-      {/* 메뉴 아이템들 */}
-      <div className="mt-6 flex flex-col gap-1">
-        {menuItems.map((item, index) => (
-          <ThinNavMenuItem
-            key={`${item.type}-${index}`}
-            type={item.type}
-            state={item.state}
-            label={item.label}
-            onClick={() => {
-              if (item.type === 'week' && item.weekData) {
-                // 주차 클릭 시 동적 라우팅으로 이동
-                router.push(
-                  `/chart/${item.weekData.year}/${item.weekData.quarter}/${item.weekData.week}`
-                );
-              } else if (item.type === 'quarter' && item.quarterKey) {
-                // 분기 클릭 시 토글
+      {/* 연도 정보 */}
+      {menuItems
+        .filter((item) => item.type === 'year')
+        .map((item, index) => (
+          <div
+            key={`year-${index}`}
+            className="mt-10 inline-flex self-stretch px-4 font-semibold text-white"
+          >
+            {item.label}
+          </div>
+        ))}
+
+      {/* 분기 정보 - chart 모드에서만 렌더링 */}
+      {mode === 'chart' &&
+        menuItems
+          .filter((item) => item.type === 'quarter')
+          .map((item) => (
+            <button
+              key={`${item.quarterKey}`}
+              onClick={() => {
                 const [year, quarter] = item.quarterKey.split('-').map(Number);
                 toggleQuarter(year, quarter);
-              } else if (
-                item.type === 'awardItem' &&
-                item.surveyId &&
-                item.survey
-              ) {
-                // award 아이템 클릭 시 라우팅
-                const surveyType = item.survey.type
-                  .toLowerCase()
-                  .replace(/_/g, '-');
-                router.push(
-                  `/award/${item.survey.year}/${surveyType}/${item.surveyId}`
-                );
-              }
-            }}
-          />
-        ))}
+              }}
+              className="mx-auto my-2 flex h-10 w-full min-w-30 items-center gap-1 rounded-lg pl-3 font-medium text-white transition hover:bg-white/10"
+            >
+              {/* 드롭다운 아이콘 */}
+              <ChevronRight
+                className={cn(
+                  'size-4 transition',
+                  expandedQuarters.has(item.quarterKey) && 'rotate-90'
+                )}
+              />
+              {item.label}
+            </button>
+          ))}
+
+      {/* 하위 항목 - award 모드: awardItem만, chart 모드: week만 렌더링 */}
+      <div className="flex flex-col items-end gap-1 pr-2">
+        {menuItems
+          .filter((item) =>
+            mode === 'award' ? item.type === 'awardItem' : item.type === 'week'
+          )
+          .map((item, index) => (
+            <button
+              key={`${item.type}-${index}`}
+              className={cn(
+                'relative flex h-7 min-w-22 items-center rounded-lg px-2.5 text-nowrap transition hover:bg-white/10 max-md:text-sm',
+                item.state === 'selected'
+                  ? 'bg-amber-200/20 font-bold text-amber-200'
+                  : 'text-white',
+                mode === 'award' && 'mt-4 ml-4'
+              )}
+              onClick={() => {
+                if (item.type === 'week' && item.weekData) {
+                  // 주차 클릭 시 동적 라우팅으로 이동
+                  router.push(
+                    `/chart/${item.weekData.year}/${item.weekData.quarter}/${item.weekData.week}`
+                  );
+                } else if (item.type === 'awardItem') {
+                  // award 아이템 클릭 시 라우팅
+                  router.push(
+                    `/award/${item.survey.year}/${item.survey.type.toLowerCase()}/${item.surveyId}`
+                  );
+                }
+              }}
+            >
+              {item.label}
+              {/* 선택된 상태일 때만 화살표 표시 - 같은 레벨에 배치 */}
+              {item.state === 'selected' && (
+                <div className="absolute top-1/2 -right-2 h-4.5 -translate-y-1/2 rounded-full border-2 border-amber-300" />
+              )}
+            </button>
+          ))}
       </div>
     </div>
   );
