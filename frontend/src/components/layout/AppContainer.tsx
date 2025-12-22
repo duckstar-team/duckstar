@@ -5,13 +5,13 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import { usePathname } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Sidebar from '@/components/layout/Sidebar';
-import ThinNav from '@/components/layout/ThinNav';
-import ThinNavDetail from '@/components/layout/ThinNavDetail';
+import { AnimatePresence, motion } from 'framer-motion';
+import Header from './Header';
+import Sidebar from './Sidebar';
 import LoginModal from '@/components/common/LoginModal';
 import { getWeeks } from '@/api/chart';
 import { WeekDto } from '@/types';
@@ -59,14 +59,16 @@ interface AppContainerProps {
 export default function AppContainer({ children }: AppContainerProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
-  const [isThinNavHovered, setIsThinNavHovered] = useState(false);
-  const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
   const [weeks, setWeeks] = useState<WeekDto[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(0);
+  const sidebarRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
+    setIsSidebarOpen(false);
   };
 
   const closeLoginModal = () => {
@@ -81,14 +83,16 @@ export default function AppContainer({ children }: AppContainerProps) {
     setIsVoteModalOpen(false);
   };
 
-  // 페이지 이동 시 모달 자동 닫기 및 사이드바 상태 초기화
+  const toggleMenu = () => {
+    setIsSidebarOpen((prev) => !prev);
+    setIsLoginModalOpen(false);
+  };
+
+  // 페이지 이동 시 사이드바 자동 닫기
   useEffect(() => {
-    if (isLoginModalOpen) {
-      closeLoginModal();
+    if (isSidebarOpen) {
+      setIsSidebarOpen(false);
     }
-    // 페이지 이동 시 호버 상태 초기화
-    setIsThinNavHovered(false);
-    setIsThinNavDetailHovered(false);
   }, [pathname]);
 
   // 주간차트 페이지에서는 ThinNav 사용 (동적 라우팅 포함)
@@ -131,6 +135,50 @@ export default function AppContainer({ children }: AppContainerProps) {
     }
   }, [isChartPage, pathname]);
 
+  /**
+   * 사이드바 너비 측정 (데스크톱에서만)
+   */
+  useEffect(() => {
+    if (!sidebarRef.current) return;
+
+    const updateWidth = () => {
+      if (sidebarRef.current) {
+        const width = sidebarRef.current.offsetWidth;
+        setSidebarWidth(width);
+      }
+    };
+
+    // ResizeObserver로 너비 변경 감지 (열릴 때와 닫힐 때 모두)
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(sidebarRef.current);
+
+    // 초기 너비 측정
+    updateWidth();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isSidebarOpen]);
+
+  /**
+   * 사이드바 Open/Close 상태 관리
+   * 데스크탑 초기 상태 Open
+   * 모바일 초기 상태 Closed
+   */
+  useEffect(() => {
+    const resizeSidebar = () => {
+      if (window.innerWidth > 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+    resizeSidebar();
+    window.addEventListener('resize', resizeSidebar);
+
+    return () => window.removeEventListener('resize', resizeSidebar);
+  }, []);
+
   const modalContextValue: ModalContextType = {
     isLoginModalOpen,
     openLoginModal,
@@ -149,71 +197,60 @@ export default function AppContainer({ children }: AppContainerProps) {
   return (
     <ModalContext.Provider value={modalContextValue}>
       <ChartContext.Provider value={chartContextValue}>
-        <div className="min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50">
           {/* Fixed Header */}
           <div className="fixed top-0 right-0 left-0 z-[9999]">
-            <Header />
+            <Header toggleMenu={toggleMenu} />
           </div>
 
-          {/* Fixed Sidebar */}
-          <div
-            className={`fixed top-[60px] bottom-0 left-0 z-[9999999] ${pathname === '/' || pathname === '/vote' || pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/animes/') || pathname === '/chart' || pathname.startsWith('/chart/') || pathname === '/profile-setup' || pathname === '/about' || pathname === '/terms' || pathname === '/privacy-policy' ? 'hidden lg:block' : ''}`}
-          >
-            {isChartPage ? (
-              <>
-                <ThinNav
-                  onHover={setIsThinNavHovered}
-                  isExpanded={isThinNavHovered || isThinNavDetailHovered}
-                />
-                <div
-                  className={`absolute top-0 transition-all duration-300 ease-in-out ${
-                    isThinNavHovered || isThinNavDetailHovered
-                      ? 'left-[200px]'
-                      : 'left-[60px]'
-                  }`}
-                  onMouseEnter={() => {
-                    if (isThinNavHovered) {
-                      setIsThinNavDetailHovered(true);
-                    }
-                  }}
-                  onMouseLeave={() => setIsThinNavDetailHovered(false)}
+          {/* Sidebar */}
+          <>
+            {/* Mobile: Fixed overlay */}
+            <AnimatePresence>
+              {isSidebarOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="fixed inset-0 top-15 z-[9999999] bg-black/50 md:hidden"
+                  onClick={() => setIsSidebarOpen(false)}
                 >
-                  <ThinNavDetail weeks={weeks} selectedWeek={selectedWeek} />
-                </div>
-              </>
-            ) : (
+                  <motion.div
+                    initial={{ x: -400 }}
+                    animate={{ x: 0 }}
+                    exit={{ x: -400 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  >
+                    <Sidebar />
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Desktop: Fixed sidebar */}
+            <motion.aside
+              ref={sidebarRef}
+              animate={{ width: isSidebarOpen ? 'fit-content' : 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="fixed top-15 left-0 z-[9999999] hidden overflow-y-hidden md:block"
+            >
               <Sidebar />
-            )}
-          </div>
+            </motion.aside>
+          </>
 
           {/* Main Content */}
           <main
-            className={`bg-gray-50 pt-[60px] transition-all duration-300 ease-in-out ${
-              isChartPage
-                ? 'ml-0 lg:ml-[200px]' // 모바일에서는 마진 없음, 데스크톱에서만 ThinNav 마진
-                : pathname === '/vote' ||
-                    pathname === '/search' ||
-                    pathname.startsWith('/search/') ||
-                    pathname.startsWith('/animes/') ||
-                    pathname === '/profile-setup' ||
-                    pathname === '/about' ||
-                    pathname === '/terms' ||
-                    pathname === '/privacy-policy'
-                  ? 'ml-0 lg:ml-[200px]'
-                  : pathname === '/'
-                    ? 'ml-0 lg:ml-[200px]'
-                    : 'ml-[50px] overflow-x-hidden group-hover:ml-[200px] sm:ml-[55px] lg:ml-[200px]'
-            }`}
+            className="w-full bg-gray-50 pt-15"
+            style={{
+              marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+            }}
           >
             {children}
           </main>
 
           {/* Global Modals - 전체 앱 레벨에서 관리 */}
-          <LoginModal
-            isOpen={isLoginModalOpen}
-            onClose={closeLoginModal}
-            backdropStyle="blur"
-          />
+          <LoginModal />
         </div>
       </ChartContext.Provider>
     </ModalContext.Provider>

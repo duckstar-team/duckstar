@@ -12,7 +12,7 @@ import { X } from 'lucide-react';
 import { FaCheckCircle } from 'react-icons/fa';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
-import CommentPostForm from '@/components/domain/anime/CommentPostForm';
+import CommentPostForm from '@/components/domain/comment/CommentPostForm';
 import { getCandidate, submitVoteForm } from '@/api/vote';
 import { CandidateDto } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -287,7 +287,7 @@ export default function VoteModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex h-full w-full items-center justify-center bg-white/20 p-4 lg:left-25"
+          className="fixed inset-0 z-50 flex h-full w-full items-center justify-center bg-white/20 p-4"
         >
           <div className="fixed inset-0 bg-black/20" onClick={onClose} />
           <motion.div

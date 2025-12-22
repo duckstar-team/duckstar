@@ -1,277 +1,149 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { NAV_ITEMS } from './navItems';
-
-// Vote button variants based on Figma specifications
-const voteButtonVariants = cva(
-  // Base classes from Figma
-  'w-[40px] md:w-[167px] h-[40px] py-[10px] pl-[10px] pr-[10px] md:pr-[12px] rounded-lg flex justify-start items-center gap-0 md:gap-[10px] transition-all duration-200 ease-in-out group-hover:w-[167px] group-hover:pr-[12px] group-hover:gap-[10px]',
-  {
-    variants: {
-      state: {
-        default: 'bg-white',
-        hover: 'bg-[#ffd4e2]',
-        active: 'bg-gradient-to-r from-[#cb285e] to-[#9c1f49]',
-      },
-    },
-    defaultVariants: {
-      state: 'default',
-    },
-  }
-);
-
-// Text variants based on Figma specifications
-const textVariants = cva(
-  'flex justify-center flex-col text-[16px] font-[Pretendard] break-words leading-[normal] whitespace-pre',
-  {
-    variants: {
-      state: {
-        default: 'text-[#586672] font-medium',
-        hover: 'text-[#586672] font-medium',
-        active: 'text-[#ffffff] font-bold',
-      },
-    },
-    defaultVariants: {
-      state: 'default',
-    },
-  }
-);
-
-interface NavButtonProps extends VariantProps<typeof voteButtonVariants> {
-  href: string;
-  label: string;
-  defaultIcon: string;
-  activeIcon: string;
-  iconSize: string;
-  iconClass: string;
-  isActive?: boolean;
-  isHovered?: boolean;
-  isBeta?: boolean;
-  badgeText?: string;
-}
-
-function NavButton({
-  href,
-  label,
-  defaultIcon,
-  activeIcon,
-  iconSize,
-  iconClass,
-  isActive,
-  isHovered,
-  isBeta = false,
-  badgeText,
-}: NavButtonProps) {
-  const state = isActive ? 'active' : isHovered ? 'hover' : 'default';
-  // hover 상태에서는 defaultIcon 사용 (vote-default.svg)
-  const iconSrc = isActive ? activeIcon : defaultIcon;
-
-  return (
-    <>
-      {isBeta ? (
-        <div
-          className={cn(
-            voteButtonVariants({ state }),
-            'opacity-50',
-            'relative'
-          )}
-        >
-          {/* Icon container */}
-          <div className={cn(iconSize, 'relative')}>
-            <div className={iconClass}>
-              <img
-                src={iconSrc}
-                alt={label}
-                className="size-full object-contain"
-              />
-            </div>
-          </div>
-
-          {/* Text container */}
-          <div
-            className={cn(
-              textVariants({ state }),
-              'hidden group-hover:block md:block'
-            )}
-          >
-            <span>{label}</span>
-          </div>
-
-          {/* 베타 표시 */}
-          <div className="absolute -right-1 bottom-2 z-10 hidden group-hover:block md:block">
-            <span
-              className={`rounded px-1 py-0.5 text-[12px] ${
-                badgeText === '8/31 출시'
-                  ? 'bg-gray-200 text-gray-900'
-                  : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {badgeText || '준비중'}
-            </span>
-          </div>
-        </div>
-      ) : (
-        <Link href={href}>
-          <div className={cn(voteButtonVariants({ state }), 'relative')}>
-            {/* Icon container */}
-            <div className={cn(iconSize, 'relative')}>
-              <div className={iconClass}>
-                <img
-                  src={iconSrc}
-                  alt={label}
-                  className="size-full object-contain"
-                />
-              </div>
-            </div>
-
-            {/* Text container */}
-            <div
-              className={cn(
-                textVariants({ state }),
-                'hidden group-hover:block md:block'
-              )}
-            >
-              <span>{label}</span>
-            </div>
-          </div>
-        </Link>
-      )}
-    </>
-  );
-}
+import ThinNavDetail from './ThinNavDetail';
+import { useChart } from './AppContainer';
+import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [windowHeight, setWindowHeight] = useState(0);
-  const [windowWidth, setWindowWidth] = useState(0);
+  const router = useRouter();
+  const [isThinNavHovered, setIsThinNavHovered] = useState(false);
+  const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
 
+  // ThinNav 여부 확인
+  const isThinNavPage =
+    pathname.startsWith('/chart') || pathname.startsWith('/award');
+  const isExpanded = isThinNavHovered || isThinNavDetailHovered;
+  const isThinNav = isThinNavPage && !isExpanded;
+
+  // 차트 컨텍스트에서 weeks와 selectedWeek 가져오기
+  const { weeks, selectedWeek } = useChart();
+
+  // 페이지 이동 시 호버 상태 초기화
   useEffect(() => {
-    const updateDimensions = () => {
-      setWindowHeight(window.innerHeight);
-      setWindowWidth(window.innerWidth);
-    };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
-
-  // Footer 위치 계산 (화면 높이에서 헤더 높이(56px)와 Footer 높이를 뺀 값)
-  const headerHeight = 56; // 헤더 높이
-  const footerHeight = 100; // Footer 대략적 높이
-  const footerTop = Math.max(
-    windowHeight - headerHeight - footerHeight - 20,
-    400
-  ); // 최소 400px, 여백 20px
-
-  // 갤럭시 Z 폴드 5와 같은 좁은 기기 감지 (280px-400px)
-  const isNarrowDevice = windowWidth >= 280 && windowWidth < 400;
-  const isVeryNarrowDevice = windowWidth < 280;
+    setIsThinNavHovered(false);
+    setIsThinNavDetailHovered(false);
+  }, [pathname]);
 
   return (
-    <div
-      className={`${
-        isVeryNarrowDevice
-          ? 'w-[52px]'
-          : isNarrowDevice
-            ? 'w-[56px]'
-            : 'w-[60px] md:w-[200px]'
-      } group relative h-screen border-r border-[#DADCE0] bg-white transition-all duration-300 ease-in-out hover:w-[200px]`}
-    >
-      {/* Navigation items */}
+    <div className="flex">
       <div
-        className={`${
-          isVeryNarrowDevice
-            ? 'left-[8px] w-[32px]'
-            : isNarrowDevice
-              ? 'left-[8px] w-[36px]'
-              : 'left-[8px] w-[40px] md:left-[16px] md:w-[167px]'
-        } absolute top-[16px] flex flex-col items-start justify-start gap-[4px] pb-[4px] transition-all duration-300 ease-in-out group-hover:left-[16px] group-hover:w-[167px]`}
+        className="flex h-screen flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5"
+        onMouseEnter={
+          isThinNavPage ? () => setIsThinNavHovered(true) : undefined
+        }
+        onMouseLeave={
+          isThinNavPage ? () => setIsThinNavHovered(false) : undefined
+        }
+        onClick={(e) => e.stopPropagation()}
       >
-        {NAV_ITEMS.map((item) => (
-          <div
-            key={item.href}
-            onMouseEnter={() => setHoveredItem(item.href)}
-            onMouseLeave={() => setHoveredItem(null)}
-          >
-            <NavButton
-              href={item.href}
-              label={item.label}
-              defaultIcon={item.defaultIcon}
-              activeIcon={item.activeIcon}
-              iconSize={item.iconSize || 'size-5'}
-              iconClass={
-                item.iconClass || 'flex items-center justify-center size-full'
-              }
-              isActive={
-                item.href === '/search'
-                  ? pathname === item.href || pathname.startsWith('/search/')
-                  : pathname === item.href
-              }
-              isHovered={hoveredItem === item.href && pathname !== item.href}
-              isBeta={item.isBeta}
-              badgeText={item.badgeText}
-            />
-          </div>
-        ))}
-      </div>
+        {/* Navigation items */}
+        <div className="space-y-1">
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              item.href === '/chart'
+                ? pathname.startsWith('/chart')
+                : pathname === item.href;
+            const iconSrc = isActive ? item.activeIcon : item.defaultIcon;
 
-      {/* Footer - 동적 위치 */}
-      <div
-        className={`${
-          isVeryNarrowDevice
-            ? 'left-[8px]'
-            : isNarrowDevice
-              ? 'left-[8px]'
-              : 'left-[8px] md:left-[16.5px]'
-        } absolute flex flex-col items-start justify-start gap-[21px] opacity-0 transition-all duration-300 ease-in-out group-hover:left-[16.5px] group-hover:opacity-100 md:opacity-100`}
-        style={{ top: `${footerTop}px` }}
-      >
-        <div className="relative h-[42px] w-[161px]">
-          {/* 상단 링크 */}
-          <div className="absolute top-0 left-[0.5px] h-[21px] w-[65px]">
-            <Link
-              href="/about"
-              className="absolute top-0 left-0 flex flex-col justify-center font-[Pretendard] text-[14px] leading-[21px] font-normal break-words text-[#586672] transition-colors hover:text-gray-800"
-            >
+            return (
+              <AnimatePresence key={item.href}>
+                <motion.button
+                  type="button"
+                  className={cn(
+                    'flex h-10 items-center overflow-hidden rounded-lg hover:bg-[#ffd4e2]',
+                    isActive && 'bg-gradient-to-r from-[#cb285e] to-[#9c1f49]'
+                  )}
+                  animate={{
+                    width: isThinNav ? 'fit-content' : '168px',
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: 'easeInOut',
+                  }}
+                  onClick={() => router.push(item.href)}
+                >
+                  <img
+                    src={iconSrc}
+                    alt={item.label}
+                    className="mx-2.5 size-4 flex-shrink-0 object-contain"
+                  />
+
+                  <motion.div
+                    className={cn(
+                      'whitespace-nowrap max-md:text-sm',
+                      isActive
+                        ? 'font-bold text-white'
+                        : 'font-medium text-gray-500'
+                    )}
+                    animate={{
+                      opacity: isThinNav ? 0 : 1,
+                      width: isThinNav ? 0 : 'auto',
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      ease: 'easeInOut',
+                    }}
+                    style={{
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <span>{item.label}</span>
+                  </motion.div>
+                </motion.button>
+              </AnimatePresence>
+            );
+          })}
+        </div>
+
+        {/* Footer - 일반 페이지에만 표시 */}
+        {!isThinNavPage && (
+          <footer className="ml-1 flex flex-col text-sm text-gray-500">
+            {/* 상단 링크 */}
+            <Link href="/about" className="hover:text-gray-800">
               덕스타 소개
             </Link>
-          </div>
-          {/* 하단 링크들 */}
-          <div className="absolute top-[21px] left-[0.5px] flex items-center justify-start gap-[5px]">
-            <div className="relative h-[21px] w-[49px]">
-              <Link
-                href="/terms"
-                className="absolute top-0 left-0 flex flex-col justify-center font-[Pretendard] text-[14px] leading-[21px] font-normal break-words text-[#586672] transition-colors hover:text-gray-800"
-              >
+
+            {/* 하단 링크들 */}
+            <div className="flex items-center gap-[5px]">
+              <Link href="/terms" className="hover:text-gray-800">
                 이용약관
               </Link>
-            </div>
-            <div className="flex flex-col justify-center font-[Pretendard] text-[14px] leading-[21px] font-normal break-words text-[#586672]">
-              ·
-            </div>
-            <div className="relative h-[21px] w-[97px]">
-              <Link
-                href="/privacy-policy"
-                className="absolute top-0 left-0 flex flex-col justify-center font-[Pretendard] text-[14px] leading-[21px] font-normal break-words text-[#586672] transition-colors hover:text-gray-800"
-              >
+              <span>·</span>
+              <Link href="/privacy-policy" className="hover:text-gray-800">
                 개인정보처리방침
               </Link>
             </div>
-          </div>
-        </div>
 
-        {/* 저작권 텍스트 */}
-        <div className="flex flex-col justify-center font-[Pretendard] text-[14px] leading-[21px] font-normal break-words text-[#586672]">
-          © 2025 DUCKSTAR
-        </div>
+            {/* 저작권 텍스트 */}
+            <div className="mt-5">© 2025 DUCKSTAR</div>
+          </footer>
+        )}
       </div>
+
+      {/* ThinNavDetail - Chart 또는 Award 페이지에만 표시 */}
+      {isThinNavPage && (
+        <div
+          onMouseEnter={() => {
+            if (isThinNavHovered) {
+              setIsThinNavDetailHovered(true);
+            }
+          }}
+          onMouseLeave={() => setIsThinNavDetailHovered(false)}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ThinNavDetail
+            weeks={weeks}
+            selectedWeek={selectedWeek}
+            mode={pathname.startsWith('/award') ? 'award' : 'chart'}
+          />
+        </div>
+      )}
     </div>
   );
 }

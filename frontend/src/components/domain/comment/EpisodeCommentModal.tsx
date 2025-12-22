@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import EpisodeSection from './EpisodeSection';
+import EpisodeSection from '../anime/EpisodeSection';
 import CommentPostForm from './CommentPostForm';
-import { getThisWeekRecord } from '../../../lib/quarterUtils';
-import { useAuth } from '../../../context/AuthContext';
-import { useModal } from '../../layout/AppContainer';
-import { showToast } from '../../common/Toast';
+import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { useAuth } from '@/context/AuthContext';
+import { useModal } from '@/components/layout/AppContainer';
+import { showToast } from '@/components/common/Toast';
 
 // API 응답 타입 정의
 interface EpisodeDto {
@@ -285,7 +285,7 @@ export default function EpisodeCommentModal({
                     className="w-full rounded-lg border border-gray-300 p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">에피소드를 선택하세요</option>
-                    {finalEpisodes.map((episode) => (
+                    {finalEpisodes.map((episode: EpisodeDto) => (
                       <option key={episode.episodeId} value={episode.episodeId}>
                         {episode.episodeNumber}화 -{' '}
                         {formatScheduledAt(episode.scheduledAt)}
@@ -303,7 +303,7 @@ export default function EpisodeCommentModal({
                 <EpisodeSection
                   animeId={animeId}
                   episodes={finalEpisodes}
-                  totalEpisodes={animeData?.animeInfoDto?.totalEpisodes}
+                  totalEpisodes={animeData?.animeInfoDto?.totalEpisodes || 0}
                   selectedEpisodeIds={selectedEpisodeIds}
                   onEpisodeClick={handleEpisodeClick}
                   disableFutureEpisodes={true}

@@ -20,7 +20,7 @@ import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
-import SearchBar from './SearchBar';
+import SearchBar from '@/components/domain/search/SearchBar';
 
 export default function VotePageContent() {
   const { openLoginModal } = useModal();
@@ -901,7 +901,7 @@ export default function VotePageContent() {
         ref={currentWeekSearchBarRef}
         className={`p-4 shadow-sm ${
           isCurrentWeekSearchBarSticky && !isLastWeekSearchBarSticky
-            ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px] lg:left-50'
+            ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px]'
             : 'mb-7 bg-white md:mb-8'
         }`}
       >
@@ -1077,7 +1077,7 @@ export default function VotePageContent() {
             ref={lastWeekSearchBarRef}
             className={`p-4 shadow-sm ${
               isLastWeekSearchBarSticky
-                ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px] lg:left-50'
+                ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px]'
                 : 'mt-4 mb-7 bg-white md:mb-8'
             }`}
           >

@@ -1,0 +1,91 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { SurveyDto } from '@/types';
+import { useQuery } from '@tanstack/react-query';
+import { queryConfig } from '@/lib/queryConfig';
+import { useAuth } from '@/context/AuthContext';
+import VoteResultView from './_components/VoteResultView';
+import VoteFormView from './_components/VoteFormView';
+import { SurveyDetailSkeleton } from '@/components/skeletons';
+import { useModal } from '@/components/layout/AppContainer';
+
+export default function SurveyPage() {
+  const params = useParams();
+  const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useModal();
+
+  const surveyId = params.surveyId ? parseInt(params.surveyId as string) : null;
+  const [isRevoteMode, setIsRevoteMode] = useState(false);
+  const [showVotedMessage, setShowVotedMessage] = useState(false);
+
+  // 투표 상태 조회 (hasVoted 확인)
+  const { data: surveyStatusData, isLoading: isSurveyStatusLoading } =
+    useQuery<SurveyDto>({
+      queryKey: ['survey-status', surveyId],
+      queryFn: async () => {
+        if (!surveyId) throw new Error('Survey ID가 없습니다');
+        const response = await fetch(`/api/v1/vote/surveys/${surveyId}`);
+        if (!response.ok) throw new Error('투표 상태 조회 실패');
+        const result = await response.json();
+        return result.result || result;
+      },
+      enabled: !!surveyId,
+      ...queryConfig.vote,
+    });
+
+  // 투표 이력 체크
+  useEffect(() => {
+    // 투표 이력이 있고 로그인하지 않았을 때 메시지 표시
+    if (surveyStatusData?.hasVoted && !isAuthenticated) {
+      setShowVotedMessage(true);
+    }
+  }, [isAuthenticated, surveyStatusData?.hasVoted]);
+
+  // 로딩 상태
+  if (isSurveyStatusLoading || !surveyId) {
+    return <SurveyDetailSkeleton />;
+  }
+
+  // 투표 이력 메시지 표시
+  if (showVotedMessage) {
+    return (
+      <main className="max-width">
+        <div className="flex flex-col items-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
+          <div className="text-2xl">😎</div>
+          <h2 className="text-xl font-semibold">
+            기존 투표 이력이 확인되었습니다
+          </h2>
+          <p className="mb-6 text-gray-600">로그인 시 재투표가 가능합니다.</p>
+          <button
+            onClick={openLoginModal}
+            className="rounded-lg bg-amber-400/40 px-6 py-2 font-semibold text-black transition hover:bg-amber-400/70"
+          >
+            로그인하기
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  // 투표 결과 화면 (hasVoted=true이고 재투표 모드가 아닐 때)
+  if (!isRevoteMode && surveyStatusData?.hasVoted) {
+    return (
+      <VoteResultView
+        surveyId={surveyId}
+        onRevoteClick={() => setIsRevoteMode(true)}
+      />
+    );
+  }
+
+  // 투표 화면 렌더링 (hasVoted=false이거나 재투표 모드일 때)
+  return (
+    <VoteFormView
+      surveyId={surveyId}
+      isRevoteMode={isRevoteMode}
+      onRevoteSuccess={() => setIsRevoteMode(false)}
+      voteStatus={surveyStatusData?.status}
+    />
+  );
+}

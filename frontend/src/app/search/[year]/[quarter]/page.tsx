@@ -14,7 +14,7 @@ import type { AnimePreviewDto, AnimePreviewListDto } from '@/types';
 import { extractChosung } from '@/lib/searchUtils';
 import { useQuery } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
-import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
+import { SearchSkeleton } from '@/components/skeletons';
 
 function SeasonPageContent() {
   const router = useRouter();
@@ -730,7 +730,7 @@ function SeasonPageContent() {
 
   // 로딩 상태
   if (isLoading) {
-    return <SearchLoadingSkeleton />;
+    return <SearchSkeleton />;
   }
 
   // 에러 상태
@@ -1503,7 +1503,7 @@ function SeasonPageContent() {
 
 export default function SeasonPage() {
   return (
-    <Suspense fallback={<SearchLoadingSkeleton />}>
+    <Suspense fallback={<SearchSkeleton />}>
       <SeasonPageContent />
     </Suspense>
   );

@@ -18,9 +18,8 @@ import type {
 } from '@/types';
 import { extractChosung } from '@/lib/searchUtils';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
-
 import { useQuery } from '@tanstack/react-query';
-import SearchLoadingSkeleton from '@/components/common/SearchLoadingSkeleton';
+import { SearchSkeleton } from '@/components/skeletons';
 
 // 애니메이션 데이터 (이제 별도 파일에서 import)
 
@@ -1727,11 +1726,7 @@ function SearchPageContentWithParams() {
   if (currentIsLoading) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#F8F9FA' }}>
-        <SearchLoadingSkeleton
-          showBanner={true}
-          cardCount={12}
-          className="pt-8"
-        />
+        <SearchSkeleton cardCount={12} className="pt-8" />
       </div>
     );
   }
