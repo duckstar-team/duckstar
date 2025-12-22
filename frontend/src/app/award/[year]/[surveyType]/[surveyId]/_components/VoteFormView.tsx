@@ -14,7 +14,6 @@ import ConfirmDialog from './ConfirmDialog';
 import SearchBar from '@/components/domain/search/SearchBar';
 import VoteStatus from './VoteStatus';
 import GenderSelection from './GenderSelection';
-import TooltipPortal from './TooltipPortal';
 import VoteDisabledState from './VoteDisabledState';
 import {
   ApiResponseAnimeCandidateListDto,
@@ -571,13 +570,6 @@ export default function VoteFormView({
         className="@container sticky top-15 z-40 border-b border-gray-200 bg-white"
         data-vote-section-sticky
       >
-        <TooltipPortal
-          type="bonus"
-          position={bonusStampPosition}
-          onHide={() => setHasStampTooltipBeenHidden(true)}
-          show={showStampTooltip && !showConfirmDialog}
-        />
-
         <div className="max-width flex items-center justify-between gap-8 @max-md:flex-col @md:gap-16">
           {/* Vote Status Section */}
           <div

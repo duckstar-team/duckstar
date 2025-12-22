@@ -1,5 +1,6 @@
 'use client';
 
+import TooltipBtn from '@/components/common/TooltipBtn';
 import { MAX_VOTES } from '@/lib/constants';
 import { Infinity } from 'lucide-react';
 
@@ -149,11 +150,20 @@ export default function VoteStamp({
     return (
       <div className="flex items-center gap-4">
         {/* Bonus Vote Stamp */}
-        <img
-          src="/icons/voteSection-bonus-stamp.svg"
-          alt="Bonus Stamp"
-          className="size-12 object-cover md:size-14"
-        />
+        <TooltipBtn
+          text="보너스 표는 2개가 모여야 일반 표 1개와 같습니다."
+          defaultIsOpen={true}
+          isOpen={!showResult}
+          className="max-md:text-xs!"
+          variant="light"
+          placement="bottom"
+        >
+          <img
+            src="/icons/voteSection-bonus-stamp.svg"
+            alt="Bonus Stamp"
+            className="size-12 object-cover md:size-14"
+          />
+        </TooltipBtn>
         {/* Bonus Vote Count */}
         <BonusVoteCountText
           bonusVotesUsed={bonusVotesUsed}
