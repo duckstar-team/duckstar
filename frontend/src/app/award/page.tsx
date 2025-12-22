@@ -9,8 +9,11 @@ import { ApiResponse } from '@/api/http';
 import Link from 'next/link';
 import { getSurveyTypeLabel, getStatusText } from '@/lib/surveyUtils';
 import { AwardListSkeleton } from '@/components/skeletons';
+import { useRouter } from 'next/navigation';
 
 export default function AwardPage() {
+  const router = useRouter();
+
   // surveys 목록 조회
   const { data, isLoading, error } = useQuery<ApiResponse<SurveyDto[]>>({
     queryKey: ['surveys'],
@@ -85,8 +88,9 @@ export default function AwardPage() {
             const isOpen = survey.status === 'OPEN';
 
             return (
-              <div
+              <Link
                 key={survey.surveyId}
+                href={`/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`}
                 className="flex overflow-hidden rounded-md bg-white shadow-lg shadow-gray-200/80"
               >
                 <img
@@ -109,9 +113,13 @@ export default function AwardPage() {
                     </div>
                   </div>
 
-                  <div className="flex h-9 w-fit rounded-full bg-gradient-to-tr from-pink-300 to-blue-300 p-0.5 shadow-lg max-sm:self-end">
-                    <Link
-                      href={`/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`}
+                  <div className="flex h-9 w-fit self-end rounded-full bg-gradient-to-tr from-pink-300 to-blue-300 p-0.5 shadow-lg md:self-center">
+                    <button
+                      onClick={() => {
+                        router.push(
+                          `/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`
+                        );
+                      }}
                       className="flex items-center justify-center rounded-full bg-white/80 px-4 text-sm font-semibold text-gray-500 transition-all duration-300 hover:opacity-80"
                     >
                       {!isOpen
@@ -119,10 +127,10 @@ export default function AwardPage() {
                         : survey.hasVoted
                           ? '투표 완료'
                           : '투표 하기'}
-                    </Link>
+                    </button>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

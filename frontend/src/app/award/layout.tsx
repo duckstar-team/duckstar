@@ -24,9 +24,7 @@ export default function AwardLayout({
     queryKey: ['survey', surveyId],
     queryFn: async () => {
       if (!surveyId) throw new Error('Survey ID가 없습니다');
-      const response = await fetch(
-        `http://127.0.0.1:3658/m1/1148465-1141052-default/api/v1/vote/surveys/${surveyId}`
-      );
+      const response = await fetch(`/api/v1/vote/surveys/${surveyId}`);
       if (!response.ok) throw new Error('설문 조회 실패');
       const result = await response.json();
       return result.result || result;
