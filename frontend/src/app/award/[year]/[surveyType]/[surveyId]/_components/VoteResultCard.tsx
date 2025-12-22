@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import CommentPostForm from '@/components/domain/comment/CommentPostForm';
 import EpisodeCommentModal from '@/components/domain/comment/EpisodeCommentModal';
 import { AnimeBallotDto } from '@/types';
 import { getAnimeEpisodes } from '@/api/search';
-import { createComment } from '@/api//comment';
+import { createComment } from '@/api/comment';
 import { showToast } from '@/components/common/Toast';
 import { getThisWeekRecord } from '@/lib/quarterUtils';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createSurveyComment } from '@/api/vote';
 
 interface VoteResultCardProps {
   ballot: AnimeBallotDto;
@@ -28,19 +30,22 @@ export default function VoteResultCard({
   onCommentSubmit,
   autoExpand = false,
 }: VoteResultCardProps) {
-  const [isExpanded, setIsExpanded] = useState(autoExpand);
+  const queryClient = useQueryClient();
+  // 댓글이 있으면 기본으로 열림
+  const hasComment = ballot.surveyCommentDto?.commentId !== null;
+  const [isExpanded, setIsExpanded] = useState(autoExpand || hasComment);
   const [isEpisodeModalOpen, setIsEpisodeModalOpen] = useState(false);
   const [episodeData, setEpisodeData] = useState<any>(null);
+  const [commentError, setCommentError] = useState<string>('');
   const router = useRouter();
+  const params = useParams();
 
-  // 투표 도장 이미지 프리로딩
-  // useEffect(() => {
-  //   if (weekDto) {
-  //     const stampImagePath = getCurrentVoteStampImagePath(weekDto, ballot.ballotType === 'BONUS');
-  //     const img = new Image();
-  //     img.src = stampImagePath;
-  //   }
-  // }, [weekDto, ballot.ballotType]);
+  // ballot이 업데이트될 때 (댓글 작성 후 등) 댓글이 있으면 드롭다운 열기
+  useEffect(() => {
+    if (hasComment && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [hasComment, isExpanded]);
 
   const handleToggleExpanded = useCallback(() => {
     setIsExpanded((prev) => !prev);
@@ -48,26 +53,48 @@ export default function VoteResultCard({
 
   const handleCommentSubmit = useCallback(
     async (comment: string, images?: File[]) => {
+      // 댓글 길이 검증 (5자 이상)
+      const trimmedComment = comment.trim();
+      if (!trimmedComment || trimmedComment.length < 5) {
+        setCommentError('댓글을 5자 이상 입력해주세요.');
+        return;
+      }
+
+      setCommentError('');
+
       try {
         if (onCommentSubmit) {
           // 부모에서 전달된 핸들러 사용
           await onCommentSubmit(ballot.animeId, comment, images);
         } else {
           // 직접 API 호출
-          await createComment(ballot.animeId, {
+          await createSurveyComment(Number(params.surveyId), {
+            animeId: ballot.animeId,
             body: comment,
-            attachedImage: images?.[0],
+            candidateId: ballot.animeCandidateId,
           });
         }
-        // 댓글 작성 성공 시 드롭다운 닫기
-        setIsExpanded(false);
+
+        // 댓글 작성 성공 시 query refetch하여 데이터 새로고침
+        await queryClient.refetchQueries({
+          queryKey: ['vote-status', params.surveyId],
+        });
+
+        // 댓글 작성 성공 시 드롭다운 열어두기 (작성한 댓글이 보이도록)
+        setIsExpanded(true);
         showToast.success('댓글이 성공적으로 작성되었습니다.');
       } catch (error) {
         console.error('댓글 작성 실패:', error);
         showToast.error('댓글 작성에 실패했습니다. 다시 시도해주세요.');
       }
     },
-    [onCommentSubmit, ballot.animeId]
+    [
+      onCommentSubmit,
+      ballot.animeId,
+      ballot.animeCandidateId,
+      params.surveyId,
+      queryClient,
+    ]
   );
 
   // 에피소드별 댓글 모달 열기
@@ -136,9 +163,6 @@ export default function VoteResultCard({
   );
 
   const handleCardClick = useCallback(() => {
-    // 현재 스크롤 위치 저장
-    // scrollUtils.saveScrollPosition('vote-result');
-
     // 상세화면에서 돌아왔을 때를 위한 플래그 설정
     sessionStorage.setItem('navigation-type', 'from-vote-result');
 
@@ -268,12 +292,23 @@ export default function VoteResultCard({
                 <div onClick={(e) => e.stopPropagation()}>
                   <CommentPostForm
                     onSubmit={handleCommentSubmit}
-                    onImageUpload={(file) => {
-                      // 이미지 업로드 기능 활성화
+                    onChange={() => {
+                      // 댓글 입력 시 에러 메시지 초기화
+                      if (commentError) {
+                        setCommentError('');
+                      }
                     }}
-                    placeholder={`${ballot.titleKor}에 대한 댓글 남기기...`}
+                    placeholder={`${ballot.titleKor}에 대한 평가를 남겨주세요!`}
                     maxLength={500}
+                    initialValue={ballot.surveyCommentDto?.body || ''}
+                    disabled={!!ballot.surveyCommentDto?.commentId}
+                    phase="form"
                   />
+                  {commentError && (
+                    <div className="mt-2 ml-2 text-sm text-red-500">
+                      {commentError}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

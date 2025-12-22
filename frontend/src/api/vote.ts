@@ -5,8 +5,9 @@ import {
   LiveVoteResultDto,
   MemberAgeGroup,
   MemberGender,
+  SurveyCommentDto,
 } from '@/types';
-import { apiCall } from './http';
+import { apiCall, ApiResponse } from './http';
 
 // Device fingerprint 생성 함수
 async function generateDeviceFingerprint(): Promise<string> {
@@ -129,7 +130,7 @@ export async function withdrawStar(episodeId: number, episodeStarId: number) {
   });
 }
 
-// 애니메이션 재투표 API
+// Survey 재투표 API
 export async function revoteAnime(
   submissionId: number,
   requestBody: {
@@ -154,4 +155,22 @@ export async function revoteAnime(
   }
 
   return response;
+}
+
+// Survey 히스토리용 댓글 작성 API (로그인 ONLY)
+export async function createSurveyComment(
+  surveyId: number,
+  requestBody: {
+    animeId: number;
+    body: string;
+    candidateId: number;
+  }
+) {
+  return apiCall<ApiResponse<SurveyCommentDto>>(
+    `/api/v1/vote/surveys/${surveyId}/me`,
+    {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+    }
+  );
 }

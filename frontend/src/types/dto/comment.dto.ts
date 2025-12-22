@@ -44,3 +44,9 @@ export interface DiscardLikeResultDto {
   likeCount: number;
   discardedAt?: string;
 }
+
+export interface SurveyCommentDto {
+  commentCreatedAt: string | null;
+  commentId: number | null;
+  body: string | null;
+}
