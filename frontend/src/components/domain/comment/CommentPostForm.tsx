@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useAuth } from '../../../context/AuthContext';
-import { useModal } from '../../layout/AppContainer';
-import { useImageUpload, UploadedImage } from '../../../hooks/useImageUpload';
-import ImageUploadPreview from '../../common/ImageUploadPreview';
+import { useAuth } from '@/context/AuthContext';
+import { useModal } from '@/components/layout/AppContainer';
+import { useImageUpload, UploadedImage } from '@/hooks/useImageUpload';
+import ImageUploadPreview from '@/components/common/ImageUploadPreview';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-
-const imgGroup = '/icons/picture-upload.svg';
 
 interface CommentPostFormProps {
   onSubmit?: (comment: string, images?: File[]) => Promise<void>;
@@ -30,7 +28,7 @@ export default function CommentPostForm({
   disabled = false,
   initialValue = '',
   submitLabel,
-  phase = 'form',
+  phase,
   voteUpdatedAt,
 }: CommentPostFormProps) {
   const { user, isAuthenticated } = useAuth();
@@ -291,7 +289,7 @@ export default function CommentPostForm({
                       <img
                         alt=""
                         className="h-full w-full object-contain"
-                        src={imgGroup}
+                        src="/icons/picture-upload.svg"
                       />
                     </div>
                     <div className="text-[15px] leading-snug font-normal text-[#8e8e93]">

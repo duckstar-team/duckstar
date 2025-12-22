@@ -20,7 +20,7 @@ import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
-import SearchBar from './SearchBar';
+import SearchBar from '@/components/domain/search/SearchBar';
 
 export default function VotePageContent() {
   const { openLoginModal } = useModal();

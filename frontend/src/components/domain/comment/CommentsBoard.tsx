@@ -4,7 +4,7 @@ import SortingMenu, { SortOption } from '@/components/ui/SortingMenu';
 import Comment from './Comment';
 import Reply from './Reply';
 import OpenOrFoldReplies from './OpenOrFoldReplies';
-import CommentPostForm from '../anime/CommentPostForm';
+import CommentPostForm from './CommentPostForm';
 
 interface CommentsBoardProps {
   comments: CommentDto[];

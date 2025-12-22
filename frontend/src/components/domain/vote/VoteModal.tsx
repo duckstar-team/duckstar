@@ -12,7 +12,7 @@ import { X } from 'lucide-react';
 import { FaCheckCircle } from 'react-icons/fa';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
-import CommentPostForm from '@/components/domain/anime/CommentPostForm';
+import CommentPostForm from '@/components/domain/comment/CommentPostForm';
 import { getCandidate, submitVoteForm } from '@/api/vote';
 import { CandidateDto } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

@@ -8,9 +8,9 @@ import React, {
   useMemo,
 } from 'react';
 import EpisodeSection from '@/components/domain/anime/EpisodeSection';
-import CommentPostForm from '@/components/domain/anime/CommentPostForm';
-import ReplyForm from '@/components/domain/anime/ReplyForm';
-import CommentHeader from '@/components/domain/anime/CommentHeader';
+import CommentPostForm from '@/components/domain/comment/CommentPostForm';
+import ReplyForm from '@/components/domain/comment/ReplyForm';
+import CommentHeader from '@/components/domain/comment/CommentHeader';
 import Comment from '@/components/domain/comment/Comment';
 import Reply from '@/components/domain/comment/Reply';
 import OpenOrFoldReplies from '@/components/domain/comment/OpenOrFoldReplies';
@@ -26,7 +26,7 @@ import {
 import { getThisWeekRecord } from '@/lib/quarterUtils';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
-import EpisodeCommentModal from '@/components/domain/anime/EpisodeCommentModal';
+import EpisodeCommentModal from '@/components/domain/comment/EpisodeCommentModal';
 import { useComments } from '@/hooks/useComments';
 import {
   getReplies,
