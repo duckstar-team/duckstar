@@ -438,6 +438,9 @@ export default function VoteFormView({
           await queryClient.invalidateQueries({
             queryKey: ['survey-status', surveyId],
           });
+          await queryClient.invalidateQueries({
+            queryKey: ['anime-candidates', surveyId],
+          });
 
           // 비로그인 상태에서 투표 성공 시 세션키 저장
           if (!isAuthenticated && surveyType && surveyEndDate) {
@@ -481,6 +484,9 @@ export default function VoteFormView({
           });
           await queryClient.invalidateQueries({
             queryKey: ['survey-status', surveyId],
+          });
+          await queryClient.invalidateQueries({
+            queryKey: ['anime-candidates', surveyId],
           });
 
           // 비로그인 상태에서 투표 성공 시 세션키 저장

@@ -17,13 +17,15 @@ import {
 
 export default function SurveyPage() {
   const params = useParams();
+  const surveyId = params.surveyId ? parseInt(params.surveyId as string) : null;
+  const surveyType = params.surveyType as SurveyType | undefined;
+
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
 
-  const surveyId = params.surveyId ? parseInt(params.surveyId as string) : null;
-  const surveyType = params.surveyType as SurveyType | undefined;
   const [isRevoteMode, setIsRevoteMode] = useState(false);
   const [showVotedMessage, setShowVotedMessage] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // 투표 상태 조회 (hasVoted 확인)
   const { data: surveyStatusData, isLoading: isSurveyStatusLoading } =
@@ -117,7 +119,12 @@ export default function SurveyPage() {
     return (
       <VoteResultView
         surveyId={surveyId}
-        onRevoteClick={() => setIsRevoteMode(true)}
+        onRevoteClick={() => {
+          setIsRevoteMode(true);
+          setShowConfetti(false);
+        }}
+        showConfetti={showConfetti}
+        onConfettiComplete={() => setShowConfetti(false)}
       />
     );
   }
@@ -127,7 +134,10 @@ export default function SurveyPage() {
     <VoteFormView
       surveyId={surveyId}
       isRevoteMode={isRevoteMode}
-      onRevoteSuccess={() => setIsRevoteMode(false)}
+      onRevoteSuccess={() => {
+        setShowConfetti(true);
+        setIsRevoteMode(false);
+      }}
       voteStatus={surveyStatusData?.status}
       surveyType={surveyType}
       surveyEndDate={surveyStatusData?.endDate}
