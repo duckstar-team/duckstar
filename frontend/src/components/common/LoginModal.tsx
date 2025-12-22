@@ -52,7 +52,7 @@ export default function LoginModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="mx-auto w-full max-w-md rounded-2xl bg-white shadow-2xl"
+            className="w-full max-w-100 rounded-2xl bg-white shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 p-6">

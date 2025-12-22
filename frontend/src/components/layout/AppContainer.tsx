@@ -233,7 +233,7 @@ export default function AppContainer({ children }: AppContainerProps) {
               ref={sidebarRef}
               animate={{ width: isSidebarOpen ? 'fit-content' : 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="fixed top-15 left-0 z-[9999999] hidden overflow-y-hidden border-r border-gray-200 md:block"
+              className="fixed top-15 left-0 z-[9999999] hidden overflow-y-hidden md:block"
             >
               <Sidebar />
             </motion.aside>

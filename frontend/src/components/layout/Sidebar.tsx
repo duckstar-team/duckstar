@@ -33,7 +33,7 @@ export default function Sidebar() {
   return (
     <div className="flex">
       <div
-        className="flex h-screen flex-col justify-between bg-white px-2 py-3 pb-24 md:px-2.5"
+        className="flex h-screen flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5"
         onMouseEnter={
           isThinNavPage ? () => setIsThinNavHovered(true) : undefined
         }

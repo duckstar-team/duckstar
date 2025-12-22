@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ThinNavMenuItem from '@/components/domain/chart/ThinNavMenuItem';
@@ -9,21 +9,18 @@ import { ApiResponse } from '@/api/http';
 import { getSurveyTypeLabel } from '@/lib/surveyUtils';
 
 interface ThinNavDetailProps {
-  weeks?: WeekDto[];
-  selectedWeek?: WeekDto | null;
-  hideTextOnMobile?: boolean;
-  mode?: 'chart' | 'award';
-  selectedSurveyId?: number | null;
+  weeks: WeekDto[];
+  selectedWeek: WeekDto | null;
+  mode: 'chart' | 'award';
 }
 
 export default function ThinNavDetail({
-  weeks = [],
+  weeks,
   selectedWeek,
-  hideTextOnMobile = false,
-  mode = 'chart',
-  selectedSurveyId = null,
+  mode,
 }: ThinNavDetailProps) {
   const router = useRouter();
+  const params = useParams();
 
   const [expandedQuarters, setExpandedQuarters] = useState<Set<string>>(
     new Set()
@@ -91,7 +88,7 @@ export default function ThinNavDetail({
       // 각 설문을 메뉴 아이템으로 추가
       yearSurveys.forEach((survey) => {
         const surveyId = survey.surveyId;
-        const isSelected = selectedSurveyId === surveyId;
+        const isSelected = Number(params.surveyId) === surveyId;
         menuItems.push({
           type: 'awardItem' as const,
           label: getSurveyTypeLabel(survey.type),
@@ -147,7 +144,6 @@ export default function ThinNavDetail({
       Object.entries(groupedByQuarter).forEach(([quarter, quarterWeeks]) => {
         const quarterKey = `${year}-${quarter}`;
         const isExpanded = expandedQuarters.has(quarterKey);
-        const isSelected = selectedWeek?.quarter === parseInt(quarter);
 
         // 분기 헤더 추가
         menuItems.push({
@@ -192,28 +188,20 @@ export default function ThinNavDetail({
   const menuItems = generateMenuItems();
 
   return (
-    <div
-      className={`${hideTextOnMobile ? 'w-[60px] md:w-[143px]' : 'w-38'} relative h-screen bg-[#212529]`}
-    >
+    <div className="h-screen w-42 bg-[#212529] px-5 pt-6">
       {/* 차트/결산 투표 제목 */}
-      <div className="absolute top-[24px] left-[20px]">
-        <h2 className="text-xl font-semibold text-white">
-          {mode === 'award' ? '결산 투표' : '차트'}
-        </h2>
-      </div>
+      <h2 className="text-xl font-semibold text-white">
+        {mode === 'award' ? '결산 투표' : '차트'}
+      </h2>
 
-      {/* 시간 메뉴 아이템들 */}
-      <div
-        className={`${hideTextOnMobile ? 'w-[40px] md:w-[123px]' : 'w-[123px]'} absolute top-[90px] left-[10px] flex flex-col items-start justify-start gap-[4px] pb-[4px]`}
-      >
+      {/* 메뉴 아이템들 */}
+      <div className="mt-6 flex flex-col gap-1">
         {menuItems.map((item, index) => (
           <ThinNavMenuItem
             key={`${item.type}-${index}`}
             type={item.type}
             state={item.state}
             label={item.label}
-            icon={item.icon}
-            hideTextOnMobile={hideTextOnMobile}
             onClick={() => {
               if (item.type === 'week' && item.weekData) {
                 // 주차 클릭 시 동적 라우팅으로 이동
