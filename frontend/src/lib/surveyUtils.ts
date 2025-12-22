@@ -1,4 +1,4 @@
-import { SurveyDto, SurveyType, VoteStatus } from '@/types';
+import { SurveyDto, SurveyType, VoteStatusType } from '@/types';
 
 /**
  * SurveyType을 한글 라벨로 변환
@@ -51,7 +51,7 @@ export function getCategoryText(category: string): string {
 /**
  * VoteStatus를 한글 텍스트로 변환
  */
-export function getStatusText(status: VoteStatus | string): string {
+export function getStatusText(status: VoteStatusType | string): string {
   switch (String(status)) {
     case 'OPEN':
       return '진행중';

@@ -60,16 +60,13 @@ export interface LiveVoteResultDto {
 export interface AnimeVoteHistoryDto {
   animeBallotDtos: AnimeBallotDto[];
   bonusCount: number;
-  hasVoted: boolean;
   memberId: number | null;
   nickName: string | null;
-  normalCount?: number;
+  normalCount: number;
   submissionId?: number | null;
+  type: string;
+  year: number;
   submittedAt: string | Date;
-  type?: string;
-  year?: number;
-  weekDto?: WeekDto;
-  category?: 'ANIME' | 'HERO' | 'HEROINE';
 }
 
 /**
@@ -82,6 +79,9 @@ export interface AnimeBallotDto {
   mainThumbnailUrl: string;
   titleKor: string;
   totalEpisodes?: number | null;
+  year: number;
+  quarter: number;
+  medium: Medium;
 }
 
 export enum BallotType {
@@ -123,6 +123,8 @@ export interface AnimeCandidateDto {
   mainThumbnailUrl: string;
   medium: Medium;
   titleKor: string;
+  year: number;
+  quarter: number;
 }
 
 export enum Medium {
@@ -151,14 +153,14 @@ export enum MemberGender {
 export interface SurveyDto {
   surveyId: number;
   hasVoted: boolean;
-  status: VoteStatus;
+  status: VoteStatusType;
   year: number;
   type: SurveyType;
   startDate: string;
   endDate: string;
 }
 
-export enum VoteStatus {
+export enum VoteStatusType {
   Closed = 'CLOSED',
   Open = 'OPEN',
   Paused = 'PAUSED',
