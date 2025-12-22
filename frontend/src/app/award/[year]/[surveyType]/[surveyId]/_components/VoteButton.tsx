@@ -5,6 +5,7 @@ interface VoteButtonProps {
   onClick: () => void;
   disabled?: boolean;
   showError?: boolean;
+  errorMessage?: string;
   isSubmitting?: boolean;
   isRevoteMode?: boolean;
 }
@@ -33,13 +34,14 @@ export default function VoteButton({
   onClick,
   disabled = false,
   showError = false,
+  errorMessage = '일반 투표를 1개 이상 선택해주세요.',
   isSubmitting = false,
   isRevoteMode = false,
 }: VoteButtonProps) {
   const config = BUTTON_CONFIG[type];
 
   const getButtonContent = () => {
-    if (type === 'next' && showError) {
+    if (showError) {
       return (
         <img
           src="/icons/button-block.svg"
@@ -70,9 +72,14 @@ export default function VoteButton({
       data-vote-button
       onClick={onClick}
       disabled={disabled}
-      className={`${config.gradient} flex h-8 items-center justify-center rounded-md px-2.5 text-center text-sm font-bold text-white transition hover:opacity-80`}
+      className={`${config.gradient} relative flex h-8 items-center justify-center rounded-md px-2.5 text-center text-sm font-bold text-white transition hover:opacity-80`}
     >
       {getButtonContent()}
+      {showError && (
+        <div className="text-brand absolute top-full right-0 z-10 mt-2 text-xs font-medium whitespace-nowrap transition-opacity duration-3000 ease-in-out">
+          {errorMessage}
+        </div>
+      )}
     </button>
   );
 }

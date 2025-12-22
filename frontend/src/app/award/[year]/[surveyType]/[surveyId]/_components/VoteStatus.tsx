@@ -242,18 +242,11 @@ export default function VoteStatus({
                   )}
               </div>
             )}
-            <div className="relative">
               <VoteButton
                 type="next"
                 onClick={onNextClick}
                 showError={showNextError}
               />
-              {showNextError && (
-                <div className="-y-2 absolute top-full -right-4 z-10 mt-2 bg-white px-2 text-xs font-medium whitespace-nowrap text-[#990033] transition-opacity duration-3000 ease-in-out">
-                  일반 투표를 1개 이상 선택해주세요.
-                </div>
-              )}
-            </div>
           </>
         )}
       </div>

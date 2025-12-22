@@ -581,12 +581,12 @@ export default function VoteFormView({
             <div className="order-1 w-full @md:order-2 @md:w-auto">
               <GenderSelection
                 genderSelectionStep={genderSelectionStep}
+                setGenderSelectionStep={setGenderSelectionStep}
                 selectedGender={selectedGender}
                 selectedAgeGroup={selectedAgeGroup}
                 setSelectedGender={setSelectedGender}
                 setSelectedAgeGroup={setSelectedAgeGroup}
                 onBackClick={handleBackClick}
-                onNextClick={() => setGenderSelectionStep('age')}
                 onSubmitClick={handleSubmitClick}
                 isSubmitting={isSubmitting}
                 isRevoteMode={isRevoteMode}
