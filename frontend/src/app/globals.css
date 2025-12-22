@@ -26,6 +26,13 @@
   --breakpoint-lg: 64rem; /* 1024px */
   --breakpoint-xl: 80rem; /* 1280px */
   --breakpoint-2xl: 96rem; /* 1536px */
+
+  /* Container Query Breakpoints - 사이드바를 제외한 메인 콘텐츠 영역 기준 */
+  --container-xs: 23.438rem; /* 375px */
+  --container-sm: 40rem; /* 640px */
+  --container-md: 48rem; /* 768px */
+  --container-lg: 64rem; /* 1024px */
+  --container-xl: 80rem; /* 1280px */
 }
 
 /* Dark Mode Support */
@@ -64,6 +71,10 @@ html {
 
 button {
   cursor: pointer;
+  outline: none;
+}
+
+input:focus {
   outline: none;
 }
 

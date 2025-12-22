@@ -3,6 +3,8 @@ import {
   CandidateDto,
   CandidateListDto,
   LiveVoteResultDto,
+  MemberAgeGroup,
+  MemberGender,
 } from '@/types';
 import { apiCall } from './http';
 
@@ -125,4 +127,31 @@ export async function withdrawStar(episodeId: number, episodeStarId: number) {
   return apiCall<void>(`/api/v1/vote/withdraw/${episodeId}/${episodeStarId}`, {
     method: 'POST',
   });
+}
+
+// 애니메이션 재투표 API
+export async function revoteAnime(
+  submissionId: number,
+  requestBody: {
+    surveyId: number;
+    gender: MemberGender;
+    ageGroup: MemberAgeGroup;
+    added: Array<{ candidateId: number; ballotType: 'NORMAL' | 'BONUS' }>;
+    removed: Array<{ candidateId: number; ballotType: 'NORMAL' | 'BONUS' }>;
+    updated: Array<{ candidateId: number; ballotType: 'NORMAL' | 'BONUS' }>;
+  }
+) {
+  const response = await apiCall<{ isSuccess: boolean }>(
+    `/api/v1/vote/surveys/${submissionId}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+    }
+  );
+
+  if (!response.isSuccess) {
+    throw response;
+  }
+
+  return response;
 }
