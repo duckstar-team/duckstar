@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { SurveyDto } from '@/types';
+import { SurveyDto, SurveyType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -10,6 +10,10 @@ import VoteResultView from './_components/VoteResultView';
 import VoteFormView from './_components/VoteFormView';
 import { SurveyDetailSkeleton } from '@/components/skeletons';
 import { useModal } from '@/components/layout/AppContainer';
+import {
+  hasValidSurveySession,
+  setSurveySession,
+} from '@/lib/surveySessionStorage';
 
 export default function SurveyPage() {
   const params = useParams();
@@ -17,6 +21,7 @@ export default function SurveyPage() {
   const { openLoginModal } = useModal();
 
   const surveyId = params.surveyId ? parseInt(params.surveyId as string) : null;
+  const surveyType = params.surveyType as SurveyType | undefined;
   const [isRevoteMode, setIsRevoteMode] = useState(false);
   const [showVotedMessage, setShowVotedMessage] = useState(false);
 
@@ -35,21 +40,59 @@ export default function SurveyPage() {
       ...queryConfig.vote,
     });
 
-  // 투표 이력 체크
+  // 로그인 시 세션키 발급
   useEffect(() => {
-    // 투표 이력이 있고 로그인하지 않았을 때 메시지 표시
-    if (surveyStatusData?.hasVoted && !isAuthenticated) {
-      setShowVotedMessage(true);
+    if (
+      isAuthenticated &&
+      surveyStatusData?.hasVoted &&
+      surveyStatusData?.type &&
+      surveyStatusData?.endDate
+    ) {
+      setSurveySession(surveyStatusData.type, surveyStatusData.endDate);
     }
-  }, [isAuthenticated, surveyStatusData?.hasVoted]);
+  }, [
+    isAuthenticated,
+    surveyStatusData?.hasVoted,
+    surveyStatusData?.type,
+    surveyStatusData?.endDate,
+  ]);
+
+  // 세션키 및 투표 이력 체크
+  useEffect(() => {
+    if (!surveyType || !surveyStatusData) return;
+
+    const hasValidSession = hasValidSurveySession(surveyType);
+    const hasVoted = surveyStatusData.hasVoted;
+
+    // 세션키가 있으면 VoteResultView 표시 (비로그인 상태에서도)
+    if (hasValidSession) {
+      setShowVotedMessage(false);
+      return;
+    }
+
+    // 세션키가 없고 투표 이력이 있고 로그인하지 않았을 때 메시지 표시
+    if (hasVoted && !isAuthenticated) {
+      setShowVotedMessage(true);
+    } else {
+      setShowVotedMessage(false);
+    }
+  }, [
+    isAuthenticated,
+    surveyStatusData?.hasVoted,
+    surveyType,
+    surveyStatusData,
+  ]);
 
   // 로딩 상태
-  if (isSurveyStatusLoading || !surveyId) {
+  if (isSurveyStatusLoading || !surveyId || !surveyType) {
     return <SurveyDetailSkeleton />;
   }
 
-  // 투표 이력 메시지 표시
-  if (showVotedMessage) {
+  // 세션키가 유효한지 확인
+  const hasValidSession = hasValidSurveySession(surveyType);
+
+  // 투표 이력 메시지 표시 (세션키가 없고 투표 이력이 있고 로그인하지 않았을 때)
+  if (showVotedMessage && !hasValidSession && !isAuthenticated) {
     return (
       <main className="max-width">
         <div className="flex flex-col items-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
@@ -69,8 +112,8 @@ export default function SurveyPage() {
     );
   }
 
-  // 투표 결과 화면 (hasVoted=true이고 재투표 모드가 아닐 때)
-  if (!isRevoteMode && surveyStatusData?.hasVoted) {
+  // 투표 결과 화면 (hasVoted=true이거나 세션키가 유효하고 재투표 모드가 아닐 때)
+  if (!isRevoteMode && (surveyStatusData?.hasVoted || hasValidSession)) {
     return (
       <VoteResultView
         surveyId={surveyId}
@@ -86,6 +129,8 @@ export default function SurveyPage() {
       isRevoteMode={isRevoteMode}
       onRevoteSuccess={() => setIsRevoteMode(false)}
       voteStatus={surveyStatusData?.status}
+      surveyType={surveyType}
+      surveyEndDate={surveyStatusData?.endDate}
     />
   );
 }
