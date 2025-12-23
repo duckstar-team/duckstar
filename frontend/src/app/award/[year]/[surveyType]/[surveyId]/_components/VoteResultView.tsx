@@ -84,8 +84,8 @@ export default function VoteResultView({
             : '정보 없음'}
         </div>
 
-        <div className="flex gap-8 @md:gap-20">
-          <div className="flex items-center gap-4 @max-sm:flex-col @md:gap-6">
+        <div className="flex max-[375px]:flex-col items-center justify-center gap-8 max-[375px]:gap-4 @md:gap-20">
+          <div className="flex items-center gap-4 @max-sm:flex-col @md:gap-10">
             <VoteStamp
               type="normal"
               currentVotes={voteHistory.normalCount || 0}
