@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { NAV_ITEMS } from './navItems';
 import ThinNavDetail from './ThinNavDetail';
-import { useChart } from './AppContainer';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 
@@ -20,9 +19,6 @@ export default function Sidebar() {
     pathname.startsWith('/chart') || pathname.startsWith('/award');
   const isExpanded = isThinNavHovered || isThinNavDetailHovered;
   const isThinNav = isThinNavPage && !isExpanded;
-
-  // 차트 컨텍스트에서 weeks와 selectedWeek 가져오기
-  const { weeks, selectedWeek } = useChart();
 
   // 페이지 이동 시 호버 상태 초기화
   useEffect(() => {
@@ -138,8 +134,6 @@ export default function Sidebar() {
           onClick={(e) => e.stopPropagation()}
         >
           <ThinNavDetail
-            weeks={weeks}
-            selectedWeek={selectedWeek}
             mode={pathname.startsWith('/award') ? 'award' : 'chart'}
           />
         </div>

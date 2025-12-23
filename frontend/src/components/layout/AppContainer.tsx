@@ -66,9 +66,13 @@ export default function AppContainer({ children }: AppContainerProps) {
   const sidebarRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
+  const SIDEBAR_STORAGE_KEY = 'sidebar-open';
+
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
-    setIsSidebarOpen(false);
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const closeLoginModal = () => {
@@ -84,13 +88,24 @@ export default function AppContainer({ children }: AppContainerProps) {
   };
 
   const toggleMenu = () => {
-    setIsSidebarOpen((prev) => !prev);
+    setIsSidebarOpen((prev) => {
+      const newValue = !prev;
+      // 데스크탑에서만 세션 스토리지에 저장
+      if (typeof window !== 'undefined' && window.innerWidth > 768) {
+        sessionStorage.setItem(SIDEBAR_STORAGE_KEY, String(newValue));
+      }
+      return newValue;
+    });
     setIsLoginModalOpen(false);
   };
 
-  // 페이지 이동 시 사이드바 자동 닫기
+  // 페이지 이동 시 사이드바 자동 닫기 (모바일에서만)
   useEffect(() => {
-    if (isSidebarOpen) {
+    if (
+      typeof window !== 'undefined' &&
+      window.innerWidth <= 768 &&
+      isSidebarOpen
+    ) {
       setIsSidebarOpen(false);
     }
   }, [pathname]);
@@ -162,14 +177,23 @@ export default function AppContainer({ children }: AppContainerProps) {
 
   /**
    * 사이드바 Open/Close 상태 관리
-   * 데스크탑 초기 상태 Open
-   * 모바일 초기 상태 Closed
+   * 데스크탑: 세션 스토리지에서 읽어오거나 기본값 false
+   * 모바일: 초기 상태 항상 Closed
    */
   useEffect(() => {
+    // 초기 로드 시 사이드바 상태 설정
     const resizeSidebar = () => {
       if (window.innerWidth > 768) {
-        setIsSidebarOpen(true);
+        // 데스크탑: 세션 스토리지에서 읽어오기
+        const savedState = sessionStorage.getItem(SIDEBAR_STORAGE_KEY);
+        if (savedState !== null) {
+          setIsSidebarOpen(savedState === 'true');
+        } else {
+          // 세션 스토리지에 값이 없으면 기본값 false
+          setIsSidebarOpen(false);
+        }
       } else {
+        // 모바일: 초기 상태 항상 닫힘
         setIsSidebarOpen(false);
       }
     };

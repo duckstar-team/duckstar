@@ -14,7 +14,6 @@ import ConfirmDialog from './ConfirmDialog';
 import SearchBar from '@/components/domain/search/SearchBar';
 import VoteStatus from './VoteStatus';
 import GenderSelection from './GenderSelection';
-import TooltipPortal from './TooltipPortal';
 import VoteDisabledState from './VoteDisabledState';
 import {
   ApiResponseAnimeCandidateListDto,
@@ -23,6 +22,7 @@ import {
   MemberAgeGroup,
   VoteStatusType,
   MemberGender,
+  SurveyType,
 } from '@/types';
 import { Megaphone } from 'lucide-react';
 import { MAX_VOTES } from '@/lib/constants';
@@ -33,12 +33,16 @@ import { revoteAnime } from '@/api/vote';
 import { apiCall } from '@/api/http';
 import { CandidateCardSkeleton } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
+import { setSurveySession } from '@/lib/surveySessionStorage';
+import { useAuth } from '@/context/AuthContext';
 
 interface VoteFormViewProps {
   surveyId: number;
   isRevoteMode: boolean;
   onRevoteSuccess: () => void;
   voteStatus?: VoteStatusType;
+  surveyType?: SurveyType;
+  surveyEndDate?: string;
 }
 
 export default function VoteFormView({
@@ -46,8 +50,11 @@ export default function VoteFormView({
   isRevoteMode,
   onRevoteSuccess,
   voteStatus,
+  surveyType,
+  surveyEndDate,
 }: VoteFormViewProps) {
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyContainerRef = useRef<HTMLDivElement>(null);
 
@@ -430,6 +437,14 @@ export default function VoteFormView({
           await queryClient.invalidateQueries({
             queryKey: ['survey-status', surveyId],
           });
+          await queryClient.invalidateQueries({
+            queryKey: ['anime-candidates', surveyId],
+          });
+
+          // 비로그인 상태에서 투표 성공 시 세션키 저장
+          if (!isAuthenticated && surveyType && surveyEndDate) {
+            setSurveySession(surveyType, surveyEndDate);
+          }
 
           onRevoteSuccess();
         } else {
@@ -469,6 +484,14 @@ export default function VoteFormView({
           await queryClient.invalidateQueries({
             queryKey: ['survey-status', surveyId],
           });
+          await queryClient.invalidateQueries({
+            queryKey: ['anime-candidates', surveyId],
+          });
+
+          // 비로그인 상태에서 투표 성공 시 세션키 저장
+          if (!isAuthenticated && surveyType && surveyEndDate) {
+            setSurveySession(surveyType, surveyEndDate);
+          }
 
           onRevoteSuccess();
         } else {
@@ -547,13 +570,6 @@ export default function VoteFormView({
         className="@container sticky top-15 z-40 border-b border-gray-200 bg-white"
         data-vote-section-sticky
       >
-        <TooltipPortal
-          type="bonus"
-          position={bonusStampPosition}
-          onHide={() => setHasStampTooltipBeenHidden(true)}
-          show={showStampTooltip && !showConfirmDialog}
-        />
-
         <div className="max-width flex items-center justify-between gap-8 @max-md:flex-col @md:gap-16">
           {/* Vote Status Section */}
           <div
@@ -581,12 +597,12 @@ export default function VoteFormView({
             <div className="order-1 w-full @md:order-2 @md:w-auto">
               <GenderSelection
                 genderSelectionStep={genderSelectionStep}
+                setGenderSelectionStep={setGenderSelectionStep}
                 selectedGender={selectedGender}
                 selectedAgeGroup={selectedAgeGroup}
                 setSelectedGender={setSelectedGender}
                 setSelectedAgeGroup={setSelectedAgeGroup}
                 onBackClick={handleBackClick}
-                onNextClick={() => setGenderSelectionStep('age')}
                 onSubmitClick={handleSubmitClick}
                 isSubmitting={isSubmitting}
                 isRevoteMode={isRevoteMode}

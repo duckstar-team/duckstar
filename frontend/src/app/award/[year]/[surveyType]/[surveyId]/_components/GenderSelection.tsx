@@ -1,15 +1,18 @@
+'use client';
+
 import { MemberAgeGroup, MemberGender } from '@/types';
 import VoteButton from './VoteButton';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface GenderSelectionProps {
   genderSelectionStep: 'gender' | 'age' | null;
+  setGenderSelectionStep: (step: 'gender' | 'age' | null) => void;
   selectedGender: MemberGender | null;
   selectedAgeGroup: MemberAgeGroup | null;
   setSelectedGender: (gender: MemberGender) => void;
   setSelectedAgeGroup: (ageGroup: MemberAgeGroup) => void;
   onBackClick: () => void;
-  onNextClick?: () => void;
   onSubmitClick: () => void;
   isSubmitting?: boolean;
   isRevoteMode?: boolean;
@@ -43,18 +46,42 @@ const AGE_GROUP_OPTIONS: AgeGroupOption[] = [
 // Main component
 export default function GenderSelection({
   genderSelectionStep,
+  setGenderSelectionStep,
   selectedGender,
   selectedAgeGroup,
   setSelectedGender,
   setSelectedAgeGroup,
   onBackClick,
-  onNextClick,
   onSubmitClick,
   isSubmitting = false,
   isRevoteMode = false,
 }: GenderSelectionProps) {
+  const [showNextError, setShowNextError] = useState(false);
+  const [showSubmitError, setShowSubmitError] = useState(false);
   const showGender = genderSelectionStep === 'gender';
   const showAge = genderSelectionStep === 'age';
+
+  const handleNextClick = () => {
+    if (!selectedGender) {
+      setShowNextError(true);
+      setTimeout(() => {
+        setShowNextError(false);
+      }, 1000);
+      return;
+    }
+    setGenderSelectionStep('age');
+  };
+
+  const handleSubmitClick = () => {
+    if (!selectedAgeGroup) {
+      setShowSubmitError(true);
+      setTimeout(() => {
+        setShowSubmitError(false);
+      }, 1000);
+      return;
+    }
+    onSubmitClick();
+  };
 
   return (
     <div className="flex items-center justify-between gap-8">
@@ -125,11 +152,13 @@ export default function GenderSelection({
         <VoteButton type="back" onClick={onBackClick} disabled={isSubmitting} />
 
         {/* Next 버튼은 gender 단계에서만 표시 */}
-        {showGender && onNextClick && (
+        {showGender && (
           <VoteButton
             type="next"
-            onClick={onNextClick}
-            disabled={!selectedGender || isSubmitting}
+            onClick={handleNextClick}
+            disabled={isSubmitting}
+            showError={showNextError}
+            errorMessage="성별을 선택해주세요."
           />
         )}
 
@@ -137,10 +166,12 @@ export default function GenderSelection({
         {showAge && (
           <VoteButton
             type="submit"
-            onClick={onSubmitClick}
-            disabled={!selectedGender || !selectedAgeGroup || isSubmitting}
+            onClick={handleSubmitClick}
+            disabled={!selectedGender || isSubmitting}
             isSubmitting={isSubmitting}
             isRevoteMode={isRevoteMode}
+            showError={showSubmitError}
+            errorMessage="연령대를 선택해주세요."
           />
         )}
       </div>

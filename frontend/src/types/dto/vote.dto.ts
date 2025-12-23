@@ -1,4 +1,10 @@
-import { Anime, StarInfoDto, VoteResultDto, WeekDto } from '@/types';
+import {
+  Anime,
+  StarInfoDto,
+  SurveyCommentDto,
+  VoteResultDto,
+  WeekDto,
+} from '@/types';
 
 // 실시간 투표 후보자 목록 DTO
 export interface LiveCandidateListDto {
@@ -82,6 +88,7 @@ export interface AnimeBallotDto {
   year: number;
   quarter: number;
   medium: Medium;
+  surveyCommentDto: SurveyCommentDto;
 }
 
 export enum BallotType {

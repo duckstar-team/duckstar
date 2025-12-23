@@ -1,10 +1,9 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
 import VoteStamp from './VoteStamp';
 import VoteButton from './VoteButton';
+import TooltipBtn from '@/components/common/TooltipBtn';
 
 interface VoteStatusProps {
   currentVotes: number;
@@ -185,75 +184,26 @@ export default function VoteStatus({
                 data-max-votes-button
                 className="relative"
               >
-                <VoteButton
-                  type="bonus"
-                  onClick={onBonusClick}
-                  disabled={isSubmitting}
-                />
-                {/* 보너스 버튼 툴팁 - Portal을 사용하여 document.body에 직접 렌더링 */}
-                {typeof window !== 'undefined' &&
-                  createPortal(
-                    <AnimatePresence>
-                      {showBonusTooltip &&
-                        tooltipPosition.x > 0 &&
-                        tooltipPosition.y > 0 && (
-                          <div
-                            className="pointer-events-none fixed z-[9999999]"
-                            style={{
-                              left: `${tooltipPosition.x}px`,
-                              top: `${tooltipPosition.y}px`,
-                              transform: 'translateX(-50%)',
-                            }}
-                          >
-                            <motion.div
-                              className="pointer-events-auto relative w-max"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{
-                                duration: 0.8,
-                                ease: 'easeOut',
-                              }}
-                            >
-                              <img
-                                src="/icons/textBalloon.svg"
-                                alt="tooltip"
-                                className="h-auto w-auto"
-                                style={{
-                                  filter:
-                                    'drop-shadow(2px 2px 4px rgba(0,0,0,0.15))',
-                                }}
-                              />
-                              <div className="absolute inset-0 flex -translate-y-0.5 items-center justify-center px-3 py-1 md:-translate-y-1 md:px-6 md:py-2">
-                                <div className="text-center font-['Pretendard',_sans-serif] text-xs leading-[16px] font-normal whitespace-nowrap text-[#000000] md:text-base md:leading-[22px]">
-                                  <span className="block md:hidden">
-                                    더 투표할까요?
-                                  </span>
-                                  <span className="hidden md:inline">
-                                    더 투표하고 싶으신가요?
-                                  </span>
-                                </div>
-                              </div>
-                            </motion.div>
-                          </div>
-                        )}
-                    </AnimatePresence>,
-                    document.body
-                  )}
+                <TooltipBtn
+                  text="더 투표하고 싶으신가요?"
+                  defaultIsOpen={hasReachedMaxVotes}
+                  isOpen={hasReachedMaxVotes}
+                  variant="light"
+                  placement="bottom"
+                >
+                  <VoteButton
+                    type="bonus"
+                    onClick={onBonusClick}
+                    disabled={isSubmitting}
+                  />
+                </TooltipBtn>
               </div>
             )}
-            <div className="relative">
-              <VoteButton
-                type="next"
-                onClick={onNextClick}
-                showError={showNextError}
-              />
-              {showNextError && (
-                <div className="-y-2 absolute top-full -right-4 z-10 mt-2 bg-white px-2 text-xs font-medium whitespace-nowrap text-[#990033] transition-opacity duration-3000 ease-in-out">
-                  일반 투표를 1개 이상 선택해주세요.
-                </div>
-              )}
-            </div>
+            <VoteButton
+              type="next"
+              onClick={onNextClick}
+              showError={showNextError}
+            />
           </>
         )}
       </div>

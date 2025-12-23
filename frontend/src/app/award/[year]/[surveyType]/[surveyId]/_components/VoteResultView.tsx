@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AnimeBallotDto, ApiResponseAnimeVoteHistoryDto } from '@/types';
 import { ChevronRight, RefreshCcw, Share2 } from 'lucide-react';
@@ -15,25 +15,21 @@ import { useAuth } from '@/context/AuthContext';
 interface VoteResultViewProps {
   surveyId: number;
   onRevoteClick: () => void;
+  showConfetti?: boolean;
+  onConfettiComplete?: () => void;
 }
 
 export default function VoteResultView({
   surveyId,
   onRevoteClick,
+  showConfetti = false,
+  onConfettiComplete,
 }: VoteResultViewProps) {
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [previousDataUpdatedAt, setPreviousDataUpdatedAt] = useState<
-    number | null
-  >(null);
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
 
   // 투표 내역 조회
-  const {
-    data: voteStatusData,
-    isLoading,
-    dataUpdatedAt,
-  } = useQuery({
+  const { data: voteStatusData, isLoading } = useQuery({
     queryKey: ['vote-status', surveyId],
     queryFn: async () => {
       const response = await fetch(`/api/v1/vote/surveys/${surveyId}/me`);
@@ -43,18 +39,6 @@ export default function VoteResultView({
     enabled: !!surveyId,
     ...queryConfig.vote,
   });
-
-  // 데이터가 새로 업데이트되면 confetti 표시
-  useEffect(() => {
-    if (
-      previousDataUpdatedAt !== null &&
-      dataUpdatedAt > previousDataUpdatedAt &&
-      voteStatusData?.result
-    ) {
-      setShowConfetti(true);
-    }
-    setPreviousDataUpdatedAt(dataUpdatedAt);
-  }, [dataUpdatedAt, previousDataUpdatedAt, voteStatusData]);
 
   const voteHistory = voteStatusData?.result;
 
@@ -74,10 +58,7 @@ export default function VoteResultView({
 
   return (
     <main className="max-width bg-gray-50">
-      <ConfettiEffect
-        isActive={showConfetti}
-        onComplete={() => setShowConfetti(false)}
-      />
+      <ConfettiEffect isActive={showConfetti} onComplete={onConfettiComplete} />
       <div className="relative mb-6 flex w-full flex-col items-center gap-2 rounded-lg bg-gray-100 p-4 sm:gap-3">
         <div className="text-center text-xl font-semibold text-black sm:text-2xl lg:text-3xl">
           {voteHistory.nickName
