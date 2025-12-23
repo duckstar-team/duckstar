@@ -57,7 +57,7 @@ export default function VoteFormView({
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
-  const stickyContainerRef = useRef<HTMLDivElement>(null);
+  const voteSectionRef = useRef<HTMLDivElement>(null);
 
   // 상태 관리
   const [selected, setSelected] = useState<number[]>([]);
@@ -89,6 +89,8 @@ export default function VoteFormView({
   const [hasTooltipBeenHidden, setHasTooltipBeenHidden] = useState(false);
   const [hasStampTooltipBeenHidden, setHasStampTooltipBeenHidden] =
     useState(false);
+  const [isVoteSectionSticky, setIsVoteSectionSticky] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(0);
 
   // 후보 목록 조회
   const {
@@ -138,25 +140,50 @@ export default function VoteFormView({
     }
   }, [candidateData?.result?.memberAgeGroup, selectedAgeGroup, isRevoteMode]);
 
-  // 재투표 모드일 때 기존 투표 내역으로 초기화
+  // 재투표 모드 처리
   useEffect(() => {
     if (isRevoteMode && voteStatusData?.result?.animeBallotDtos) {
-      const normalVotes = voteStatusData.result.animeBallotDtos
-        .filter((ballot) => ballot.ballotType === 'NORMAL')
-        .map((ballot) => ballot.animeCandidateId);
-      const bonusVotes = voteStatusData.result.animeBallotDtos
-        .filter((ballot) => ballot.ballotType === 'BONUS')
-        .map((ballot) => ballot.animeCandidateId);
-
-      setSelected(normalVotes);
-      setBonusSelected(bonusVotes);
-
-      if (bonusVotes.length > 0) {
-        setIsBonusMode(true);
-        setHasClickedBonus(true);
-      }
+      // 재투표 모드에서는 성별 선택 화면을 표시하지 않음 (초기 모드 유지)
+      setGenderSelectionStep(null);
+      setScrollCompleted(false);
     }
   }, [isRevoteMode, voteStatusData]);
+
+  // 재투표 모드로 이동할 때 기존 투표 내역으로 초기화
+  useEffect(() => {
+    if (isRevoteMode) {
+      // 재투표 모드에서는 기존 투표 데이터를 기표칸에 미리 채우기
+      if (
+        voteStatusData?.result?.animeBallotDtos &&
+        voteStatusData.result.animeBallotDtos.length > 0
+      ) {
+        const normalVotes = voteStatusData.result.animeBallotDtos
+          .filter((ballot) => ballot.ballotType === 'NORMAL')
+          .map((ballot) => ballot.animeCandidateId);
+        const bonusVotes = voteStatusData.result.animeBallotDtos
+          .filter((ballot) => ballot.ballotType === 'BONUS')
+          .map((ballot) => ballot.animeCandidateId);
+
+        // 기존 투표 데이터를 즉시 상태에 설정
+        setSelected(normalVotes);
+        setBonusSelected(bonusVotes);
+
+        // 보너스 투표가 있으면 보너스 모드 활성화
+        if (bonusVotes.length > 0) {
+          setIsBonusMode(true);
+          setHasClickedBonus(true);
+        }
+
+        // 성별 정보 설정
+        if (
+          candidateData?.result?.memberGender &&
+          candidateData.result.memberGender !== 'UNKNOWN'
+        ) {
+          setSelectedGender(candidateData.result.memberGender);
+        }
+      }
+    }
+  }, [isRevoteMode, voteStatusData, candidateData]);
 
   // 에러 카드 관리 헬퍼 함수
   const updateErrorCards = (animeId: number, shouldAdd: boolean) => {
@@ -188,35 +215,58 @@ export default function VoteFormView({
     }
   }, [selected.length]);
 
-  // Container query가 메인 콘텐츠 영역 너비를 기준으로 동작하도록 설정
+  // 사이드바 너비 계산
   useEffect(() => {
-    if (!containerRef.current || !stickyContainerRef.current) return;
+    const calculateSidebarWidth = () => {
+      if (!containerRef.current) return;
 
-    const updateContainerWidth = () => {
-      if (containerRef.current && stickyContainerRef.current) {
-        // 부모 <main> 요소의 실제 너비 측정 (사이드바 제외)
-        const mainElement = containerRef.current.closest('main');
-        if (mainElement) {
-          const rect = mainElement.getBoundingClientRect();
-          stickyContainerRef.current.style.width = `${rect.width}px`;
+      const mainElement = containerRef.current.closest('main');
+      if (mainElement) {
+        const rect = mainElement.getBoundingClientRect();
+        // 메인 요소의 left offset이 사이드바 너비
+        setSidebarWidth(rect.left);
+      } else {
+        // 사이드바를 직접 찾기
+        const sidebar = document.querySelector(
+          'aside, [data-sidebar], .sidebar'
+        );
+        if (sidebar) {
+          const sidebarRect = sidebar.getBoundingClientRect();
+          setSidebarWidth(sidebarRect.width);
         }
       }
     };
 
-    updateContainerWidth();
-    window.addEventListener('resize', updateContainerWidth);
-
-    // ResizeObserver로 부모 요소 크기 변경 감지
-    const resizeObserver = new ResizeObserver(updateContainerWidth);
-    if (containerRef.current.parentElement) {
-      resizeObserver.observe(containerRef.current.parentElement);
-    }
+    calculateSidebarWidth();
+    window.addEventListener('resize', calculateSidebarWidth);
 
     return () => {
-      window.removeEventListener('resize', updateContainerWidth);
-      resizeObserver.disconnect();
+      window.removeEventListener('resize', calculateSidebarWidth);
     };
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!voteSectionRef.current) return;
+
+      const rect = voteSectionRef.current.getBoundingClientRect();
+      const shouldBeSticky = rect.top <= 60; // 헤더 높이 60px
+
+      if (shouldBeSticky !== isVoteSectionSticky) {
+        setIsVoteSectionSticky(shouldBeSticky);
+      }
+    };
+
+    // 초기 체크
+    handleScroll();
+
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isVoteSectionSticky]);
 
   // 보너스 툴팁 표시 조건
   useEffect(() => {
@@ -565,11 +615,74 @@ export default function VoteFormView({
         </div>
       </section>
 
-      {/* Sticky VoteSection - 헤더 60px 아래에 고정, 메인 콘텐츠 영역 너비 기준 */}
+      {/* Sticky VoteSection - 헤더 60px 아래에 고정, 사이드바 너비 제외 */}
+      {isVoteSectionSticky && (
+        <div
+          className="fixed top-[60px] z-40 border-b border-gray-200 bg-white py-4"
+          data-vote-section-sticky
+          style={{
+            top: '60px',
+            left: `${sidebarWidth}px`,
+            width: `calc(100vw - ${sidebarWidth}px)`,
+            zIndex: 40,
+          }}
+        >
+          <div className="max-width flex items-center justify-between gap-8 px-10! @max-lg:flex-col @lg:gap-16">
+            {/* Vote Status Section */}
+            <div
+              className={`${showGenderSelection && '@lg:order-1'} order-2 w-full @lg:w-auto`}
+            >
+              <VoteStatus
+                currentVotes={selected.length}
+                bonusVotesUsed={bonusSelected.length}
+                isBonusMode={isBonusMode}
+                hasReachedMaxVotes={hasReachedMaxVotes}
+                hasClickedBonus={hasClickedBonus}
+                showGenderSelection={showGenderSelection}
+                isSubmitting={isSubmitting}
+                onBonusClick={handleBonusClick}
+                onBonusButtonPositionChange={handleBonusButtonPositionChange}
+                onBonusStampPositionChange={handleBonusStampPositionChange}
+              />
+            </div>
+
+            {/* Search Bar or Gender Selection */}
+            {showGenderSelection ? (
+              <div className="order-2 w-full @lg:w-auto">
+                <GenderSelection
+                  genderSelectionStep={genderSelectionStep}
+                  setGenderSelectionStep={setGenderSelectionStep}
+                  selectedGender={selectedGender}
+                  selectedAgeGroup={selectedAgeGroup}
+                  setSelectedGender={setSelectedGender}
+                  setSelectedAgeGroup={setSelectedAgeGroup}
+                  onBackClick={handleBackClick}
+                  onSubmitClick={handleSubmitClick}
+                  isSubmitting={isSubmitting}
+                  isRevoteMode={isRevoteMode}
+                />
+              </div>
+            ) : (
+              <div className="order-1 flex w-full items-center justify-between @lg:order-2 @lg:w-auto">
+                <div className="min-w-2/3 @lg:min-w-100">
+                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                </div>
+
+                <VoteButton
+                  type="next"
+                  onClick={handleNextClick}
+                  showError={showNextError}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 원본 VoteSection */}
       <section
-        ref={stickyContainerRef}
-        className="@container sticky top-15 z-40 mt-4 border-b border-gray-200 bg-white py-4"
-        data-vote-section-sticky
+        ref={voteSectionRef}
+        className="@container mt-4 border-b border-gray-200 bg-white py-4"
       >
         <div className="max-width flex items-center justify-between gap-8 px-10! @max-lg:flex-col @lg:gap-16">
           {/* Vote Status Section */}
