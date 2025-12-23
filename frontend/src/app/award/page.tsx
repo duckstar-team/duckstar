@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { ExternalLink } from 'lucide-react';
 import SurveyCountdown from './[year]/[surveyType]/[surveyId]/_components/SurveyCountdown';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const GOOGLE_FORM_SURVEYS = [
   {
@@ -133,7 +134,7 @@ export default function AwardPage() {
                       />
                       {isNotYet && (
                         <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 text-center font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
-                          <SurveyCountdown startDate={survey.startDate} />
+                          <SurveyCountdown startDate={survey.startDateTime} />
                         </div>
                       )}
                     </div>
@@ -147,7 +148,8 @@ export default function AwardPage() {
                           </h2>
                         </div>
                         <div className="xs:ml-1 text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
-                          {survey.startDate} ~ {survey.endDate}
+                          {format(survey.startDateTime, 'MM월 dd일 H시')} -{' '}
+                          {format(survey.endDateTime, 'MM월 dd일 H시')}
                         </div>
                       </div>
 

@@ -45,7 +45,7 @@ interface VoteFormViewProps {
   onRevoteSuccess: () => void;
   voteStatus?: VoteStatusType;
   surveyType?: SurveyType;
-  surveyEndDate?: string;
+  surveyEndDate?: Date;
 }
 
 export default function VoteFormView({
