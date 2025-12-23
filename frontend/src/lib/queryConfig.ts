@@ -1,58 +1,31 @@
 /**
- * 통일된 React Query 설정
- * 모든 페이지에서 동일한 캐싱 전략 적용
+ * 쿼리별 React Query 설정 (QueryProvider 기본값에서 변경이 필요한 경우만)
+ * 기본값: staleTime 5분, gcTime 10분, retry 3회
  */
-
 export const queryConfig = {
-  // 기본 캐싱 설정
-  default: {
-    staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
-    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
-    refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
-    refetchOnReconnect: true, // 네트워크 재연결 시 재요청
-    retry: 3, // 에러 시 3번 재시도
-    retryDelay: 5000, // 재시도 간격 5초
-  },
-  
-  // 홈 데이터 (자주 변경되지 않음)
+  // 홈 데이터 (더 긴 캐싱)
   home: {
-    staleTime: 10 * 60 * 1000, // 10분간 fresh 상태 유지
-    gcTime: 30 * 60 * 1000, // 30분간 캐시 유지
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: 3,
-    retryDelay: 5000,
+    staleTime: 10 * 60 * 1000, // 10분 (기본값: 5분)
+    gcTime: 30 * 60 * 1000, // 30분 (기본값: 10분)
   },
-  
-  // 검색 데이터 (자주 변경됨)
+
+  // 검색 데이터 (더 짧은 캐싱, 적은 재시도)
   search: {
-    staleTime: 2 * 60 * 1000, // 2분간 fresh 상태 유지
-    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: 1, // 재시도 횟수 감소 (무한로딩 방지)
-    retryDelay: 3000, // 재시도 간격 증가
-    retryOnMount: true, // 마운트 시 재시도
-    networkMode: 'online', // 온라인 상태에서만 요청
+    staleTime: 2 * 60 * 1000, // 2분 (기본값: 5분)
+    retry: 1, // 기본값: 3회
+    retryDelay: 3000,
+    retryOnMount: true,
+    networkMode: 'online' as const,
   },
-  
-  // 투표 데이터 (중요한 데이터)
+
+  // 투표 데이터 (기본값과 동일, 명시적으로 사용)
   vote: {
-    staleTime: 5 * 60 * 1000, // 5분간 fresh 상태 유지
-    gcTime: 15 * 60 * 1000, // 15분간 캐시 유지
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: 3,
-    retryDelay: 5000,
+    gcTime: 15 * 60 * 1000, // 15분 (기본값: 10분)
   },
-  
-  // 애니메이션 상세 (자주 변경되지 않음)
+
+  // 애니메이션 상세 (더 긴 캐싱)
   animeDetail: {
-    staleTime: 15 * 60 * 1000, // 15분간 fresh 상태 유지
-    gcTime: 60 * 60 * 1000, // 1시간 캐시 유지
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: 3,
-    retryDelay: 5000,
-  }
+    staleTime: 15 * 60 * 1000, // 15분 (기본값: 5분)
+    gcTime: 60 * 60 * 1000, // 1시간 (기본값: 10분)
+  },
 };

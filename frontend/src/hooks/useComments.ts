@@ -1,27 +1,19 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { CommentDto, ReplyDto } from '../api/comments';
-import { 
-  getAnimeComments, 
-  createComment, 
-  deleteComment, 
-  getReplies, 
-  createReply, 
-  deleteReply,
+import { CommentDto, CommentRequestDto, ReplyDto } from '@/types';
+import {
+  getAnimeComments,
+  createComment,
+  deleteComment,
   likeComment,
   unlikeComment,
-  likeReply,
-  unlikeReply,
   mapSortOptionToBackend,
-  CommentRequestDto,
-  ReplyRequestDto,
-  PageInfo
-} from '../api/comments';
-import { SortOption } from '../components/SortingMenu';
-import { useModal } from '../components/AppContainer';
+} from '@/api/comment';
+import { SortOption } from '@/components/ui/SortingMenu';
+import { useModal } from '@/components/layout/AppContainer';
 
 export function useComments(animeId: number) {
   const { openLoginModal } = useModal();
-  
+
   // 댓글 관련 상태
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -32,69 +24,80 @@ export function useComments(animeId: number) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [currentSort, setCurrentSort] = useState<SortOption>('Recent');
-  const [replies, setReplies] = useState<{ [commentId: number]: ReplyDto[] }>({});
-  
+  const [replies, setReplies] = useState<{ [commentId: number]: ReplyDto[] }>(
+    {}
+  );
+
   // 중복 호출 방지용 ref
   const isLoadingRef = useRef(false);
-  
+
   // selectedEpisodeIds 최신 값 참조용 ref
   const selectedEpisodeIdsRef = useRef(selectedEpisodeIds);
-  
+
   // selectedEpisodeIds가 변경될 때마다 ref 업데이트
   useEffect(() => {
     selectedEpisodeIdsRef.current = selectedEpisodeIds;
   }, [selectedEpisodeIds]);
 
   // 댓글 데이터 로딩
-  const loadComments = useCallback(async (page: number = 0, reset: boolean = false, resetPage: boolean = true, skipLoadingState: boolean = false) => {
-    if (!animeId) return;
-    
-    // 중복 호출 방지
-    if (isLoadingRef.current) {
-      return;
-    }
-    
-    try {
-      isLoadingRef.current = true;
-      if (reset && !skipLoadingState) {
-        setCommentsLoading(true);
-      } else if (!skipLoadingState) {
-        setLoadingMore(true);
+  const loadComments = useCallback(
+    async (
+      page: number = 0,
+      reset: boolean = false,
+      resetPage: boolean = true,
+      skipLoadingState: boolean = false
+    ) => {
+      if (!animeId) return;
+
+      // 중복 호출 방지
+      if (isLoadingRef.current) {
+        return;
       }
-      setCommentsError(null);
-      
-      const sortBy = mapSortOptionToBackend(currentSort);
-      const data = await getAnimeComments(
-        animeId,
-        selectedEpisodeIdsRef.current.length > 0 ? selectedEpisodeIdsRef.current : undefined,
-        sortBy,
-        page,
-        10
-      );
-      
-      if (reset) {
-        setComments(data.commentDtos);
-        if (resetPage) {
-          setCurrentPage(0);
+
+      try {
+        isLoadingRef.current = true;
+        if (reset && !skipLoadingState) {
+          setCommentsLoading(true);
+        } else if (!skipLoadingState) {
+          setLoadingMore(true);
         }
-        setTotalCommentCount(data.totalCount || 0);
-      } else {
-        setComments(prev => [...prev, ...data.commentDtos]);
-        setCurrentPage(page);
+        setCommentsError(null);
+
+        const sortBy = mapSortOptionToBackend(currentSort);
+        const data = await getAnimeComments(
+          animeId,
+          selectedEpisodeIdsRef.current.length > 0
+            ? selectedEpisodeIdsRef.current
+            : undefined,
+          sortBy,
+          page,
+          10
+        );
+
+        if (reset) {
+          setComments(data.commentDtos);
+          if (resetPage) {
+            setCurrentPage(0);
+          }
+          setTotalCommentCount(data.totalCount || 0);
+        } else {
+          setComments((prev) => [...prev, ...data.commentDtos]);
+          setCurrentPage(page);
+        }
+
+        setHasMoreComments(data.pageInfo.hasNext);
+      } catch (err) {
+        setCommentsError('댓글을 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        if (!skipLoadingState) {
+          setCommentsLoading(false);
+          setLoadingMore(false);
+        }
+        isLoadingRef.current = false;
       }
-      
-      setHasMoreComments(data.pageInfo.hasNext);
-      
-    } catch (err) {
-      setCommentsError('댓글을 불러오는 중 오류가 발생했습니다.');
-    } finally {
-      if (!skipLoadingState) {
-        setCommentsLoading(false);
-        setLoadingMore(false);
-      }
-      isLoadingRef.current = false;
-    }
-  }, [animeId, currentSort]); // selectedEpisodeIds 의존성 제거
+    },
+    [animeId, currentSort]
+  ); // selectedEpisodeIds 의존성 제거
 
   // 초기 댓글 로딩
   useEffect(() => {
@@ -111,73 +114,86 @@ export function useComments(animeId: number) {
   }, [currentSort, animeId]);
 
   // 댓글 생성
-  const createCommentHandler = useCallback(async (request: CommentRequestDto) => {
-    await createComment(animeId, request);
-    loadComments(0, true);
-  }, [animeId, loadComments]);
+  const createCommentHandler = useCallback(
+    async (request: CommentRequestDto) => {
+      await createComment(animeId, request);
+      loadComments(0, true);
+    },
+    [animeId, loadComments]
+  );
 
   // 댓글 삭제
-  const deleteCommentHandler = useCallback(async (commentId: number) => {
-    const shouldDelete = confirm('댓글을 삭제하시겠습니까?');
-    if (!shouldDelete) {
-      return;
-    }
-    
-    try {
-      await deleteComment(commentId);
-      loadComments(0, true);
-    } catch (error) {
-      alert('댓글 삭제에 실패했습니다. 다시 시도해주세요.');
-    }
-  }, [loadComments]);
+  const deleteCommentHandler = useCallback(
+    async (commentId: number) => {
+      const shouldDelete = confirm('댓글을 삭제하시겠습니까?');
+      if (!shouldDelete) {
+        return;
+      }
+
+      try {
+        await deleteComment(commentId);
+        loadComments(0, true);
+      } catch (error) {
+        alert('댓글 삭제에 실패했습니다. 다시 시도해주세요.');
+      }
+    },
+    [loadComments]
+  );
 
   // 댓글 좋아요
-  const likeCommentHandler = useCallback(async (commentId: number) => {
-    try {
-      const currentComment = comments.find(c => c && c.commentId === commentId);
-      const isCurrentlyLiked = currentComment?.isLiked;
-      const currentLikeId = currentComment?.commentLikeId;
-      
-      if (isCurrentlyLiked && currentLikeId && currentLikeId > 0) {
-        const result = await unlikeComment(commentId, currentLikeId);
-        setComments(prevComments => 
-          prevComments.map(comment => 
-            comment && comment.commentId === commentId 
-              ? { 
-                  ...comment, 
-                  isLiked: false,
-                  likeCount: result.likeCount,
-                  commentLikeId: currentLikeId
-                }
-              : comment
-          )
+  const likeCommentHandler = useCallback(
+    async (commentId: number) => {
+      try {
+        const currentComment = comments.find(
+          (c) => c && c.commentId === commentId
         );
-      } else {
-        const result = await likeComment(commentId, currentLikeId);
-        setComments(prevComments => 
-          prevComments.map(comment => 
-            comment && comment.commentId === commentId 
-              ? { 
-                  ...comment, 
-                  isLiked: true,
-                  likeCount: result.likeCount,
-                  commentLikeId: result.likeId || currentLikeId || 0
-                }
-              : comment
-          )
-        );
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('401')) {
-        const shouldLogin = confirm('로그인 후에 좋아요를 남길 수 있습니다. 로그인하시겠습니까?');
-        if (shouldLogin) {
-          openLoginModal();
+        const isCurrentlyLiked = currentComment?.isLiked;
+        const currentLikeId = currentComment?.commentLikeId;
+
+        if (isCurrentlyLiked && currentLikeId && currentLikeId > 0) {
+          const result = await unlikeComment(commentId, currentLikeId);
+          setComments((prevComments) =>
+            prevComments.map((comment) =>
+              comment && comment.commentId === commentId
+                ? {
+                    ...comment,
+                    isLiked: false,
+                    likeCount: result.likeCount,
+                    commentLikeId: currentLikeId,
+                  }
+                : comment
+            )
+          );
+        } else {
+          const result = await likeComment(commentId, currentLikeId);
+          setComments((prevComments) =>
+            prevComments.map((comment) =>
+              comment && comment.commentId === commentId
+                ? {
+                    ...comment,
+                    isLiked: true,
+                    likeCount: result.likeCount,
+                    commentLikeId: result.likeId || currentLikeId || 0,
+                  }
+                : comment
+            )
+          );
         }
-      } else {
-        alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('401')) {
+          const shouldLogin = confirm(
+            '로그인 후에 좋아요를 남길 수 있습니다. 로그인하시겠습니까?'
+          );
+          if (shouldLogin) {
+            openLoginModal();
+          }
+        } else {
+          alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+        }
       }
-    }
-  }, [comments]);
+    },
+    [comments]
+  );
 
   return {
     comments,
@@ -198,6 +214,6 @@ export function useComments(animeId: number) {
     loadComments,
     createComment: createCommentHandler,
     deleteComment: deleteCommentHandler,
-    likeComment: likeCommentHandler
+    likeComment: likeCommentHandler,
   };
 }

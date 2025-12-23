@@ -1,9 +1,5 @@
 package com.duckstar.web.dto;
 
-import com.duckstar.domain.enums.BallotType;
-import com.duckstar.domain.enums.Gender;
-import com.duckstar.validation.annotation.AnimeVoteConstraint;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 
@@ -41,39 +37,15 @@ public class VoteRequestDto {
         Long episodeStarId;  // 추가
     }
 
-    @AnimeVoteConstraint
     @Getter
-    public static class AnimeVoteRequest {
+    public static class SurveyCommentRequestDto {
         @NotNull
-        Long weekId;
+        Long animeId;
 
-        @NotNull
-        Gender gender;
+        @NotBlank
+        @Size(max = 1000)
+        String body;
 
-        @Valid
-        @NotEmpty
-        List<BallotRequestDto> ballotRequests;
-    }
-    
-    @Getter
-    public static class BallotRequestDto {
-        @NotNull
-        Long candidateId;
-
-        @NotNull
-        BallotType ballotType;
-    }
-
-    @Getter
-    public static class AnimeRevoteRequest {
-        @NotNull
-        Long weekId;
-
-        @NotNull
-        Gender gender;
-
-        List<BallotRequestDto> added;
-        List<BallotRequestDto> removed;
-        List<BallotRequestDto> updated;
+        Long candidateId;  // 추가
     }
 }

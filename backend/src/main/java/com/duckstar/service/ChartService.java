@@ -6,8 +6,8 @@ import com.duckstar.domain.HomeBanner;
 import com.duckstar.domain.Week;
 import com.duckstar.domain.enums.BannerType;
 import com.duckstar.domain.enums.EpEvaluateState;
-import com.duckstar.domain.mapping.Episode;
-import com.duckstar.domain.mapping.EpisodeStar;
+import com.duckstar.domain.mapping.weeklyVote.Episode;
+import com.duckstar.domain.mapping.weeklyVote.EpisodeStar;
 import com.duckstar.domain.vo.RankInfo;
 import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
@@ -32,7 +32,8 @@ public class ChartService {
     private final WeekService weekService;
 
     // 0.5(중간 수준) -> 0.1 작아질 수록 평점 가중치 우선됨
-    private static final double BASE_WEIGHT = 0.5;
+    // 0.5 또는 0.3
+    private static final double BASE_WEIGHT = 0.2;
 
 //    @Transactional
 //    public void buildDuckstars(LocalDateTime lastWeekEndAt, Long lastWeekId, Long secondLastWeekId) {

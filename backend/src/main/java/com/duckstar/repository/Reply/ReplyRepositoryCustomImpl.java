@@ -2,7 +2,6 @@ package com.duckstar.repository.Reply;
 
 import com.duckstar.domain.Member;
 import com.duckstar.domain.enums.CommentStatus;
-import com.duckstar.domain.mapping.QEpisode;
 import com.duckstar.domain.mapping.QReply;
 import com.duckstar.domain.mapping.QReplyLike;
 import com.duckstar.security.MemberPrincipal;
@@ -13,14 +12,10 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.duckstar.web.dto.CommentResponseDto.*;
 
@@ -92,7 +87,9 @@ public class ReplyRepositoryCustomImpl implements ReplyRepositoryCustom {
                 .leftJoin(reply.listener) // 명시적으로 leftJoin
                 .where(
                         reply.parent.id.eq(commentId),
-                        reply.status.eq(CommentStatus.NORMAL)
+                        reply.status.ne(CommentStatus.DELETED).and(
+                                reply.status.ne(CommentStatus.ADMIN_DELETED)
+                        )
                 )
                 .orderBy(reply.createdAt.asc())
                 .offset((long) pageable.getPageNumber() * (pageSize - 1))

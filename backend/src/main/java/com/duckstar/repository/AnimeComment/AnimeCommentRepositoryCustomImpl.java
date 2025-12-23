@@ -3,13 +3,11 @@ package com.duckstar.repository.AnimeComment;
 import com.duckstar.domain.enums.CommentSortType;
 import com.duckstar.domain.enums.CommentStatus;
 import com.duckstar.domain.mapping.QCommentLike;
-import com.duckstar.domain.mapping.QEpisode;
-import com.duckstar.domain.mapping.QEpisodeStar;
 import com.duckstar.domain.mapping.QReply;
 import com.duckstar.domain.mapping.comment.QAnimeComment;
-import com.duckstar.domain.mapping.comment.QComment;
+import com.duckstar.domain.mapping.weeklyVote.QEpisode;
+import com.duckstar.domain.mapping.weeklyVote.QEpisodeStar;
 import com.duckstar.security.MemberPrincipal;
-import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
@@ -23,10 +21,8 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.duckstar.web.dto.CommentResponseDto.*;
 
@@ -110,12 +106,14 @@ public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryC
                         episodeStar.isLateParticipating
                 )
                 .from(animeComment)
-                .leftJoin(animeComment.episode, episode)
-                .leftJoin(animeComment.episodeStar, episodeStar)
+                .leftJoin(episode).on(episode.id.eq(animeComment.episode.id))
+                .leftJoin(episodeStar).on(episodeStar.id.eq(animeComment.episodeStar.id))
                 .where(
                         animeCondition,
                         episodeCondition,
-                        animeComment.status.eq(CommentStatus.NORMAL)
+                        animeComment.status.ne(CommentStatus.DELETED).and(
+                                        animeComment.status.ne(CommentStatus.ADMIN_DELETED)
+                                )
                                 .or(animeComment.replyCount.gt(0))
                 )
                 .orderBy(getOrder(sortBy))  // 정렬
@@ -139,7 +137,7 @@ public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryC
 
                     Boolean isUserTaggedEp = t.get(animeComment.isUserTaggedEp);
                     Integer episodeNumber = Boolean.TRUE.equals(isUserTaggedEp) ?
-                            t.get(animeComment.episode.episodeNumber) :
+                            t.get(episode.episodeNumber) :
                             null;
 
                     Integer replyCount = t.get(animeComment.replyCount);
@@ -198,7 +196,9 @@ public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryC
                 .leftJoin(animeComment.episode, episode)
                 .where(
                         animeCondition,
-                        animeComment.status.eq(CommentStatus.NORMAL),
+                        animeComment.status.ne(CommentStatus.DELETED).and(
+                                animeComment.status.ne(CommentStatus.ADMIN_DELETED)
+                        ),
                         episodeCondition
                 )
                 .fetchOne();
@@ -209,7 +209,9 @@ public class AnimeCommentRepositoryCustomImpl implements AnimeCommentRepositoryC
                 .leftJoin(animeComment.episode, episode)
                 .where(
                         animeCondition,
-                        reply.status.eq(CommentStatus.NORMAL),
+                        reply.status.ne(CommentStatus.DELETED).and(
+                                reply.status.ne(CommentStatus.ADMIN_DELETED)
+                        ),
                         episodeCondition
                 )
                 .fetchOne();

@@ -3,16 +3,24 @@ package com.duckstar.schedule;
 import com.duckstar.apiPayload.code.status.ErrorStatus;
 import com.duckstar.apiPayload.exception.handler.WeekHandler;
 import com.duckstar.domain.Anime;
+import com.duckstar.domain.Quarter;
+import com.duckstar.domain.Survey;
 import com.duckstar.domain.Week;
-import com.duckstar.domain.mapping.Episode;
-import com.duckstar.domain.mapping.EpisodeStar;
+import com.duckstar.domain.mapping.AnimeSeason;
+import com.duckstar.domain.mapping.surveyVote.SurveyCandidate;
+import com.duckstar.domain.mapping.weeklyVote.Episode;
+import com.duckstar.domain.mapping.weeklyVote.EpisodeStar;
 import com.duckstar.domain.vo.RankInfo;
 import com.duckstar.repository.AnimeRepository;
+import com.duckstar.repository.AnimeSeason.AnimeSeasonRepository;
 import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.repository.EpisodeStar.EpisodeStarRepository;
+import com.duckstar.repository.QuarterRepository;
+import com.duckstar.repository.SurveyCandidate.SurveyCandidateRepository;
+import com.duckstar.repository.SurveyRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.service.ChartService;
-import com.duckstar.service.VoteCommandServiceImpl;
+import com.duckstar.service.VoteService.VoteCommandServiceImpl;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +52,14 @@ public class TempTest {
     private EpisodeStarRepository episodeStarRepository;
     @Autowired
     private VoteCommandServiceImpl voteCommandServiceImpl;
+    @Autowired
+    private AnimeSeasonRepository animeSeasonRepository;
+    @Autowired
+    private SurveyRepository surveyRepository;
+    @Autowired
+    private SurveyCandidateRepository surveyCandidateRepository;
+    @Autowired
+    private QuarterRepository quarterRepository;
 
     @Test
     @Transactional
@@ -231,7 +247,7 @@ public class TempTest {
     @Transactional
     @Rollback(false)
     public void delayEpisode() {
-        Episode targetEp = episodeRepository.findById(1050L).get();
+        Episode targetEp = episodeRepository.findById(2152L).get();
 
         LocalDateTime scheduledAt = targetEp.getScheduledAt();
         Anime anime = targetEp.getAnime();
@@ -245,11 +261,12 @@ public class TempTest {
         }
 
         //=== target 포함 이후 에피소드들: 연기일 기준으로 한주씩 미루기 ===//
-        LocalDate date = LocalDate.of(2025, 12, 2);
+        LocalDate date = LocalDate.of(2026, 1, 4);
         LocalDateTime delayedDate = LocalDateTime.of(date, targetEp.getScheduledAt().toLocalTime());
 
         // 직전 에피소드 nextEp 스케줄 수정
-        episodes.get(idx - 1).setNextEpScheduledAt(delayedDate);
+        int safeIdx = Math.max(0, idx - 1);
+        episodes.get(safeIdx).setNextEpScheduledAt(delayedDate);
         // target 포함 이후 에피소드들 수정
         for (int i = idx; i < episodes.size(); i++) {
             Episode episode = episodes.get(i);
@@ -257,5 +274,23 @@ public class TempTest {
             delayedDate = delayedDate.plusWeeks(1);
             episode.setNextEpScheduledAt(delayedDate);
         }
+    }
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    public void postSurveyFromSeasonAnimes() {
+        Survey survey = surveyRepository.findById(1L).get();
+        Quarter quarter = quarterRepository.getReferenceById(2L);
+
+        List<Anime> animes = animeSeasonRepository.findAllBySeason_Id(2L).stream()
+                .map(AnimeSeason::getAnime)
+                .toList();
+
+        List<SurveyCandidate> candidates = animes.stream()
+                .map(anime -> SurveyCandidate.createByAnime(survey, quarter, anime))
+                .toList();
+
+        surveyCandidateRepository.saveAll(candidates);
     }
 }

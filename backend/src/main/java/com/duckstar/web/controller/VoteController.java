@@ -3,7 +3,8 @@ package com.duckstar.web.controller;
 import com.duckstar.apiPayload.ApiResponse;
 import com.duckstar.security.MemberPrincipal;
 import com.duckstar.service.EpisodeService.EpisodeQueryService;
-import com.duckstar.service.VoteCommandServiceImpl;
+import com.duckstar.service.VoteService.VoteCommandService;
+import com.duckstar.service.VoteService.VoteQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.duckstar.web.dto.SurveyRequestDto.*;
+import static com.duckstar.web.dto.SurveyResponseDto.*;
 import static com.duckstar.web.dto.VoteRequestDto.*;
 import static com.duckstar.web.dto.VoteResponseDto.*;
 
@@ -22,11 +25,12 @@ import static com.duckstar.web.dto.VoteResponseDto.*;
 @RequiredArgsConstructor
 public class VoteController {
 
-    private final VoteCommandServiceImpl voteCommandServiceImpl;
     private final EpisodeQueryService episodeQueryService;
+    private final VoteQueryService voteQueryService;
+    private final VoteCommandService voteCommandService;
 
     /**
-     * 별점 투표 방식
+     * 주간 투표 - 별점 투표 방식
      */
     @Operation(summary = "실시간 투표 리스트 조회 API",
             description = "now - 36시간 ~ now 범위의 에피소드들 (VOTING_WINDOW 상태) 조회")
@@ -52,7 +56,7 @@ public class VoteController {
     ) {
         Long memberId = principal == null ? null : principal.getId();
 
-        return ApiResponse.onSuccess(voteCommandServiceImpl.voteOrUpdate(
+        return ApiResponse.onSuccess(voteCommandService.voteOrUpdateStar(
                 request,
                 memberId,
                 requestRaw,
@@ -109,14 +113,14 @@ public class VoteController {
     ) {
         Long memberId = principal == null ? null : principal.getId();
 
-        return ApiResponse.onSuccess(voteCommandServiceImpl.voteOrUpdateWithLoginAndComment(
+        return ApiResponse.onSuccess(voteCommandService.voteOrUpdateStarWithLoginAndComment(
                 request,
                 memberId,
                 requestRaw
         ));
     }
 
-    // 개발 연기
+// 개발 연기
 //    @Operation(summary = "상시 평가/수정 API (로그인 ONLY)",
 //            description = "Episode 기반, 지난 주차")
 //    @PostMapping()
@@ -132,7 +136,7 @@ public class VoteController {
 
         Long memberId = principal == null ? null : principal.getId();
 
-        voteCommandServiceImpl.withdrawVote(
+        voteCommandService.withdrawStar(
                 episodeId,
                 episodeStarId,
                 memberId,
@@ -143,69 +147,98 @@ public class VoteController {
         return ApiResponse.onSuccess(null);
     }
 
-//    /**
-//     * 기존 투표 방식
-//     */
-//
-//    @Operation(summary = "(legacy) 애니메이션 후보자 리스트 조회 API")
-//    @GetMapping("/anime")
-//    public ApiResponse<AnimeCandidateListDto> getAnimeCandidateList(
-//            @AuthenticationPrincipal MemberPrincipal principal) {
-//        Long memberId = principal == null ? null : principal.getId();
-//        return ApiResponse.onSuccess(
-//                voteService.getAnimeCandidateList(memberId));
-//    }
-//
-//    @Operation(summary = "(legacy) 애니 투표 참여 여부에 따른 투표 기록 조회 API")
-//    @GetMapping("/anime/status")
-//    public ApiResponse<AnimeVoteHistoryDto> getAnimeVoteStatus(
-//            @AuthenticationPrincipal MemberPrincipal principal,
-//            @CookieValue(name = "vote_cookie_id", required = false) String cookieId
-//    ) {
-//        Long memberId = principal == null ? null : principal.getId();
-//
-//        return ApiResponse.onSuccess(
-//                voteService.getAnimeVoteHistory(memberId, cookieId));
-//    }
-//
-//    @Operation(summary = "(leagcy) 애니메이션 투표 (일반 방식) API")
-//    @PostMapping("/anime")
-//    public ApiResponse<Void> voteAnime(
-//            @Valid @RequestBody AnimeVoteRequest request,
-//            @AuthenticationPrincipal MemberPrincipal principal,
-//            HttpServletRequest requestRaw,
-//            HttpServletResponse responseRaw
-//    ) {
-//        Long memberId = principal == null ? null : principal.getId();
-//
-//        String cookieId = voteCookieManager.ensureVoteCookie(requestRaw, responseRaw);
-//
-//        String clientIp = ipExtractor.extract(requestRaw);
-//        String ipHash = ipHasher.hash(clientIp);
-//
-//        voteService.voteAnime(
-//                request,
-//                memberId,
-//                cookieId,
-//                ipHash,
-//                requestRaw,
-//                responseRaw
-//        );
-//
-//        return ApiResponse.onSuccess(null);
-//    }
-//
-//    @Operation(summary = "(legacy) 애니메이션 재투표 API")
-//    @PostMapping("/anime/{submissionId}")
-//    public ApiResponse<Void> revoteAnime(
-//            @PathVariable Long submissionId,
-//            @Valid @RequestBody AnimeRevoteRequest request,
-//            @AuthenticationPrincipal MemberPrincipal principal
-//    ) {
-//        Long memberId = principal == null ? null : principal.getId();
-//
-//        voteService.revoteAnime(submissionId, request, memberId);
-//
-//        return ApiResponse.onSuccess(null);
-//    }
+    /**
+     * 어워드 - 객관식 투표 방식
+     */
+    @Operation(summary = "Survey 정보 리스트 조회 API")
+    @GetMapping("/surveys")
+    public ApiResponse<List<SurveyDto>> getSurveys(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            HttpServletRequest req
+    ) {
+        Long memberId = principal == null ? null : principal.getId();
+        return ApiResponse.onSuccess(voteQueryService.getSurveyDtos(memberId, req));
+    }
+
+    @Operation(summary = "Survey 정보 단건 조회 API")
+    @GetMapping("/surveys/{surveyId}")
+    public ApiResponse<SurveyDto> getSurvey(
+            @PathVariable Long surveyId,
+            @AuthenticationPrincipal MemberPrincipal principal,
+            HttpServletRequest req
+    ) {
+        Long memberId = principal == null ? null : principal.getId();
+        return ApiResponse.onSuccess(
+                voteQueryService.getSurveyDto(surveyId, memberId, req));
+    }
+
+    @Operation(summary = "Survey 후보자 리스트 조회 API")
+    @GetMapping("/surveys/{surveyId}/candidates")
+    public ApiResponse<AnimeCandidateListDto> getAnimeCandidateList(
+            @PathVariable Long surveyId,
+            @AuthenticationPrincipal MemberPrincipal principal) {
+        Long memberId = principal == null ? null : principal.getId();
+        return ApiResponse.onSuccess(
+                voteQueryService.getAnimeCandidateListDto(surveyId, memberId));
+    }
+
+    @Operation(summary = "Survey 투표 기록 조회 API")
+    @GetMapping("/surveys/{surveyId}/me")
+    public ApiResponse<AnimeVoteHistoryDto> getAnimeVoteHistory(
+            @PathVariable Long surveyId,
+            @AuthenticationPrincipal MemberPrincipal principal,
+            HttpServletRequest req
+    ) {
+        Long memberId = principal == null ? null : principal.getId();
+        return ApiResponse.onSuccess(
+                voteQueryService.getAnimeVoteHistoryDto(surveyId, memberId, req));
+    }
+
+    @Operation(summary = "Survey 히스토리용 댓글 작성 API (로그인 ONLY)")
+    @PostMapping("/surveys/{surveyId}/me")
+    public ApiResponse<SurveyCommentDto> voteOrUpdateWithStarForm(
+            @Valid @RequestBody SurveyCommentRequestDto request,
+            @AuthenticationPrincipal MemberPrincipal principal
+    ) {
+        Long memberId = principal == null ? null : principal.getId();
+
+        return ApiResponse.onSuccess(
+                voteCommandService.postCommentBySurvey(request, memberId));
+    }
+
+    // 결과 차트 조회 API: GET /surveys/{surveyId}/result
+
+    @Operation(summary = "Survey 투표 API")
+    @PostMapping("/surveys")
+    public ApiResponse<Void> voteSurvey(
+            @Valid @RequestBody AnimeVoteRequest request,
+            @AuthenticationPrincipal MemberPrincipal principal,
+            HttpServletRequest requestRaw,
+            HttpServletResponse responseRaw
+    ) {
+        Long memberId = principal == null ? null : principal.getId();
+
+        voteCommandService.voteSurvey(
+                request,
+                memberId,
+                requestRaw,
+                responseRaw
+        );
+
+        return ApiResponse.onSuccess(null);
+    }
+
+    @Operation(summary = "Survey 재투표 API")
+    @PostMapping("/surveys/{submissionId}")
+    public ApiResponse<Void> revoteSurvey(
+            @PathVariable Long submissionId,
+            @Valid @RequestBody AnimeRevoteRequest request,
+            @AuthenticationPrincipal MemberPrincipal principal
+    ) {
+        Long memberId = principal == null ? null : principal.getId();
+
+        voteCommandService.revoteSurvey(submissionId, request, memberId);
+
+        return ApiResponse.onSuccess(null);
+    }
 }

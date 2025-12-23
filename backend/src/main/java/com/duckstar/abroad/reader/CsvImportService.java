@@ -1,6 +1,7 @@
 package com.duckstar.abroad.reader;
 
 import com.duckstar.apiPayload.code.status.ErrorStatus;
+import com.duckstar.apiPayload.exception.handler.VoteHandler;
 import com.duckstar.apiPayload.exception.handler.WeekHandler;
 import com.duckstar.abroad.aniLab.Anilab;
 import com.duckstar.abroad.aniLab.AnilabRepository;
@@ -11,14 +12,13 @@ import com.duckstar.domain.Character;
 import com.duckstar.domain.enums.*;
 import com.duckstar.domain.mapping.AnimeCharacter;
 import com.duckstar.domain.mapping.AnimeSeason;
-import com.duckstar.domain.mapping.Episode;
+import com.duckstar.domain.mapping.surveyVote.SurveyCandidate;
+import com.duckstar.domain.mapping.weeklyVote.Episode;
+import com.duckstar.repository.*;
 import com.duckstar.repository.AnimeCharacter.AnimeCharacterRepository;
-import com.duckstar.repository.AnimeRepository;
 import com.duckstar.repository.AnimeSeason.AnimeSeasonRepository;
-import com.duckstar.repository.CharacterRepository;
 import com.duckstar.repository.Episode.EpisodeRepository;
-import com.duckstar.repository.QuarterRepository;
-import com.duckstar.repository.SeasonRepository;
+import com.duckstar.repository.SurveyCandidate.SurveyCandidateRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.s3.S3Uploader;
 import com.duckstar.service.WeekService;
@@ -32,10 +32,10 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -73,6 +73,11 @@ public class CsvImportService {
     private final AnimeCornerRepository animeCornerRepository;
     private final AnilabRepository anilabRepository;
     private final WeekService weekService;
+    private final SurveyRepository surveyRepository;
+    private final SurveyCandidateRepository surveyCandidateRepository;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -252,6 +257,81 @@ public class CsvImportService {
         return outputFile;
     }
 
+    public void importCandidates(Long surveyId, MultipartFile csv) throws IOException {
+        Survey survey = surveyRepository.findById(surveyId).orElseThrow(() ->
+                new VoteHandler(ErrorStatus.SURVEY_NOT_FOUND));
+
+        Map<String, Long> animeMap = animeRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        Anime::getTitleKor,
+                        Anime::getId
+                ));
+
+        Reader reader = new InputStreamReader(csv.getInputStream(), StandardCharsets.UTF_8);
+        CSVFormat format = CSVFormat.Builder
+                .create()
+                .setHeader()
+                .setSkipHeaderRecord(true)
+                .build();
+
+        CSVParser parser = new CSVParser(reader, format);
+        for (CSVRecord record : parser) {
+            try {
+                Medium medium;
+                try {
+                    medium = Medium.valueOf(record.get("medium"));
+                } catch (IllegalArgumentException e) {
+                    medium = null;
+                }
+
+                Quarter quarter = quarterRepository
+                        .getReferenceById(Long.valueOf(record.get("quarterId")));
+
+                String mainImageUrl = record.get("mainImageUrl");
+                boolean isAlreadyUploaded = mainImageUrl.startsWith("https://" + bucket + "/");
+                if (isAlreadyUploaded) {
+                    String[] parts = mainImageUrl.split("/");
+                    Anime animeRef = animeRepository.getReferenceById(Long.valueOf(parts[4]));
+                    SurveyCandidate candidate = SurveyCandidate.createByAnime(
+                            survey,
+                            quarter,
+                            animeRef
+                    );
+
+                    surveyCandidateRepository.save(candidate);
+
+                } else { // ⚠️ Survey 전용 candidate 이미지 업로드 (애니메이션과 관계 맺지 않은 경우)
+                    String title = record.get("titleKor");
+                    SurveyCandidate candidate = SurveyCandidate.create(
+                            survey,
+                            quarter,
+                            title,
+                            null,
+                            null,
+                            medium
+                    );
+
+                    Long animeId = animeMap.get(title);
+                    if (animeId != null) {
+                        Anime anime = animeRepository.getReferenceById(animeId);
+                        candidate.setAnime(anime);
+                    }
+                    SurveyCandidate saved = surveyCandidateRepository.save(candidate);
+
+                    try {
+                        // S3 업로드 & image 필드 업데이트
+                        uploadCandidateMain(mainImageUrl, saved);
+                    } catch (Exception e) {
+                        log.warn("⚠️ 이미지 처리 실패 - id: {}, url: {}", saved.getId(), mainImageUrl, e);
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("❌ CSV 레코드 처리 실패: {}", record, e);
+            }
+        }
+    }
+
     public void importNewSeason(Integer year, Integer quarter, NewSeasonRequestDto request) throws IOException {
         Quarter savedQuarter = quarterRepository.save(Quarter.create(year, quarter));
         Season savedSeason = seasonRepository.save(Season.create(year, savedQuarter));
@@ -268,7 +348,6 @@ public class CsvImportService {
             Map<Long, Anime> animeMap,
             Map<Integer, Long> animeIdMap
     ) throws IOException {
-
         Reader reader = new InputStreamReader(episodesCsv.getInputStream(), StandardCharsets.UTF_8);
         CSVFormat format = CSVFormat.Builder
                 .create()
@@ -434,26 +513,29 @@ public class CsvImportService {
             String imageUrl, File tempDir, String name
     ) throws IOException, KeyStoreException, CertificateException,
             NoSuchAlgorithmException, KeyManagementException {
-        // 1. Truststore 로딩
-        char[] password = "secret".toCharArray();
-        KeyStore trustStore = KeyStore.getInstance("PKCS12");
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("truststore.p12")) {
-            if (is == null) {
-                throw new IllegalStateException("truststore.p12 not found in resources");
-            }
-            trustStore.load(is, password);
-        }
-
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        tmf.init(trustStore);
-
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, tmf.getTrustManagers(), new SecureRandom());
-
-        // 2. HTTPS 연결 (온나다 다운로드에만 적용)
+        
         URL url = new URL(imageUrl);
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-        conn.setSSLSocketFactory(sslContext.getSocketFactory());
+
+        // 1. HTTPS 연결 설정 (온나다 다운로드에만 커스텀 Truststore 적용)
+        if (url.getHost().contains("onnada.com")) {
+            char[] password = "secret".toCharArray();
+            KeyStore trustStore = KeyStore.getInstance("PKCS12");
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream("truststore.p12")) {
+                if (is == null) {
+                    throw new IllegalStateException("truststore.p12 not found in resources");
+                }
+                trustStore.load(is, password);
+            }
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(trustStore);
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, tmf.getTrustManagers(), new SecureRandom());
+
+            conn.setSSLSocketFactory(sslContext.getSocketFactory());
+        }
 
         // 3. 원본 파일 저장
         String extension = "jpg";
@@ -630,6 +712,46 @@ public class CsvImportService {
         }
     }
 
+    private Long uploadCandidateMain(String imageUrl, SurveyCandidate candidate) throws IOException {
+        File tempDir = Files.createTempDirectory("candidate").toFile();
+        try {
+            // 메인 webp 변환
+            File mainWebp = downloadAndConvertToWebp(imageUrl, tempDir, "main");
+
+            // 썸네일 생성 (minWidth 640 보장, 비율 유지)
+            File thumbWebp = s3Uploader.createThumbnail(mainWebp, 640);
+
+            return uploadCandidateImages(candidate, mainWebp, thumbWebp, 1);
+
+        } catch (CertificateException | KeyStoreException | NoSuchAlgorithmException | KeyManagementException e) {
+            throw new RuntimeException(e);
+        } finally {
+            FileSystemUtils.deleteRecursively(tempDir);
+        }
+    }
+
+    private Long uploadCandidateImages(
+            SurveyCandidate candidate,
+            File mainWebp,
+            File thumbWebp,
+            int version
+    ) {
+        // S3 업로드
+        Long id = candidate.getId();
+
+        String tail = version >= 2 ? "_v" + version + ".webp" : ".webp";
+
+        String mainS3Key = "candidates/" + id + "/main" + tail;
+        String thumbS3Key = "candidates/" + id + "/thumb" + tail;
+
+        String mainUrl = s3Uploader.uploadWithKey(mainWebp, mainS3Key);
+        String thumbUrl = s3Uploader.uploadWithKey(thumbWebp, thumbS3Key);
+
+        candidate.updateImage(mainUrl, thumbUrl);
+
+        return id;
+    }
+
     public void uploadAnimeMain(MultipartFile main, Anime anime) throws IOException {
         File tempDir = Files.createTempDirectory("anime").toFile();
         try {
@@ -662,7 +784,12 @@ public class CsvImportService {
         }
     }
 
-    private Long uploadAnimeImages(Anime anime, File mainWebp, File thumbWebp, int version) {
+    private Long uploadAnimeImages(
+            Anime anime,
+            File mainWebp,
+            File thumbWebp,
+            int version
+    ) {
         // S3 업로드
         Long newId = anime.getId();
 
