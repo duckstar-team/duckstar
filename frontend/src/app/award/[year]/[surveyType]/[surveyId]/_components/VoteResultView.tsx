@@ -147,11 +147,13 @@ export default function VoteResultView({
         Array.isArray(voteHistory.animeBallotDtos) &&
         voteHistory.animeBallotDtos.length > 0 ? (
           <div className="grid w-full grid-cols-1 gap-4 @md:grid-cols-2">
-            {voteHistory.animeBallotDtos.map((ballot: AnimeBallotDto) => (
-              <div key={ballot.animeId}>
-                <VoteResultCard ballot={ballot} />
-              </div>
-            ))}
+            {voteHistory.animeBallotDtos.map(
+              (ballot: AnimeBallotDto, index: number) => (
+                <div key={index}>
+                  <VoteResultCard ballot={ballot} />
+                </div>
+              )
+            )}
           </div>
         ) : (
           <div className="py-8 text-center sm:py-12">

@@ -7,7 +7,7 @@ import {
   MemberGender,
   SurveyCommentDto,
 } from '@/types';
-import { apiCall, ApiResponse } from './http';
+import { apiCall } from './http';
 
 // Device fingerprint 생성 함수
 async function generateDeviceFingerprint(): Promise<string> {
@@ -166,11 +166,8 @@ export async function createSurveyComment(
     candidateId: number;
   }
 ) {
-  return apiCall<ApiResponse<SurveyCommentDto>>(
-    `/api/v1/vote/surveys/${surveyId}/me`,
-    {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-    }
-  );
+  return apiCall<SurveyCommentDto>(`/api/v1/vote/surveys/${surveyId}/me`, {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+  });
 }
