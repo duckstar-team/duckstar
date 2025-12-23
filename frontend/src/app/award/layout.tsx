@@ -59,7 +59,7 @@ export default function AwardLayout({
         )}
       </nav>
 
-      {children}
+      <div className="pb-20">{children}</div>
     </>
   );
 }

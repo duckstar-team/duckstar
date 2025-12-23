@@ -12,6 +12,7 @@ import { AwardListSkeleton } from '@/components/skeletons';
 import { useRouter } from 'next/navigation';
 import { ExternalLink } from 'lucide-react';
 import SurveyCountdown from './[year]/[surveyType]/[surveyId]/_components/SurveyCountdown';
+import { cn } from '@/lib/utils';
 
 const GOOGLE_FORM_SURVEYS = [
   {
@@ -101,21 +102,22 @@ export default function AwardPage() {
           <p className="text-lg text-gray-500">등록된 어워드가 없습니다.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-6 @lg:flex-row @lg:items-start @lg:gap-8">
+        <div className="flex flex-col gap-10 @lg:flex-row @lg:items-start @lg:gap-8">
           {/* 덕스타 어워드 리스트 (좌측) */}
           <div className="flex-1">
             <h1 className="mb-5 text-xl font-bold text-gray-600 @lg:text-2xl">
               덕스타 어워드
             </h1>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
               {surveys.map((survey, i) => {
                 const isOpen = survey.status === 'OPEN';
+                const isNotYet = survey.status === 'NOT_YET';
 
                 return (
                   <Link
                     key={survey.surveyId}
                     href={`/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`}
-                    className="group flex min-h-32 overflow-hidden rounded-lg bg-white shadow-lg shadow-gray-200/80 @lg:min-h-48"
+                    className="group flex min-h-32 flex-col overflow-hidden rounded-lg bg-white shadow-lg shadow-gray-200/80 @lg:min-h-48"
                   >
                     <div className="relative w-full">
                       <img
@@ -123,7 +125,17 @@ export default function AwardPage() {
                         alt="survey-thumbnail"
                         className="h-full w-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+                      <div
+                        className={cn(
+                          'absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent',
+                          isNotYet && 'bg-black/60'
+                        )}
+                      />
+                      {isNotYet && (
+                        <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 text-center font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
+                          <SurveyCountdown startDate={survey.startDate} />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex w-full flex-col justify-between gap-4 p-3 @md:p-4">
@@ -135,25 +147,19 @@ export default function AwardPage() {
                           </h2>
                         </div>
                         <div className="xs:ml-1 text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
-                          <span>투표 기간 :</span> {survey.startDate} ~{' '}
-                          {survey.endDate}
+                          {survey.startDate} ~ {survey.endDate}
                         </div>
-                        {survey.status === 'NOT_YET' && (
-                          <div className="font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
-                            <SurveyCountdown startDate={survey.startDate} />
-                          </div>
-                        )}
                       </div>
 
-                      {survey.status !== 'NOT_YET' && (
-                        <div className="flex h-9 w-fit self-end rounded-full bg-gradient-to-tr from-pink-300 to-blue-300 p-0.5 shadow-lg">
+                      {!isNotYet && (
+                        <div className="mt-2 flex h-10 w-full self-end rounded-full bg-gradient-to-tr from-pink-300 to-blue-300 p-0.5 shadow-lg">
                           <button
                             onClick={() => {
                               router.push(
                                 `/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`
                               );
                             }}
-                            className="flex items-center justify-center rounded-full bg-white/80 px-6 text-xs font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-sm"
+                            className="flex w-full items-center justify-center rounded-full bg-white/80 px-6 text-xs font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-sm"
                           >
                             {!isOpen
                               ? '결과 보기'

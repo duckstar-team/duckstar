@@ -52,6 +52,7 @@ export default function TooltipBtn({
             zIndex: 1000,
           }}
           clickable={true}
+          opacity={1}
         >
           {typeof tooltipContent === 'string' ? null : tooltipContent}
         </Tooltip>

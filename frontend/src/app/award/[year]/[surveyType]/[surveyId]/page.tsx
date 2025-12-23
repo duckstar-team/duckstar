@@ -122,13 +122,15 @@ export default function SurveyPage() {
           <img
             src="/survey_not_yet.jpeg"
             alt="survey-not-yet"
-            className="mb-4 aspect-video w-1/3 object-cover"
+            className="mb-4 aspect-video w-1/3 object-cover @max-sm:w-1/2"
           />
-          <h2 className="text-xl font-semibold">투표 오픈 전입니다.</h2>
-          <p className="mb-6 text-gray-600">
+          <h2 className="text-xl font-semibold text-black">
+            투표 오픈 전입니다
+          </h2>
+          <p className="my-6 text-center text-gray-600">
             <SurveyCountdown
               startDate={surveyStatusData?.startDate}
-              className="text-[2rem] @lg:text-[2.5rem]"
+              className="text-[1.5rem] font-bold! text-red-400! @md:text-[2rem]"
             />
           </p>
         </div>
