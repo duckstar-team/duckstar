@@ -21,10 +21,7 @@ function getSessionKeyName(surveyType: SurveyType): string {
  * @param surveyType 어워드 타입
  * @param endDate 어워드 종료일 (ISO string)
  */
-export function setSurveySession(
-  surveyType: SurveyType,
-  endDate: string
-): void {
+export function setSurveySession(surveyType: SurveyType, endDate: Date): void {
   if (typeof window === 'undefined') return;
 
   // 이미 유효한 세션키가 있으면 저장하지 않음
@@ -34,9 +31,8 @@ export function setSurveySession(
 
   try {
     const key = getSessionKeyName(surveyType);
-    const endDateTimestamp = new Date(endDate).getTime();
     const sessionData = {
-      endDate: endDateTimestamp,
+      endDate: endDate,
       createdAt: Date.now(),
     };
     localStorage.setItem(key, JSON.stringify(sessionData));

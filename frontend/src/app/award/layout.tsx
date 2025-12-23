@@ -47,7 +47,7 @@ export default function AwardLayout({
         customSubtitle={bannerSubtitle}
       />
 
-      <nav className="max-width my-6! flex items-center gap-3 px-10! text-sm font-medium text-gray-500 @md:text-base">
+      <nav className="max-width my-6! flex items-center gap-3 text-sm font-medium break-keep text-gray-500 @md:text-base">
         <Link href="/award" className="hover:text-brand">
           어워드 목록
         </Link>

@@ -165,8 +165,8 @@ export interface SurveyDto {
   status: VoteStatusType;
   year: number;
   type: SurveyType;
-  startDate: string;
-  endDate: string;
+  startDateTime: Date;
+  endDateTime: Date;
 }
 
 export enum VoteStatusType {

@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 
 interface VoteResultViewProps {
   surveyId: number;
-  endDate?: string;
+  endDate?: Date;
   onRevoteClick: () => void;
   showConfetti?: boolean;
   onConfettiComplete?: () => void;
@@ -77,7 +77,7 @@ export default function VoteResultView({
   }
 
   return (
-    <main className="max-width px-10!">
+    <main className="max-width">
       <ConfettiEffect isActive={showConfetti} onComplete={onConfettiComplete} />
       <section className="relative mb-6 flex w-full flex-col items-center gap-2 rounded-lg bg-gray-100 p-4 sm:gap-3">
         <div className="text-center text-xl font-semibold text-black sm:text-2xl lg:text-3xl">
@@ -86,7 +86,7 @@ export default function VoteResultView({
             : '소중한 참여 감사합니다!'}
         </div>
 
-        <div className="text-sm sm:text-base">
+        <div className="text-center text-sm sm:text-base">
           {getResultAnnouncementMessage()}
         </div>
 
@@ -97,14 +97,16 @@ export default function VoteResultView({
       </section>
 
       <section className="flex w-full flex-col items-center gap-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 @max-md:justify-center">
-        <div className="flex flex-col justify-center rounded-md bg-gray-100 px-4 py-0.5 font-medium text-gray-600 @max-md:text-sm">
-          제출 시각:{' '}
+        <div className="max-xs:flex-col flex items-center justify-center rounded-md bg-gray-100 px-4 py-0.5 text-center font-medium text-gray-600 @max-md:text-sm">
+          <div className="flex items-center gap-1">
+            제출 시각<span className="max-xs:hidden mr-1 inline-block">: </span>
+          </div>
           {voteHistory.submittedAt
             ? new Date(voteHistory.submittedAt).toLocaleString('ko-KR')
             : '정보 없음'}
         </div>
 
-        <div className="flex max-[375px]:flex-col items-center justify-center gap-8 max-[375px]:gap-4 @md:gap-20">
+        <div className="flex items-center justify-center gap-8 max-[375px]:flex-col max-[375px]:gap-4 @md:gap-20">
           <div className="flex items-center gap-4 @max-sm:flex-col @md:gap-10">
             <VoteStamp
               type="normal"
@@ -138,7 +140,7 @@ export default function VoteResultView({
       </section>
 
       <section className="mt-8">
-        <div className="mb-3 flex items-end justify-between sm:mb-4">
+        <div className="max-xs:flex-col mb-3 flex items-center justify-between sm:mb-4 @xs:items-end">
           <h2 className="text-lg font-semibold sm:text-xl">
             투표한 {categoryText}
           </h2>

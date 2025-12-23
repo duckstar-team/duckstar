@@ -1,4 +1,5 @@
 import { SurveyDto, SurveyType, VoteStatusType } from '@/types';
+import { format } from 'date-fns';
 
 /**
  * SurveyType을 한글 라벨로 변환
@@ -34,10 +35,9 @@ export function getBannerSubtitle(
 ): string | undefined {
   if (!surveyData) return undefined;
 
-  const formatDate = (date: string) => date.replaceAll('-', '/');
-
-  const rangeText = `${formatDate(surveyData.startDate)} - ${formatDate(
-    surveyData.endDate
+  const rangeText = `${format(surveyData.startDateTime, 'yyyy/MM/dd')} - ${format(
+    surveyData.endDateTime,
+    'yyyy/MM/dd'
   )}`;
 
   let summaryText: string;

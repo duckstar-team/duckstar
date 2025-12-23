@@ -143,9 +143,9 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
       {/* 카드 구조 - 세퍼레이터 기준 두 영역 */}
       <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow">
         {/* 카드 내용 - 오른쪽 영역(w-10)을 제외한 나머지 영역 */}
-        <div className="flex gap-4 p-4 pr-12 lg:items-center">
+        <div className="flex items-center gap-4 p-4 pr-12">
           {/* 썸네일 */}
-          <div className="relative h-24 w-20 flex-shrink-0 lg:h-36 lg:w-28">
+          <div className="relative h-full w-20 flex-shrink-0 lg:h-36 lg:w-28">
             <img
               src={ballot.mainThumbnailUrl}
               alt={ballot.titleKor}
@@ -159,61 +159,73 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
           </div>
 
           {/* 제목 + 시즌 */}
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="line-clamp-3 leading-tight font-semibold text-gray-900 lg:text-lg">
               {ballot.titleKor || '제목 없음'}
             </div>
-            <div className="mt-1 text-xs text-gray-500 lg:text-sm">
-              {`${ballot.year} ${ballot.quarter}분기 ${ballot.medium}`}
-            </div>
-          </div>
+            <div className="flex w-full items-center justify-between gap-2">
+              <div className="mt-1 self-start text-xs text-gray-500 lg:text-sm">
+                {`${ballot.year} ${ballot.quarter}분기 ${ballot.medium}`}
+              </div>
 
-          {/* 기표칸 */}
-          <div className="mr-2 size-12 flex-shrink-0 rounded-full border border-gray-300 sm:size-14 lg:size-16">
-            <img
-              src={
-                ballot.ballotType === 'BONUS'
-                  ? '/voted-bonus-2025-autumn.svg'
-                  : '/voted-normal-2025-autumn.svg'
-              }
-              alt="투표 완료"
-            />
+              {/* 기표칸 */}
+              <div className="mr-2 size-12 flex-shrink-0 rounded-full border border-gray-300 sm:size-14 lg:size-16">
+                <img
+                  src={
+                    ballot.ballotType === 'BONUS'
+                      ? '/voted-bonus-2025-autumn.svg'
+                      : '/voted-normal-2025-autumn.svg'
+                  }
+                  alt="투표 완료"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 세퍼레이터 라인 */}
-        <div className="absolute top-1/2 right-10 h-15 w-px -translate-y-1/2 bg-gray-200"></div>
-
         {/* 왼쪽 영역 - 메인 카드 클릭 */}
         <button
-          className="absolute inset-0 cursor-pointer transition-colors hover:bg-gray-50/30"
+          className={cn(
+            'absolute inset-0 cursor-pointer transition-colors disabled:cursor-auto!',
+            !ballot.animeId ? 'cursor-auto!' : 'hover:bg-gray-50/30'
+          )}
           onClick={handleCardClick}
           style={{
             clipPath:
               'polygon(0 0, calc(100% - 40px) 0, calc(100% - 40px) 100%, 0 100%)',
           }}
+          disabled={!ballot.animeId}
         />
+        {ballot.animeId && (
+          <>
+            {/* 세퍼레이터 라인 */}
+            <div className="absolute top-1/2 right-10 h-15 w-px -translate-y-1/2 bg-gray-200"></div>
+            {/* 오른쪽 영역 - 드롭다운 토글 */}
 
-        {/* 오른쪽 영역 - 드롭다운 토글 */}
-        <button
-          className="absolute top-0 right-0 bottom-0 flex w-10 cursor-pointer items-center justify-center transition-colors hover:bg-gray-100/70"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsExpanded((prev) => !prev);
-          }}
-        >
-          <ChevronDown
-            className={cn(
-              'h-5 w-5 text-gray-600 transition',
-              isExpanded && 'rotate-180'
-            )}
-          />
-        </button>
+            <button
+              className={cn(
+                'absolute top-0 right-0 bottom-0 flex w-10 cursor-pointer items-center justify-center transition',
+                ballot.animeId && 'bg-[#FFF7F0] hover:opacity-70'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded((prev) => !prev);
+              }}
+            >
+              <ChevronDown
+                className={cn(
+                  'h-5 w-5 text-gray-600 transition',
+                  isExpanded && 'rotate-180'
+                )}
+              />
+            </button>
+          </>
+        )}
       </div>
 
       {/* 드롭다운 컨텐츠 영역 (완전히 독립적) */}
       <AnimatePresence>
-        {isExpanded && ballot.animeId && (
+        {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}

@@ -45,7 +45,7 @@ interface VoteFormViewProps {
   onRevoteSuccess: () => void;
   voteStatus?: VoteStatusType;
   surveyType?: SurveyType;
-  surveyEndDate?: string;
+  surveyEndDate?: Date;
 }
 
 export default function VoteFormView({
@@ -783,7 +783,7 @@ export default function VoteFormView({
       {/* 투표 안내 문구 */}
       <section
         className={cn(
-          'max-width px-10!',
+          'max-width',
           genderSelectionStep !== null && 'flex md:justify-end'
         )}
       >
@@ -809,7 +809,7 @@ export default function VoteFormView({
             zIndex: 40,
           }}
         >
-          <div className="max-width flex items-center justify-between gap-8 px-10! @max-lg:flex-col @lg:gap-16">
+          <div className="max-width flex items-center justify-between gap-8 @max-lg:flex-col @lg:gap-16">
             {/* Vote Status Section */}
             <div
               className={`${showGenderSelection && '@lg:order-1'} order-2 w-full @lg:w-auto`}
@@ -866,7 +866,7 @@ export default function VoteFormView({
         ref={voteSectionRef}
         className="@container mt-4 border-b border-gray-200 bg-white py-4"
       >
-        <div className="max-width flex items-center justify-between gap-8 px-10! @max-lg:flex-col @lg:gap-16">
+        <div className="max-width flex items-center justify-between gap-8 @max-lg:flex-col @lg:gap-16">
           {/* Vote Status Section */}
           <div
             className={`${showGenderSelection && '@lg:order-1'} order-2 w-full @lg:w-auto`}
@@ -917,7 +917,7 @@ export default function VoteFormView({
         </div>
       </section>
 
-      <section className="max-width px-10! py-6!">
+      <section className="max-width py-6!">
         <p className="mt-1 mb-6 text-sm text-gray-500">
           선택한 애니메이션 :{' '}
           <span className="text-brand font-bold">{allSelected.length}</span> /{' '}

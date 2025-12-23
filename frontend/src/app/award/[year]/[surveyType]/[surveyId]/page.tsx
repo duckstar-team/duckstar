@@ -49,15 +49,15 @@ export default function SurveyPage() {
       isAuthenticated &&
       surveyStatusData?.hasVoted &&
       surveyStatusData?.type &&
-      surveyStatusData?.endDate
+      surveyStatusData?.endDateTime
     ) {
-      setSurveySession(surveyStatusData.type, surveyStatusData.endDate);
+      setSurveySession(surveyStatusData.type, surveyStatusData.endDateTime);
     }
   }, [
     isAuthenticated,
     surveyStatusData?.hasVoted,
     surveyStatusData?.type,
-    surveyStatusData?.endDate,
+    surveyStatusData?.endDateTime,
   ]);
 
   // 세션키 및 투표 이력 체크
@@ -129,7 +129,7 @@ export default function SurveyPage() {
           </h2>
           <p className="my-6 text-center text-gray-600">
             <SurveyCountdown
-              startDate={surveyStatusData?.startDate}
+              startDate={surveyStatusData?.startDateTime}
               className="text-[1.5rem] font-bold! text-red-400! @md:text-[2rem]"
             />
           </p>
@@ -143,7 +143,7 @@ export default function SurveyPage() {
     return (
       <VoteResultView
         surveyId={surveyId}
-        endDate={surveyStatusData?.endDate}
+        endDate={surveyStatusData?.endDateTime}
         onRevoteClick={() => {
           setIsRevoteMode(true);
           setShowConfetti(false);
@@ -165,7 +165,7 @@ export default function SurveyPage() {
       }}
       voteStatus={surveyStatusData?.status}
       surveyType={surveyType}
-      surveyEndDate={surveyStatusData?.endDate}
+      surveyEndDate={surveyStatusData?.endDateTime}
     />
   );
 }
