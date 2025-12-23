@@ -189,8 +189,8 @@ export default function AppContainer({ children }: AppContainerProps) {
         if (savedState !== null) {
           setIsSidebarOpen(savedState === 'true');
         } else {
-          // 세션 스토리지에 값이 없으면 기본값 false
-          setIsSidebarOpen(false);
+          // 세션 스토리지에 값이 없으면 기본값 열림
+          setIsSidebarOpen(true);
         }
       } else {
         // 모바일: 초기 상태 항상 닫힘
