@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { differenceInDays } from 'date-fns';
 import { AnimeBallotDto, ApiResponseAnimeVoteHistoryDto } from '@/types';
 import { ChevronRight, RefreshCcw, Share2 } from 'lucide-react';
 import { queryConfig } from '@/lib/queryConfig';
@@ -14,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 
 interface VoteResultViewProps {
   surveyId: number;
+  endDate?: string;
   onRevoteClick: () => void;
   showConfetti?: boolean;
   onConfettiComplete?: () => void;
@@ -21,6 +23,7 @@ interface VoteResultViewProps {
 
 export default function VoteResultView({
   surveyId,
+  endDate,
   onRevoteClick,
   showConfetti = false,
   onConfettiComplete,
@@ -47,7 +50,24 @@ export default function VoteResultView({
       return '덕스타 결과는 일요일 22시에 공개됩니다.';
     }
 
-    return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 2주 뒤에 공개됩니다.`;
+    if (!endDate) {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 곧 공개됩니다.`;
+    }
+
+    // D-day 계산 (date-fns 사용)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    const diffDays = differenceInDays(end, today);
+
+    if (diffDays < 0) {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 곧 공개됩니다.`;
+    } else if (diffDays === 0) {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 오늘 공개됩니다.`;
+    } else {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 ${diffDays}일 뒤에 공개됩니다.`;
+    }
   };
 
   const categoryText = getCategoryText('ANIME');

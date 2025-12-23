@@ -141,6 +141,7 @@ export default function SurveyPage() {
     return (
       <VoteResultView
         surveyId={surveyId}
+        endDate={surveyStatusData?.endDate}
         onRevoteClick={() => {
           setIsRevoteMode(true);
           setShowConfetti(false);
