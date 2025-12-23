@@ -96,7 +96,7 @@ export default function AwardPage() {
   const surveys = data?.result || [];
 
   return (
-    <main className="max-width px-10!">
+    <main className="max-width">
       {/* 덕스타 어워드 투표 링크 */}
       {surveys.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow-sm">
@@ -202,7 +202,7 @@ export default function AwardPage() {
                         className="size-5"
                       />
                       {survey.label}
-                      <ExternalLink className="ml-1 transition-transform duration-300" />
+                      <ExternalLink className="ml-1 shrink-0 transition-transform duration-300" />
                     </Link>
                   </div>
                 );

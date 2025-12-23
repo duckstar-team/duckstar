@@ -130,7 +130,7 @@ export default function VoteCard({
       >
         <div className="flex gap-4 p-4 lg:items-center">
           {/* 썸네일 */}
-          <div className="relative h-24 w-20 flex-shrink-0 lg:h-36 lg:w-28">
+          <div className="relative h-full w-20 flex-shrink-0 lg:h-36 lg:w-28">
             <img
               src={anime.mainThumbnailUrl}
               alt={anime.titleKor}
@@ -142,38 +142,37 @@ export default function VoteCard({
               }}
             />
           </div>
-
           {/* 오른쪽 열: 제목 + 시즌 + 기표칸 */}
-          <div className="flex min-w-0 flex-1 justify-between gap-4 lg:items-center lg:gap-8">
-            <div className="flex flex-col gap-1">
-              {/* 제목 */}
-              <div className="line-clamp-3 leading-tight font-semibold break-words text-gray-900 lg:text-lg">
-                {anime.titleKor}
-              </div>
+          <div className="flex flex-1 flex-col gap-2">
+            {/* 제목 */}
+            <div className="line-clamp-3 leading-tight font-semibold break-words text-gray-900 lg:text-lg">
+              {anime.titleKor}
+            </div>
 
+            <div className="flex w-full flex-1 items-start justify-between gap-1">
               {/* 시즌 정보 */}
               <div className="text-xs text-gray-500 lg:text-sm">
                 {`${anime.year} ${anime.quarter}분기 ${anime.medium}`}
               </div>
-            </div>
 
-            {/* 투표 토글 */}
-            <div className="flex max-lg:self-end">
-              <VoteToggle
-                selected={checked}
-                isCardHovered={isHovered}
-                justDeselected={justDeselected}
-                currentVotes={currentVotes}
-                isBonusMode={isBonusMode}
-                isBonusVote={isBonusVote}
-                onClick={(isBonusVote) => {
-                  if (!onChange) return; // disabled 상태에서는 클릭 무시
-                  // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
-                  onChange(isBonusVote);
-                }}
-                disabled={disabled}
-                cardHoverSide={hoverSide}
-              />
+              {/* 투표 토글 */}
+              <div className="flex @max-md:self-end">
+                <VoteToggle
+                  selected={checked}
+                  isCardHovered={isHovered}
+                  justDeselected={justDeselected}
+                  currentVotes={currentVotes}
+                  isBonusMode={isBonusMode}
+                  isBonusVote={isBonusVote}
+                  onClick={(isBonusVote) => {
+                    if (!onChange) return; // disabled 상태에서는 클릭 무시
+                    // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
+                    onChange(isBonusVote);
+                  }}
+                  disabled={disabled}
+                  cardHoverSide={hoverSide}
+                />
+              </div>
             </div>
           </div>
         </div>

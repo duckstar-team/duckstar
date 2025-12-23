@@ -86,7 +86,7 @@ export default function VoteResultView({
             : '소중한 참여 감사합니다!'}
         </div>
 
-        <div className="text-sm sm:text-base">
+        <div className="text-center text-sm sm:text-base">
           {getResultAnnouncementMessage()}
         </div>
 

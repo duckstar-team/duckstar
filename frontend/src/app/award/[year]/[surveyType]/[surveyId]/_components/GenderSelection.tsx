@@ -101,7 +101,7 @@ export default function GenderSelection({
           {GENDER_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
-              className="flex items-center gap-2 text-sm font-medium"
+              className="flex items-center gap-2 text-sm font-medium break-keep"
               onClick={() => handleGenderClick(value)}
             >
               <span
