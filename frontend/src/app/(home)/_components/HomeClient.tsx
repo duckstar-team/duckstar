@@ -525,7 +525,7 @@ export default function HomeClient() {
 
           {/* 헤더 리스트 영역 */}
           <div className="sticky top-[60px] z-20 w-full rounded-lg bg-white px-4 pt-2 sm:pt-3">
-            <div className="flex w-full flex-col justify-center gap-4 xl:flex-row xl:gap-[240px]">
+            <div className="flex w-full flex-col justify-center gap-4 xl:flex-row xl:gap-[50px]">
               {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
               <div className="w-[full] xl:w-auto">
                 <HeaderList

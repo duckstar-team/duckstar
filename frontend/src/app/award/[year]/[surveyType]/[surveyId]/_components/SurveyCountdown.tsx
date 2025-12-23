@@ -51,7 +51,7 @@ export default function SurveyCountdown({
 
   return (
     <span
-      className={cn('text-lg font-bold text-red-400 @lg:text-2xl', className)}
+      className={cn('text-lg font-bold text-red-400 @lg:text-xl', className)}
     >
       {remaining}
     </span>

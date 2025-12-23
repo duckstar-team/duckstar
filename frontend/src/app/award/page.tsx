@@ -95,104 +95,111 @@ export default function AwardPage() {
 
   return (
     <main className="max-width px-10!">
-      <h1 className="my-4 text-xl font-bold text-gray-600 @lg:text-2xl">
-        덕스타 어워드
-      </h1>
       {/* 덕스타 어워드 투표 링크 */}
       {surveys.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow-sm">
           <p className="text-lg text-gray-500">등록된 어워드가 없습니다.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {surveys.map((survey, i) => {
-            const isOpen = survey.status === 'OPEN';
+        <div className="flex flex-col gap-6 @lg:flex-row @lg:items-start @lg:gap-8">
+          {/* 덕스타 어워드 리스트 (좌측) */}
+          <div className="flex-1">
+            <h1 className="mb-5 text-xl font-bold text-gray-600 @lg:text-2xl">
+              덕스타 어워드
+            </h1>
+            <div className="grid grid-cols-1 gap-4">
+              {surveys.map((survey, i) => {
+                const isOpen = survey.status === 'OPEN';
 
-            return (
-              <Link
-                key={survey.surveyId}
-                href={`/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`}
-                className="group flex min-h-40 overflow-hidden rounded-lg bg-white shadow-lg shadow-gray-200/80 @lg:min-h-60"
-              >
-                <div className="relative w-2/3">
-                  <img
-                    src={`/survey-thumb-${i + 1}.png`}
-                    alt="survey-thumbnail"
-                    className="h-full w-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
-                </div>
-
-                <div className="flex w-full flex-col justify-between gap-4 p-4 @md:p-6">
-                  <div className="flex flex-col gap-2">
-                    <div className="max-xs:flex-col flex gap-2 sm:items-center @md:gap-3">
-                      <div>{getStatusBadge(survey.status)}</div>
-                      <h2 className="group-hover:text-brand text-lg font-semibold text-gray-600 transition-all duration-300 @sm:text-xl @md:text-2xl">
-                        {survey.year} {getSurveyTypeLabel(survey.type)}
-                      </h2>
-                    </div>
-                    <div className="xs:ml-1 font-medium text-gray-500/80 @max-sm:text-sm @md:text-lg">
-                      <span>투표 기간 :</span> {survey.startDate} ~{' '}
-                      {survey.endDate}
-                    </div>
-                    {survey.status === 'NOT_YET' && (
-                      <div className="font-medium text-gray-500/80 @max-sm:text-sm @md:text-lg">
-                        <SurveyCountdown startDate={survey.startDate} />
-                      </div>
-                    )}
-                  </div>
-
-                  {survey.status !== 'NOT_YET' && (
-                    <div className="flex h-10 w-fit self-end rounded-full bg-gradient-to-tr from-pink-300 to-blue-300 p-0.5 shadow-lg">
-                      <button
-                        onClick={() => {
-                          router.push(
-                            `/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`
-                          );
-                        }}
-                        className="flex items-center justify-center rounded-full bg-white/80 px-10 text-sm font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-base"
-                      >
-                        {!isOpen
-                          ? '결과 보기'
-                          : survey.hasVoted
-                            ? '투표 완료'
-                            : '투표 하기'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-
-          {/* 커스텀 어워드 투표 링크 */}
-          <h1 className="mt-8 text-xl font-bold text-gray-600 @lg:text-2xl">
-            커스텀 어워드 투표 링크
-          </h1>
-          <div className="grid gap-4 @md:grid-cols-2">
-            {GOOGLE_FORM_SURVEYS.map((survey) => {
-              return (
-                <div
-                  key={survey.link}
-                  className="flex h-fit rounded-lg bg-white shadow-lg shadow-gray-200/80"
-                >
+                return (
                   <Link
-                    href={survey.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-brand flex items-center gap-4 p-4 text-lg font-semibold text-gray-600 @md:p-6 @md:text-xl @lg:text-2xl"
+                    key={survey.surveyId}
+                    href={`/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`}
+                    className="group flex min-h-32 overflow-hidden rounded-lg bg-white shadow-lg shadow-gray-200/80 @lg:min-h-48"
                   >
-                    <img
-                      src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico"
-                      alt="survey-thumbnail"
-                      className="size-5"
-                    />
-                    {survey.label}
-                    <ExternalLink className="ml-1 transition-transform duration-300" />
+                    <div className="relative w-full">
+                      <img
+                        src={`/survey-thumb-${i + 1}.png`}
+                        alt="survey-thumbnail"
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+                    </div>
+
+                    <div className="flex w-full flex-col justify-between gap-4 p-3 @md:p-4">
+                      <div className="flex flex-col gap-2">
+                        <div className="max-xs:flex-col flex gap-2 sm:items-center @md:gap-3">
+                          <div>{getStatusBadge(survey.status)}</div>
+                          <h2 className="group-hover:text-brand text-base font-semibold text-gray-600 transition-all duration-300 @sm:text-lg @md:text-xl">
+                            {survey.year} {getSurveyTypeLabel(survey.type)}
+                          </h2>
+                        </div>
+                        <div className="xs:ml-1 text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
+                          <span>투표 기간 :</span> {survey.startDate} ~{' '}
+                          {survey.endDate}
+                        </div>
+                        {survey.status === 'NOT_YET' && (
+                          <div className="font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
+                            <SurveyCountdown startDate={survey.startDate} />
+                          </div>
+                        )}
+                      </div>
+
+                      {survey.status !== 'NOT_YET' && (
+                        <div className="flex h-9 w-fit self-end rounded-full bg-gradient-to-tr from-pink-300 to-blue-300 p-0.5 shadow-lg">
+                          <button
+                            onClick={() => {
+                              router.push(
+                                `/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`
+                              );
+                            }}
+                            className="flex items-center justify-center rounded-full bg-white/80 px-6 text-xs font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-sm"
+                          >
+                            {!isOpen
+                              ? '결과 보기'
+                              : survey.hasVoted
+                                ? '투표 완료'
+                                : '투표 하기'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </Link>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 커스텀 어워드 투표 링크 (우측 패널 형태) */}
+          <div className="w-full @lg:w-[373px]">
+            <h1 className="mb-5 text-xl font-bold text-gray-600 @lg:text-2xl">
+              커스텀 어워드 투표 링크
+            </h1>
+            <div className="flex w-full flex-col gap-4">
+              {GOOGLE_FORM_SURVEYS.map((survey) => {
+                return (
+                  <div
+                    key={survey.link}
+                    className="flex h-fit rounded-lg bg-white shadow-lg shadow-gray-200/80"
+                  >
+                    <Link
+                      href={survey.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-brand flex items-center gap-4 p-3 text-base font-semibold text-gray-600 @md:p-4 @md:text-lg @lg:text-xl"
+                    >
+                      <img
+                        src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico"
+                        alt="survey-thumbnail"
+                        className="size-5"
+                      />
+                      {survey.label}
+                      <ExternalLink className="ml-1 transition-transform duration-300" />
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
