@@ -47,7 +47,7 @@ export default function VoteResultView({
       return '덕스타 결과는 일요일 22시에 공개됩니다.';
     }
 
-    return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 일요일 22시에 공개됩니다.`;
+    return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 2주 뒤에 공개됩니다.`;
   };
 
   const categoryText = getCategoryText('ANIME');
@@ -57,9 +57,9 @@ export default function VoteResultView({
   }
 
   return (
-    <main className="max-width bg-gray-50">
+    <main className="max-width px-10!">
       <ConfettiEffect isActive={showConfetti} onComplete={onConfettiComplete} />
-      <div className="relative mb-6 flex w-full flex-col items-center gap-2 rounded-lg bg-gray-100 p-4 sm:gap-3">
+      <section className="relative mb-6 flex w-full flex-col items-center gap-2 rounded-lg bg-gray-100 p-4 sm:gap-3">
         <div className="text-center text-xl font-semibold text-black sm:text-2xl lg:text-3xl">
           {voteHistory.nickName
             ? `${voteHistory.nickName} 님, 소중한 참여 감사합니다!`
@@ -74,48 +74,50 @@ export default function VoteResultView({
         {/* <button className="absolute top-4 right-4 rounded-full p-2 hover:bg-gray-200">
           <Share2 className="size-5" />
         </button> */}
-      </div>
+      </section>
 
-      <div className="flex w-full items-center justify-evenly gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm max-lg:justify-center max-md:flex-col sm:p-6">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <VoteStamp
-            type="normal"
-            currentVotes={voteHistory.normalCount || 0}
-            showResult={true}
-            showGenderSelection={true}
-          />
-
-          {voteHistory.bonusCount > 0 && (
-            <VoteStamp
-              type="bonus"
-              currentVotes={voteHistory.bonusCount || 0}
-              bonusVotesUsed={voteHistory.bonusCount || 0}
-              showResult={true}
-            />
-          )}
-        </div>
-
-        <div className="flex flex-col justify-center rounded-md bg-gray-100 px-4 py-0.5 font-medium text-gray-600 max-md:text-sm">
+      <section className="flex w-full flex-col items-center gap-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 @max-md:justify-center">
+        <div className="flex flex-col justify-center rounded-md bg-gray-100 px-4 py-0.5 font-medium text-gray-600 @max-md:text-sm">
           제출 시각:{' '}
           {voteHistory.submittedAt
             ? new Date(voteHistory.submittedAt).toLocaleString('ko-KR')
             : '정보 없음'}
         </div>
 
-        {isAuthenticated && (
-          <div className="flex justify-center lg:justify-end">
-            <button
-              onClick={onRevoteClick}
-              className="flex items-center gap-2 rounded-lg bg-amber-400 px-2.5 py-1.5 font-semibold text-white transition hover:opacity-60 max-md:text-sm"
-            >
-              <RefreshCcw className="size-4 md:size-5" />
-              재투표하기
-            </button>
-          </div>
-        )}
-      </div>
+        <div className="flex gap-8 @md:gap-20">
+          <div className="flex items-center gap-4 @max-sm:flex-col @md:gap-6">
+            <VoteStamp
+              type="normal"
+              currentVotes={voteHistory.normalCount || 0}
+              showResult={true}
+              showGenderSelection={true}
+            />
 
-      <div className="mt-8">
+            {voteHistory.bonusCount > 0 && (
+              <VoteStamp
+                type="bonus"
+                currentVotes={voteHistory.bonusCount || 0}
+                bonusVotesUsed={voteHistory.bonusCount || 0}
+                showResult={true}
+              />
+            )}
+          </div>
+
+          {isAuthenticated && (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={onRevoteClick}
+                className="flex h-fit items-center gap-2 rounded-lg bg-amber-400 px-2.5 py-1.5 font-semibold text-white transition hover:opacity-60 @max-sm:text-sm"
+              >
+                <RefreshCcw className="size-4 md:size-5" />
+                재투표하기
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-8">
         <div className="mb-3 flex items-end justify-between sm:mb-4">
           <h2 className="text-lg font-semibold sm:text-xl">
             투표한 {categoryText}
@@ -144,7 +146,7 @@ export default function VoteResultView({
         {voteHistory.animeBallotDtos &&
         Array.isArray(voteHistory.animeBallotDtos) &&
         voteHistory.animeBallotDtos.length > 0 ? (
-          <div className="grid w-full grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+          <div className="grid w-full grid-cols-1 gap-4 @md:grid-cols-2">
             {voteHistory.animeBallotDtos.map((ballot: AnimeBallotDto) => (
               <div key={ballot.animeId}>
                 <VoteResultCard ballot={ballot} />
@@ -158,7 +160,7 @@ export default function VoteResultView({
             </p>
           </div>
         )}
-      </div>
+      </section>
     </main>
   );
 }

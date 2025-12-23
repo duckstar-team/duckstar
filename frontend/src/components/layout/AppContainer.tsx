@@ -265,8 +265,10 @@ export default function AppContainer({ children }: AppContainerProps) {
 
           {/* Main Content */}
           <main
-            className="w-full bg-gray-50 pt-15"
+            className="@container bg-gray-50 pt-15"
             style={{
+              width:
+                sidebarWidth > 0 ? `calc(100% - ${sidebarWidth}px)` : '100%',
               marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
             }}
           >

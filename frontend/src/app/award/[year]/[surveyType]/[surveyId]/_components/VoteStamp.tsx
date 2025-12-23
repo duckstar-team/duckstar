@@ -2,7 +2,8 @@
 
 import TooltipBtn from '@/components/common/TooltipBtn';
 import { MAX_VOTES } from '@/lib/constants';
-import { Infinity } from 'lucide-react';
+import { Infinity, X } from 'lucide-react';
+import { useState } from 'react';
 
 // Types
 interface VoteStampProps {
@@ -144,7 +145,12 @@ export default function VoteStamp({
   showResult = false,
   showGenderSelection = false,
 }: VoteStampProps) {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(!showResult);
   const imageSrc = getNormalStampImage(showGenderSelection, currentVotes);
+
+  const onCloseTooltip = () => {
+    setIsTooltipOpen(false);
+  };
 
   if (type === 'bonus') {
     return (
@@ -153,10 +159,22 @@ export default function VoteStamp({
         <TooltipBtn
           text="보너스 표는 2개가 모여야 일반 표 1개와 같습니다."
           defaultIsOpen={true}
-          isOpen={!showResult}
+          isOpen={isTooltipOpen}
           className="max-md:text-xs!"
           variant="light"
           placement="bottom"
+          content={
+            <div className="flex items-center gap-2">
+              보너스 표는 2개가 모여야 일반 표 1개와 같습니다.
+              <button
+                onClick={onCloseTooltip}
+                type="button"
+                className="size-3.5"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          }
         >
           <img
             src="/icons/voteSection-bonus-stamp.svg"

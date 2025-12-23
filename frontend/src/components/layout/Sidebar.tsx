@@ -44,7 +44,9 @@ export default function Sidebar() {
             const isActive =
               item.href === '/chart'
                 ? pathname.startsWith('/chart')
-                : pathname === item.href;
+                : item.href.startsWith('/award')
+                  ? pathname.startsWith('/award')
+                  : pathname === item.href;
             const iconSrc = isActive ? item.activeIcon : item.defaultIcon;
 
             return (
@@ -67,12 +69,12 @@ export default function Sidebar() {
                   <img
                     src={iconSrc}
                     alt={item.label}
-                    className="mx-2.5 size-4 flex-shrink-0 object-contain"
+                    className="mx-3 size-5 flex-shrink-0 object-contain"
                   />
 
                   <motion.div
                     className={cn(
-                      'whitespace-nowrap max-md:text-sm',
+                      'overflow-hidden whitespace-nowrap max-md:text-sm',
                       isActive
                         ? 'font-bold text-white'
                         : 'font-medium text-gray-500'
@@ -84,9 +86,6 @@ export default function Sidebar() {
                     transition={{
                       duration: 0.3,
                       ease: 'easeInOut',
-                    }}
-                    style={{
-                      overflow: 'hidden',
                     }}
                   >
                     <span>{item.label}</span>

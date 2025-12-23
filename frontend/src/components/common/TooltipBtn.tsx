@@ -49,7 +49,9 @@ export default function TooltipBtn({
             borderRadius: '8px',
             padding: '6px 12px',
             boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.2)',
+            zIndex: 1000,
           }}
+          clickable={true}
         >
           {typeof tooltipContent === 'string' ? null : tooltipContent}
         </Tooltip>

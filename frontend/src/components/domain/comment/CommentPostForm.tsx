@@ -196,7 +196,6 @@ export default function CommentPostForm({
     (!comment.trim() && uploadedImages.length === 0);
 
   // 댓글 폼 전용 스타일 설정
-  const containerWidth = 'w-full max-w-[534px]';
   const inputAreaWidth = 'w-full max-w-[100%]';
   const inputAreaHeight = 'h-[83px]';
   const footerSectionWidth = 'flex-1';
@@ -205,7 +204,7 @@ export default function CommentPostForm({
 
   return (
     <form
-      className={`relative rounded-[8px] bg-white ${containerWidth}`}
+      className="relative w-full rounded-[8px] bg-white"
       onSubmit={(e) => {
         e.preventDefault();
         handleSubmit();

@@ -35,6 +35,7 @@ import {
   likeReply,
   unlikeReply,
 } from '@/api/comment';
+import { ChevronRight } from 'lucide-react';
 
 interface RightCommentPanelProps {
   animeId?: number;
@@ -1117,17 +1118,13 @@ export default function RightCommentPanel({
             >
               <div className="flex w-full max-w-[100%] flex-col items-center justify-center gap-[10px] self-stretch overflow-hidden bg-[#F8F9FA] px-[11px] pt-[10px] pb-[16px]">
                 {/* First Row - Episode Comment Header */}
-                <div className="inline-flex w-full max-w-[534px] items-center justify-end">
+                <div className="inline-flex w-full items-center justify-end">
                   <button
                     onClick={() => setIsEpisodeCommentModalOpen(true)}
-                    className="inline-flex cursor-pointer items-center gap-2.5 text-right text-xs leading-snug font-medium text-[#ADB5BD] hover:underline"
+                    className="mr-2 inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:underline"
                   >
                     <span>에피소드 댓글 남기기</span>
-                    <img
-                      src="/icons/post-episodeComment.svg"
-                      alt="에피소드 댓글"
-                      className="h-2 w-1.5"
-                    />
+                    <ChevronRight className="size-[14px]" />
                   </button>
                 </div>
 
