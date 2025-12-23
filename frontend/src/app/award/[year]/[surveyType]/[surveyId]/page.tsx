@@ -14,6 +14,7 @@ import {
   hasValidSurveySession,
   setSurveySession,
 } from '@/lib/surveySessionStorage';
+import SurveyCountdown from './_components/SurveyCountdown';
 
 export default function SurveyPage() {
   const params = useParams();
@@ -96,7 +97,7 @@ export default function SurveyPage() {
   // 투표 이력 메시지 표시 (세션키가 없고 투표 이력이 있고 로그인하지 않았을 때)
   if (showVotedMessage && !hasValidSession && !isAuthenticated) {
     return (
-      <main className="max-width">
+      <main className="max-width px-10!">
         <div className="flex flex-col items-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
           <div className="text-2xl">😎</div>
           <h2 className="text-xl font-semibold">
@@ -109,6 +110,27 @@ export default function SurveyPage() {
           >
             로그인하기
           </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (surveyStatusData?.status === 'NOT_YET') {
+    return (
+      <main className="max-width px-10!">
+        <div className="flex flex-col items-center justify-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
+          <img
+            src="/survey_not_yet.jpeg"
+            alt="survey-not-yet"
+            className="mb-4 aspect-video w-1/3 object-cover"
+          />
+          <h2 className="text-xl font-semibold">투표 오픈 전입니다.</h2>
+          <p className="mb-6 text-gray-600">
+            <SurveyCountdown
+              startDate={surveyStatusData?.startDate}
+              className="text-[2rem] @lg:text-[2.5rem]"
+            />
+          </p>
         </div>
       </main>
     );
