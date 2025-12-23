@@ -2,7 +2,7 @@
 
 /* CSS Variables */
 :root {
-  --background: #ffffff;
+  --background: #f9fafb;
   --foreground: #171717;
   --brand: #990033;
 }
@@ -38,8 +38,8 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #f9fafb; /* TODO: 임시 */
+    --foreground: #171717; /* TODO: 임시 */
   }
 }
 
@@ -49,7 +49,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Pretendard', Arial, Helvetica, sans-serif;
-  min-height: 100%;
 }
 
 /* 반응형 설정 - 모바일에서 올바른 뷰포트 사용 */
@@ -168,6 +167,8 @@ input:focus {
 .max-width {
   width: 100%;
   max-width: 1240px;
-  margin: 0 auto;
-  padding: 0 16px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
 }

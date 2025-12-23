@@ -221,63 +221,57 @@ export default function AppContainer({ children }: AppContainerProps) {
   return (
     <ModalContext.Provider value={modalContextValue}>
       <ChartContext.Provider value={chartContextValue}>
-        <div className="flex min-h-screen bg-gray-50">
-          {/* Fixed Header */}
-          <div className="fixed top-0 right-0 left-0 z-[9999]">
-            <Header toggleMenu={toggleMenu} />
-          </div>
-
-          {/* Sidebar */}
-          <>
-            {/* Mobile: Fixed overlay */}
-            <AnimatePresence>
-              {isSidebarOpen && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="fixed inset-0 top-15 z-[9999999] bg-black/50 md:hidden"
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <motion.div
-                    initial={{ x: -400 }}
-                    animate={{ x: 0 }}
-                    exit={{ x: -400 }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  >
-                    <Sidebar />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Desktop: Fixed sidebar */}
-            <motion.aside
-              ref={sidebarRef}
-              animate={{ width: isSidebarOpen ? 'fit-content' : 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="fixed top-15 left-0 z-[9999999] hidden overflow-y-hidden md:block"
-            >
-              <Sidebar />
-            </motion.aside>
-          </>
-
-          {/* Main Content */}
-          <main
-            className="@container bg-gray-50 pt-15"
-            style={{
-              width:
-                sidebarWidth > 0 ? `calc(100% - ${sidebarWidth}px)` : '100%',
-              marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
-            }}
-          >
-            {children}
-          </main>
-
-          {/* Global Modals - 전체 앱 레벨에서 관리 */}
-          <LoginModal />
+        {/* Fixed Header */}
+        <div className="fixed top-0 right-0 left-0 z-[9999]">
+          <Header toggleMenu={toggleMenu} />
         </div>
+
+        {/* Mobile Sidebar: Fixed overlay */}
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 top-15 z-[9999999] bg-black/50 md:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <motion.div
+                initial={{ x: -400 }}
+                animate={{ x: 0 }}
+                exit={{ x: -400 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+              >
+                <Sidebar />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Desktop Sidebar: Fixed */}
+        <motion.aside
+          ref={sidebarRef}
+          animate={{ width: isSidebarOpen ? 'fit-content' : 0 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className="fixed top-15 left-0 z-[9999999] hidden overflow-y-hidden md:block"
+        >
+          <Sidebar />
+        </motion.aside>
+
+        {/* Main Content */}
+        <main
+          className="@container pt-15"
+          style={{
+            width: sidebarWidth > 0 ? `calc(100% - ${sidebarWidth}px)` : '100%',
+            marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+          }}
+        >
+          {children}
+        </main>
+
+        {/* Global Modals - 전체 앱 레벨에서 관리 */}
+        <LoginModal />
       </ChartContext.Provider>
     </ModalContext.Provider>
   );
