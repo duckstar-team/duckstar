@@ -40,7 +40,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
   }, [hasComment]);
 
   const handleCommentSubmit = useCallback(
-    async (comment: string, images?: File[]) => {
+    async (comment: string) => {
       try {
         const response = await createSurveyComment(Number(params.surveyId), {
           animeId: ballot.animeId,
@@ -50,7 +50,6 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
 
         setCommentBody(response.result?.body || '');
         if (response.isSuccess) {
-          showToast.success('댓글이 성공적으로 작성되었습니다.');
           // 댓글 작성 성공 시 query refetch하여 데이터 새로고침
           await queryClient.refetchQueries({
             queryKey: ['vote-status', params.surveyId],
@@ -214,7 +213,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
 
       {/* 드롭다운 컨텐츠 영역 (완전히 독립적) */}
       <AnimatePresence>
-        {isExpanded && (
+        {isExpanded && ballot.animeId && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
