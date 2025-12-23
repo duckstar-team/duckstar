@@ -33,13 +33,6 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
     setIsSearchOpen(!isSearchOpen);
   };
 
-  // 엔터 키 처리
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch(e);
-    }
-  };
-
   // ESC 키로 검색창 닫기
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -88,10 +81,10 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
 
   return (
     <header className="flex h-15 w-full items-center justify-between border-b border-[#DADCE0] bg-white/80 p-4 backdrop-blur-sm transition md:pr-6 md:pl-4">
-      <div className="flex items-center gap-3 md:gap-4">
+      <div className="flex items-center gap-4 md:gap-5">
         {/* Hamburger Menu Button */}
         <button type="button" aria-label="Open menu" onClick={toggleMenu}>
-          <Menu className="text-brand" />
+          <Menu className="text-brand size-7 stroke-[1.5px]" />
         </button>
 
         {/* Logo */}
@@ -131,7 +124,6 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
               placeholder="제목, 초성으로 애니 찾기"
               className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
             />
@@ -159,7 +151,6 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
                 placeholder="애니 검색"
                 className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
                 autoFocus

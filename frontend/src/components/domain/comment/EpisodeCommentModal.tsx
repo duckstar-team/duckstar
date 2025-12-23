@@ -8,6 +8,7 @@ import { getThisWeekRecord } from '@/lib/quarterUtils';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import { showToast } from '@/components/common/Toast';
+import { cn } from '@/lib/utils';
 
 // API 응답 타입 정의
 interface EpisodeDto {
@@ -81,12 +82,18 @@ export default function EpisodeCommentModal({
   rawAnimeData,
   onCommentSubmit,
 }: EpisodeCommentModalProps) {
-  // 화면 크기 감지 (768px 미만에서 드롭다운 사용)
+  const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useModal();
+  const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
+  const [commentContent, setCommentContent] = useState('');
+  const [episodeCurrentPage, setEpisodeCurrentPage] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
+  // 화면 크기 감지 (1024px 미만에서 드롭다운 사용)
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 768);
+      setIsSmallScreen(window.innerWidth < 1024);
     };
 
     checkScreenSize();
@@ -94,12 +101,6 @@ export default function EpisodeCommentModal({
 
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
-  const { isAuthenticated } = useAuth();
-  const { openLoginModal } = useModal();
-  const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
-  const [commentContent, setCommentContent] = useState('');
-  const [episodeCurrentPage, setEpisodeCurrentPage] = useState(0);
-  const [errorMessage, setErrorMessage] = useState('');
 
   // 분기/주차 계산 함수
   const getQuarterAndWeek = (date: Date) => {
@@ -241,7 +242,10 @@ export default function EpisodeCommentModal({
         onClick={onClose}
       >
         <div
-          className="relative mx-4 max-h-[calc(100vh-120px)] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+          className={cn(
+            'relative mx-4 max-h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-2xl',
+            isSmallScreen ? 'max-w-xs' : 'max-w-2xl'
+          )}
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
@@ -358,7 +362,7 @@ export default function EpisodeCommentModal({
                     onImageUpload={(file) => {
                       // 이미지 업로드 기능 활성화
                     }}
-                    placeholder="선택한 에피소드에 대한 댓글을 작성해주세요..."
+                    placeholder="선택한 에피소드에 대한 댓글을 작성해주세요."
                   />
                 </div>
               </div>

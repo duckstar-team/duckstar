@@ -8,7 +8,7 @@ import { useParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { SurveyDto } from '@/types';
 import { queryConfig } from '@/lib/queryConfig';
-import { getBannerTitle } from '@/lib/surveyUtils';
+import { getBannerTitle, getBannerSubtitle } from '@/lib/surveyUtils';
 
 export default function AwardLayout({
   children,
@@ -33,22 +33,31 @@ export default function AwardLayout({
     ...queryConfig.vote,
   });
 
-  const bannerTitle = getBannerTitle(surveyData);
   const isSurveyPage = pathname.startsWith('/award');
+  const isRootAwardPage = pathname === '/award';
+  const isAwardSubPage = isSurveyPage && !isRootAwardPage;
+  const bannerSubtitle = isAwardSubPage
+    ? getBannerSubtitle(surveyData)
+    : undefined;
 
   return (
     <>
-      <VoteBanner customTitle={bannerTitle} />
+      <VoteBanner
+        customTitle={getBannerTitle(surveyData, true)}
+        customSubtitle={bannerSubtitle}
+      />
 
-      {isSurveyPage && surveyData && (
-        <nav className="max-width flex items-center gap-3 text-sm font-medium text-gray-500">
-          <Link href="/award" className="hover:text-brand">
-            어워드 목록
-          </Link>
-          <ChevronRight className="size-4 text-gray-500/80" />
-          <span className="text-gray-700">{bannerTitle}</span>
-        </nav>
-      )}
+      <nav className="max-width my-6! flex items-center gap-3 px-10! text-sm font-medium text-gray-500 @md:text-base">
+        <Link href="/award" className="hover:text-brand">
+          어워드 목록
+        </Link>
+        {isSurveyPage && surveyData && (
+          <>
+            <ChevronRight className="size-4 text-gray-500/80" />
+            <span className="text-gray-700">{getBannerTitle(surveyData)}</span>
+          </>
+        )}
+      </nav>
 
       {children}
     </>

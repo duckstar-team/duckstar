@@ -51,10 +51,10 @@ export async function getScheduleByQuarter(
  * @returns 현재 분기 애니메이션 편성표
  */
 export async function getCurrentSchedule() {
-  // '이번 주' 메뉴에서는 offset을 00시 00분으로 설정
+  // '이번 주' 메뉴에서는 offset을 18시 00분으로 설정
   // return apiCall<AnimePreviewListDto>(`/api/v1/search?hour=0&minute=0`);
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/search?hour=0&minute=0`, {
+    const response = await fetch(`${BASE_URL}/api/v1/search?hour=18&minute=0`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

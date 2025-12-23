@@ -12,13 +12,10 @@ interface VoteStatusProps {
   hasReachedMaxVotes: boolean;
   hasClickedBonus: boolean;
   showGenderSelection: boolean;
-  showNextError: boolean;
   isSubmitting?: boolean;
   onBonusClick: () => void;
-  onNextClick: () => void;
   onBonusButtonPositionChange?: (position: { x: number; y: number }) => void;
   onBonusStampPositionChange?: (position: { x: number; y: number }) => void;
-  showBonusTooltip?: boolean;
 }
 
 export default function VoteStatus({
@@ -28,17 +25,13 @@ export default function VoteStatus({
   hasReachedMaxVotes,
   hasClickedBonus,
   showGenderSelection,
-  showNextError,
   isSubmitting = false,
   onBonusClick,
-  onNextClick,
   onBonusButtonPositionChange,
   onBonusStampPositionChange,
-  showBonusTooltip = false,
 }: VoteStatusProps) {
   const bonusButtonRef = useRef<HTMLDivElement>(null);
   const bonusStampRef = useRef<HTMLDivElement>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // 활성 요소 찾기 (sticky 우선, 없으면 기본)
   const findActiveElement = useCallback(
@@ -72,47 +65,6 @@ export default function VoteStatus({
       });
     }
   }, [onBonusStampPositionChange]);
-
-  // 보너스 버튼 툴팁 위치 업데이트
-  const updateTooltipPosition = useCallback(() => {
-    const activeButton = findActiveElement(
-      '[data-bonus-button]',
-      '[data-vote-section-sticky] [data-bonus-button]'
-    );
-    if (activeButton) {
-      const rect = activeButton.getBoundingClientRect();
-      setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top - 55,
-      });
-    }
-  }, [findActiveElement]);
-
-  // 보너스 버튼이 표시될 때 위치 업데이트
-  useEffect(() => {
-    if (hasReachedMaxVotes && !hasClickedBonus && !showGenderSelection) {
-      const updatePosition = () => {
-        updateBonusButtonPosition();
-        updateTooltipPosition();
-      };
-
-      const timer = setTimeout(updatePosition, 50);
-      window.addEventListener('scroll', updateTooltipPosition, {
-        passive: true,
-      });
-
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('scroll', updateTooltipPosition);
-      };
-    }
-  }, [
-    hasReachedMaxVotes,
-    hasClickedBonus,
-    showGenderSelection,
-    updateBonusButtonPosition,
-    updateTooltipPosition,
-  ]);
 
   // 보너스 도장 위치 업데이트
   const updateStampPosition = useCallback(() => {
@@ -199,11 +151,6 @@ export default function VoteStatus({
                 </TooltipBtn>
               </div>
             )}
-            <VoteButton
-              type="next"
-              onClick={onNextClick}
-              showError={showNextError}
-            />
           </>
         )}
       </div>

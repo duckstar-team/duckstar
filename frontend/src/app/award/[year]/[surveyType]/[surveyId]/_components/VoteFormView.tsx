@@ -35,6 +35,7 @@ import { CandidateCardSkeleton } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
 import { setSurveySession } from '@/lib/surveySessionStorage';
 import { useAuth } from '@/context/AuthContext';
+import VoteButton from './VoteButton';
 
 interface VoteFormViewProps {
   surveyId: number;
@@ -548,9 +549,9 @@ export default function VoteFormView({
   return (
     <main className="min-h-screen w-full" ref={containerRef}>
       {/* 투표 안내 문구 */}
-      <div
+      <section
         className={cn(
-          'mx-auto max-w-[1240px] px-4 pb-6',
+          'max-width px-10!',
           genderSelectionStep !== null && 'flex md:justify-end'
         )}
       >
@@ -562,18 +563,18 @@ export default function VoteFormView({
               : '연령대는 투표 성향 통계에 필수적인 정보예요.'
             : `마음에 든 ${categoryText}에 투표해주세요!`}
         </div>
-      </div>
+      </section>
 
       {/* Sticky VoteSection - 헤더 60px 아래에 고정, 메인 콘텐츠 영역 너비 기준 */}
-      <div
+      <section
         ref={stickyContainerRef}
-        className="@container sticky top-15 z-40 border-b border-gray-200 bg-white"
+        className="@container sticky top-15 z-40 mt-4 border-b border-gray-200 bg-white py-4"
         data-vote-section-sticky
       >
-        <div className="max-width flex items-center justify-between gap-8 @max-md:flex-col @md:gap-16">
+        <div className="max-width flex items-center justify-between gap-8 px-10! @max-lg:flex-col @lg:gap-16">
           {/* Vote Status Section */}
           <div
-            className={`${showGenderSelection && '@md:order-1'} order-2 w-full @md:w-auto`}
+            className={`${showGenderSelection && '@lg:order-1'} order-2 w-full @lg:w-auto`}
           >
             <VoteStatus
               currentVotes={selected.length}
@@ -582,19 +583,16 @@ export default function VoteFormView({
               hasReachedMaxVotes={hasReachedMaxVotes}
               hasClickedBonus={hasClickedBonus}
               showGenderSelection={showGenderSelection}
-              showNextError={showNextError}
               isSubmitting={isSubmitting}
               onBonusClick={handleBonusClick}
-              onNextClick={handleNextClick}
               onBonusButtonPositionChange={handleBonusButtonPositionChange}
               onBonusStampPositionChange={handleBonusStampPositionChange}
-              showBonusTooltip={showBonusTooltip}
             />
           </div>
 
           {/* Search Bar or Gender Selection */}
           {showGenderSelection ? (
-            <div className="order-1 w-full @md:order-2 @md:w-auto">
+            <div className="order-2 w-full @lg:w-auto">
               <GenderSelection
                 genderSelectionStep={genderSelectionStep}
                 setGenderSelectionStep={setGenderSelectionStep}
@@ -609,18 +607,22 @@ export default function VoteFormView({
               />
             </div>
           ) : (
-            <div className="order-1 w-full flex-1 @md:order-1 @md:w-auto">
-              <div className="flex min-w-0 items-center gap-2 @sm:gap-4">
-                <div className="min-w-0 flex-1">
-                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
-                </div>
+            <div className="order-1 flex w-full items-center justify-between @lg:order-2 @lg:w-auto">
+              <div className="min-w-2/3 @lg:min-w-100">
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
               </div>
+
+              <VoteButton
+                type="next"
+                onClick={handleNextClick}
+                showError={showNextError}
+              />
             </div>
           )}
         </div>
-      </div>
+      </section>
 
-      <div className="max-width">
+      <section className="max-width px-10! py-6!">
         <p className="mt-1 mb-6 text-sm text-gray-500">
           선택한 애니메이션 :{' '}
           <span className="text-brand font-bold">{allSelected.length}</span> /{' '}
@@ -716,7 +718,7 @@ export default function VoteFormView({
             ))}
           </motion.div>
         )}
-      </div>
+      </section>
 
       <ConfirmDialog
         isOpen={showConfirmDialog}

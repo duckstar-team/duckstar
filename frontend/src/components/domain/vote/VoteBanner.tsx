@@ -1,6 +1,7 @@
 import { WeekDto } from '@/types';
 import { getSeasonFromDate, getSeasonInKorean } from '@/lib/utils';
 import { format } from 'date-fns';
+import { usePathname } from 'next/navigation';
 
 // Types
 interface VoteBannerProps {
@@ -154,7 +155,7 @@ const BannerDate = ({
   </div>
 );
 
-const BannerContent = ({
+function BannerContent({
   title,
   dateText,
   quarterWeekText,
@@ -164,18 +165,45 @@ const BannerContent = ({
   dateText: string;
   quarterWeekText: string;
   fullDateText: string;
-}) => (
-  <div className={STYLES.mainContent}>
-    <div className={STYLES.textContent}>
-      <BannerTitle title={title} />
-      <BannerDate
-        dateText={dateText}
-        quarterWeekText={quarterWeekText}
-        fullDateText={fullDateText}
-      />
+}) {
+  const pathname = usePathname();
+
+  if (pathname === '/award') {
+    return (
+      <div className={STYLES.mainContent}>
+        <div className={STYLES.textContent}>
+          <BannerTitle title={title} />
+        </div>
+      </div>
+    );
+  } else if (pathname.startsWith('/award')) {
+    return (
+      <div className={STYLES.mainContent}>
+        <div className={STYLES.textContent}>
+          <BannerTitle title={title} />
+          <BannerDate
+            dateText={dateText}
+            quarterWeekText={quarterWeekText}
+            fullDateText={fullDateText}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={STYLES.mainContent}>
+      <div className={STYLES.textContent}>
+        <BannerTitle title={title} />
+        <BannerDate
+          dateText={dateText}
+          quarterWeekText={quarterWeekText}
+          fullDateText={fullDateText}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 // Main component
 export default function VoteBanner({

@@ -14,7 +14,7 @@ export default function SearchBar({
   placeholder,
 }: SearchBarProps) {
   return (
-    <div className="flex items-center gap-4 @max-md:justify-center">
+    <div className="flex items-center gap-4">
       <Search className="text-brand size-5 stroke-2" />
       <div className="w-2/3 max-w-sm">
         <input

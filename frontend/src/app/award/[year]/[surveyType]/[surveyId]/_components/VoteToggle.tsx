@@ -120,10 +120,7 @@ export default function VoteToggle({
                 : '/voted-normal-2025-autumn.svg'
             }
             alt="Selected"
-            className={cn(
-              'aspect-square object-cover',
-              isBonusVote ? 'w-2/3' : 'w-full'
-            )}
+            className="aspect-square w-full object-cover"
           />
         )}
       </button>

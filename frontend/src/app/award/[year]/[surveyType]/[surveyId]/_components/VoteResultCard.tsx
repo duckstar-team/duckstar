@@ -11,7 +11,7 @@ import { getAnimeEpisodes } from '@/api/search';
 import { createComment } from '@/api/comment';
 import { showToast } from '@/components/common/Toast';
 import { getThisWeekRecord } from '@/lib/quarterUtils';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createSurveyComment } from '@/api/vote';
 
@@ -45,11 +45,7 @@ export default function VoteResultCard({
     if (hasComment && !isExpanded) {
       setIsExpanded(true);
     }
-  }, [hasComment, isExpanded]);
-
-  const handleToggleExpanded = useCallback(() => {
-    setIsExpanded((prev) => !prev);
-  }, []);
+  }, [hasComment]);
 
   const handleCommentSubmit = useCallback(
     async (comment: string, images?: File[]) => {
@@ -170,13 +166,13 @@ export default function VoteResultCard({
   }, [router, ballot.animeId]);
 
   return (
-    <div className="w-full">
+    <div className="@container/result w-full">
       {/* 카드 구조 - 세퍼레이터 기준 두 영역 */}
       <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow">
         {/* 카드 내용 - 오른쪽 영역(w-10)을 제외한 나머지 영역 */}
         <div className="flex items-center gap-4 p-4 pr-12">
           {/* 썸네일 */}
-          <div className="relative h-36 w-28 flex-shrink-0">
+          <div className="relative h-24 w-20 flex-shrink-0 @md/result:h-36 @md/result:w-28">
             <img
               src={ballot.mainThumbnailUrl}
               alt={ballot.titleKor}
@@ -191,31 +187,24 @@ export default function VoteResultCard({
 
           {/* 제목 + 시즌 */}
           <div className="flex min-w-0 flex-1 flex-col">
-            <div className="text-lg leading-tight font-semibold break-words text-gray-900">
+            <div className="line-clamp-3 leading-tight font-semibold text-gray-900 @md/result:text-lg">
               {ballot.titleKor || '제목 없음'}
             </div>
-            <div className="mt-1 text-sm text-gray-500">
+            <div className="mt-1 text-xs text-gray-500 @md/result:text-sm">
               {`${ballot.year} ${ballot.quarter}분기 ${ballot.medium}`}
             </div>
           </div>
 
           {/* 기표칸 */}
-          <div className="mr-2 flex-shrink-0">
-            <div className="relative flex size-24 items-center justify-center overflow-hidden rounded-xl border border-gray-300 bg-white">
-              <img
-                src={
-                  ballot.ballotType === 'BONUS'
-                    ? '/voted-bonus-2025-autumn.svg'
-                    : '/voted-normal-2025-autumn.svg'
-                }
-                alt="투표 완료"
-                className={
-                  ballot.ballotType === 'BONUS'
-                    ? 'h-[60px] w-[60px] rounded-xl object-cover'
-                    : 'h-full w-full rounded-xl object-cover'
-                }
-              />
-            </div>
+          <div className="mr-2 size-16 rounded-full border border-gray-300 @max-xs:size-12">
+            <img
+              src={
+                ballot.ballotType === 'BONUS'
+                  ? '/voted-bonus-2025-autumn.svg'
+                  : '/voted-normal-2025-autumn.svg'
+              }
+              alt="투표 완료"
+            />
           </div>
         </div>
 
@@ -237,7 +226,7 @@ export default function VoteResultCard({
           className="absolute top-0 right-0 bottom-0 flex w-10 cursor-pointer items-center justify-center transition-colors hover:bg-gray-100/70"
           onClick={(e) => {
             e.stopPropagation();
-            handleToggleExpanded();
+            setIsExpanded((prev) => !prev);
           }}
         >
           <ChevronDown
@@ -277,14 +266,10 @@ export default function VoteResultCard({
                       e.stopPropagation();
                       handleEpisodeCommentClick();
                     }}
-                    className="inline-flex cursor-pointer items-center gap-2.5 text-right font-['Pretendard'] text-xs leading-snug font-medium text-[#ADB5BD] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:underline"
                   >
                     <span>에피소드 댓글 남기기</span>
-                    <img
-                      src="/icons/post-episodeComment.svg"
-                      alt="에피소드 댓글"
-                      className="h-2 w-1.5"
-                    />
+                    <ChevronRight className="size-[14px]" />
                   </button>
                 </div>
 
