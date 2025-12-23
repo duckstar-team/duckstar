@@ -209,13 +209,13 @@ export default function ThinNavDetail({ mode }: ThinNavDetailProps) {
 
       {mode === 'award' ? (
         // 어워드 모드: 연도와 항목을 함께 순서대로 렌더링
-        <div className="mt-10 flex flex-col gap-1 pr-2">
+        <div className="mt-7 flex flex-col gap-1 pr-2">
           {menuItems.map((item, index) => {
             if (item.type === 'year') {
               return (
                 <div
                   key={`year-${item.label}-${index}`}
-                  className="mb-4 inline-flex flex-col self-stretch px-4 font-semibold text-white"
+                  className="mt-4 inline-flex flex-col self-stretch px-4 font-semibold text-white"
                 >
                   {item.label}
                 </div>

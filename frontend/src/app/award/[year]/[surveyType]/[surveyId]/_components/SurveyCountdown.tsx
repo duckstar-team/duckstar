@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface SurveyCountdownProps {
@@ -13,6 +14,8 @@ export default function SurveyCountdown({
   className,
 }: SurveyCountdownProps) {
   const [remaining, setRemaining] = useState<string>('');
+  const pathname = usePathname();
+  const isAwardPage = pathname === '/award';
 
   useEffect(() => {
     const target =
@@ -23,12 +26,6 @@ export default function SurveyCountdown({
     const update = () => {
       const now = Date.now();
       const diff = target - now;
-
-      // if (diff <= 0) {
-      //   setRemaining('곧 오픈됩니다');
-      //   return;
-      // }
-
       const totalSeconds = Math.floor(diff / 1000);
       const days = Math.floor(totalSeconds / 86400);
       const hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -40,7 +37,7 @@ export default function SurveyCountdown({
         .toString()
         .padStart(2, '0')}분 ${seconds.toString().padStart(2, '0')}초`;
 
-      setRemaining(`오픈까지 ${dayText}${timeText}`);
+      setRemaining(`${dayText}${timeText}`);
     };
 
     update();
@@ -51,9 +48,13 @@ export default function SurveyCountdown({
 
   return (
     <span
-      className={cn('text-lg font-bold text-red-400 @lg:text-xl', className)}
+      className={cn('text-lg font-medium text-white @md:text-2xl', className)}
     >
-      {remaining}
+      오픈까지
+      <br className={isAwardPage ? 'block' : 'hidden'} />{' '}
+      <span className={cn(isAwardPage && 'text-xl @md:text-3xl')}>
+        {remaining}
+      </span>
     </span>
   );
 }

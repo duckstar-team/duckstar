@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { WeekDto } from '@/types';
+import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface HeaderListProps {
   weekDtos: WeekDto[];
   selectedWeek?: WeekDto | null;
   onWeekChange?: (week: WeekDto) => void;
-  className?: string;
 }
 
 export default function HeaderList({
   weekDtos,
   selectedWeek: propSelectedWeek,
   onWeekChange,
-  className = '',
 }: HeaderListProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -97,10 +97,9 @@ export default function HeaderList({
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [isDropdownOpen]);
+
   return (
-    <div
-      className={`inline-flex w-full max-w-sm items-end justify-between gap-18 pl-3 sm:max-w-md sm:gap-70 sm:px-4 md:max-w-lg md:justify-between md:gap-90 md:px-5 lg:max-w-xl lg:justify-start lg:gap-100 xl:w-[750px] xl:justify-between xl:gap-90 ${className}`}
-    >
+    <div className="flex w-full items-end justify-between gap-4 px-3 sm:gap-6 sm:px-4 md:px-5 lg:gap-8">
       {/* 왼쪽 헤더 */}
       <div className="flex items-center justify-start">
         <div className="relative h-12 w-32 overflow-hidden sm:w-36 md:w-40 lg:w-44">
@@ -118,26 +117,19 @@ export default function HeaderList({
       </div>
 
       {/* 오른쪽 드롭다운 메뉴 */}
-      <div className="size- dropdown-container relative flex items-center justify-end gap-1.5">
+      <div className="dropdown-container relative flex items-center justify-end gap-1.5">
         <button
           onClick={handleDropdownToggle}
           className="flex cursor-pointer items-center justify-start gap-1.5 text-right text-sm leading-loose font-normal whitespace-nowrap text-gray-400 hover:text-gray-600 sm:text-base md:text-lg"
         >
           <span>{displayText}</span>
           {/* 드롭다운 아이콘 */}
-          <svg
-            className={`h-4 w-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
+          <ChevronDown
+            className={cn(
+              'size-4 text-gray-400 transition-transform',
+              isDropdownOpen && 'rotate-180'
+            )}
+          />
         </button>
 
         {/* 드롭다운 메뉴 - CLOSED된 주차들만 표시 */}

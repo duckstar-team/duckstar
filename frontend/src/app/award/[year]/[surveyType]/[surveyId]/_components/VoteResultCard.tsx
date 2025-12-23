@@ -17,26 +17,18 @@ import { createSurveyComment } from '@/api/vote';
 
 interface VoteResultCardProps {
   ballot: AnimeBallotDto;
-  onCommentSubmit?: (
-    animeId: number,
-    comment: string,
-    images?: File[]
-  ) => Promise<void>;
-  autoExpand?: boolean;
 }
 
-export default function VoteResultCard({
-  ballot,
-  onCommentSubmit,
-  autoExpand = false,
-}: VoteResultCardProps) {
+export default function VoteResultCard({ ballot }: VoteResultCardProps) {
   const queryClient = useQueryClient();
   // 댓글이 있으면 기본으로 열림
   const hasComment = ballot.surveyCommentDto?.commentId !== null;
-  const [isExpanded, setIsExpanded] = useState(autoExpand || hasComment);
+  const [isExpanded, setIsExpanded] = useState(hasComment);
   const [isEpisodeModalOpen, setIsEpisodeModalOpen] = useState(false);
   const [episodeData, setEpisodeData] = useState<any>(null);
-  const [commentError, setCommentError] = useState<string>('');
+  const [commentBody, setCommentBody] = useState<string>(
+    ballot.surveyCommentDto?.body || ''
+  );
   const router = useRouter();
   const params = useParams();
 
@@ -48,49 +40,30 @@ export default function VoteResultCard({
   }, [hasComment]);
 
   const handleCommentSubmit = useCallback(
-    async (comment: string, images?: File[]) => {
-      // 댓글 길이 검증 (5자 이상)
-      const trimmedComment = comment.trim();
-      if (!trimmedComment || trimmedComment.length < 5) {
-        setCommentError('댓글을 5자 이상 입력해주세요.');
-        return;
-      }
-
-      setCommentError('');
-
+    async (comment: string) => {
       try {
-        if (onCommentSubmit) {
-          // 부모에서 전달된 핸들러 사용
-          await onCommentSubmit(ballot.animeId, comment, images);
-        } else {
-          // 직접 API 호출
-          await createSurveyComment(Number(params.surveyId), {
-            animeId: ballot.animeId,
-            body: comment,
-            candidateId: ballot.animeCandidateId,
-          });
-        }
-
-        // 댓글 작성 성공 시 query refetch하여 데이터 새로고침
-        await queryClient.refetchQueries({
-          queryKey: ['vote-status', params.surveyId],
+        const response = await createSurveyComment(Number(params.surveyId), {
+          animeId: ballot.animeId,
+          body: comment,
+          candidateId: ballot.animeCandidateId,
         });
 
-        // 댓글 작성 성공 시 드롭다운 열어두기 (작성한 댓글이 보이도록)
-        setIsExpanded(true);
-        showToast.success('댓글이 성공적으로 작성되었습니다.');
+        setCommentBody(response.result?.body || '');
+        if (response.isSuccess) {
+          // 댓글 작성 성공 시 query refetch하여 데이터 새로고침
+          await queryClient.refetchQueries({
+            queryKey: ['vote-status', params.surveyId],
+          });
+          showToast.success('댓글이 성공적으로 작성되었습니다.');
+        } else {
+          showToast.error(response.message);
+        }
       } catch (error) {
         console.error('댓글 작성 실패:', error);
         showToast.error('댓글 작성에 실패했습니다. 다시 시도해주세요.');
       }
     },
-    [
-      onCommentSubmit,
-      ballot.animeId,
-      ballot.animeCandidateId,
-      params.surveyId,
-      queryClient,
-    ]
+    [ballot.animeId, ballot.animeCandidateId, params.surveyId, queryClient]
   );
 
   // 에피소드별 댓글 모달 열기
@@ -172,7 +145,7 @@ export default function VoteResultCard({
         {/* 카드 내용 - 오른쪽 영역(w-10)을 제외한 나머지 영역 */}
         <div className="flex items-center gap-4 p-4 pr-12">
           {/* 썸네일 */}
-          <div className="relative h-24 w-20 flex-shrink-0 @md/result:h-36 @md/result:w-28">
+          <div className="relative h-full w-20 flex-shrink-0 lg:h-36 lg:w-28">
             <img
               src={ballot.mainThumbnailUrl}
               alt={ballot.titleKor}
@@ -186,56 +159,68 @@ export default function VoteResultCard({
           </div>
 
           {/* 제목 + 시즌 */}
-          <div className="flex min-w-0 flex-1 flex-col">
-            <div className="line-clamp-3 leading-tight font-semibold text-gray-900 @md/result:text-lg">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="line-clamp-3 leading-tight font-semibold text-gray-900 lg:text-lg">
               {ballot.titleKor || '제목 없음'}
             </div>
-            <div className="mt-1 text-xs text-gray-500 @md/result:text-sm">
-              {`${ballot.year} ${ballot.quarter}분기 ${ballot.medium}`}
-            </div>
-          </div>
+            <div className="flex w-full items-center justify-between gap-2">
+              <div className="mt-1 self-start text-xs text-gray-500 lg:text-sm">
+                {`${ballot.year} ${ballot.quarter}분기 ${ballot.medium}`}
+              </div>
 
-          {/* 기표칸 */}
-          <div className="mr-2 size-16 rounded-full border border-gray-300 @max-xs:size-12">
-            <img
-              src={
-                ballot.ballotType === 'BONUS'
-                  ? '/voted-bonus-2025-autumn.svg'
-                  : '/voted-normal-2025-autumn.svg'
-              }
-              alt="투표 완료"
-            />
+              {/* 기표칸 */}
+              <div className="mr-2 size-12 flex-shrink-0 rounded-full border border-gray-300 sm:size-14 lg:size-16">
+                <img
+                  src={
+                    ballot.ballotType === 'BONUS'
+                      ? '/voted-bonus-2025-autumn.svg'
+                      : '/voted-normal-2025-autumn.svg'
+                  }
+                  alt="투표 완료"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 세퍼레이터 라인 */}
-        <div className="absolute top-1/2 right-10 h-15 w-px -translate-y-1/2 bg-gray-200"></div>
-
         {/* 왼쪽 영역 - 메인 카드 클릭 */}
         <button
-          className="absolute inset-0 cursor-pointer transition-colors hover:bg-gray-50/30"
+          className={cn(
+            'absolute inset-0 cursor-pointer transition-colors disabled:cursor-auto!',
+            !ballot.animeId ? 'cursor-auto!' : 'hover:bg-gray-50/30'
+          )}
           onClick={handleCardClick}
           style={{
             clipPath:
               'polygon(0 0, calc(100% - 40px) 0, calc(100% - 40px) 100%, 0 100%)',
           }}
+          disabled={!ballot.animeId}
         />
+        {ballot.animeId && (
+          <>
+            {/* 세퍼레이터 라인 */}
+            <div className="absolute top-1/2 right-10 h-15 w-px -translate-y-1/2 bg-gray-200"></div>
+            {/* 오른쪽 영역 - 드롭다운 토글 */}
 
-        {/* 오른쪽 영역 - 드롭다운 토글 */}
-        <button
-          className="absolute top-0 right-0 bottom-0 flex w-10 cursor-pointer items-center justify-center transition-colors hover:bg-gray-100/70"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsExpanded((prev) => !prev);
-          }}
-        >
-          <ChevronDown
-            className={cn(
-              'h-5 w-5 text-gray-600 transition',
-              isExpanded && 'rotate-180'
-            )}
-          />
-        </button>
+            <button
+              className={cn(
+                'absolute top-0 right-0 bottom-0 flex w-10 cursor-pointer items-center justify-center transition',
+                ballot.animeId && 'bg-[#FFF7F0] hover:opacity-70'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded((prev) => !prev);
+              }}
+            >
+              <ChevronDown
+                className={cn(
+                  'h-5 w-5 text-gray-600 transition',
+                  isExpanded && 'rotate-180'
+                )}
+              />
+            </button>
+          </>
+        )}
       </div>
 
       {/* 드롭다운 컨텐츠 영역 (완전히 독립적) */}
@@ -277,23 +262,15 @@ export default function VoteResultCard({
                 <div onClick={(e) => e.stopPropagation()}>
                   <CommentPostForm
                     onSubmit={handleCommentSubmit}
-                    onChange={() => {
-                      // 댓글 입력 시 에러 메시지 초기화
-                      if (commentError) {
-                        setCommentError('');
-                      }
-                    }}
                     placeholder={`${ballot.titleKor}에 대한 평가를 남겨주세요!`}
                     maxLength={500}
-                    initialValue={ballot.surveyCommentDto?.body || ''}
-                    disabled={!!ballot.surveyCommentDto?.commentId}
+                    initialValue={commentBody}
+                    disabled={
+                      !!ballot.surveyCommentDto?.commentId ||
+                      commentBody.length > 0
+                    }
                     phase="form"
                   />
-                  {commentError && (
-                    <div className="mt-2 ml-2 text-sm text-red-500">
-                      {commentError}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

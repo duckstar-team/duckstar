@@ -15,6 +15,7 @@ export interface CommentDto {
   attachedImageUrl?: string;
   body: string;
   replyCount: number;
+  surveyCandidateId: number | null;
 }
 
 // 답글 DTO

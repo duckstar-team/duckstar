@@ -36,6 +36,8 @@ import { cn } from '@/lib/utils';
 import { setSurveySession } from '@/lib/surveySessionStorage';
 import { useAuth } from '@/context/AuthContext';
 import VoteButton from './VoteButton';
+import QuarterNavigation from './QuarterNavigation';
+import SelectionStatusNavigation from './SelectionStatusNavigation';
 
 interface VoteFormViewProps {
   surveyId: number;
@@ -43,7 +45,7 @@ interface VoteFormViewProps {
   onRevoteSuccess: () => void;
   voteStatus?: VoteStatusType;
   surveyType?: SurveyType;
-  surveyEndDate?: string;
+  surveyEndDate?: Date;
 }
 
 export default function VoteFormView({
@@ -57,7 +59,7 @@ export default function VoteFormView({
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
-  const stickyContainerRef = useRef<HTMLDivElement>(null);
+  const voteSectionRef = useRef<HTMLDivElement>(null);
 
   // 상태 관리
   const [selected, setSelected] = useState<number[]>([]);
@@ -89,6 +91,11 @@ export default function VoteFormView({
   const [hasTooltipBeenHidden, setHasTooltipBeenHidden] = useState(false);
   const [hasStampTooltipBeenHidden, setHasStampTooltipBeenHidden] =
     useState(false);
+  const [activeQuarter, setActiveQuarter] = useState<number | null>(null);
+  const quarterRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [showOnlySelected, setShowOnlySelected] = useState(false);
+  const [isVoteSectionSticky, setIsVoteSectionSticky] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(0);
 
   // 후보 목록 조회
   const {
@@ -138,25 +145,50 @@ export default function VoteFormView({
     }
   }, [candidateData?.result?.memberAgeGroup, selectedAgeGroup, isRevoteMode]);
 
-  // 재투표 모드일 때 기존 투표 내역으로 초기화
+  // 재투표 모드 처리
   useEffect(() => {
     if (isRevoteMode && voteStatusData?.result?.animeBallotDtos) {
-      const normalVotes = voteStatusData.result.animeBallotDtos
-        .filter((ballot) => ballot.ballotType === 'NORMAL')
-        .map((ballot) => ballot.animeCandidateId);
-      const bonusVotes = voteStatusData.result.animeBallotDtos
-        .filter((ballot) => ballot.ballotType === 'BONUS')
-        .map((ballot) => ballot.animeCandidateId);
-
-      setSelected(normalVotes);
-      setBonusSelected(bonusVotes);
-
-      if (bonusVotes.length > 0) {
-        setIsBonusMode(true);
-        setHasClickedBonus(true);
-      }
+      // 재투표 모드에서는 성별 선택 화면을 표시하지 않음 (초기 모드 유지)
+      setGenderSelectionStep(null);
+      setScrollCompleted(false);
     }
   }, [isRevoteMode, voteStatusData]);
+
+  // 재투표 모드로 이동할 때 기존 투표 내역으로 초기화
+  useEffect(() => {
+    if (isRevoteMode) {
+      // 재투표 모드에서는 기존 투표 데이터를 기표칸에 미리 채우기
+      if (
+        voteStatusData?.result?.animeBallotDtos &&
+        voteStatusData.result.animeBallotDtos.length > 0
+      ) {
+        const normalVotes = voteStatusData.result.animeBallotDtos
+          .filter((ballot) => ballot.ballotType === 'NORMAL')
+          .map((ballot) => ballot.animeCandidateId);
+        const bonusVotes = voteStatusData.result.animeBallotDtos
+          .filter((ballot) => ballot.ballotType === 'BONUS')
+          .map((ballot) => ballot.animeCandidateId);
+
+        // 기존 투표 데이터를 즉시 상태에 설정
+        setSelected(normalVotes);
+        setBonusSelected(bonusVotes);
+
+        // 보너스 투표가 있으면 보너스 모드 활성화
+        if (bonusVotes.length > 0) {
+          setIsBonusMode(true);
+          setHasClickedBonus(true);
+        }
+
+        // 성별 정보 설정
+        if (
+          candidateData?.result?.memberGender &&
+          candidateData.result.memberGender !== 'UNKNOWN'
+        ) {
+          setSelectedGender(candidateData.result.memberGender);
+        }
+      }
+    }
+  }, [isRevoteMode, voteStatusData, candidateData]);
 
   // 에러 카드 관리 헬퍼 함수
   const updateErrorCards = (animeId: number, shouldAdd: boolean) => {
@@ -188,35 +220,58 @@ export default function VoteFormView({
     }
   }, [selected.length]);
 
-  // Container query가 메인 콘텐츠 영역 너비를 기준으로 동작하도록 설정
+  // 사이드바 너비 계산
   useEffect(() => {
-    if (!containerRef.current || !stickyContainerRef.current) return;
+    const calculateSidebarWidth = () => {
+      if (!containerRef.current) return;
 
-    const updateContainerWidth = () => {
-      if (containerRef.current && stickyContainerRef.current) {
-        // 부모 <main> 요소의 실제 너비 측정 (사이드바 제외)
-        const mainElement = containerRef.current.closest('main');
-        if (mainElement) {
-          const rect = mainElement.getBoundingClientRect();
-          stickyContainerRef.current.style.width = `${rect.width}px`;
+      const mainElement = containerRef.current.closest('main');
+      if (mainElement) {
+        const rect = mainElement.getBoundingClientRect();
+        // 메인 요소의 left offset이 사이드바 너비
+        setSidebarWidth(rect.left);
+      } else {
+        // 사이드바를 직접 찾기
+        const sidebar = document.querySelector(
+          'aside, [data-sidebar], .sidebar'
+        );
+        if (sidebar) {
+          const sidebarRect = sidebar.getBoundingClientRect();
+          setSidebarWidth(sidebarRect.width);
         }
       }
     };
 
-    updateContainerWidth();
-    window.addEventListener('resize', updateContainerWidth);
-
-    // ResizeObserver로 부모 요소 크기 변경 감지
-    const resizeObserver = new ResizeObserver(updateContainerWidth);
-    if (containerRef.current.parentElement) {
-      resizeObserver.observe(containerRef.current.parentElement);
-    }
+    calculateSidebarWidth();
+    window.addEventListener('resize', calculateSidebarWidth);
 
     return () => {
-      window.removeEventListener('resize', updateContainerWidth);
-      resizeObserver.disconnect();
+      window.removeEventListener('resize', calculateSidebarWidth);
     };
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!voteSectionRef.current) return;
+
+      const rect = voteSectionRef.current.getBoundingClientRect();
+      const shouldBeSticky = rect.top <= 60; // 헤더 높이 60px
+
+      if (shouldBeSticky !== isVoteSectionSticky) {
+        setIsVoteSectionSticky(shouldBeSticky);
+      }
+    };
+
+    // 초기 체크
+    handleScroll();
+
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isVoteSectionSticky]);
 
   // 보너스 툴팁 표시 조건
   useEffect(() => {
@@ -268,6 +323,16 @@ export default function VoteFormView({
           return 0;
         });
     }
+
+    // 선택한 후보만 보기 필터링
+    if (showOnlySelected) {
+      return filteredAnimeList.filter(
+        (anime) =>
+          selected.includes(anime.animeCandidateId) ||
+          bonusSelected.includes(anime.animeCandidateId)
+      );
+    }
+
     return filteredAnimeList;
   }, [
     filteredAnimeList,
@@ -275,11 +340,178 @@ export default function VoteFormView({
     scrollCompleted,
     selected,
     bonusSelected,
+    showOnlySelected,
   ]);
 
   const totalCandidates =
     candidateData?.result?.candidatesCount || animeList.length;
   const categoryText = getCategoryText('ANIME'); // 기본값 사용
+
+  // YEAR_END 타입일 때 분기별 네비게이션을 위한 로직
+  const isYearEnd = String(surveyType).toUpperCase() === 'YEAR_END';
+
+  // 분기별로 그룹화된 후보 목록 (필터링된 상태에서도 작동하도록 animeList 기준)
+  const quartersInList = useMemo(() => {
+    if (!isYearEnd) return [];
+    const quarters = new Set<number>();
+    animeList.forEach((anime) => {
+      if (anime.quarter) {
+        quarters.add(anime.quarter);
+      }
+    });
+    return Array.from(quarters).sort((a, b) => a - b);
+  }, [isYearEnd, animeList]);
+
+  // 분기별 첫 번째 후보 찾기 (실제 렌더링되는 animeList 기준)
+  const getFirstAnimeInQuarter = useCallback(
+    (quarter: number): AnimeCandidateDto | null => {
+      return animeList.find((anime) => anime.quarter === quarter) || null;
+    },
+    [animeList]
+  );
+
+  // 분기 클릭 핸들러
+  const handleQuarterClick = useCallback(
+    (quarter: number) => {
+      if (quarter === 1) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const firstAnime = getFirstAnimeInQuarter(quarter);
+      if (!firstAnime) {
+        console.warn(`분기 ${quarter}의 첫 번째 후보를 찾을 수 없습니다.`);
+        return;
+      }
+
+      // ref 또는 data 속성으로 요소 찾기
+      const tryScroll = () => {
+        // 먼저 ref에서 찾기
+        let element = quarterRefs.current.get(firstAnime.animeCandidateId);
+
+        // ref에서 못 찾으면 data-anime-id 속성으로 직접 찾기
+        if (!element) {
+          const candidateElement = document.querySelector(
+            `[data-anime-id="${firstAnime.animeCandidateId}"]`
+          );
+          if (candidateElement) {
+            element = candidateElement as HTMLDivElement;
+          }
+        }
+
+        if (element) {
+          const offset = 100; // 헤더 높이 고려
+          const rect = element.getBoundingClientRect();
+          const scrollTop =
+            window.pageYOffset || document.documentElement.scrollTop;
+          const elementTop = rect.top + scrollTop;
+          const targetPosition = elementTop - offset;
+
+          window.scrollTo({
+            top: Math.max(0, targetPosition),
+            behavior: 'smooth',
+          });
+        } else {
+          // ref가 아직 설정되지 않았다면 잠시 후 재시도
+          setTimeout(() => {
+            let retryElement = quarterRefs.current.get(
+              firstAnime.animeCandidateId
+            );
+            if (!retryElement) {
+              const candidateElement = document.querySelector(
+                `[data-anime-id="${firstAnime.animeCandidateId}"]`
+              );
+              if (candidateElement) {
+                retryElement = candidateElement as HTMLDivElement;
+              }
+            }
+            if (retryElement) {
+              const offset = 100;
+              const rect = retryElement.getBoundingClientRect();
+              const scrollTop =
+                window.pageYOffset || document.documentElement.scrollTop;
+              const elementTop = rect.top + scrollTop;
+              const targetPosition = elementTop - offset;
+              window.scrollTo({
+                top: Math.max(0, targetPosition),
+                behavior: 'smooth',
+              });
+            } else {
+              console.warn(`분기 ${quarter}의 요소를 찾을 수 없습니다.`);
+            }
+          }, 100);
+        }
+      };
+
+      // 다음 프레임에서 실행하여 DOM 업데이트 대기
+      requestAnimationFrame(() => {
+        tryScroll();
+      });
+    },
+    [getFirstAnimeInQuarter, animeList]
+  );
+
+  // 스크롤 이벤트로 현재 보이는 분기 감지
+  useEffect(() => {
+    if (
+      !isYearEnd ||
+      quartersInList.length === 0 ||
+      searchQuery.trim() !== ''
+    ) {
+      return;
+    }
+
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollPosition = window.scrollY + 150; // 헤더 높이 + 여유 공간
+
+          // 스크롤이 맨 위에 있으면 1분기
+          if (scrollPosition < 200) {
+            setActiveQuarter(1);
+            ticking = false;
+            return;
+          }
+
+          // 각 분기의 첫 번째 후보 위치 확인
+          for (let i = quartersInList.length - 1; i >= 0; i--) {
+            const quarter = quartersInList[i];
+            const firstAnime = getFirstAnimeInQuarter(quarter);
+            if (!firstAnime) continue;
+
+            const element = quarterRefs.current.get(
+              firstAnime.animeCandidateId
+            );
+            if (element) {
+              const rect = element.getBoundingClientRect();
+              const scrollTop =
+                window.pageYOffset || document.documentElement.scrollTop;
+              const elementTop = rect.top + scrollTop;
+              if (scrollPosition >= elementTop) {
+                setActiveQuarter(quarter);
+                ticking = false;
+                return;
+              }
+            }
+          }
+
+          // 아무것도 매칭되지 않으면 첫 번째 분기
+          setActiveQuarter(quartersInList[0] || null);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // 초기 실행
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isYearEnd, quartersInList, getFirstAnimeInQuarter, searchQuery]);
 
   // 핸들러 함수들
   const handleSelect = (animeId: number, isBonusVote?: boolean) => {
@@ -551,11 +783,11 @@ export default function VoteFormView({
       {/* 투표 안내 문구 */}
       <section
         className={cn(
-          'max-width px-10!',
+          'max-width',
           genderSelectionStep !== null && 'flex md:justify-end'
         )}
       >
-        <div className="flex h-8 w-fit items-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-semibold text-gray-600 shadow-md backdrop-blur-sm">
+        <div className="flex h-8 w-fit items-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-semibold whitespace-nowrap text-gray-600 shadow-md backdrop-blur-sm">
           <Megaphone className="size-4.5" />
           {showGenderSelection
             ? genderSelectionStep === 'gender'
@@ -565,13 +797,76 @@ export default function VoteFormView({
         </div>
       </section>
 
-      {/* Sticky VoteSection - 헤더 60px 아래에 고정, 메인 콘텐츠 영역 너비 기준 */}
+      {/* Sticky VoteSection - 헤더 60px 아래에 고정, 사이드바 너비 제외 */}
+      {isVoteSectionSticky && (
+        <div
+          className="fixed top-[60px] z-40 border-b border-gray-200 bg-white py-4"
+          data-vote-section-sticky
+          style={{
+            top: '60px',
+            left: `${sidebarWidth}px`,
+            width: `calc(100vw - ${sidebarWidth}px)`,
+            zIndex: 40,
+          }}
+        >
+          <div className="max-width flex items-center justify-between gap-8 @max-lg:flex-col @lg:gap-16">
+            {/* Vote Status Section */}
+            <div
+              className={`${showGenderSelection && '@lg:order-1'} order-2 w-full @lg:w-auto`}
+            >
+              <VoteStatus
+                currentVotes={selected.length}
+                bonusVotesUsed={bonusSelected.length}
+                isBonusMode={isBonusMode}
+                hasReachedMaxVotes={hasReachedMaxVotes}
+                hasClickedBonus={hasClickedBonus}
+                showGenderSelection={showGenderSelection}
+                isSubmitting={isSubmitting}
+                onBonusClick={handleBonusClick}
+                onBonusButtonPositionChange={handleBonusButtonPositionChange}
+                onBonusStampPositionChange={handleBonusStampPositionChange}
+              />
+            </div>
+
+            {/* Search Bar or Gender Selection */}
+            {showGenderSelection ? (
+              <div className="order-2 w-full @lg:w-auto">
+                <GenderSelection
+                  genderSelectionStep={genderSelectionStep}
+                  setGenderSelectionStep={setGenderSelectionStep}
+                  selectedGender={selectedGender}
+                  selectedAgeGroup={selectedAgeGroup}
+                  setSelectedGender={setSelectedGender}
+                  setSelectedAgeGroup={setSelectedAgeGroup}
+                  onBackClick={handleBackClick}
+                  onSubmitClick={handleSubmitClick}
+                  isSubmitting={isSubmitting}
+                  isRevoteMode={isRevoteMode}
+                />
+              </div>
+            ) : (
+              <div className="order-1 flex w-full items-center justify-between @lg:order-2 @lg:w-auto">
+                <div className="min-w-2/3 @lg:min-w-100">
+                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                </div>
+
+                <VoteButton
+                  type="next"
+                  onClick={handleNextClick}
+                  showError={showNextError}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 원본 VoteSection */}
       <section
-        ref={stickyContainerRef}
-        className="@container sticky top-15 z-40 mt-4 border-b border-gray-200 bg-white py-4"
-        data-vote-section-sticky
+        ref={voteSectionRef}
+        className="@container mt-4 border-b border-gray-200 bg-white py-4"
       >
-        <div className="max-width flex items-center justify-between gap-8 px-10! @max-lg:flex-col @lg:gap-16">
+        <div className="max-width flex items-center justify-between gap-8 @max-lg:flex-col @lg:gap-16">
           {/* Vote Status Section */}
           <div
             className={`${showGenderSelection && '@lg:order-1'} order-2 w-full @lg:w-auto`}
@@ -622,7 +917,7 @@ export default function VoteFormView({
         </div>
       </section>
 
-      <section className="max-width px-10! py-6!">
+      <section className="max-width py-6!">
         <p className="mt-1 mb-6 text-sm text-gray-500">
           선택한 애니메이션 :{' '}
           <span className="text-brand font-bold">{allSelected.length}</span> /{' '}
@@ -659,63 +954,81 @@ export default function VoteFormView({
             }}
             style={{ willChange: 'auto' }}
           >
-            {animeList.map((anime, index) => (
-              <motion.div
-                key={anime.animeCandidateId}
-                initial={{ opacity: 1, y: 0, scale: 1 }}
-                animate={{
-                  opacity: showGenderSelection
-                    ? scrollCompleted
-                      ? [0, 1]
-                      : [1, 0.8, 0.5, 0.2, 0]
-                    : 1,
-                  y: 0,
-                  scale: 1,
-                }}
-                transition={{
-                  duration: showGenderSelection ? 0.5 : 0.3,
-                  delay: showGenderSelection
-                    ? scrollCompleted
-                      ? index * 0.05
-                      : 0
-                    : 0,
-                  ease: 'easeInOut',
-                  times:
-                    showGenderSelection && !scrollCompleted
-                      ? [0, 0.2, 0.4, 0.6, 1]
-                      : undefined,
-                }}
-                style={{
-                  pointerEvents: showGenderSelection ? 'none' : 'auto',
-                  willChange: showGenderSelection ? 'opacity' : 'auto',
-                }}
-              >
-                <VoteCard
-                  anime={anime}
-                  checked={
-                    selected.includes(anime.animeCandidateId) ||
-                    bonusSelected.includes(anime.animeCandidateId)
-                  }
-                  onChange={
-                    showGenderSelection
-                      ? undefined
-                      : (isBonusVote?: boolean) =>
-                          handleSelect(anime.animeCandidateId, isBonusVote)
-                  }
-                  showError={
-                    !isBonusMode && errorCards.has(anime.animeCandidateId)
-                  }
-                  currentVotes={selected.length}
-                  isBonusMode={isBonusMode}
-                  isBonusVote={bonusSelected.includes(anime.animeCandidateId)}
-                  onMouseLeave={() =>
-                    handleCardMouseLeave(anime.animeCandidateId)
-                  }
-                  disabled={showGenderSelection}
-                  showGenderSelection={showGenderSelection}
-                />
-              </motion.div>
-            ))}
+            {animeList.map((anime, index) => {
+              // 분기의 첫 번째 후보인지 확인 (animeList 기준)
+              const isFirstInQuarter =
+                isYearEnd &&
+                anime.quarter &&
+                animeList.findIndex((a) => a.quarter === anime.quarter) ===
+                  index;
+
+              return (
+                <motion.div
+                  key={anime.animeCandidateId}
+                  ref={(el) => {
+                    if (el && isFirstInQuarter) {
+                      quarterRefs.current.set(anime.animeCandidateId, el);
+                    } else if (!isFirstInQuarter) {
+                      quarterRefs.current.delete(anime.animeCandidateId);
+                    }
+                  }}
+                  data-quarter={isYearEnd ? anime.quarter : undefined}
+                  data-anime-id={anime.animeCandidateId}
+                  initial={{ opacity: 1, y: 0, scale: 1 }}
+                  animate={{
+                    opacity: showGenderSelection
+                      ? scrollCompleted
+                        ? [0, 1]
+                        : [1, 0.8, 0.5, 0.2, 0]
+                      : 1,
+                    y: 0,
+                    scale: 1,
+                  }}
+                  transition={{
+                    duration: showGenderSelection ? 0.5 : 0.3,
+                    delay: showGenderSelection
+                      ? scrollCompleted
+                        ? index * 0.05
+                        : 0
+                      : 0,
+                    ease: 'easeInOut',
+                    times:
+                      showGenderSelection && !scrollCompleted
+                        ? [0, 0.2, 0.4, 0.6, 1]
+                        : undefined,
+                  }}
+                  style={{
+                    pointerEvents: showGenderSelection ? 'none' : 'auto',
+                    willChange: showGenderSelection ? 'opacity' : 'auto',
+                  }}
+                >
+                  <VoteCard
+                    anime={anime}
+                    checked={
+                      selected.includes(anime.animeCandidateId) ||
+                      bonusSelected.includes(anime.animeCandidateId)
+                    }
+                    onChange={
+                      showGenderSelection
+                        ? undefined
+                        : (isBonusVote?: boolean) =>
+                            handleSelect(anime.animeCandidateId, isBonusVote)
+                    }
+                    showError={
+                      !isBonusMode && errorCards.has(anime.animeCandidateId)
+                    }
+                    currentVotes={selected.length}
+                    isBonusMode={isBonusMode}
+                    isBonusVote={bonusSelected.includes(anime.animeCandidateId)}
+                    onMouseLeave={() =>
+                      handleCardMouseLeave(anime.animeCandidateId)
+                    }
+                    disabled={showGenderSelection}
+                    showGenderSelection={showGenderSelection}
+                  />
+                </motion.div>
+              );
+            })}
           </motion.div>
         )}
       </section>
@@ -725,6 +1038,26 @@ export default function VoteFormView({
         onConfirm={handleConfirmDialogConfirm}
         onCancel={() => setShowConfirmDialog(false)}
       />
+
+      {/* 분기 네비게이션 - YEAR_END 타입일 때만 표시 */}
+      {isYearEnd && quartersInList.length > 0 && !showGenderSelection && (
+        <QuarterNavigation
+          quarters={quartersInList}
+          onQuarterClick={handleQuarterClick}
+          activeQuarter={activeQuarter}
+        />
+      )}
+
+      {/* 선택 현황 네비게이션 - 항상 표시 */}
+      {!showGenderSelection && (
+        <SelectionStatusNavigation
+          selectedCount={allSelected.length}
+          totalCount={totalCandidates}
+          isFiltered={showOnlySelected}
+          onToggleFilter={() => setShowOnlySelected((prev) => !prev)}
+          isYearEnd={isYearEnd}
+        />
+      )}
     </main>
   );
 }

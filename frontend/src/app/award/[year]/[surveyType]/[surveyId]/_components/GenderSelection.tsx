@@ -83,6 +83,16 @@ export default function GenderSelection({
     onSubmitClick();
   };
 
+  const handleGenderClick = (gender: MemberGender) => {
+    setSelectedGender(gender);
+    setGenderSelectionStep('age');
+  };
+
+  const handleAgeClick = (ageGroup: MemberAgeGroup) => {
+    setSelectedAgeGroup(ageGroup);
+    onSubmitClick();
+  };
+
   return (
     <div className="flex items-center justify-between gap-8">
       {/* Gender Selection */}
@@ -91,8 +101,8 @@ export default function GenderSelection({
           {GENDER_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
-              className="flex items-center gap-2 text-sm font-medium"
-              onClick={() => setSelectedGender(value)}
+              className="flex items-center gap-2 text-sm font-medium break-keep"
+              onClick={() => handleGenderClick(value)}
             >
               <span
                 className={cn(
@@ -123,7 +133,7 @@ export default function GenderSelection({
               <button
                 key={value}
                 className="flex items-center gap-2 text-sm font-medium"
-                onClick={() => setSelectedAgeGroup(value)}
+                onClick={() => handleAgeClick(value)}
               >
                 <span
                   className={cn(

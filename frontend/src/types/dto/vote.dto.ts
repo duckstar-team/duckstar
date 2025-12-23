@@ -137,6 +137,8 @@ export interface AnimeCandidateDto {
 export enum Medium {
   Movie = 'MOVIE',
   Tva = 'TVA',
+  Ott = 'OTT',
+  Special = 'SPECIAL',
 }
 
 export enum MemberAgeGroup {
@@ -163,8 +165,8 @@ export interface SurveyDto {
   status: VoteStatusType;
   year: number;
   type: SurveyType;
-  startDate: string;
-  endDate: string;
+  startDateTime: Date;
+  endDateTime: Date;
 }
 
 export enum VoteStatusType {

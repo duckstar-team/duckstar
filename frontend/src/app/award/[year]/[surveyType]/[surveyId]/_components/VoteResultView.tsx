@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { differenceInDays } from 'date-fns';
 import { AnimeBallotDto, ApiResponseAnimeVoteHistoryDto } from '@/types';
 import { ChevronRight, RefreshCcw, Share2 } from 'lucide-react';
 import { queryConfig } from '@/lib/queryConfig';
@@ -14,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 
 interface VoteResultViewProps {
   surveyId: number;
+  endDate?: Date;
   onRevoteClick: () => void;
   showConfetti?: boolean;
   onConfettiComplete?: () => void;
@@ -21,6 +23,7 @@ interface VoteResultViewProps {
 
 export default function VoteResultView({
   surveyId,
+  endDate,
   onRevoteClick,
   showConfetti = false,
   onConfettiComplete,
@@ -47,7 +50,24 @@ export default function VoteResultView({
       return '덕스타 결과는 일요일 22시에 공개됩니다.';
     }
 
-    return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 2주 뒤에 공개됩니다.`;
+    if (!endDate) {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 곧 공개됩니다.`;
+    }
+
+    // D-day 계산 (date-fns 사용)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    const diffDays = differenceInDays(end, today);
+
+    if (diffDays < 0) {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 곧 공개됩니다.`;
+    } else if (diffDays === 0) {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 오늘 공개됩니다.`;
+    } else {
+      return `${voteHistory?.year}년 ${getSurveyTypeLabel(voteHistory?.type)} 결과는 ${diffDays}일 뒤에 공개됩니다.`;
+    }
   };
 
   const categoryText = getCategoryText('ANIME');
@@ -57,7 +77,7 @@ export default function VoteResultView({
   }
 
   return (
-    <main className="max-width px-10!">
+    <main className="max-width">
       <ConfettiEffect isActive={showConfetti} onComplete={onConfettiComplete} />
       <section className="relative mb-6 flex w-full flex-col items-center gap-2 rounded-lg bg-gray-100 p-4 sm:gap-3">
         <div className="text-center text-xl font-semibold text-black sm:text-2xl lg:text-3xl">
@@ -66,7 +86,7 @@ export default function VoteResultView({
             : '소중한 참여 감사합니다!'}
         </div>
 
-        <div className="text-sm sm:text-base">
+        <div className="text-center text-sm sm:text-base">
           {getResultAnnouncementMessage()}
         </div>
 
@@ -77,15 +97,17 @@ export default function VoteResultView({
       </section>
 
       <section className="flex w-full flex-col items-center gap-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 @max-md:justify-center">
-        <div className="flex flex-col justify-center rounded-md bg-gray-100 px-4 py-0.5 font-medium text-gray-600 @max-md:text-sm">
-          제출 시각:{' '}
+        <div className="max-xs:flex-col flex items-center justify-center rounded-md bg-gray-100 px-4 py-0.5 text-center font-medium text-gray-600 @max-md:text-sm">
+          <div className="flex items-center gap-1">
+            제출 시각<span className="max-xs:hidden mr-1 inline-block">: </span>
+          </div>
           {voteHistory.submittedAt
             ? new Date(voteHistory.submittedAt).toLocaleString('ko-KR')
             : '정보 없음'}
         </div>
 
-        <div className="flex gap-8 @md:gap-20">
-          <div className="flex items-center gap-4 @max-sm:flex-col @md:gap-6">
+        <div className="flex items-center justify-center gap-8 max-[375px]:flex-col max-[375px]:gap-4 @md:gap-20">
+          <div className="flex items-center gap-4 @max-sm:flex-col @md:gap-10">
             <VoteStamp
               type="normal"
               currentVotes={voteHistory.normalCount || 0}
@@ -118,7 +140,7 @@ export default function VoteResultView({
       </section>
 
       <section className="mt-8">
-        <div className="mb-3 flex items-end justify-between sm:mb-4">
+        <div className="max-xs:flex-col mb-3 flex items-center justify-between sm:mb-4 @xs:items-end">
           <h2 className="text-lg font-semibold sm:text-xl">
             투표한 {categoryText}
           </h2>
@@ -147,11 +169,13 @@ export default function VoteResultView({
         Array.isArray(voteHistory.animeBallotDtos) &&
         voteHistory.animeBallotDtos.length > 0 ? (
           <div className="grid w-full grid-cols-1 gap-4 @md:grid-cols-2">
-            {voteHistory.animeBallotDtos.map((ballot: AnimeBallotDto) => (
-              <div key={ballot.animeId}>
-                <VoteResultCard ballot={ballot} />
-              </div>
-            ))}
+            {voteHistory.animeBallotDtos.map(
+              (ballot: AnimeBallotDto, index: number) => (
+                <div key={index}>
+                  <VoteResultCard ballot={ballot} />
+                </div>
+              )
+            )}
           </div>
         ) : (
           <div className="py-8 text-center sm:py-12">

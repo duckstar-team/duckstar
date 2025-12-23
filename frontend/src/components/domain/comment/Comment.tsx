@@ -52,6 +52,7 @@ const Comment: React.FC<CommentProps> = ({
     profileImageUrl,
     episodeNumber,
     attachedImageUrl,
+    surveyCandidateId,
   } = comment;
 
   // 삭제된 댓글인지 확인
@@ -209,7 +210,7 @@ const Comment: React.FC<CommentProps> = ({
             {canDeleteThis && (
               <div className="ml-auto flex h-[22px] items-center justify-end">
                 <button
-                  onClick={() => onDelete?.(commentId)}
+                  onClick={() => onDelete?.(commentId, surveyCandidateId)}
                   className="relative size-[17px] shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70"
                   aria-label="댓글 삭제"
                 >
