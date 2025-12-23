@@ -143,9 +143,9 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
       {/* 카드 구조 - 세퍼레이터 기준 두 영역 */}
       <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow">
         {/* 카드 내용 - 오른쪽 영역(w-10)을 제외한 나머지 영역 */}
-        <div className="flex items-center gap-4 p-4 pr-12">
+        <div className="flex gap-4 p-4 pr-12 lg:items-center">
           {/* 썸네일 */}
-          <div className="relative h-24 w-20 flex-shrink-0 @md/result:h-36 @md/result:w-28">
+          <div className="relative h-24 w-20 flex-shrink-0 lg:h-36 lg:w-28">
             <img
               src={ballot.mainThumbnailUrl}
               alt={ballot.titleKor}
@@ -160,16 +160,16 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
 
           {/* 제목 + 시즌 */}
           <div className="flex min-w-0 flex-1 flex-col">
-            <div className="line-clamp-3 leading-tight font-semibold text-gray-900 @md/result:text-lg">
+            <div className="line-clamp-3 leading-tight font-semibold text-gray-900 lg:text-lg">
               {ballot.titleKor || '제목 없음'}
             </div>
-            <div className="mt-1 text-xs text-gray-500 @md/result:text-sm">
+            <div className="mt-1 text-xs text-gray-500 lg:text-sm">
               {`${ballot.year} ${ballot.quarter}분기 ${ballot.medium}`}
             </div>
           </div>
 
           {/* 기표칸 */}
-          <div className="mr-2 size-16 rounded-full border border-gray-300 @max-xs:size-12">
+          <div className="mr-2 size-12 flex-shrink-0 rounded-full border border-gray-300 sm:size-14 lg:size-16">
             <img
               src={
                 ballot.ballotType === 'BONUS'

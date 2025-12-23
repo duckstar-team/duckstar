@@ -92,14 +92,15 @@ export default function ConfettiEffect({ isActive, onComplete }: ConfettiEffectP
       {confetti.map((piece) => (
         <motion.div
           key={piece.id}
-          className="absolute"
+          className="absolute pointer-events-none"
           style={{
             left: piece.x,
             top: piece.y,
             width: piece.size,
             height: piece.size,
             backgroundColor: piece.color,
-            borderRadius: '2px'
+            borderRadius: '2px',
+            pointerEvents: 'none'
           }}
           initial={{ 
             y: piece.y,

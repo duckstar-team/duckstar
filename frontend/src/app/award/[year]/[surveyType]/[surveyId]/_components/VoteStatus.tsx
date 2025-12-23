@@ -107,7 +107,7 @@ export default function VoteStatus({
   return (
     <div className="flex min-h-16 w-full flex-wrap items-center justify-center overflow-visible">
       {/* Vote Stamps and Buttons Container */}
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex max-[425px]:flex-col items-center justify-center gap-8 max-[425px]:gap-4">
         {/* Normal Vote Stamp */}
         <VoteStamp
           type="normal"

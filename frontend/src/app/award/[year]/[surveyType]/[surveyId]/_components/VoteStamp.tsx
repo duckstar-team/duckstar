@@ -15,9 +15,9 @@ interface VoteStampProps {
 }
 
 const TEXT_SIZES = {
-  small: 'text-sm sm:text-base lg:text-lg xl:text-[24px]',
-  medium: 'text-base sm:text-lg lg:text-xl xl:text-[28px]',
-  large: 'text-lg sm:text-xl lg:text-2xl xl:text-[32px]',
+  small: 'text-xs sm:text-sm lg:text-base xl:text-lg',
+  medium: 'text-sm sm:text-base lg:text-lg xl:text-xl',
+  large: 'text-base sm:text-lg lg:text-xl xl:text-2xl',
 } as const;
 
 const COLORS = {
@@ -70,16 +70,16 @@ const VoteCountText = ({
 
   if (showResult) {
     return (
-      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-[13px]">
-        <div className="flex items-center justify-center pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px]">
+      <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2">
+        <div className="flex items-center justify-center pt-1 pb-0.5 sm:pt-1.5 sm:pb-0.5 lg:pt-2 lg:pb-1">
           <span
-            className={`justify-center text-right ${TEXT_SIZES.large} font-bold ${textColor}`}
+            className={`justify-center text-right ${TEXT_SIZES.medium} font-bold ${textColor}`}
           >
             ×
           </span>
         </div>
 
-        <div className="flex items-center justify-center pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px]">
+        <div className="flex items-center justify-center pt-1 pb-0.5 sm:pt-1.5 sm:pb-0.5 lg:pt-2 lg:pb-1">
           <span
             className={`justify-center text-right font-bold ${textColor} ${textSizeClass}`}
           >
@@ -109,14 +109,14 @@ const BonusVoteCountText = ({
 
   if (showResult) {
     return (
-      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-[13px]">
-        <div className="flex items-center justify-center pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px]">
-          <span className={`font-bold ${TEXT_SIZES.large} ${COLORS.bonus}`}>
+      <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2">
+        <div className="flex items-center justify-center pt-1 pb-0.5 sm:pt-1.5 sm:pb-0.5 lg:pt-2 lg:pb-1">
+          <span className={`font-bold ${TEXT_SIZES.medium} ${COLORS.bonus}`}>
             ×
           </span>
         </div>
 
-        <div className="flex items-center justify-center pt-1.5 pb-0.5 sm:pt-2 sm:pb-1 lg:pt-2.5 lg:pb-[5px]">
+        <div className="flex items-center justify-center pt-1 pb-0.5 sm:pt-1.5 sm:pb-0.5 lg:pt-2 lg:pb-1">
           <span className={`font-bold ${COLORS.bonus} ${textSizeClass}`}>
             {bonusVotesUsed}표
           </span>
@@ -153,9 +153,9 @@ export default function VoteStamp({
   };
 
   if (type === 'bonus') {
-    return (
-      <div className="flex items-center gap-4">
-        {/* Bonus Vote Stamp */}
+  return (
+    <div className="flex items-center gap-3 sm:gap-3.5 md:gap-4">
+      {/* Bonus Vote Stamp */}
         <TooltipBtn
           text="보너스 표는 2개가 모여야 일반 표 1개와 같습니다."
           defaultIsOpen={true}
@@ -179,7 +179,7 @@ export default function VoteStamp({
           <img
             src="/icons/voteSection-bonus-stamp.svg"
             alt="Bonus Stamp"
-            className="size-12 object-cover md:size-14"
+            className="size-10 object-cover sm:size-11 md:size-12"
           />
         </TooltipBtn>
         {/* Bonus Vote Count */}
@@ -192,12 +192,12 @@ export default function VoteStamp({
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3 sm:gap-3.5 md:gap-4">
       {/* Normal Vote Stamp */}
       <img
         src={imageSrc}
         alt="Normal Vote Stamp"
-        className="size-12 object-cover md:size-14"
+        className="size-10 object-cover sm:size-11 md:size-12"
       />
       {/* Vote Count Text */}
       <VoteCountText
