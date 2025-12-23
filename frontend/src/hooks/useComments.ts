@@ -10,9 +10,11 @@ import {
 } from '@/api/comment';
 import { SortOption } from '@/components/ui/SortingMenu';
 import { useModal } from '@/components/layout/AppContainer';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useComments(animeId: number) {
   const { openLoginModal } = useModal();
+  const queryClient = useQueryClient();
 
   // 댓글 관련 상태
   const [comments, setComments] = useState<CommentDto[]>([]);
@@ -124,7 +126,7 @@ export function useComments(animeId: number) {
 
   // 댓글 삭제
   const deleteCommentHandler = useCallback(
-    async (commentId: number) => {
+    async (commentId: number, surveyCandidateId?: number) => {
       const shouldDelete = confirm('댓글을 삭제하시겠습니까?');
       if (!shouldDelete) {
         return;
@@ -132,6 +134,9 @@ export function useComments(animeId: number) {
 
       try {
         await deleteComment(commentId);
+        await queryClient.refetchQueries({
+          queryKey: ['vote-status', surveyCandidateId],
+        });
         loadComments(0, true);
       } catch (error) {
         alert('댓글 삭제에 실패했습니다. 다시 시도해주세요.');

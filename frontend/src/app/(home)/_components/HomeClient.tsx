@@ -471,7 +471,7 @@ export default function HomeClient() {
   }
 
   return (
-    <div className="bg-white font-sans">
+    <div>
       {/* 상단 홈 배너 */}
       <div className="relative h-[200px] w-full overflow-hidden xl:h-[280px]">
         {/* 배경 배너 이미지 */}
@@ -499,114 +499,111 @@ export default function HomeClient() {
         </div>
       </div>
 
-      {/* 통합 메인 컨테이너 */}
-      <div className="w-full bg-[#F8F9FA]">
-        {/* 통합 컨테이너 - 모든 섹션을 하나로 묶음 */}
-        <div className="w-full">
-          {/* 홈배너 섹션 */}
-          <div className="flex min-h-[300px] items-center justify-center pt-6 pb-5 xl:py-12">
-            <div className="flex w-full flex-col items-center justify-center gap-4 xl:mr-6 xl:flex-row xl:gap-[75px]">
-              {/* HomeBanner 컴포넌트 */}
-              <div className="flex justify-center xl:justify-start">
-                <HomeBanner homeBannerDtos={homeData.result.homeBannerDtos} />
-              </div>
+      {/* 통합 컨테이너 - 모든 섹션을 하나로 묶음 */}
+      <div className="w-full">
+        {/* 홈배너 섹션 */}
+        <div className="flex min-h-[300px] items-center justify-center pt-6 pb-5 xl:py-12">
+          <div className="flex flex-col items-center justify-center gap-4 xl:mr-6 xl:flex-row xl:gap-[75px]">
+            {/* HomeBanner 컴포넌트 */}
+            <div className="flex justify-center xl:justify-start">
+              <HomeBanner homeBannerDtos={homeData.result.homeBannerDtos} />
+            </div>
 
-              {/* ButtonVote 컴포넌트 */}
-              <div className="flex justify-center xl:justify-start">
-                <ButtonVote
-                  weekDtos={[
-                    homeData.result.currentWeekDto,
-                    ...homeData.result.pastWeekDtos,
-                  ]}
-                />
-              </div>
+            {/* ButtonVote 컴포넌트 */}
+            <div className="flex justify-center xl:justify-start">
+              <ButtonVote
+                weekDtos={[
+                  homeData.result.currentWeekDto,
+                  ...homeData.result.pastWeekDtos,
+                ]}
+              />
             </div>
           </div>
+        </div>
 
-          {/* 헤더 리스트 영역 */}
-          <div className="sticky top-[60px] z-20 w-full rounded-lg bg-white px-4 pt-2 sm:pt-3">
-            <div className="flex w-full flex-col justify-center gap-4 xl:flex-row xl:gap-[50px]">
-              {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
-              <div className="w-[full] xl:w-auto">
-                <HeaderList
-                  weekDtos={homeData.result.pastWeekDtos}
-                  selectedWeek={selectedWeek}
-                  onWeekChange={handleLeftPanelWeekChange}
-                />
-              </div>
-              {/* Right Panel 헤더 - 해외 순위 (데스크톱에서만 같은 줄에 표시) */}
-              <div className="hidden w-full xl:block xl:w-auto">
-                <RightHeaderList
-                  selectedTab={selectedRightTab}
-                  onTabChange={handleRightPanelTabChange}
-                />
-              </div>
+        {/* 헤더 리스트 영역 */}
+        <div className="sticky top-[60px] z-20 w-full bg-white px-4 pt-2 sm:pt-3">
+          <div className="mx-auto flex w-full max-w-[1147px] flex-col gap-4 xl:flex-row xl:items-end xl:justify-center xl:gap-6">
+            {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
+            <div className="w-full xl:w-[750px] xl:flex-shrink-0">
+              <HeaderList
+                weekDtos={homeData.result.pastWeekDtos}
+                selectedWeek={selectedWeek}
+                onWeekChange={handleLeftPanelWeekChange}
+              />
+            </div>
+            {/* Right Panel 헤더 - 해외 순위 (데스크톱에서만 같은 줄에 표시) */}
+            <div className="hidden w-full xl:block xl:w-[373px] xl:flex-shrink-0">
+              <RightHeaderList
+                selectedTab={selectedRightTab}
+                onTabChange={handleRightPanelTabChange}
+              />
             </div>
           </div>
+        </div>
 
-          {/* 메인 컨텐츠 영역 - Left Panel + Right Panel */}
-          <div className="px-4 py-6">
-            <div className="flex w-full flex-col justify-center gap-4 xl:flex-row xl:gap-[57px]">
-              {/* Left Panel */}
-              <div className="flex w-full flex-col items-center gap-4 xl:w-auto">
-                {leftPanelLoading ? (
-                  <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white p-5">
-                    <div className="flex h-full items-center justify-center">
-                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
-                      <span className="ml-3 text-gray-600">
-                        Left Panel 데이터 로딩 중...
-                      </span>
-                    </div>
-                  </div>
-                ) : leftPanelError ? (
-                  <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white p-5">
-                    <div className="flex h-full flex-col items-center justify-center">
-                      <div className="mb-2 text-4xl text-red-500">⚠️</div>
-                      <h3 className="mb-2 text-lg font-semibold text-red-600">
-                        데이터 로딩 실패
-                      </h3>
-                      <p className="mb-4 text-center text-sm text-gray-600">
-                        {leftPanelError}
-                      </p>
-                      <button
-                        onClick={() => window.location.reload()}
-                        className="rounded bg-rose-500 px-4 py-2 text-sm text-white hover:bg-rose-600"
-                      >
-                        다시 시도
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex w-full max-w-[750px] justify-center xl:w-[750px]">
-                    <HomeChart
-                      duckstarRankPreviews={leftPanelData || []}
-                      selectedWeek={selectedWeek}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* 모바일용 해외 순위 헤더 - 한국 순위 패널 아래, 해외 순위 패널 위에 위치 */}
-              <div className="w-full xl:hidden">
-                <div className="mx-auto w-full rounded-lg bg-white py-1">
-                  <div className="mx-auto flex justify-center">
-                    <RightHeaderList
-                      selectedTab={selectedRightTab}
-                      onTabChange={handleRightPanelTabChange}
-                    />
+        {/* 메인 컨텐츠 영역 - Left Panel + Right Panel */}
+        <div className="px-4 py-6">
+          <div className="mx-auto flex w-full max-w-[1147px] flex-col gap-4 xl:flex-row xl:justify-center xl:gap-6">
+            {/* Left Panel */}
+            <div className="flex w-full flex-col items-center gap-4 xl:w-[750px] xl:flex-shrink-0">
+              {leftPanelLoading ? (
+                <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white p-5">
+                  <div className="flex h-full items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
+                    <span className="ml-3 text-gray-600">
+                      Left Panel 데이터 로딩 중...
+                    </span>
                   </div>
                 </div>
-              </div>
+              ) : leftPanelError ? (
+                <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white p-5">
+                  <div className="flex h-full flex-col items-center justify-center">
+                    <div className="mb-2 text-4xl text-red-500">⚠️</div>
+                    <h3 className="mb-2 text-lg font-semibold text-red-600">
+                      데이터 로딩 실패
+                    </h3>
+                    <p className="mb-4 text-center text-sm text-gray-600">
+                      {leftPanelError}
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="rounded bg-rose-500 px-4 py-2 text-sm text-white hover:bg-rose-600"
+                    >
+                      다시 시도
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex w-full max-w-[750px] justify-center">
+                  <HomeChart
+                    duckstarRankPreviews={leftPanelData || []}
+                    selectedWeek={selectedWeek}
+                  />
+                </div>
+              )}
+            </div>
 
-              {/* Right Panel - 해외 순위 */}
-              <div className="flex w-full justify-center xl:w-auto xl:justify-start">
-                <RightPanel
-                  rightPanelData={rightPanelData}
-                  selectedRightTab={selectedRightTab}
-                  rightPanelLoading={rightPanelLoading}
-                  selectedWeek={selectedWeek}
-                />
+            {/* 모바일용 해외 순위 헤더 - 한국 순위 패널 아래, 해외 순위 패널 위에 위치 */}
+            <div className="w-full xl:hidden">
+              <div className="mx-auto w-full rounded-lg bg-white py-1">
+                <div className="mx-auto flex justify-center">
+                  <RightHeaderList
+                    selectedTab={selectedRightTab}
+                    onTabChange={handleRightPanelTabChange}
+                  />
+                </div>
               </div>
+            </div>
+
+            {/* Right Panel - 해외 순위 */}
+            <div className="flex w-full justify-center xl:w-[373px] xl:flex-shrink-0 xl:justify-start">
+              <RightPanel
+                rightPanelData={rightPanelData}
+                selectedRightTab={selectedRightTab}
+                rightPanelLoading={rightPanelLoading}
+                selectedWeek={selectedWeek}
+              />
             </div>
           </div>
         </div>

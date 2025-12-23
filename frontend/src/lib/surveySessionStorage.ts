@@ -13,7 +13,7 @@ const SESSION_KEY_PREFIX = 'survey_session_';
  * @returns 세션키 이름
  */
 function getSessionKeyName(surveyType: SurveyType): string {
-  return `${SESSION_KEY_PREFIX}${surveyType}`;
+  return `${SESSION_KEY_PREFIX}${surveyType.toUpperCase()}`;
 }
 
 /**
@@ -26,6 +26,11 @@ export function setSurveySession(
   endDate: string
 ): void {
   if (typeof window === 'undefined') return;
+
+  // 이미 유효한 세션키가 있으면 저장하지 않음
+  if (hasValidSurveySession(surveyType)) {
+    return;
+  }
 
   try {
     const key = getSessionKeyName(surveyType);

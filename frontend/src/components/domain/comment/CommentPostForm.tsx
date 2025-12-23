@@ -11,7 +11,6 @@ import { ko } from 'date-fns/locale';
 interface CommentPostFormProps {
   onSubmit?: (comment: string, images?: File[]) => Promise<void>;
   onImageUpload?: (file: File) => void;
-  onChange?: (value: string) => void;
   placeholder?: string;
   maxLength?: number;
   disabled?: boolean;
@@ -24,7 +23,6 @@ interface CommentPostFormProps {
 export default function CommentPostForm({
   onSubmit,
   onImageUpload,
-  onChange,
   placeholder = '댓글을 입력하세요.',
   maxLength = 1000,
   disabled = false,
@@ -223,7 +221,6 @@ export default function CommentPostForm({
             value={comment}
             onChange={(e) => {
               setComment(e.target.value);
-              onChange?.(e.target.value);
             }}
             onCompositionStart={() => {
               isComposingRef.current = true;

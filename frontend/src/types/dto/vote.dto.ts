@@ -137,6 +137,8 @@ export interface AnimeCandidateDto {
 export enum Medium {
   Movie = 'MOVIE',
   Tva = 'TVA',
+  Ott = 'OTT',
+  Special = 'SPECIAL',
 }
 
 export enum MemberAgeGroup {
