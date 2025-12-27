@@ -1,64 +1,49 @@
-'use client';
-
-import VoteBanner from '@/components/domain/vote/VoteBanner';
-import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
 import React from 'react';
-import { useParams, usePathname } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { SurveyDto } from '@/types';
-import { queryConfig } from '@/lib/queryConfig';
-import { getBannerTitle, getBannerSubtitle } from '@/lib/surveyUtils';
+import { OG_LOGO_URL } from '@/lib/constants';
+import { Metadata } from 'next';
+import AwardHeader from './_components/AwardHeader';
+
+export const metadata: Metadata = {
+  title: '애니메이션 어워드 - 덕스타',
+  description:
+    '애니메이션 어워드에서 최고의 애니메이션에 투표하고, 어워드 결과를 확인하세요.',
+  keywords:
+    '애니메이션 어워드, 애니메이션 순위, 덕스타 어워드, 분기 애니메이션 어워드',
+  openGraph: {
+    title: '애니메이션 어워드 - 덕스타',
+    description:
+      '애니메이션 어워드에서 최고의 애니메이션에 투표하고, 어워드 결과를 확인하세요.',
+    url: 'https://duckstar.kr/award',
+    siteName: '덕스타',
+    type: 'website',
+    images: [
+      {
+        url: OG_LOGO_URL,
+        width: 1200,
+        height: 630,
+        alt: '덕스타 - 애니메이션 투표',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '애니메이션 어워드 - 덕스타',
+    description: '애니메이션 투표에 참여하고 주차별 순위를 확인하세요',
+    images: [OG_LOGO_URL],
+  },
+  alternates: {
+    canonical: 'https://duckstar.kr/award',
+  },
+};
 
 export default function AwardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const params = useParams();
-  const pathname = usePathname();
-  const surveyId = params.surveyId ? parseInt(params.surveyId as string) : null;
-
-  // survey 정보 조회
-  const { data: surveyData } = useQuery<SurveyDto>({
-    queryKey: ['survey', surveyId],
-    queryFn: async () => {
-      if (!surveyId) throw new Error('Survey ID가 없습니다');
-      const response = await fetch(`/api/v1/vote/surveys/${surveyId}`);
-      if (!response.ok) throw new Error('설문 조회 실패');
-      const result = await response.json();
-      return result.result || result;
-    },
-    enabled: !!surveyId,
-    ...queryConfig.vote,
-  });
-
-  const isSurveyPage = pathname.startsWith('/award');
-  const isRootAwardPage = pathname === '/award';
-  const isAwardSubPage = isSurveyPage && !isRootAwardPage;
-  const bannerSubtitle = isAwardSubPage
-    ? getBannerSubtitle(surveyData)
-    : undefined;
-
   return (
     <>
-      <VoteBanner
-        customTitle={getBannerTitle(surveyData, true)}
-        customSubtitle={bannerSubtitle}
-      />
-
-      <nav className="max-width my-6! flex items-center gap-3 text-sm font-medium break-keep text-gray-500 @md:text-base">
-        <Link href="/award" className="hover:text-brand">
-          어워드 목록
-        </Link>
-        {isSurveyPage && surveyData && (
-          <>
-            <ChevronRight className="size-4 text-gray-500/80" />
-            <span className="text-gray-700">{getBannerTitle(surveyData)}</span>
-          </>
-        )}
-      </nav>
-
+      <AwardHeader />
       <div className="pb-20">{children}</div>
     </>
   );

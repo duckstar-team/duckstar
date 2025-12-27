@@ -1,3 +1,5 @@
+'use client';
+
 import { WeekDto } from '@/types';
 import { getSeasonFromDate, getSeasonInKorean } from '@/lib/utils';
 import { format } from 'date-fns';
