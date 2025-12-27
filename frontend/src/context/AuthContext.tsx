@@ -16,7 +16,6 @@ import {
 } from '@/api/auth';
 import { getCurrentUser } from '@/api/member';
 import { setUserId } from '@/utils/gtag';
-import { clearAllSurveySessions } from '@/lib/surveySessionStorage';
 
 interface User {
   id: number;
@@ -248,8 +247,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // localStorage에서 토큰 제거
       if (typeof window !== 'undefined') {
         localStorage.removeItem('accessToken');
-        // 어워드 투표 세션키 삭제
-        clearAllSurveySessions();
         // 프로필 설정 페이지에서 로그아웃 시 홈페이지로 리다이렉트
         if (window.location.pathname === '/profile-setup') {
           window.location.href = '/';

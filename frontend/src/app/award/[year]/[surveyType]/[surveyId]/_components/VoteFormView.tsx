@@ -674,9 +674,9 @@ export default function VoteFormView({
             queryKey: ['anime-candidates', surveyId],
           });
 
-          // 비로그인 상태에서 투표 성공 시 세션키 저장
+          // 비로그인 상태에서 투표 성공 시 세션키 저장 (투표 내역 저장: false)
           if (!isAuthenticated && surveyType && surveyEndDate) {
-            setSurveySession(surveyType, surveyEndDate);
+            setSurveySession(surveyType, surveyEndDate, false);
           }
 
           onRevoteSuccess();
@@ -721,9 +721,9 @@ export default function VoteFormView({
             queryKey: ['anime-candidates', surveyId],
           });
 
-          // 비로그인 상태에서 투표 성공 시 세션키 저장
+          // 비로그인 상태에서 투표 성공 시 세션키 저장 (투표 내역 저장: false)
           if (!isAuthenticated && surveyType && surveyEndDate) {
-            setSurveySession(surveyType, surveyEndDate);
+            setSurveySession(surveyType, surveyEndDate, false);
           }
 
           onRevoteSuccess();
