@@ -108,9 +108,9 @@ export default function VoteCard({
   );
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <motion.div
-        className={`w-full rounded-xl border-2 bg-white shadow transition-all duration-200 ease-in-out ${disabled ? 'cursor-pointer' : 'cursor-pointer hover:shadow-lg'} ${
+        className={`h-full w-full rounded-xl border-2 bg-white shadow transition-all duration-200 ease-in-out ${disabled ? 'cursor-pointer' : 'cursor-pointer hover:shadow-lg'} ${
           showError
             ? 'border-[#CB285E]/80 shadow-red-200/50'
             : 'border-gray-200'
@@ -128,7 +128,7 @@ export default function VoteCard({
         onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
         onClick={!disabled ? handleCardClick : undefined}
       >
-        <div className="flex gap-4 p-4 lg:items-center">
+        <div className="flex h-full gap-4 p-4 lg:items-start">
           {/* 썸네일 */}
           <div className="relative h-full w-20 flex-shrink-0 lg:h-36 lg:w-28">
             <img
@@ -149,7 +149,7 @@ export default function VoteCard({
               {anime.titleKor}
             </div>
 
-            <div className="flex w-full flex-1 items-start justify-between gap-1">
+            <div className="flex w-full items-start justify-between gap-1">
               {/* 시즌 정보 */}
               <div className="text-xs text-gray-500 lg:text-sm">
                 {`${anime.year} ${anime.quarter}분기 ${anime.medium}`}

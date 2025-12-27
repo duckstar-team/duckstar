@@ -1001,6 +1001,7 @@ export default function VoteFormView({
                     pointerEvents: showGenderSelection ? 'none' : 'auto',
                     willChange: showGenderSelection ? 'opacity' : 'auto',
                   }}
+                  className="h-full"
                 >
                   <VoteCard
                     anime={anime}
