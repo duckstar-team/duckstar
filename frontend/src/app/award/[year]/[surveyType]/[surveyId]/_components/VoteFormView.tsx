@@ -38,6 +38,7 @@ import { useAuth } from '@/context/AuthContext';
 import VoteButton from './VoteButton';
 import QuarterNavigation from './QuarterNavigation';
 import SelectionStatusNavigation from './SelectionStatusNavigation';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 interface VoteFormViewProps {
   surveyId: number;
@@ -81,21 +82,13 @@ export default function VoteFormView({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasReachedMaxVotes, setHasReachedMaxVotes] = useState(false);
-  const [bonusButtonPosition, setBonusButtonPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const [bonusStampPosition, setBonusStampPosition] = useState({ x: 0, y: 0 });
-  const [showBonusTooltip, setShowBonusTooltip] = useState(true);
-  const [showStampTooltip, setShowStampTooltip] = useState(true);
-  const [hasTooltipBeenHidden, setHasTooltipBeenHidden] = useState(false);
-  const [hasStampTooltipBeenHidden, setHasStampTooltipBeenHidden] =
-    useState(false);
   const [activeQuarter, setActiveQuarter] = useState<number | null>(null);
   const quarterRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [showOnlySelected, setShowOnlySelected] = useState(false);
   const [isVoteSectionSticky, setIsVoteSectionSticky] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(0);
+
+  // 사이드바 너비 계산 (커스텀 훅 사용)
+  const sidebarWidth = useSidebarWidth();
 
   // 후보 목록 조회
   const {
@@ -210,46 +203,6 @@ export default function VoteFormView({
     }
   }, [selected.length, hasReachedMaxVotes]);
 
-  // 선택 초기화 시 툴팁 리셋
-  useEffect(() => {
-    if (selected.length === 0) {
-      setHasTooltipBeenHidden(false);
-      setHasStampTooltipBeenHidden(false);
-      setShowBonusTooltip(true);
-      setShowStampTooltip(true);
-    }
-  }, [selected.length]);
-
-  // 사이드바 너비 계산
-  useEffect(() => {
-    const calculateSidebarWidth = () => {
-      if (!containerRef.current) return;
-
-      const mainElement = containerRef.current.closest('main');
-      if (mainElement) {
-        const rect = mainElement.getBoundingClientRect();
-        // 메인 요소의 left offset이 사이드바 너비
-        setSidebarWidth(rect.left);
-      } else {
-        // 사이드바를 직접 찾기
-        const sidebar = document.querySelector(
-          'aside, [data-sidebar], .sidebar'
-        );
-        if (sidebar) {
-          const sidebarRect = sidebar.getBoundingClientRect();
-          setSidebarWidth(sidebarRect.width);
-        }
-      }
-    };
-
-    calculateSidebarWidth();
-    window.addEventListener('resize', calculateSidebarWidth);
-
-    return () => {
-      window.removeEventListener('resize', calculateSidebarWidth);
-    };
-  }, []);
-
   useEffect(() => {
     const handleScroll = () => {
       if (!voteSectionRef.current) return;
@@ -272,28 +225,6 @@ export default function VoteFormView({
       window.removeEventListener('scroll', handleScroll);
     };
   }, [isVoteSectionSticky]);
-
-  // 보너스 툴팁 표시 조건
-  useEffect(() => {
-    const shouldShowBonusTooltip =
-      hasReachedMaxVotes &&
-      !hasClickedBonus &&
-      !genderSelectionStep &&
-      !hasTooltipBeenHidden;
-    setShowBonusTooltip(shouldShowBonusTooltip);
-  }, [
-    hasReachedMaxVotes,
-    hasClickedBonus,
-    genderSelectionStep,
-    hasTooltipBeenHidden,
-  ]);
-
-  // 스탬프 툴팁 표시 조건
-  useEffect(() => {
-    const shouldShowStampTooltip =
-      hasClickedBonus && !genderSelectionStep && !hasStampTooltipBeenHidden;
-    setShowStampTooltip(shouldShowStampTooltip);
-  }, [hasClickedBonus, genderSelectionStep, hasStampTooltipBeenHidden]);
 
   // 전체 애니메이션 리스트 생성
   const allAnimeList = candidateData?.result?.animeCandidates || [];
@@ -556,8 +487,6 @@ export default function VoteFormView({
   };
 
   const handleBonusClick = useCallback(() => {
-    setHasTooltipBeenHidden(true);
-    setShowBonusTooltip(false);
     setIsBonusMode(true);
     setHasClickedBonus(true);
   }, []);
@@ -744,20 +673,6 @@ export default function VoteFormView({
     }
   };
 
-  const handleBonusButtonPositionChange = useCallback(
-    (position: { x: number; y: number }) => {
-      setBonusButtonPosition(position);
-    },
-    []
-  );
-
-  const handleBonusStampPositionChange = useCallback(
-    (position: { x: number; y: number }) => {
-      setBonusStampPosition(position);
-    },
-    []
-  );
-
   // 로딩 상태
   if (isLoading) {
     return <CandidateCardSkeleton />;
@@ -823,8 +738,6 @@ export default function VoteFormView({
                 showGenderSelection={showGenderSelection}
                 isSubmitting={isSubmitting}
                 onBonusClick={handleBonusClick}
-                onBonusButtonPositionChange={handleBonusButtonPositionChange}
-                onBonusStampPositionChange={handleBonusStampPositionChange}
               />
             </div>
 
@@ -880,8 +793,6 @@ export default function VoteFormView({
               showGenderSelection={showGenderSelection}
               isSubmitting={isSubmitting}
               onBonusClick={handleBonusClick}
-              onBonusButtonPositionChange={handleBonusButtonPositionChange}
-              onBonusStampPositionChange={handleBonusStampPositionChange}
             />
           </div>
 

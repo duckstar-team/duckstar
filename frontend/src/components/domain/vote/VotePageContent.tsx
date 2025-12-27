@@ -21,6 +21,7 @@ import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
 import SearchBar from '@/components/domain/search/SearchBar';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 export default function VotePageContent() {
   const { openLoginModal } = useModal();
@@ -158,6 +159,7 @@ export default function VotePageContent() {
   const [duplicatePreventionEndTime, setDuplicatePreventionEndTime] = useState<
     number | null
   >(null); // 중복 방지 종료 시간
+  const sidebarWidth = useSidebarWidth();
 
   // 이번주차 뷰 모드 변경 핸들러
   const handleCurrentViewModeChange = (mode: 'large' | 'small') => {
@@ -901,9 +903,13 @@ export default function VotePageContent() {
         ref={currentWeekSearchBarRef}
         className={`p-4 shadow-sm ${
           isCurrentWeekSearchBarSticky && !isLastWeekSearchBarSticky
-            ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px]'
+            ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px]'
             : 'mb-7 bg-white md:mb-8'
         }`}
+        style={{
+          left: `${sidebarWidth}px`,
+          width: `calc(100vw - ${sidebarWidth}px)`,
+        }}
       >
         <div
           className={`mx-auto flex w-full items-center justify-between gap-2 sm:gap-4 ${getOptimalContainerWidth()} `}
@@ -1077,9 +1083,13 @@ export default function VotePageContent() {
             ref={lastWeekSearchBarRef}
             className={`p-4 shadow-sm ${
               isLastWeekSearchBarSticky
-                ? 'fixed top-[60px] right-0 left-0 z-20 bg-white/80 backdrop-blur-[6px]'
+                ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px]'
                 : 'mt-4 mb-7 bg-white md:mb-8'
             }`}
+            style={{
+              left: `${sidebarWidth}px`,
+              width: `calc(100vw - ${sidebarWidth}px)`,
+            }}
           >
             <div
               className={`mx-auto flex items-center justify-between gap-2 sm:gap-4 ${getOptimalContainerWidth()} `}
