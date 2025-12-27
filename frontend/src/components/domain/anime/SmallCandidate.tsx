@@ -47,8 +47,21 @@ const getKoreanDayOfWeek = (dayOfWeek: string): string => {
 const formatAirTime = (anime: AnimePreviewDto) => {
   const { scheduledAt, airTime, dayOfWeek, status, medium } = anime;
 
-  // 극장판의 경우 airTime 필드 사용 (8/17 형식)
+  // dateTime 형식인지 확인 (ISO 8601 형식: "T" 포함 또는 숫자와 하이픈/콜론 포함)
+  const isDateTimeFormat = (str: string) => {
+    return /^\d{4}-\d{2}-\d{2}/.test(str) || str.includes('T');
+  };
+
+  // 극장판의 경우 airTime 필드 사용
   if (medium === 'MOVIE' && airTime) {
+    if (isDateTimeFormat(airTime)) {
+      const date = new Date(airTime);
+      if (!isNaN(date.getTime())) {
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        return `${month}/${day} 개봉`;
+      }
+    }
     return `${airTime} 개봉`;
   }
 
