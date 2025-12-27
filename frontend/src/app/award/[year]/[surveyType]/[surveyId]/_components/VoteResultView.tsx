@@ -126,15 +126,13 @@ export default function VoteResultView({
           </div>
 
           {isAuthenticated && (
-            <div className="flex items-center justify-center">
-              <button
-                onClick={onRevoteClick}
-                className="flex h-fit items-center gap-2 rounded-lg bg-amber-400 px-2.5 py-1.5 font-semibold text-white transition hover:opacity-60 @max-sm:text-sm"
-              >
-                <RefreshCcw className="size-4 md:size-5" />
-                재투표하기
-              </button>
-            </div>
+            <button
+              onClick={onRevoteClick}
+              className="flex h-fit items-center gap-2 rounded-lg bg-amber-400 px-2.5 py-1.5 font-semibold text-white transition hover:opacity-60 @max-sm:text-sm"
+            >
+              <RefreshCcw className="size-4 md:size-5" />
+              재투표하기
+            </button>
           )}
         </div>
       </section>

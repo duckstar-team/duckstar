@@ -148,8 +148,8 @@ export default function AwardPage() {
                           </h2>
                         </div>
                         <div className="xs:ml-1 text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
-                          {format(survey.startDateTime, 'MM월 dd일 H시')} -{' '}
-                          {format(survey.endDateTime, 'MM월 dd일 H시')}
+                          {format(survey.startDateTime, 'M월 d일 H시')} -{' '}
+                          {format(survey.endDateTime, 'M월 d일 H시')}
                         </div>
                       </div>
 

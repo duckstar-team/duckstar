@@ -49,7 +49,7 @@ export default function AwardHeader() {
         </Link>
         {isSurveyPage && surveyData && (
           <>
-            <ChevronRight className="size-4 text-gray-500/80" />
+            <ChevronRight className="size-4 shrink-0 text-gray-500/80" />
             <span className="text-gray-700">{getBannerTitle(surveyData)}</span>
           </>
         )}

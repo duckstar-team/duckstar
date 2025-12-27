@@ -258,7 +258,7 @@ export default function ThinNavDetail({ mode }: ThinNavDetailProps) {
             .map((item, index) => (
               <div
                 key={`year-${index}`}
-                className="mt-10 mb-4 inline-flex self-stretch px-4 font-semibold text-white"
+                className="mt-7 mb-4 inline-flex self-stretch px-4 font-semibold text-white"
               >
                 {item.label}
               </div>

@@ -784,11 +784,11 @@ export default function VoteFormView({
       <section
         className={cn(
           'max-width',
-          genderSelectionStep !== null && 'flex md:justify-end'
+          genderSelectionStep !== null && 'flex @lg:justify-end'
         )}
       >
-        <div className="flex h-8 w-fit items-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-semibold whitespace-nowrap text-gray-600 shadow-md backdrop-blur-sm">
-          <Megaphone className="size-4.5" />
+        <div className="flex h-fit w-fit items-center gap-2 rounded-md bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 shadow-md backdrop-blur-sm sm:text-sm">
+          <Megaphone className="size-4.5 shrink-0" />
           {showGenderSelection
             ? genderSelectionStep === 'gender'
               ? '성별은 투표 성향 통계에 꼭 필요한 정보예요.'
