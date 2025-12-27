@@ -139,12 +139,12 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
   }, [router, ballot.animeId]);
 
   return (
-    <div className="@container/result w-full">
-      <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow">
+    <>
+      <div className="relative h-fit overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow">
         {/* 카드 내용 - 드롭다운 토글 제외한 나머지 영역 */}
         <div className="flex items-center gap-4 p-4 pr-12">
           {/* 썸네일 */}
-          <div className="relative h-26 w-18 flex-shrink-0 lg:h-36 lg:w-28">
+          <div className="relative h-28 w-20 flex-shrink-0 lg:h-36 lg:w-28">
             <img
               src={ballot.mainThumbnailUrl}
               alt={ballot.titleKor}
@@ -159,7 +159,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
 
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             {/* 제목 */}
-            <div className="line-clamp-3 leading-tight font-semibold text-gray-900 lg:text-lg">
+            <div className="line-clamp-2 leading-tight font-semibold text-gray-900 lg:text-lg">
               {ballot.titleKor || '제목 없음'}
             </div>
 
@@ -177,6 +177,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
                       : '/voted-normal-2025-autumn.svg'
                   }
                   alt="투표 완료"
+                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
@@ -195,6 +196,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
               'polygon(0 0, calc(100% - 40px) 0, calc(100% - 40px) 100%, 0 100%)',
           }}
           disabled={!ballot.animeId}
+          title={ballot.titleKor || '제목 없음'}
         />
 
         {/* 오른쪽 영역 - 드롭다운 토글 */}
@@ -287,6 +289,6 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
         rawAnimeData={episodeData}
         onCommentSubmit={handleEpisodeCommentSubmit}
       />
-    </div>
+    </>
   );
 }

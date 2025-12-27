@@ -108,82 +108,79 @@ export default function VoteCard({
   );
 
   return (
-    <div className="relative h-full">
-      <motion.div
-        className={`h-full w-full rounded-xl border-2 bg-white shadow transition-all duration-200 ease-in-out ${disabled ? 'cursor-pointer' : 'cursor-pointer hover:shadow-lg'} ${
-          showError
-            ? 'border-[#CB285E]/80 shadow-red-200/50'
-            : 'border-gray-200'
-        } `}
-        initial={{ scale: 1 }}
-        animate={{
-          scale: 1,
-        }}
-        transition={{
-          duration: 0.2,
-          ease: 'easeInOut',
-        }}
-        onMouseEnter={!disabled ? () => setIsHovered(true) : undefined}
-        onMouseLeave={!disabled ? handleMouseLeave : undefined}
-        onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
-        onClick={!disabled ? handleCardClick : undefined}
-      >
-        <div className="flex h-full gap-4 p-4 lg:items-start">
-          {/* 썸네일 */}
-          <div className="relative h-full w-20 flex-shrink-0 lg:h-36 lg:w-28">
-            <img
-              src={anime.mainThumbnailUrl}
-              alt={anime.titleKor}
-              className="h-full w-full rounded-md object-cover"
-              loading="lazy"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/banners/duckstar-logo.svg';
-              }}
-            />
+    <motion.div
+      className={`relative h-full w-full rounded-xl border-2 bg-white shadow transition-all duration-200 ease-in-out ${disabled ? 'cursor-pointer' : 'cursor-pointer hover:shadow-lg'} ${
+        showError ? 'border-[#CB285E]/80 shadow-red-200/50' : 'border-gray-200'
+      } `}
+      initial={{ scale: 1 }}
+      animate={{
+        scale: 1,
+      }}
+      transition={{
+        duration: 0.2,
+        ease: 'easeInOut',
+      }}
+      onMouseEnter={!disabled ? () => setIsHovered(true) : undefined}
+      onMouseLeave={!disabled ? handleMouseLeave : undefined}
+      onMouseMove={!disabled && isHybridMode ? handleMouseMove : undefined}
+      onClick={!disabled ? handleCardClick : undefined}
+      title={anime.titleKor}
+    >
+      <div className="flex h-full gap-4 p-4 lg:items-start">
+        {/* 썸네일 */}
+        <div className="relative h-full w-20 flex-shrink-0 lg:w-28">
+          <img
+            src={anime.mainThumbnailUrl}
+            alt={anime.titleKor}
+            className="h-full w-full rounded-md object-cover"
+            loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = '/banners/duckstar-logo.svg';
+            }}
+          />
+        </div>
+        {/* 오른쪽 열: 제목 + 시즌 + 기표칸 */}
+        <div className="flex h-full flex-1 flex-col gap-2">
+          {/* 제목 */}
+          <div className="line-clamp-3 shrink-0 leading-tight font-semibold break-words text-gray-900 lg:text-lg">
+            {anime.titleKor}
           </div>
-          {/* 오른쪽 열: 제목 + 시즌 + 기표칸 */}
-          <div className="flex flex-1 flex-col gap-2">
-            {/* 제목 */}
-            <div className="line-clamp-3 leading-tight font-semibold break-words text-gray-900 lg:text-lg">
-              {anime.titleKor}
+
+          <div className="flex h-full w-full items-start justify-between gap-1">
+            {/* 시즌 정보 */}
+            <div className="text-xs text-gray-500 lg:text-sm">
+              {`${anime.year} ${anime.quarter}분기 ${anime.medium}`}
             </div>
 
-            <div className="flex w-full items-start justify-between gap-1">
-              {/* 시즌 정보 */}
-              <div className="text-xs text-gray-500 lg:text-sm">
-                {`${anime.year} ${anime.quarter}분기 ${anime.medium}`}
-              </div>
-
-              {/* 투표 토글 */}
-              <div className="flex @max-md:self-end">
-                <VoteToggle
-                  selected={checked}
-                  isCardHovered={isHovered}
-                  justDeselected={justDeselected}
-                  currentVotes={currentVotes}
-                  isBonusMode={isBonusMode}
-                  isBonusVote={isBonusVote}
-                  onClick={(isBonusVote) => {
-                    if (!onChange) return; // disabled 상태에서는 클릭 무시
-                    // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
-                    onChange(isBonusVote);
-                  }}
-                  disabled={disabled}
-                  cardHoverSide={hoverSide}
-                />
-              </div>
+            {/* 투표 토글 */}
+            <div className="flex self-end">
+              <VoteToggle
+                selected={checked}
+                isCardHovered={isHovered}
+                justDeselected={justDeselected}
+                currentVotes={currentVotes}
+                isBonusMode={isBonusMode}
+                isBonusVote={isBonusVote}
+                onClick={(isBonusVote) => {
+                  if (!onChange) return; // disabled 상태에서는 클릭 무시
+                  // 클릭은 항상 허용하고, 부모 컴포넌트에서 에러 처리
+                  onChange(isBonusVote);
+                }}
+                disabled={disabled}
+                cardHoverSide={hoverSide}
+              />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 에러 메시지 - 빨간 테두리 위에 작은 글씨 */}
-        {showError && (
-          <div className="absolute -top-2 left-4 bg-white px-2 text-xs font-medium text-[#990033] transition-opacity duration-3000 ease-in-out">
-            일반 투표 횟수(10회)를 모두 소진하였습니다.
-          </div>
-        )}
-      </motion.div>
-    </div>
+      {/* 에러 메시지 - 빨간 테두리 위에 작은 글씨 */}
+      {showError && (
+        <div className="absolute -top-2 left-4 bg-white px-2 text-xs font-medium text-[#990033] transition-opacity duration-3000 ease-in-out">
+          일반 투표 횟수(10회)를 모두 소진하였습니다.
+        </div>
+      )}
+    </motion.div>
   );
 }
