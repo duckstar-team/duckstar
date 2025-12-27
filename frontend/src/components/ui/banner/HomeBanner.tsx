@@ -8,21 +8,15 @@ import { HomeBannerDto } from '@/types';
 
 interface HomeBannerProps {
   homeBannerDtos: HomeBannerDto[];
-  className?: string;
 }
 
-export default function HomeBanner({
-  homeBannerDtos,
-  className = '',
-}: HomeBannerProps) {
+export default function HomeBanner({ homeBannerDtos }: HomeBannerProps) {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const bannerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  // 홈페이지에서는 간단한 라우터 사용 (스크롤 복원 훅 사용 안 함)
 
   // 자동 페이지네이션 - 애니메이션 완료 후 타이머 시작
   useEffect(() => {
@@ -109,9 +103,7 @@ export default function HomeBanner({
   // 배너 데이터가 없으면 기본값 사용
   if (!homeBannerDtos || homeBannerDtos.length === 0) {
     return (
-      <div
-        className={`relative h-auto w-full overflow-hidden rounded-xl bg-white outline outline-offset-[-1px] outline-[#D1D1D6] md:h-[215px] md:w-[750px] ${className}`}
-      >
+      <div className="relative h-auto w-full overflow-hidden rounded-xl bg-white outline outline-offset-[-1px] outline-[#D1D1D6] md:h-[215px] md:w-[750px]">
         <div className="flex h-full items-center justify-center text-gray-500">
           배너 데이터가 없습니다
         </div>
@@ -139,7 +131,7 @@ export default function HomeBanner({
   return (
     <div
       ref={bannerRef}
-      className={`xs:w-[500px] relative h-auto w-[320px] max-w-[750px] overflow-hidden rounded-xl bg-white outline outline-offset-[-1px] outline-[#D1D1D6] sm:w-[500px] md:h-[215px] md:w-[550px] lg:w-[750px] ${className}`}
+      className="relative h-[215px] w-full overflow-hidden rounded-xl outline outline-offset-[-1px] outline-[#D1D1D6]"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -175,18 +167,29 @@ export default function HomeBanner({
 
       {/* 모든 배너를 미리 렌더링 - 실무 방식 */}
       <div
-        className="flex transition-transform duration-1000 ease-in-out"
+        className="flex h-full transition-transform duration-1000 ease-in-out"
         style={{
-          transform: `translateX(-${currentBannerIndex * (window.innerWidth >= 1024 ? 750 : window.innerWidth >= 768 ? 550 : window.innerWidth >= 640 ? 500 : 320)}px)`,
-          width: `${homeBannerDtos.length * (window.innerWidth >= 1024 ? 750 : window.innerWidth >= 768 ? 550 : window.innerWidth >= 640 ? 500 : 320)}px`,
+          transform: `translateX(-${(currentBannerIndex * 100) / homeBannerDtos.length}%)`,
+          width: `${homeBannerDtos.length * 100}%`,
         }}
       >
         {homeBannerDtos.map((banner, index) => (
           <div
             key={index}
-            className="xs:w-[500px] relative flex h-auto w-[320px] flex-shrink-0 cursor-pointer flex-row items-center transition-opacity hover:opacity-95 sm:w-[500px] md:h-[215px] md:w-[550px] lg:w-[750px]"
+            className="relative flex h-full flex-shrink-0 cursor-pointer flex-row items-center transition-opacity hover:opacity-95"
+            style={{
+              width: `${100 / homeBannerDtos.length}%`,
+            }}
+            // style={{
+            //   backgroundImage: `url(${banner.animeImageUrl})`,
+            //   backgroundSize: 'cover',
+            //   backgroundPosition: 'center',
+            //   backgroundRepeat: 'no-repeat',
+            // }}
             onClick={() => handleBannerClick(banner)}
           >
+            {/* <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/10" /> */}
+            {/* <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(18,18,18,0.5)_0%,rgba(18,18,18,0)_50%),linear-gradient(rgba(18,18,18,0.5)_0%,rgba(18,18,18,0)_21.11%),linear-gradient(rgba(18,18,18,0)_50%,rgba(18,18,18,0.5)_100%)]" /> */}
             {/* 왼쪽 텍스트 */}
             <div className="flex flex-1 items-center p-4 md:p-0">
               <BannerContent

@@ -15,6 +15,7 @@ import Sidebar from './Sidebar';
 import LoginModal from '@/components/common/LoginModal';
 import { getWeeks } from '@/api/chart';
 import { WeekDto } from '@/types';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 // 모달 상태를 관리하는 Context
 interface ModalContextType {
@@ -62,8 +63,8 @@ export default function AppContainer({ children }: AppContainerProps) {
   const [weeks, setWeeks] = useState<WeekDto[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(0);
   const sidebarRef = useRef<HTMLElement>(null);
+  const sidebarWidth = useSidebarWidth(sidebarRef);
   const pathname = usePathname();
 
   const SIDEBAR_STORAGE_KEY = 'sidebar-open';
@@ -149,31 +150,6 @@ export default function AppContainer({ children }: AppContainerProps) {
       // 해당 페이지에서 URL 파라미터를 기반으로 설정
     }
   }, [isChartPage, pathname]);
-
-  /**
-   * 사이드바 너비 측정 (데스크톱에서만)
-   */
-  useEffect(() => {
-    if (!sidebarRef.current) return;
-
-    const updateWidth = () => {
-      if (sidebarRef.current) {
-        const width = sidebarRef.current.offsetWidth;
-        setSidebarWidth(width);
-      }
-    };
-
-    // ResizeObserver로 너비 변경 감지 (열릴 때와 닫힐 때 모두)
-    const resizeObserver = new ResizeObserver(updateWidth);
-    resizeObserver.observe(sidebarRef.current);
-
-    // 초기 너비 측정
-    updateWidth();
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [isSidebarOpen]);
 
   /**
    * 사이드바 Open/Close 상태 관리

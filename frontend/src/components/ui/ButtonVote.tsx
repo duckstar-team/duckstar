@@ -44,7 +44,7 @@ export default function ButtonVote({
   };
   return (
     <button
-      className={`inline-flex h-20 cursor-pointer items-center justify-start gap-6 overflow-hidden rounded-xl bg-gradient-to-r from-pink-700 to-pink-950 px-7 pt-1.5 pb-2.5 transition-all hover:brightness-110 sm:h-24 sm:gap-12 ${className}`}
+      className={`inline-flex h-20 shrink-0 cursor-pointer items-center justify-start gap-6 overflow-hidden rounded-xl bg-gradient-to-r from-pink-700 to-pink-950 px-7 pt-1.5 pb-2.5 transition-all hover:brightness-110 sm:h-24 sm:gap-12 ${className}`}
       onClick={handleClick}
     >
       {/* 텍스트 영역 */}
