@@ -1085,14 +1085,13 @@ export default function AdminPage() {
       if (animeData.titleEng) formData.append('titleEng', animeData.titleEng);
       if (animeData.airTime) formData.append('airTime', animeData.airTime);
       if (animeData.premiereDate && animeData.premiereTime) {
-        const fullDateTime = new Date(
-          `${animeData.premiereDate}T${animeData.premiereTime}`
-        );
-        const localDateTimeString = fullDateTime.toISOString().replace('Z', '');
+        // 로컬 시간을 그대로 유지하기 위해 ISO 형식 문자열 직접 생성
+        // toISOString()은 UTC로 변환하므로 사용하지 않음
+        const localDateTimeString = `${animeData.premiereDate}T${animeData.premiereTime}:00`;
         formData.append('premiereDateTime', localDateTimeString);
       } else if (animeData.premiereDate) {
-        const fullDateTime = new Date(`${animeData.premiereDate}T00:00`);
-        const localDateTimeString = fullDateTime.toISOString().replace('Z', '');
+        // 날짜만 있는 경우 시간을 00:00:00으로 설정
+        const localDateTimeString = `${animeData.premiereDate}T00:00:00`;
         formData.append('premiereDateTime', localDateTimeString);
       }
       if (animeData.dayOfWeek)

@@ -55,32 +55,52 @@ export default function AnimeCard({
     navigateToDetail(animeId);
   };
 
-  // 디데이 계산 함수 (8/22 형식에서 현재 시간까지의 차이)
+  // 디데이 계산 함수 (dateTime 문자열에서 현재 날짜까지의 차이)
   const calculateDaysUntilAir = (airTime: string) => {
     const now = new Date();
-    const currentYear = now.getFullYear();
 
-    // airTime을 파싱 (예: "8/22")
-    const [month, day] = airTime.split('/').map(Number);
+    // airTime을 dateTime 문자열로 파싱 (예: "2025-01-11T00:00:00")
+    const airDate = new Date(airTime);
 
-    // 올해의 해당 날짜 생성
-    const airDate = new Date(currentYear, month - 1, day);
+    // 유효하지 않은 날짜인 경우
+    if (isNaN(airDate.getTime())) {
+      return 0;
+    }
 
-    // 이미 지난 경우 D-DAY로 표시 (내년으로 설정하지 않음)
-    if (airDate < now) {
+    // 날짜만 비교하기 위해 시간을 00:00:00으로 설정
+    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+
+    // 이미 지난 경우 D-DAY로 표시
+    if (airDateOnly < nowDateOnly) {
       return 0; // D-DAY로 표시
     }
 
-    const diffTime = airDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // 날짜 차이 계산 (밀리초 단위)
+    const diffTime = airDateOnly.getTime() - nowDateOnly.getTime();
+    // 날짜 차이를 일 단위로 변환 (Math.floor 사용하여 정확한 일 수 계산)
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
     return diffDays;
   };
 
   // 방영 시간 포맷팅
   const formatAirTime = (scheduledAt: string, airTime?: string) => {
-    // 극장판의 경우 airTime 필드 사용 (8/17 형식)
+    // dateTime 형식인지 확인 (ISO 8601 형식: "T" 포함 또는 숫자와 하이픈/콜론 포함)
+    const isDateTimeFormat = (str: string) => {
+      return /^\d{4}-\d{2}-\d{2}/.test(str) || str.includes('T');
+    };
+
+    // 극장판의 경우 airTime 필드 사용
     if (medium === 'MOVIE' && airTime) {
+      if (isDateTimeFormat(airTime)) {
+        const date = new Date(airTime);
+        if (!isNaN(date.getTime())) {
+          const month = date.getMonth() + 1;
+          const day = date.getDate();
+          return `${month}/${day} 개봉`;
+        }
+      }
       return `${airTime} 개봉`;
     }
 
@@ -92,18 +112,42 @@ export default function AnimeCard({
       return `${month}/${day} 개봉`;
     }
 
-    // UPCOMING 상태이고 airTime이 있는 경우 (8/22 형식) 디데이 계산
-    if (status === 'UPCOMING' && airTime && airTime.includes('/')) {
-      const daysUntil = calculateDaysUntilAir(airTime);
-      if (daysUntil > 0) {
-        return `D-${daysUntil}`;
-      } else if (daysUntil === 0) {
-        return 'D-DAY';
+    // UPCOMING 상태이고 airTime이 dateTime 형식인 경우 디데이 계산
+    if (status === 'UPCOMING' && airTime && isDateTimeFormat(airTime)) {
+      const airDate = new Date(airTime);
+      if (!isNaN(airDate.getTime())) {
+        const now = new Date();
+        const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+
+        // 지난 날짜인 경우 시간만 표시
+        if (airDateOnly < nowDateOnly) {
+          const hours = airDate.getHours().toString().padStart(2, '0');
+          const minutes = airDate.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
+        }
+
+        // 오늘 또는 미래 날짜인 경우 디데이 계산
+        const daysUntil = calculateDaysUntilAir(airTime);
+        if (daysUntil > 0) {
+          return `D-${daysUntil}`;
+        } else if (daysUntil === 0) {
+          return 'D-DAY';
+        }
       }
     }
 
     // airTime이 있는 경우 우선 사용 (검색 결과 포함)
     if (airTime) {
+      // dateTime 형식인 경우 시간만 표시
+      if (isDateTimeFormat(airTime)) {
+        const airDate = new Date(airTime);
+        if (!isNaN(airDate.getTime())) {
+          const hours = airDate.getHours().toString().padStart(2, '0');
+          const minutes = airDate.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
+        }
+      }
       return airTime;
     }
 

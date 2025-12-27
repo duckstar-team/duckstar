@@ -147,11 +147,16 @@ export async function getScheduleByYearAndQuarter(
   return getScheduleByQuarter(year, quarter);
 }
 
+export interface SeasonResponseItem {
+  year: number;
+  types: string[];
+}
+
 /**
  * 시즌 목록을 조회합니다.
- * @returns 연도별 시즌 목록
+ * @returns 연도별 시즌 목록 (백엔드 정렬 순서 유지)
  */
-export async function getSeasons(): Promise<{ [year: number]: string[] }> {
+export async function getSeasons(): Promise<SeasonResponseItem[]> {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/search/seasons`, {
       method: 'GET',
@@ -165,13 +170,14 @@ export async function getSeasons(): Promise<{ [year: number]: string[] }> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<{ [year: number]: string[] }> =
+    const apiResponse: ApiResponse<SeasonResponseItem[]> =
       await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
     }
 
+    // 백엔드에서 정렬된 순서를 그대로 유지
     return apiResponse.result;
   } catch (error) {
     throw error;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getSeasons } from '@/api/search';
+import { getSeasons, type SeasonResponseItem } from '@/api/search';
 import { useQuery } from '@tanstack/react-query';
 import { cn, getSeasonFromQuarter, getSeasonInKorean } from '@/lib/utils';
 
@@ -66,15 +66,15 @@ export default function SeasonSelector({
   });
 
   if (seasonsData) {
-    Object.entries(seasonsData).forEach(([yearStr, seasons]) => {
-      const year = parseInt(yearStr);
-      seasons.forEach((season) => {
+    // 백엔드에서 정렬된 순서를 그대로 유지하여 순회
+    seasonsData.forEach((item: SeasonResponseItem) => {
+      item.types.forEach((season) => {
         const quarter = getQuarterFromSeason(season);
         if (quarter) {
           seasonOptions.push({
-            year,
+            year: item.year,
             quarter,
-            label: `${year}년 ${getSeasonInKorean(season)} 애니메이션`,
+            label: `${item.year}년 ${getSeasonInKorean(season)} 애니메이션`,
           });
         }
       });
