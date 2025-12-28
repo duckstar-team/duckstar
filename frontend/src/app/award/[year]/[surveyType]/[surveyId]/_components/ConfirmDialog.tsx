@@ -30,7 +30,7 @@ export default function ConfirmDialog({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-1/2 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 -translate-y-1/2 transform items-center justify-center"
+            className="max-width fixed top-1/2 left-1/2 z-60 flex w-full max-w-sm -translate-x-1/2 -translate-y-1/2 transform items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-100 rounded-2xl bg-white p-6 text-center shadow-2xl">
@@ -39,7 +39,6 @@ export default function ConfirmDialog({
               </h3>
               <p className="mb-6 text-sm leading-relaxed text-gray-600">
                 보너스 투표 사용을 위해서는 일반 투표 10개를 다 사용하셔야
-                <br />
                 합니다. 보너스 표를 회수하고 다음으로 넘어갈까요?
               </p>
 

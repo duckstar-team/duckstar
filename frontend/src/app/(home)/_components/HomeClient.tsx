@@ -502,23 +502,17 @@ export default function HomeClient() {
       {/* 통합 컨테이너 - 모든 섹션을 하나로 묶음 */}
       <div className="w-full">
         {/* 홈배너 섹션 */}
-        <div className="flex min-h-[300px] items-center justify-center pt-6 pb-5 xl:py-12">
-          <div className="flex flex-col items-center justify-center gap-4 xl:mr-6 xl:flex-row xl:gap-[75px]">
-            {/* HomeBanner 컴포넌트 */}
-            <div className="flex justify-center xl:justify-start">
-              <HomeBanner homeBannerDtos={homeData.result.homeBannerDtos} />
-            </div>
+        <div className="mx-auto flex min-h-[300px] w-full max-w-[750px] items-center justify-center gap-4 pt-6 pb-5 max-xl:flex-col max-xl:px-4 xl:max-w-[1147px] xl:gap-18 xl:py-12">
+          {/* HomeBanner 컴포넌트 */}
+          <HomeBanner homeBannerDtos={homeData.result.homeBannerDtos} />
 
-            {/* ButtonVote 컴포넌트 */}
-            <div className="flex justify-center xl:justify-start">
-              <ButtonVote
-                weekDtos={[
-                  homeData.result.currentWeekDto,
-                  ...homeData.result.pastWeekDtos,
-                ]}
-              />
-            </div>
-          </div>
+          {/* ButtonVote 컴포넌트 */}
+          <ButtonVote
+            weekDtos={[
+              homeData.result.currentWeekDto,
+              ...homeData.result.pastWeekDtos,
+            ]}
+          />
         </div>
 
         {/* 헤더 리스트 영역 */}

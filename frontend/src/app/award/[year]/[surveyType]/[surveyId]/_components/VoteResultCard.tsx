@@ -139,13 +139,12 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
   }, [router, ballot.animeId]);
 
   return (
-    <div className="@container/result w-full">
-      {/* 카드 구조 - 세퍼레이터 기준 두 영역 */}
-      <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow">
-        {/* 카드 내용 - 오른쪽 영역(w-10)을 제외한 나머지 영역 */}
+    <>
+      <div className="relative h-fit overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow">
+        {/* 카드 내용 - 드롭다운 토글 제외한 나머지 영역 */}
         <div className="flex items-center gap-4 p-4 pr-12">
           {/* 썸네일 */}
-          <div className="relative h-full w-20 flex-shrink-0 lg:h-36 lg:w-28">
+          <div className="relative h-28 w-20 flex-shrink-0 lg:h-36 lg:w-28">
             <img
               src={ballot.mainThumbnailUrl}
               alt={ballot.titleKor}
@@ -158,17 +157,18 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
             />
           </div>
 
-          {/* 제목 + 시즌 */}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="line-clamp-3 leading-tight font-semibold text-gray-900 lg:text-lg">
+            {/* 제목 */}
+            <div className="line-clamp-2 leading-tight font-semibold text-gray-900 lg:text-lg">
               {ballot.titleKor || '제목 없음'}
             </div>
+
+            {/* 시즌 + 기표칸 */}
             <div className="flex w-full items-center justify-between gap-2">
               <div className="mt-1 self-start text-xs text-gray-500 lg:text-sm">
                 {`${ballot.year} ${ballot.quarter}분기 ${ballot.medium}`}
               </div>
 
-              {/* 기표칸 */}
               <div className="mr-2 size-12 flex-shrink-0 rounded-full border border-gray-300 sm:size-14 lg:size-16">
                 <img
                   src={
@@ -177,6 +177,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
                       : '/voted-normal-2025-autumn.svg'
                   }
                   alt="투표 완료"
+                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
@@ -195,13 +196,14 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
               'polygon(0 0, calc(100% - 40px) 0, calc(100% - 40px) 100%, 0 100%)',
           }}
           disabled={!ballot.animeId}
+          title={ballot.titleKor || '제목 없음'}
         />
+
+        {/* 오른쪽 영역 - 드롭다운 토글 */}
         {ballot.animeId && (
           <>
             {/* 세퍼레이터 라인 */}
             <div className="absolute top-1/2 right-10 h-15 w-px -translate-y-1/2 bg-gray-200"></div>
-            {/* 오른쪽 영역 - 드롭다운 토글 */}
-
             <button
               className={cn(
                 'absolute top-0 right-0 bottom-0 flex w-10 cursor-pointer items-center justify-center transition',
@@ -223,7 +225,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
         )}
       </div>
 
-      {/* 드롭다운 컨텐츠 영역 (완전히 독립적) */}
+      {/* 드롭다운 컨텐츠 영역 */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -287,6 +289,6 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
         rawAnimeData={episodeData}
         onCommentSubmit={handleEpisodeCommentSubmit}
       />
-    </div>
+    </>
   );
 }

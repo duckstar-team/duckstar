@@ -94,7 +94,7 @@ export default function GenderSelection({
   };
 
   return (
-    <div className="flex items-center justify-between gap-8">
+    <div className="flex items-center justify-between gap-8 max-sm:flex-col">
       {/* Gender Selection */}
       {showGender && (
         <div className="mr-4 flex items-center justify-center gap-4">
@@ -128,11 +128,11 @@ export default function GenderSelection({
       {/* Age Group Selection */}
       {showAge && (
         <div className="flex items-center gap-4">
-          <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+          <div className="max-xs:grid-cols-2 grid grid-cols-3 gap-x-4 gap-y-2">
             {AGE_GROUP_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
-                className="flex items-center gap-2 text-sm font-medium"
+                className="flex items-center gap-2 text-sm font-medium whitespace-nowrap"
                 onClick={() => handleAgeClick(value)}
               >
                 <span

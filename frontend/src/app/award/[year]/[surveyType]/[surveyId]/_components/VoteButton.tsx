@@ -72,7 +72,7 @@ export default function VoteButton({
       data-vote-button
       onClick={onClick}
       disabled={disabled}
-      className={`${config.gradient} relative flex h-8 items-center justify-center rounded-md px-2.5 text-center text-sm font-bold text-white transition hover:opacity-80`}
+      className={`${config.gradient} relative flex h-8 items-center justify-center rounded-md px-2.5 text-center text-sm font-bold whitespace-nowrap text-white transition hover:opacity-80`}
     >
       {getButtonContent()}
       {showError && (

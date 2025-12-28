@@ -153,11 +153,10 @@ export default function VoteStamp({
   };
 
   if (type === 'bonus') {
-  return (
-    <div className="flex items-center gap-3 sm:gap-3.5 md:gap-4">
-      {/* Bonus Vote Stamp */}
+    return (
+      <div className="flex items-center gap-3 sm:gap-3.5 md:gap-4">
+        {/* Bonus Vote Stamp */}
         <TooltipBtn
-          text="보너스 표는 2개가 모여야 일반 표 1개와 같습니다."
           defaultIsOpen={true}
           isOpen={isTooltipOpen}
           className="max-md:text-xs!"
