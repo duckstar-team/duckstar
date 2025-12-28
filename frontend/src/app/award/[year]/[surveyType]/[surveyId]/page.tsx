@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { SurveyDto, SurveyType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
@@ -13,9 +13,9 @@ import { useModal } from '@/components/layout/AppContainer';
 import {
   hasValidSurveySession,
   isVoteHistorySaved,
-  updateSurveySessionVoteHistory,
 } from '@/lib/surveySessionStorage';
 import SurveyCountdown from './_components/SurveyCountdown';
+import { useSurveySession } from '@/hooks/useSurveySession';
 
 export default function SurveyPage() {
   const params = useParams();
@@ -26,6 +26,9 @@ export default function SurveyPage() {
   const { openLoginModal } = useModal();
   const [isRevoteMode, setIsRevoteMode] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  // 로그인 시 hasVoted=true인 모든 survey에 대해 세션키 생성
+  useSurveySession();
 
   // 투표 상태 조회 (hasVoted 확인)
   const { data: surveyStatusData, isLoading: isSurveyStatusLoading } =
@@ -41,17 +44,6 @@ export default function SurveyPage() {
       enabled: !!surveyId,
       ...queryConfig.vote,
     });
-
-  // 로그인 시 세션키의 투표 내역 저장 여부 업데이트
-  useEffect(() => {
-    if (
-      isAuthenticated &&
-      surveyStatusData?.hasVoted &&
-      surveyStatusData?.type
-    ) {
-      updateSurveySessionVoteHistory(surveyStatusData.type);
-    }
-  }, [isAuthenticated, surveyStatusData?.hasVoted, surveyStatusData?.type]);
 
   // 로딩 상태
   if (isSurveyStatusLoading || !surveyId || !surveyType) {
@@ -107,7 +99,7 @@ export default function SurveyPage() {
   }
 
   // 재투표 모드=false, 세션키=true → 결과창 표시
-  if (!isRevoteMode && hasValidSession) {
+  if (!isRevoteMode && (hasValidSession || surveyStatusData?.hasVoted)) {
     return (
       <VoteResultView
         surveyId={surveyId}
