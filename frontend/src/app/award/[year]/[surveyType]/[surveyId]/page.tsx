@@ -107,7 +107,7 @@ export default function SurveyPage() {
   }
 
   // 재투표 모드=false, 세션키=true → 결과창 표시
-  if (!isRevoteMode && hasValidSession) {
+  if (!isRevoteMode && (hasValidSession || surveyStatusData?.hasVoted)) {
     return (
       <VoteResultView
         surveyId={surveyId}
