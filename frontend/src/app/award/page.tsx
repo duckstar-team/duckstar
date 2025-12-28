@@ -14,6 +14,7 @@ import { ExternalLink } from 'lucide-react';
 import SurveyCountdown from './[year]/[surveyType]/[surveyId]/_components/SurveyCountdown';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useSurveySession } from '@/hooks/useSurveySession';
 
 const GOOGLE_FORM_SURVEYS = [
   {
@@ -28,6 +29,9 @@ const GOOGLE_FORM_SURVEYS = [
 
 export default function AwardPage() {
   const router = useRouter();
+
+  // 로그인 시 hasVoted=true인 모든 survey에 대해 세션키 생성
+  useSurveySession();
 
   // surveys 목록 조회
   const { data, isLoading, error } = useQuery<ApiResponse<SurveyDto[]>>({
