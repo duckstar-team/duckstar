@@ -15,6 +15,8 @@ export interface CommentDto {
   attachedImageUrl?: string;
   body: string;
   replyCount: number;
+  starScore?: number;
+  isLateParticipating?: boolean;
   surveyCandidateId: number | null;
 }
 

@@ -184,3 +184,17 @@ export enum SurveyType {
   Q4End = 'Q4_END',
   YearEnd = 'YEAR_END',
 }
+
+export interface VoteRatioDto {
+  votePercent: number;
+  normalPercent: number;
+  bonusPercent: number;
+  malePercent: number;
+  femalePercent: number;
+  under14Percent: number;
+  to19Percent: number;
+  to24Percent: number;
+  to29Percent: number;
+  to34Percent: number;
+  over35Percent: number;
+}

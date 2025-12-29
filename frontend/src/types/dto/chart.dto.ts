@@ -1,11 +1,12 @@
-import { MedalPreviewDto, PageInfo, VoteResultDto } from '@/types';
-
-export interface ChartAnimeDto {
-  animeRankDtos: AnimeRankDto[];
-  animeTrendRankPreviews: any[];
-  aniLabRankPreviews: any[];
-  pageInfo: PageInfo;
-}
+import {
+  AnimeCandidateDto,
+  CommentDto,
+  MedalPreviewDto,
+  PageInfo,
+  SurveyDto,
+  VoteRatioDto,
+  VoteResultDto,
+} from '@/types';
 
 interface AnimeRankDto {
   rankPreviewDto: {
@@ -27,4 +28,31 @@ interface AnimeRankDto {
     weeksOnTop10: number;
   };
   voteResultDto: VoteResultDto;
+}
+
+export interface ChartAnimeDto {
+  animeRankDtos: AnimeRankDto[];
+  animeTrendRankPreviews: any[];
+  aniLabRankPreviews: any[];
+  pageInfo: PageInfo;
+}
+
+/**
+ * SurveyRankDto
+ */
+export interface SurveyRankDto {
+  rank: number;
+  animeCandidateDto: AnimeCandidateDto;
+  voteRatioDto: VoteRatioDto;
+  totalCount: number;
+  commentDto: CommentDto;
+}
+
+/**
+ * SurveyResultDto
+ */
+export interface SurveyResultDto {
+  surveyDto: SurveyDto;
+  surveyRankDtos: SurveyRankDto[];
+  pageInfo: PageInfo;
 }

@@ -16,6 +16,7 @@ import {
 } from '@/lib/surveySessionStorage';
 import SurveyCountdown from './_components/SurveyCountdown';
 import { useSurveySession } from '@/hooks/useSurveySession';
+import SurveyResultChart from './_components/SurveyResultChart';
 
 export default function SurveyPage() {
   const params = useParams();
@@ -53,6 +54,14 @@ export default function SurveyPage() {
   // 세션키 및 투표 내역 저장 여부 확인
   const hasValidSession = hasValidSurveySession(surveyType);
   const voteHistorySaved = isVoteHistorySaved(surveyType);
+
+  // 종료된 어워드 결과 차트
+  if (
+    surveyStatusData?.endDateTime &&
+    new Date(surveyStatusData.endDateTime) < new Date()
+  ) {
+    return <SurveyResultChart surveyId={surveyId} />;
+  }
 
   // 로그인=false, 투표내역저장=true → 메세지창
   if (!isAuthenticated && voteHistorySaved) {
