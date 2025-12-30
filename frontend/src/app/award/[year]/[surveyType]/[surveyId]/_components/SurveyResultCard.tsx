@@ -46,24 +46,26 @@ function DonutChart({
 
   return (
     <div className="flex flex-col gap-3">
-      <ResponsiveContainer width={120} height={120} style={{ outline: 'none' }}>
+      <div
+        className="w-full"
+        style={{ height: '120px', maxWidth: '120px', minWidth: '80px' }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={35}
-            outerRadius={50}
+              innerRadius="45%"
+              outerRadius="100%"
             paddingAngle={0}
             dataKey="value"
             startAngle={90}
             endAngle={-270}
-            style={{ outline: 'none' }}
           >
             {data.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
-                style={{ outline: 'none' }}
                 fill={COLORS[index % COLORS.length]}
                 stroke="none"
               />
@@ -71,23 +73,24 @@ function DonutChart({
           </Pie>
         </PieChart>
       </ResponsiveContainer>
+      </div>
       <div className="flex flex-col gap-1 @max-xs:ml-4">
         <div className="flex items-center justify-center gap-2 @max-xs:justify-start">
           <div
-            className="h-3 w-3 rounded-full"
+            className="h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color1 }}
           />
-          <span className="text-sm text-gray-700">
-            {label1} {Math.round(percentage1Value)}%
+          <span className="text-sm break-keep text-gray-700">
+            {label1} {percentage1Value}%
           </span>
         </div>
         <div className="flex items-center justify-center gap-2 @max-xs:justify-start">
           <div
-            className="h-3 w-3 rounded-full"
+            className="h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color2 }}
           />
-          <span className="text-sm text-gray-700">
-            {label2} {Math.round(percentage2Value)}%
+          <span className="text-sm break-keep text-gray-700">
+            {label2} {percentage2Value}%
           </span>
         </div>
       </div>
@@ -141,7 +144,7 @@ function AgeBarChart({ voteRatioDto }: { voteRatioDto: any }) {
         data={chartData}
         margin={{ top: 30, right: 5, left: 5, bottom: 5 }}
       >
-        <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={40}>
+        <Bar dataKey="value" radius={[16, 16, 0, 0]} maxBarSize={20}>
           {chartData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.fill} />
           ))}
@@ -171,7 +174,7 @@ export default function SurveyResultCard({
     <div className="flex flex-col gap-6">
       {/* 헤더: 분기 및 순위 */}
       <div className="flex items-center gap-6 px-4">
-        <div className="relative flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
           {/* 원형 border (순위에 따라 1/n만 채워짐) */}
           <svg
             className="absolute"
@@ -198,12 +201,10 @@ export default function SurveyResultCard({
               strokeLinecap="round"
             />
           </svg>
-          <div className="flex flex-col items-center justify-center">
             <span className="translate-y-1 text-xs font-medium whitespace-nowrap text-black">
               {animeCandidateDto.quarter}분기
             </span>
             <span className="text-2xl font-bold text-black">{rank}</span>
-          </div>
         </div>
         <h3 className="text-2xl font-bold text-black">
           {animeCandidateDto.titleKor}
@@ -211,9 +212,9 @@ export default function SurveyResultCard({
       </div>
 
       {/* 메인 콘텐츠 영역 */}
-      <div className="flex gap-6 @max-md:flex-col">
+      <div className="flex gap-6 @max-sm:flex-col">
         {/* 포스터 이미지 */}
-        <div className="flex flex-col items-center justify-start @max-md:w-full">
+        <div className="flex flex-col items-center justify-start gap-2 @max-sm:w-full">
           <div className="relative h-72 w-48 overflow-hidden rounded-lg bg-gray-100">
             <img
               src={animeCandidateDto.mainThumbnailUrl || '/og-logo.jpg'}
@@ -221,7 +222,11 @@ export default function SurveyResultCard({
               className="h-full w-full object-cover"
             />
           </div>
-          <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-gray-400 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+          <span className="self-start text-sm font-medium text-gray-500">
+            {animeCandidateDto.year}년 {animeCandidateDto.quarter}분기{' '}
+            {animeCandidateDto.medium}
+          </span>
+          <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-400 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
             <span>애니 정보</span>
             <FaArrowCircleRight className="h-4 w-4 text-[#c30b4e]" />
           </button>
@@ -229,19 +234,20 @@ export default function SurveyResultCard({
 
         {/* 통계 정보 + 댓글 */}
         <div className="flex w-full flex-col gap-6">
-          <div className="flex gap-6 rounded-lg bg-gray-100 p-4 @max-sm:flex-col">
-            <div className="max-xs:flex-col flex gap-6">
+          {/* 통계 정보 섹션 */}
+          <div className="flex gap-10 rounded-lg bg-gray-100 p-4 @max-lg:flex-col">
+            <div className="max-xs:flex-col flex gap-10 transition xl:gap-16">
               {/* 득표율 */}
               <div className="flex flex-col gap-4">
                 <h4 className="text-sm font-semibold text-gray-700">득표율</h4>
-                <div className="text-3xl font-medium text-black @md:text-4xl">
+                <div className="text-3xl font-medium text-black transition @md:text-4xl">
                   {voteRatioDto.votePercent?.toFixed(1) || '0.0'}%
                 </div>
               </div>
 
-              <div className="flex gap-6 @max-xs:flex-col">
+              <div className="grid grid-cols-2 gap-6">
                 {/* 표 비율 도넛 차트 */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4">
                   <h4 className="text-sm font-semibold text-gray-700">
                     표 비율
                   </h4>
@@ -256,7 +262,7 @@ export default function SurveyResultCard({
                 </div>
 
                 {/* 성비 도넛 차트 */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4">
                   <h4 className="text-sm font-semibold text-gray-700">성비</h4>
                   <DonutChart
                     percentage1={voteRatioDto.malePercent || 0}
@@ -271,7 +277,7 @@ export default function SurveyResultCard({
             </div>
 
             {/* 연령별 투표 분포 */}
-            <div className="flex flex-1 flex-col gap-2">
+            <div className="flex max-w-100 flex-1 flex-col gap-2">
               <h4 className="text-sm font-semibold text-gray-700">
                 연령별 투표 분포
               </h4>
