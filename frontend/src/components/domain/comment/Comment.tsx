@@ -155,7 +155,7 @@ const Comment: React.FC<CommentProps> = ({
   return (
     <div
       className={cn(
-        'relative box-border flex h-full w-full content-stretch items-start justify-start gap-5 bg-white pb-2',
+        'relative box-border flex h-fit w-full content-stretch items-start justify-start gap-5 bg-white pb-2',
         className
       )}
     >

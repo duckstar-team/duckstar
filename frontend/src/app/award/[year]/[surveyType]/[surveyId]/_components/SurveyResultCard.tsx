@@ -17,6 +17,10 @@ import { FaArrowCircleRight } from 'react-icons/fa';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import { createComment } from '@/api/comment';
+import { showToast } from '@/components/common/Toast';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 // 도넛 차트 컴포넌트
 function DonutChart({
@@ -51,28 +55,28 @@ function DonutChart({
         style={{ height: '120px', maxWidth: '120px', minWidth: '80px' }}
       >
         <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
               innerRadius="45%"
               outerRadius="100%"
-            paddingAngle={0}
-            dataKey="value"
-            startAngle={90}
-            endAngle={-270}
-          >
-            {data.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-                stroke="none"
-              />
-            ))}
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
+              paddingAngle={0}
+              dataKey="value"
+              startAngle={90}
+              endAngle={-270}
+            >
+              {data.map((_, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                  stroke="none"
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
       </div>
       <div className="flex flex-col gap-1 @max-xs:ml-4">
         <div className="flex items-center justify-center gap-2 @max-xs:justify-start">
@@ -168,7 +172,29 @@ export default function SurveyResultCard({
   surveyRank: SurveyRankDto;
 }) {
   const { animeCandidateDto, voteRatioDto, commentDto, rank } = surveyRank;
+  const { user } = useAuth();
   const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [comment, setComment] = useState('');
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [isConfirm, setIsConfirm] = useState(false);
+
+  const handleCommentSubmit = async (animeId: number, comment: string) => {
+    try {
+      await createComment(animeId, { body: comment });
+      showToast.success('댓글이 작성되었습니다.');
+    } catch (error) {
+      console.error(error);
+      showToast.error('댓글 작성에 실패했습니다.');
+    }
+  };
+
+  const handleCommentFocus = () => {
+    if (!user) {
+      setIsConfirm(true);
+    } else {
+      setIsCommenting(true);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -201,10 +227,10 @@ export default function SurveyResultCard({
               strokeLinecap="round"
             />
           </svg>
-            <span className="translate-y-1 text-xs font-medium whitespace-nowrap text-black">
-              {animeCandidateDto.quarter}분기
-            </span>
-            <span className="text-2xl font-bold text-black">{rank}</span>
+          <span className="translate-y-1 text-xs font-medium whitespace-nowrap text-black">
+            {animeCandidateDto.quarter}분기
+          </span>
+          <span className="text-2xl font-bold text-black">{rank}</span>
         </div>
         <h3 className="text-2xl font-bold text-black">
           {animeCandidateDto.titleKor}
@@ -312,12 +338,58 @@ export default function SurveyResultCard({
                       height: { duration: 0.2, ease: 'easeInOut' },
                       opacity: { duration: 0.2, ease: 'easeInOut' },
                     }}
-                    style={{ overflow: 'hidden' }}
                   >
                     <Comment comment={commentDto} className="bg-transparent!" />
+                    <div className="mt-6 flex flex-col gap-2 px-4">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={user?.profileImageUrl}
+                          alt={user?.nickname}
+                          className="aspect-square w-7 rounded-full"
+                        />
+                        <input
+                          type="text"
+                          placeholder="댓글 추가..."
+                          className="w-full border-b border-gray-300 p-1 text-sm focus:border-black"
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          onFocus={handleCommentFocus}
+                        />
+                      </div>
+                      {isCommenting && (
+                        <div className="flex w-full justify-end gap-1 text-xs font-medium">
+                          <button
+                            onClick={() => setIsCommenting(false)}
+                            className="rounded-full px-3 py-2 hover:bg-gray-200"
+                          >
+                            취소
+                          </button>
+                          <button
+                            disabled={!comment.trim()}
+                            onClick={
+                              () =>
+                                handleCommentSubmit(
+                                  animeCandidateDto.animeCandidateId,
+                                  comment
+                                ) // TODO: animeId로 수정
+                            }
+                            className="rounded-full bg-black px-3 py-2 text-white hover:opacity-80 disabled:cursor-not-allowed! disabled:bg-gray-200/80 disabled:text-gray-400"
+                          >
+                            댓글 작성
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
+              {isConfirm && (
+                <ConfirmModal
+                  title="댓글 작성"
+                  description="댓글을 작성하기 위해서는 로그인이 필요합니다."
+                  setIsConfirm={setIsConfirm}
+                />
+              )}
             </>
           )}
         </div>
