@@ -1,19 +1,24 @@
 'use client';
 
 import VoteBanner from '@/components/domain/vote/VoteBanner';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Share2 } from 'lucide-react';
 import Link from 'next/link';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { SurveyDto } from '@/types';
 import { queryConfig } from '@/lib/queryConfig';
 import { getBannerTitle, getBannerSubtitle } from '@/lib/surveyUtils';
+import DownloadBtn from '@/components/common/DownloadBtn';
+import { useOutsideClick } from '@/hooks/useOutsideClick';
+import ShareDropdown from '@/components/common/ShareDropdown';
 
 export default function AwardHeader() {
   const params = useParams();
   const pathname = usePathname();
   const surveyId = params.surveyId ? parseInt(params.surveyId as string) : null;
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // survey 정보 조회
   const { data: surveyData } = useQuery<SurveyDto>({
@@ -36,6 +41,11 @@ export default function AwardHeader() {
     ? getBannerSubtitle(surveyData)
     : undefined;
 
+  useOutsideClick(dropdownRef, (e) => {
+    setIsDropdownOpen(false);
+    e.stopPropagation();
+  });
+
   return (
     <>
       <VoteBanner
@@ -53,6 +63,23 @@ export default function AwardHeader() {
             <span className="text-gray-700">{getBannerTitle(surveyData)}</span>
           </>
         )}
+        <div
+          ref={dropdownRef}
+          className="relative ml-auto flex items-center gap-1"
+        >
+          <DownloadBtn />
+          <button
+            onClick={() => setIsDropdownOpen((prev) => !prev)}
+            className="rounded-full p-2 transition hover:bg-gray-200"
+          >
+            <Share2 className="size-5" />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute top-full right-0 z-10">
+              <ShareDropdown />
+            </div>
+          )}
+        </div>
       </nav>
     </>
   );
