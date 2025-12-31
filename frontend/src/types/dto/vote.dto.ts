@@ -174,6 +174,7 @@ export enum VoteStatusType {
   Open = 'OPEN',
   Paused = 'PAUSED',
   NotYet = 'NOT_YET',
+  ResultOpen = 'RESULT_OPEN',
 }
 
 export enum SurveyType {

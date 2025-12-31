@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { SurveyDto, SurveyType } from '@/types';
+import { SurveyDto, SurveyType, VoteStatusType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -14,9 +14,9 @@ import {
   hasValidSurveySession,
   isVoteHistorySaved,
 } from '@/lib/surveySessionStorage';
-import SurveyCountdown from './_components/SurveyCountdown';
 import { useSurveySession } from '@/hooks/useSurveySession';
 import SurveyResultChart from './_components/SurveyResultChart';
+import SurveyDisabled from './_components/SurveyDisabled';
 
 export default function SurveyPage() {
   const params = useParams();
@@ -56,10 +56,7 @@ export default function SurveyPage() {
   const voteHistorySaved = isVoteHistorySaved(surveyType);
 
   // 종료된 어워드 결과 차트
-  if (
-    surveyStatusData?.endDateTime &&
-    new Date(surveyStatusData.endDateTime) < new Date()
-  ) {
+  if (surveyStatusData?.status === VoteStatusType.ResultOpen) {
     return <SurveyResultChart surveyId={surveyId} />;
   }
 
@@ -84,31 +81,15 @@ export default function SurveyPage() {
     );
   }
 
-  if (surveyStatusData?.status === 'NOT_YET') {
-    return (
-      <main className="max-width px-10!">
-        <div className="flex flex-col items-center justify-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
-          <img
-            src="/survey_not_yet.jpeg"
-            alt="survey-not-yet"
-            className="mb-4 aspect-video w-1/3 object-cover @max-sm:w-1/2"
-          />
-          <h2 className="text-xl font-semibold text-black">
-            투표 오픈 전입니다
-          </h2>
-          <p className="my-6 text-center text-gray-600">
-            <SurveyCountdown
-              startDate={surveyStatusData?.startDateTime}
-              className="text-[1.5rem] font-bold! text-red-400! @md:text-[2rem]"
-            />
-          </p>
-        </div>
-      </main>
-    );
+  if (
+    surveyStatusData?.status === VoteStatusType.NotYet ||
+    surveyStatusData?.status === VoteStatusType.Closed
+  ) {
+    return <SurveyDisabled survey={surveyStatusData} />;
   }
 
-  // 재투표 모드=false, 세션키=true → 결과창 표시
-  if (!isRevoteMode && (hasValidSession || surveyStatusData?.hasVoted)) {
+  // 재투표 모드=false, 세션키=true, 투표=true → 결과창 표시
+  if (!isRevoteMode && hasValidSession && surveyStatusData?.hasVoted) {
     return (
       <VoteResultView
         surveyId={surveyId}

@@ -111,3 +111,38 @@ export function getStatusText(status: VoteStatusType | string): string {
       return '오픈 예정';
   }
 }
+
+/**
+ * VoteStatusType에 따른 뱃지 배경색 클래스 반환
+ * @param status VoteStatusType
+ * @returns string
+ */
+export const getStatusBadge = (status: VoteStatusType) => {
+  const colorVariants = {
+    OPEN: 'bg-rose-100 text-rose-500',
+    PAUSED: 'bg-yellow-100 text-amber-500',
+    CLOSED: 'bg-gray-100 text-gray-800',
+    NOT_YET: 'bg-blue-100 text-blue-500',
+  };
+
+  return colorVariants[status as keyof typeof colorVariants] || '';
+};
+
+/**
+ * VoteStatusType에 따른 버튼 텍스트 반환
+ * @param status VoteStatusType
+ * @param hasVoted boolean
+ * @returns string
+ */
+export const getButtonText = (status: VoteStatusType, hasVoted: boolean) => {
+  if (status === VoteStatusType.Open && hasVoted) {
+    return '투표 완료';
+  } else if (status === VoteStatusType.Open && !hasVoted) {
+    return '투표 하기';
+  } else if (status === VoteStatusType.Closed) {
+    return '결과 보기';
+  } else if (status === VoteStatusType.ResultOpen) {
+    return '결과 공개 - 18:00';
+  }
+  return '';
+};
