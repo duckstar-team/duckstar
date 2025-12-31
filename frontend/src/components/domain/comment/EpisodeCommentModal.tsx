@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import { showToast } from '@/components/common/Toast';
 import { cn } from '@/lib/utils';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 // API 응답 타입 정의
 interface EpisodeDto {
@@ -90,6 +91,7 @@ export default function EpisodeCommentModal({
   const [errorMessage, setErrorMessage] = useState('');
   // 화면 크기 감지 (1024px 미만에서 드롭다운 사용)
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const sidebarWidth = useSidebarWidth();
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -232,21 +234,19 @@ export default function EpisodeCommentModal({
     <div className="fixed inset-0 z-50">
       {/* 배경 오버레이 */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* 모달 컨테이너 - 사이드바와 헤더를 제외한 메인 프레임 중앙 정렬 */}
-      <div
-        className="fixed inset-0 top-[60px] flex items-center justify-center lg:left-[240px]"
+        className="fixed inset-0 top-[60px] flex items-center justify-center bg-black/50"
         onClick={onClose}
       >
+        {/* 모달 컨테이너 - 사이드바와 헤더를 제외한 메인 프레임 중앙 정렬 */}
         <div
           className={cn(
             'relative mx-4 max-h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-2xl',
             isSmallScreen ? 'max-w-xs' : 'max-w-2xl'
           )}
           onClick={(e) => e.stopPropagation()}
+          style={{
+            marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+          }}
         >
           {/* 헤더 */}
           <div className="flex items-center justify-between border-b border-gray-200 p-6">

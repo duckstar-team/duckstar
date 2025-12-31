@@ -5,9 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { startKakaoLogin, startGoogleLogin, startNaverLogin } from '@/api/auth';
 import { useModal } from '@/components/layout/AppContainer';
 import { X } from 'lucide-react';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 export default function LoginModal() {
   const { isLoginModalOpen, closeLoginModal } = useModal();
+  const sidebarWidth = useSidebarWidth();
 
   // ESC 키로 모달 닫기
   useEffect(() => {
@@ -53,6 +55,9 @@ export default function LoginModal() {
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.2 }}
             className="w-full max-w-100 rounded-2xl bg-white shadow-2xl"
+            style={{
+              marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+            }}
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 p-6">

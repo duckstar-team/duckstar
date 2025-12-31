@@ -20,6 +20,7 @@ import StarDetailPopup from '@/components/domain/star/StarDetailPopup';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useModal } from '@/components/layout/AppContainer';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 interface VoteModalProps {
   episodeId: number;
@@ -61,6 +62,7 @@ export default function VoteModal({
   const starInfo = candidate?.result?.info ?? null;
   const userStarScore = starInfo?.userStarScore ?? null;
   const hasUserRating = Boolean(userStarScore && userStarScore > 0);
+  const sidebarWidth = useSidebarWidth();
 
   const [phase, setPhase] = useState<'form' | 'summary'>(
     hasVoted ? 'summary' : 'form'
@@ -298,6 +300,9 @@ export default function VoteModal({
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.2 }}
             className="relative z-60 rounded-lg border border-gray-200 bg-white p-6 pr-8"
+            style={{
+              marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <X
