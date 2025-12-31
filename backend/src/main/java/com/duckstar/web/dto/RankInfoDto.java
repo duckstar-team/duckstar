@@ -8,8 +8,11 @@ import com.duckstar.domain.enums.SurveyType;
 import com.duckstar.domain.mapping.weeklyVote.Episode;
 import com.duckstar.domain.vo.RankInfo;
 import com.duckstar.web.dto.CommentResponseDto.CommentDto;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
 
 import static com.duckstar.web.dto.SurveyResponseDto.*;
 
@@ -150,22 +153,44 @@ public class RankInfoDto {
 //                    .build();
 //        }
     }
+
     @Builder
     @Getter
+    @AllArgsConstructor
     public static class SurveyRankDto {
         Integer rank;
+
+        Long animeId;
 
         AnimeCandidateDto animeCandidateDto;
 
         VoteRatioDto voteRatioDto;
 
-        Integer totalCount;
+        Long commentTotalCount;
 
-        CommentDto commentDto;
+        List<CommentDto> commentDtos;
+
+        public SurveyRankDto(Integer rank, Long animeId,
+                             AnimeCandidateDto animeCandidateDto,
+                             VoteRatioDto voteRatioDto) {
+            this.rank = rank;
+            this.animeId = animeId;
+            this.animeCandidateDto = animeCandidateDto;
+            this.voteRatioDto = voteRatioDto;
+        }
+
+        public void setCommentDtos(List<CommentDto> commentDtos) {
+            this.commentDtos = commentDtos;
+        }
+
+        public void setCommentTotalCount(Long commentTotalCount) {
+            this.commentTotalCount = commentTotalCount;
+        }
     }
 
     @Builder
     @Getter
+    @AllArgsConstructor
     public static class VoteRatioDto {
         Double votePercent;
 
