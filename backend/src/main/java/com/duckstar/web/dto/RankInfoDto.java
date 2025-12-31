@@ -4,10 +4,17 @@ import com.duckstar.abroad.aniLab.Anilab;
 import com.duckstar.abroad.animeCorner.AnimeCorner;
 import com.duckstar.domain.Anime;
 import com.duckstar.domain.enums.ContentType;
+import com.duckstar.domain.enums.SurveyType;
 import com.duckstar.domain.mapping.weeklyVote.Episode;
 import com.duckstar.domain.vo.RankInfo;
+import com.duckstar.web.dto.CommentResponseDto.CommentDto;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
+
+import static com.duckstar.web.dto.SurveyResponseDto.*;
 
 public class RankInfoDto {
 
@@ -149,11 +156,58 @@ public class RankInfoDto {
 
     @Builder
     @Getter
+    @AllArgsConstructor
+    public static class SurveyRankDto {
+        Integer rank;
+
+        Long animeId;
+
+        AnimeCandidateDto animeCandidateDto;
+
+        VoteRatioDto voteRatioDto;
+
+        Long commentTotalCount;
+
+        List<CommentDto> commentDtos;
+
+        public SurveyRankDto(
+                Integer rank,
+                Long animeId,
+                AnimeCandidateDto animeCandidateDto,
+                VoteRatioDto voteRatioDto
+        ) {
+            this.rank = rank;
+            this.animeId = animeId;
+            this.animeCandidateDto = animeCandidateDto;
+            this.voteRatioDto = voteRatioDto;
+        }
+
+        public void setCommentDtos(List<CommentDto> commentDtos) {
+            this.commentDtos = commentDtos;
+        }
+
+        public void setCommentTotalCount(Long commentTotalCount) {
+            this.commentTotalCount = commentTotalCount;
+        }
+    }
+
+    @Builder
+    @Getter
+    @AllArgsConstructor
     public static class VoteRatioDto {
         Double votePercent;
 
-        Double malePercent;
+        Double normalPercent;
+        Double bonusPercent;
 
+        Double malePercent;
         Double femalePercent;
+
+        Double under14Percent;
+        Double to19Percent;
+        Double to24Percent;
+        Double to29Percent;
+        Double to34Percent;
+        Double over35Percent;
     }
 }

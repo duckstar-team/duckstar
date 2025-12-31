@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -252,7 +253,7 @@ public class TempTest {
     @Transactional
     @Rollback(false)
     public void delayEpisode() {
-        Episode targetEp = episodeRepository.findById(21L).get();
+        Episode targetEp = episodeRepository.findById(1522L).get();
 
         LocalDateTime scheduledAt = targetEp.getScheduledAt();
         Anime anime = targetEp.getAnime();
@@ -266,12 +267,23 @@ public class TempTest {
         }
 
         //=== target 포함 이후 에피소드들: 연기일 기준으로 한주씩 미루기 ===//
-        LocalDate date = LocalDate.of(2026, 1, 4);
-        LocalDateTime delayedDate = LocalDateTime.of(date, targetEp.getScheduledAt().toLocalTime());
+        LocalDate date = LocalDate.of(2026, 1, 10);
+
+        LocalTime manualTime = null;
+
+        // 직접입력 또는 주석 처리
+//        manualTime = LocalTime.of(20, 30);
+
+        LocalTime startTimeToSet = manualTime != null ?
+                manualTime :
+                targetEp.getScheduledAt().toLocalTime();
+
+        LocalDateTime delayedDate = LocalDateTime.of(date, startTimeToSet);
 
         // 직전 에피소드 nextEp 스케줄 수정
-        int safeIdx = Math.max(0, idx - 1);
-        episodes.get(safeIdx).setNextEpScheduledAt(delayedDate);
+        if (idx > 0) {
+            episodes.get(idx - 1).setNextEpScheduledAt(delayedDate);
+        }
         // target 포함 이후 에피소드들 수정
         for (int i = idx; i < episodes.size(); i++) {
             Episode episode = episodes.get(i);
@@ -284,13 +296,14 @@ public class TempTest {
     @Test
     @Transactional
     @Rollback(false)
-    public void postSurveyFromSeasonAnimes() {
-        Survey survey = surveyRepository.findById(1L).get();
-        Quarter quarter = quarterRepository.getReferenceById(2L);
+    public void Anime_로부터_SurveyCandidate_인서트() {
+        Survey survey = surveyRepository.findById(3L).get();
+        Quarter quarter = quarterRepository.getReferenceById(3L);
 
-        List<Anime> animes = animeSeasonRepository.findAllBySeason_Id(2L).stream()
-                .map(AnimeSeason::getAnime)
-                .toList();
+        List<Anime> animes = animeRepository
+                .findAllByPremiereDateTimeGreaterThan(
+                        LocalDateTime.of(2026, 1, 1, 0, 0)
+                );
 
         List<SurveyCandidate> candidates = animes.stream()
                 .map(anime -> SurveyCandidate.createByAnime(survey, quarter, anime))
@@ -330,5 +343,20 @@ public class TempTest {
                 .toList();
 
         surveyCandidateRepository.saveAll(newCandidates);
+    }
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    public void 서베이_순위_수동_계산() {
+        chartService.buildSurveyAwards(1L, true);
+    }
+
+    @Test
+    @Transactional(readOnly = true)
+    public void 연말결산_중복_후보_찾기() {
+        List<SurveyCandidate> candidates = surveyCandidateRepository.findAllBySurvey_Id(2L);
+
+        //TODO
     }
 }

@@ -963,8 +963,6 @@ export default function VoteFormView({
       {/* 선택 현황 네비게이션 - 항상 표시 */}
       {!showGenderSelection && (
         <SelectionStatusNavigation
-          selectedCount={allSelected.length}
-          totalCount={totalCandidates}
           isFiltered={showOnlySelected}
           onToggleFilter={() => setShowOnlySelected((prev) => !prev)}
           isYearEnd={isYearEnd}

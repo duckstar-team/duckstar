@@ -3,11 +3,16 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';
-import { SurveyDto } from '@/types';
+import { SurveyDto, VoteStatusType } from '@/types';
 import VoteBanner from '@/components/domain/vote/VoteBanner';
 import { ApiResponse } from '@/api/http';
 import Link from 'next/link';
-import { getSurveyTypeLabel, getStatusText } from '@/lib/surveyUtils';
+import {
+  getSurveyTypeLabel,
+  getStatusText,
+  getStatusBadge,
+  getButtonText,
+} from '@/lib/surveyUtils';
 import { AwardListSkeleton } from '@/components/skeletons';
 import { useRouter } from 'next/navigation';
 import { ExternalLink } from 'lucide-react';
@@ -15,17 +20,7 @@ import SurveyCountdown from './[year]/[surveyType]/[surveyId]/_components/Survey
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useSurveySession } from '@/hooks/useSurveySession';
-
-const GOOGLE_FORM_SURVEYS = [
-  {
-    label: '2025년 4분기 애니 조사',
-    link: 'https://docs.google.com/forms/d/e/1FAIpQLSevH6se5MuYkrZvlSEfBOKs51UAxu_lK_9lYmXBeXbXbCbi6w/viewform',
-  },
-  {
-    label: '2025년 애니메이션 연말 결산',
-    link: 'https://docs.google.com/forms/d/e/1FAIpQLSeHbQol8LaDVe5uiKryIVqNr17Vx8WkshIBV7k4TF2WNuRnbQ/viewform',
-  },
-];
+import { GOOGLE_FORM_SURVEYS } from '@/lib/constants';
 
 export default function AwardPage() {
   const router = useRouter();
@@ -43,39 +38,6 @@ export default function AwardPage() {
     },
     ...queryConfig.vote,
   });
-
-  const getStatusBadge = (status: string) => {
-    const baseClass =
-      'rounded-md px-2 py-1 h-6 w-fit break-keep text-xs font-semibold @md:text-sm @md:h-8';
-    const statusText = getStatusText(status);
-
-    switch (status) {
-      case 'OPEN':
-        return (
-          <span className={`${baseClass} bg-rose-100 text-rose-500`}>
-            {statusText}
-          </span>
-        );
-      case 'PAUSED':
-        return (
-          <span className={`${baseClass} bg-yellow-100 text-amber-500`}>
-            {statusText}
-          </span>
-        );
-      case 'CLOSED':
-        return (
-          <span className={`${baseClass} bg-gray-100 text-gray-800`}>
-            {statusText}
-          </span>
-        );
-      default:
-        return (
-          <span className={`${baseClass} bg-blue-100 text-blue-500`}>
-            {statusText}
-          </span>
-        );
-    }
-  };
 
   if (isLoading) {
     return <AwardListSkeleton />;
@@ -115,14 +77,14 @@ export default function AwardPage() {
             </h1>
             <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
               {surveys.map((survey, i) => {
-                const isOpen = survey.status === 'OPEN';
-                const isNotYet = survey.status === 'NOT_YET';
+                const isNotYet = survey.status === VoteStatusType.NotYet;
+                const isClosed = survey.status === VoteStatusType.Closed;
 
                 return (
                   <Link
                     key={survey.surveyId}
                     href={`/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`}
-                    className="group flex min-h-32 flex-col overflow-hidden rounded-lg bg-white shadow-lg shadow-gray-200/80 @lg:min-h-48"
+                    className="group relative flex min-h-32 flex-col overflow-hidden rounded-lg bg-white shadow-lg shadow-gray-200/80 @lg:min-h-48"
                   >
                     <div className="relative w-full">
                       <img
@@ -136,18 +98,35 @@ export default function AwardPage() {
                           isNotYet && 'bg-black/60'
                         )}
                       />
-                      {isNotYet && (
-                        <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 text-center font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
-                          <SurveyCountdown startDate={survey.startDateTime} />
-                        </div>
-                      )}
+                      {isNotYet ||
+                        (isClosed && (
+                          <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center bg-black/70 text-white">
+                            <SurveyCountdown
+                              type={survey.status}
+                              text={isClosed ? '투표 집계중...' : undefined}
+                              startDate={
+                                isClosed
+                                  ? survey.endDateTime
+                                  : survey.startDateTime
+                              }
+                              className="text-center"
+                            />
+                          </div>
+                        ))}
                     </div>
 
                     <div className="flex w-full flex-col justify-between gap-4 p-3 @md:p-4">
                       <div className="flex flex-col gap-2">
                         <div className="max-xs:flex-col flex gap-2 sm:items-center @md:gap-3">
-                          <div>{getStatusBadge(survey.status)}</div>
-                          <h2 className="group-hover:text-brand text-base font-semibold text-gray-600 transition-all duration-300 @sm:text-lg @md:text-xl">
+                          <span
+                            className={cn(
+                              'flex h-6 w-fit items-center rounded-md px-2 py-1 text-xs font-semibold break-keep @md:text-sm',
+                              getStatusBadge(survey.status)
+                            )}
+                          >
+                            {getStatusText(survey.status)}
+                          </span>
+                          <h2 className="text-base font-semibold text-gray-600 transition-all duration-300 @sm:text-lg @md:text-xl">
                             {survey.year} {getSurveyTypeLabel(survey.type)}
                           </h2>
                         </div>
@@ -167,11 +146,7 @@ export default function AwardPage() {
                             }}
                             className="flex w-full items-center justify-center rounded-full bg-white/80 px-6 text-xs font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-sm"
                           >
-                            {!isOpen
-                              ? '결과 보기'
-                              : survey.hasVoted
-                                ? '투표 완료'
-                                : '투표 하기'}
+                            {getButtonText(survey.status, survey.hasVoted)}
                           </button>
                         </div>
                       )}
