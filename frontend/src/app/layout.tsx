@@ -55,7 +55,7 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1.0, user-scalable=no"
         />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/icons/favicon.svg" />
       </head>
       <body className={`${pretendard.variable} antialiased`}>
         {/* Google Analytics 4 - 개발 환경에서는 로드하지 않음 */}

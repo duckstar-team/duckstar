@@ -6,7 +6,7 @@ import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { SurveyDto } from '@/types';
+import { SurveyDto, VoteStatusType } from '@/types';
 import { queryConfig } from '@/lib/queryConfig';
 import { getBannerTitle, getBannerSubtitle } from '@/lib/surveyUtils';
 import DownloadBtn from '@/components/common/DownloadBtn';
@@ -63,23 +63,25 @@ export default function AwardHeader() {
             <span className="text-gray-700">{getBannerTitle(surveyData)}</span>
           </>
         )}
-        <div
-          ref={dropdownRef}
-          className="relative ml-auto flex items-center gap-1"
-        >
-          <DownloadBtn />
-          <button
-            onClick={() => setIsDropdownOpen((prev) => !prev)}
-            className="rounded-full p-2 transition hover:bg-gray-200"
+        {surveyData?.status === VoteStatusType.ResultOpen && (
+          <div
+            ref={dropdownRef}
+            className="relative ml-auto flex items-center gap-1"
           >
-            <Share2 className="size-5" />
-          </button>
-          {isDropdownOpen && (
-            <div className="absolute top-full right-0 z-10">
-              <ShareDropdown />
-            </div>
-          )}
-        </div>
+            <DownloadBtn />
+            <button
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="rounded-full p-2 transition hover:bg-gray-200"
+            >
+              <Share2 className="size-5" />
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute top-full right-0 z-10">
+                <ShareDropdown ogUrl={surveyData?.ogUrl} />
+              </div>
+            )}
+          </div>
+        )}
       </nav>
     </>
   );

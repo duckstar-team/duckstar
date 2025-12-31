@@ -3,7 +3,7 @@
 import { Link } from 'lucide-react';
 import { SiKakaotalk } from 'react-icons/si';
 import React, { useEffect } from 'react';
-import { FaFacebook, FaInstagram, FaLine } from 'react-icons/fa';
+import { FaLine } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { showToast } from './Toast';
 
@@ -13,94 +13,72 @@ declare global {
   }
 }
 
-export default function ShareDropdown() {
-  useEffect(() => {
-    // 카카오 SDK 초기화 (스크립트가 로드된 경우)
-    if (
-      typeof window !== 'undefined' &&
-      window.Kakao &&
-      !window.Kakao.isInitialized()
-    ) {
-      const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
-      if (kakaoAppKey) {
-        window.Kakao.init(kakaoAppKey);
-      }
-    }
-  }, []);
-
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+export default function ShareDropdown({ ogUrl }: { ogUrl: string }) {
+  const shareUrl = window.location.href;
   const shareTitle =
     typeof document !== 'undefined' ? document.title : '덕스타';
+  const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
 
+  useEffect(() => {
+    if (document.querySelector('script[src*="kakao"]')) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.7/kakao.min.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.Kakao && !window.Kakao.isInitialized()) {
+        window.Kakao.init(kakaoAppKey!);
+      }
+    };
+    document.head.appendChild(script);
+  }, [kakaoAppKey]);
+
+  // 링크 복사 핸들러
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       showToast.success('링크가 클립보드에 복사되었습니다.');
     } catch (err) {
       console.error('URL 복사 실패:', err);
-      alert('링크 복사에 실패했습니다.');
+      showToast.error('링크 복사에 실패했습니다.');
     }
   };
 
   const handleKakaoShare = () => {
-    if (
-      typeof window !== 'undefined' &&
-      window.Kakao &&
-      window.Kakao.isInitialized()
-    ) {
-      // Kakao SDK를 사용한 공유
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: shareTitle,
-          description: '덕스타에서 확인해보세요!',
-          imageUrl:
-            typeof window !== 'undefined'
-              ? `${window.location.origin}/og-logo.jpg`
-              : '',
+    if (!window.Kakao) {
+      showToast.error('카카오 SDK가 아직 로드되지 않았습니다.');
+      return;
+    }
+
+    if (!window.Kakao.isInitialized()) {
+      window.Kakao.init(kakaoAppKey!);
+    }
+
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: shareTitle,
+        description:
+          '덕스타 어워드에서 최고의 애니메이션에 투표하고, 어워드 결과를 확인하세요.',
+        imageUrl: ogUrl,
+        link: {
+          mobileWebUrl: shareUrl,
+          webUrl: shareUrl,
+        },
+      },
+      buttons: [
+        {
+          title: '덕스타 바로가기',
           link: {
             mobileWebUrl: shareUrl,
             webUrl: shareUrl,
           },
         },
-      });
-    } else {
-      // Kakao SDK가 없는 경우 URL 스킴 시도 (모바일)
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = `kakaotalk://sharing?url=${encodeURIComponent(shareUrl)}`;
-      } else {
-        // 데스크톱에서는 카카오톡 공유 링크로 안내
-        alert(
-          '카카오톡 공유는 모바일에서만 가능합니다. 링크를 복사하여 공유해주세요.'
-        );
-        handleCopyLink();
-      }
-    }
+      ],
+    });
   };
 
-  const handleFacebookShare = () => {
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-    const width = 600;
-    const height = 400;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-
-    window.open(
-      facebookUrl,
-      '_blank',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-    );
-  };
-
-  const handleInstagramShare = () => {
-    // 인스타그램은 직접 공유가 불가능하므로 링크 복사 안내
-    alert(
-      '인스타그램은 직접 공유가 불가능합니다. 링크를 복사하여 인스타그램에 붙여넣어주세요.'
-    );
-    handleCopyLink();
-  };
-
+  // 트위터 공유 핸들러
   const handleTwitterShare = () => {
     const text = encodeURIComponent(`${shareTitle} - 덕스타`);
     const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${text}`;
@@ -116,6 +94,7 @@ export default function ShareDropdown() {
     );
   };
 
+  // 라인 공유 핸들러
   const handleLineShare = () => {
     const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}`;
     const width = 600;
@@ -147,22 +126,6 @@ export default function ShareDropdown() {
       >
         <SiKakaotalk size={16} />
         카카오톡 공유
-      </button>
-      <button
-        onClick={handleFacebookShare}
-        aria-label="페이스북 공유"
-        className="flex items-center gap-2 hover:text-black"
-      >
-        <FaFacebook size={16} />
-        페이스북 공유
-      </button>
-      <button
-        onClick={handleInstagramShare}
-        aria-label="인스타그램 공유"
-        className="flex items-center gap-2 hover:text-black"
-      >
-        <FaInstagram size={16} />
-        인스타그램 공유
       </button>
       <button
         onClick={handleTwitterShare}

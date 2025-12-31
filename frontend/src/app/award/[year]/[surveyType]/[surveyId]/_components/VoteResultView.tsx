@@ -4,7 +4,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { differenceInDays } from 'date-fns';
 import { AnimeBallotDto, ApiResponseAnimeVoteHistoryDto } from '@/types';
-import { ChevronRight, RefreshCcw, Share2 } from 'lucide-react';
+import { ChevronRight, RefreshCcw } from 'lucide-react';
 import { queryConfig } from '@/lib/queryConfig';
 import { getCategoryText, getSurveyTypeLabel } from '@/lib/surveyUtils';
 import VoteStamp from './VoteStamp';
@@ -89,11 +89,6 @@ export default function VoteResultView({
         <div className="text-center text-sm sm:text-base">
           {getResultAnnouncementMessage()}
         </div>
-
-        {/* TODO: 공유 기능 (보류) */}
-        {/* <button className="absolute top-4 right-4 rounded-full p-2 hover:bg-gray-200">
-          <Share2 className="size-5" />
-        </button> */}
       </section>
 
       <section className="flex w-full flex-col items-center gap-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 @max-md:justify-center">
