@@ -98,21 +98,20 @@ export default function AwardPage() {
                           isNotYet && 'bg-black/60'
                         )}
                       />
-                      {isNotYet ||
-                        (isClosed && (
-                          <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center bg-black/70 text-white">
-                            <SurveyCountdown
-                              type={survey.status}
-                              text={isClosed ? '투표 집계중...' : undefined}
-                              startDate={
-                                isClosed
-                                  ? survey.endDateTime
-                                  : survey.startDateTime
-                              }
-                              className="text-center"
-                            />
-                          </div>
-                        ))}
+                      {(isNotYet || isClosed) && (
+                        <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center bg-black/70 text-white">
+                          <SurveyCountdown
+                            type={survey.status}
+                            text={isClosed ? '투표 집계중...' : undefined}
+                            startDate={
+                              isClosed
+                                ? survey.endDateTime
+                                : survey.startDateTime
+                            }
+                            className="text-center"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex w-full flex-col justify-between gap-4 p-3 @md:p-4">
@@ -146,7 +145,11 @@ export default function AwardPage() {
                             }}
                             className="flex w-full items-center justify-center rounded-full bg-white/80 px-6 text-xs font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-sm"
                           >
-                            {getButtonText(survey.status, survey.hasVoted)}
+                            {getButtonText(
+                              survey.status,
+                              survey.hasVoted,
+                              survey.endDateTime
+                            )}
                           </button>
                         </div>
                       )}

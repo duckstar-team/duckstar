@@ -60,11 +60,18 @@ export default function SurveyPage() {
     return <SurveyResultChart surveyId={surveyId} />;
   }
 
+  if (
+    surveyStatusData?.status === VoteStatusType.NotYet ||
+    surveyStatusData?.status === VoteStatusType.Closed
+  ) {
+    return <SurveyDisabled survey={surveyStatusData} />;
+  }
+
   // 로그인=false, 투표내역저장=true → 메세지창
   if (!isAuthenticated && voteHistorySaved) {
     return (
       <main className="max-width px-10!">
-        <div className="flex flex-col items-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
           <div className="text-2xl">😎</div>
           <h2 className="text-xl font-semibold">
             기존 투표 이력이 확인되었습니다
@@ -79,13 +86,6 @@ export default function SurveyPage() {
         </div>
       </main>
     );
-  }
-
-  if (
-    surveyStatusData?.status === VoteStatusType.NotYet ||
-    surveyStatusData?.status === VoteStatusType.Closed
-  ) {
-    return <SurveyDisabled survey={surveyStatusData} />;
   }
 
   // 재투표 모드=false, 세션키=true, 투표=true → 결과창 표시

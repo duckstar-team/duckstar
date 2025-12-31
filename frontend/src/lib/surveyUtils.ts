@@ -134,15 +134,20 @@ export const getStatusBadge = (status: VoteStatusType) => {
  * @param hasVoted boolean
  * @returns string
  */
-export const getButtonText = (status: VoteStatusType, hasVoted: boolean) => {
+export const getButtonText = (
+  status: VoteStatusType,
+  hasVoted: boolean,
+  endDateTime?: Date
+) => {
   if (status === VoteStatusType.Open && hasVoted) {
     return '투표 완료';
   } else if (status === VoteStatusType.Open && !hasVoted) {
     return '투표 하기';
-  } else if (status === VoteStatusType.Closed) {
-    return '결과 보기';
+  } else if (status === VoteStatusType.Closed && endDateTime) {
+    const endDate = format(endDateTime, 'M/d 오후 6시');
+    return `결과 공개 - ${endDate}`;
   } else if (status === VoteStatusType.ResultOpen) {
-    return '결과 공개 - 18:00';
+    return '결과 보기';
   }
   return '';
 };
