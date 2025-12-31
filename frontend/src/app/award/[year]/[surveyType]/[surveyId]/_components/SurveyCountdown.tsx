@@ -1,15 +1,20 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { VoteStatusType } from '@/types';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface SurveyCountdownProps {
+  text?: string;
+  type?: VoteStatusType;
   startDate: string | Date;
   className?: string;
 }
 
 export default function SurveyCountdown({
+  text = '오픈까지',
+  type = VoteStatusType.NotYet,
   startDate,
   className,
 }: SurveyCountdownProps) {
@@ -25,7 +30,8 @@ export default function SurveyCountdown({
 
     const update = () => {
       const now = Date.now();
-      const diff = target - now;
+      const diff =
+        type === 'CLOSED' ? target + 18 * 3600 * 1000 - now : target - now;
       const totalSeconds = Math.floor(diff / 1000);
       const days = Math.floor(totalSeconds / 86400);
       const hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -48,11 +54,11 @@ export default function SurveyCountdown({
 
   return (
     <span
-      className={cn('text-lg font-medium text-white @md:text-2xl', className)}
+      className={cn('text-xl font-medium text-white transition', className)}
     >
-      오픈까지
+      {text}
       <br className={isAwardPage ? 'block' : 'hidden'} />{' '}
-      <span className={cn(isAwardPage && 'text-xl @md:text-3xl')}>
+      <span className={cn('transition', isAwardPage && 'text-2xl')}>
         {remaining}
       </span>
     </span>

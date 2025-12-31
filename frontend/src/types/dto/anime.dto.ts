@@ -1,4 +1,11 @@
-import { Anime, MedalPreviewDto, OttDto, SeasonDto, WeekDto } from '@/types';
+import {
+  Anime,
+  MedalPreviewDto,
+  OttDto,
+  SeasonDto,
+  VoteRatioDto,
+  WeekDto,
+} from '@/types';
 
 // Anime Info DTO (home, detail)
 export interface AnimeInfoDto extends Anime {
@@ -94,13 +101,6 @@ export interface HomeDto {
   homeBannerDtos: HomeBannerDto[];
   currentWeekDto: WeekDto;
   pastWeekDtos: WeekDto[];
-}
-
-// Vote Ratio DTO
-export interface VoteRatioDto {
-  votePercent: number;
-  malePercent: number;
-  femalePercent: number;
 }
 
 // Anime Stat DTO

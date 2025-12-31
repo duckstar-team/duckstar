@@ -44,7 +44,9 @@ export default function AwardLayout({
   return (
     <>
       <AwardHeader />
-      <div className="pb-20">{children}</div>
+      <div id="capture-area" className="pb-20">
+        {children}
+      </div>
     </>
   );
 }

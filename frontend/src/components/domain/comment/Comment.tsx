@@ -1,6 +1,7 @@
 import React from 'react';
 import { CommentDto } from '@/types';
 import VoteCount from '@/components/domain/vote/VoteCount';
+import { cn } from '@/lib/utils';
 
 // 시간 포맷팅 유틸리티 함수
 const formatTimeAgo = (dateString: string): string => {
@@ -30,7 +31,8 @@ interface CommentProps {
   comment: CommentDto;
   onLike?: (commentId: number) => void;
   onReply?: (commentId: number) => void;
-  onDelete?: (commentId: number) => void;
+  onDelete?: (commentId: number, surveyCandidateId: number | null) => void;
+  className?: string;
 }
 
 const Comment: React.FC<CommentProps> = ({
@@ -38,6 +40,7 @@ const Comment: React.FC<CommentProps> = ({
   onLike,
   onReply,
   onDelete,
+  className,
 }) => {
   const {
     commentId,
@@ -150,7 +153,12 @@ const Comment: React.FC<CommentProps> = ({
   }
 
   return (
-    <div className="relative box-border flex h-full w-full content-stretch items-start justify-start gap-5 bg-white pb-2">
+    <div
+      className={cn(
+        'relative box-border flex h-fit w-full content-stretch items-start justify-start gap-5 bg-white pb-2',
+        className
+      )}
+    >
       <div className="relative flex h-full w-full shrink-0 content-stretch items-start justify-start gap-[15px] pr-[20px] pl-[31px]">
         {/* 프로필 이미지 */}
         <div className="relative size-10 shrink-0">
