@@ -19,7 +19,7 @@ export async function getWeeks() {
 export async function getSurveyResult(
   surveyId: number,
   page: number = 0,
-  size: number = 20,
+  size: number = 10,
   sort: 'asc' | 'desc' = 'asc'
 ) {
   const params = new URLSearchParams({

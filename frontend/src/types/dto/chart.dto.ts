@@ -3,7 +3,6 @@ import {
   CommentDto,
   MedalPreviewDto,
   PageInfo,
-  SurveyDto,
   VoteRatioDto,
   VoteResultDto,
 } from '@/types';
@@ -42,17 +41,23 @@ export interface ChartAnimeDto {
  */
 export interface SurveyRankDto {
   rank: number;
+  animeId: number;
   animeCandidateDto: AnimeCandidateDto;
   voteRatioDto: VoteRatioDto;
-  totalCount: number;
-  commentDto: CommentDto;
+  commentDtos: CommentDto[];
+  commentTotalCount: number;
 }
 
 /**
  * SurveyResultDto
  */
 export interface SurveyResultDto {
-  surveyDto: SurveyDto;
+  isFirst: boolean;
+  isLast: boolean;
+  page: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+  voteTotalCount: number;
   surveyRankDtos: SurveyRankDto[];
-  pageInfo: PageInfo;
 }
