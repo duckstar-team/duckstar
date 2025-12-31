@@ -33,7 +33,7 @@ export default function SurveyDisabled({ survey }: { survey: SurveyDto }) {
       <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-2 rounded border border-gray-200 bg-white p-6 shadow-lg">
         <img
           src="/award-closed.jpg"
-          alt="survey-not-yet"
+          alt="award-closed"
           className="mb-4 w-1/2 object-cover @max-sm:w-1/2"
         />
         <h2 className="text-xl font-semibold text-black">
