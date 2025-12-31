@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -16,6 +16,8 @@ export default function ImageModal({
   imageUrl,
   title,
 }: ImageModalProps) {
+  const sidebarWidth = useSidebarWidth();
+
   // ESC 키로 모달 닫기
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -40,25 +42,16 @@ export default function ImageModal({
 
   return (
     <div
-      className="fixed z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 top-15 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={onClose}
-      style={{
-        // 헤더 60px 아래부터 시작
-        top: '60px',
-        left: '0',
-        right: '0',
-        bottom: '0',
-      }}
     >
       {/* 모달 컨텐츠 - 사이드바를 제외한 중앙 영역에 위치 */}
       <div
         className="relative flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
         style={{
-          // 사이드바를 제외한 중앙 영역에 위치하도록 오른쪽으로 이동
-          marginLeft: '200px', // 사이드바 너비만큼 오른쪽으로 이동
-          maxWidth: 'calc(100vw - 200px)', // 양쪽 여백 고려
-          maxHeight: '90vh',
+          marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+          maxWidth: 'calc(100vw - 200px)',
         }}
       >
         {/* 이미지 */}
@@ -66,11 +59,7 @@ export default function ImageModal({
           <img
             src={imageUrl}
             alt={title}
-            className="rounded-lg object-contain shadow-2xl"
-            style={{
-              maxWidth: 'calc(100vw - 200px)', // 사이드바를 제외한 영역 크기
-              maxHeight: '90vh',
-            }}
+            className="max-h-[90vh] rounded-lg object-contain shadow-2xl"
           />
 
           {/* 이미지 제목 */}

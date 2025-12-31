@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import React, { useRef } from 'react';
 import { useModal } from '../layout/AppContainer';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 interface ConfirmModalProps {
   title: string;
@@ -16,6 +17,7 @@ export default function ConfirmModal({
 }: ConfirmModalProps) {
   const { openLoginModal } = useModal();
   const modalRef = useRef<HTMLDivElement>(null);
+  const sidebarWidth = useSidebarWidth();
 
   useOutsideClick(modalRef, () => {
     setIsConfirm(false);
@@ -31,6 +33,9 @@ export default function ConfirmModal({
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="max-width fixed top-1/2 left-1/2 z-60 flex w-full max-w-sm -translate-x-1/2 -translate-y-1/2 transform items-center justify-center"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+        }}
       >
         <div className="w-fit rounded-2xl bg-white p-6 text-center shadow-2xl">
           <h3 className="mb-4 text-lg font-bold text-gray-900">{title}</h3>
