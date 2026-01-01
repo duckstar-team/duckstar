@@ -29,6 +29,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_KAKAO_APP_KEY: ${NEXT_PUBLIC_KAKAO_APP_KEY}
     container_name: duckstar-frontend
     expose:
       - "3000"

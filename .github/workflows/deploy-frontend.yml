@@ -33,6 +33,7 @@ jobs:
       KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
       KAKAO_ADMIN_KEY: ${{ secrets.KAKAO_ADMIN_KEY }}
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      NEXT_PUBLIC_KAKAO_APP_KEY: ${{ secrets.NEXT_PUBLIC_KAKAO_APP_KEY }}
 
     steps:
       - name: Checkout code
@@ -106,6 +107,7 @@ jobs:
           KAKAO_CLIENT_SECRET=${{ env.KAKAO_CLIENT_SECRET }}
           KAKAO_ADMIN_KEY=${{ env.KAKAO_ADMIN_KEY }}
           NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_KAKAO_APP_KEY=${{ env.NEXT_PUBLIC_KAKAO_APP_KEY }}
           EOF
 
       - name: Upload code to EC2
