@@ -1,8 +1,8 @@
 'use client';
 
 import { SurveyRankDto } from '@/types';
-import React, { useState } from 'react';
-import Comment from '@/components/domain/comment/Comment';
+import React from 'react';
+import SurveyResultComment from './SurveyResultComment';
 import {
   PieChart,
   Pie,
@@ -14,17 +14,7 @@ import {
   LabelList,
 } from 'recharts';
 import { FaArrowCircleRight } from 'react-icons/fa';
-import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext';
-import { createComment } from '@/api/comment';
-import { showToast } from '@/components/common/Toast';
-import ConfirmModal from '@/components/common/ConfirmModal';
 import Link from 'next/link';
-import { useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { useComments } from '@/hooks/useComments';
 
 // 도넛 차트 컴포넌트
 function DonutChart({
@@ -185,39 +175,6 @@ export default function SurveyResultCard({
     commentTotalCount,
     rank,
   } = surveyRank;
-  const { user } = useAuth();
-  const { deleteComment } = useComments(animeId);
-  const [isCommentOpen, setIsCommentOpen] = useState(false);
-  const [comment, setComment] = useState('');
-  const [isCommenting, setIsCommenting] = useState(false);
-  const [isConfirm, setIsConfirm] = useState(false);
-
-  const { surveyId: surveyIdParam } = useParams();
-  const surveyId = Number(surveyIdParam);
-  const queryClient = useQueryClient();
-
-  const handleCommentSubmit = async (animeId: number, comment: string) => {
-    try {
-      await createComment(animeId, { body: comment });
-      await queryClient.refetchQueries({
-        queryKey: ['survey-result', surveyId],
-      });
-      setComment('');
-      setIsCommenting(false);
-      showToast.success('댓글이 작성되었습니다.');
-    } catch (error) {
-      console.error(error);
-      showToast.error('댓글 작성에 실패했습니다.');
-    }
-  };
-
-  const handleCommentFocus = () => {
-    if (!user) {
-      setIsConfirm(true);
-    } else {
-      setIsCommenting(true);
-    }
-  };
 
   return (
     <div className="relative flex flex-col gap-6">
@@ -343,91 +300,12 @@ export default function SurveyResultCard({
           </div>
 
           {/* 댓글 섹션 */}
-          <button
-            onClick={() => setIsCommentOpen((prev) => !prev)}
-            className="flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-lg font-semibold text-gray-800"
-          >
-            댓글 {commentTotalCount}개
-            <ChevronDown
-              className={cn(
-                'text-gray-500 transition',
-                isCommentOpen && 'rotate-180'
-              )}
-            />
-          </button>
-
-          {/* 댓글 아이템 */}
-          <AnimatePresence initial={false}>
-            {isCommentOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{
-                  height: { duration: 0.2, ease: 'easeInOut' },
-                  opacity: { duration: 0.2, ease: 'easeInOut' },
-                }}
-              >
-                {commentDtos.map((commentDto) => (
-                  <Comment
-                    key={commentDto.commentId}
-                    comment={commentDto}
-                    className="bg-transparent!"
-                    onDelete={() =>
-                      deleteComment(
-                        commentDto.commentId,
-                        animeCandidateDto.animeCandidateId,
-                        surveyId
-                      )
-                    }
-                  />
-                ))}
-                <div className="mt-6 flex flex-col gap-2 px-4">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={
-                        user?.profileImageUrl || '/icons/profile-default.svg'
-                      }
-                      alt={user?.nickname}
-                      className="aspect-square w-7 rounded-full"
-                    />
-                    <input
-                      type="text"
-                      placeholder="댓글 추가..."
-                      className="w-full border-b border-gray-300 p-1 text-sm focus:border-black"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      onFocus={handleCommentFocus}
-                    />
-                  </div>
-                  {isCommenting && (
-                    <div className="flex w-full justify-end gap-1 text-xs font-medium">
-                      <button
-                        onClick={() => setIsCommenting(false)}
-                        className="rounded-full px-3 py-2 hover:bg-gray-200"
-                      >
-                        취소
-                      </button>
-                      <button
-                        disabled={!comment.trim()}
-                        onClick={() => handleCommentSubmit(animeId, comment)}
-                        className="rounded-full bg-black px-3 py-2 text-white hover:opacity-80 disabled:cursor-not-allowed! disabled:bg-gray-200/80 disabled:text-gray-400"
-                      >
-                        댓글 작성
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          {isConfirm && (
-            <ConfirmModal
-              title="댓글 작성"
-              description="댓글을 작성하기 위해서는 로그인이 필요합니다."
-              setIsConfirm={setIsConfirm}
-            />
-          )}
+          <SurveyResultComment
+            animeId={animeId}
+            commentDtos={commentDtos}
+            commentTotalCount={commentTotalCount}
+            surveyCandidateId={animeCandidateDto.animeCandidateId}
+          />
         </div>
       </div>
     </div>
