@@ -1,0 +1,106 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import ConfirmModal from '@/components/common/ConfirmModal';
+
+interface CommentInputFormProps {
+  onSubmit: (content: string) => Promise<void>;
+  placeholder?: string;
+  onCancel?: () => void;
+  showCancelButton?: boolean;
+}
+
+export default function CommentInputForm({
+  onSubmit,
+  placeholder = '댓글 추가...',
+  onCancel,
+  showCancelButton = true,
+}: CommentInputFormProps) {
+  const { user } = useAuth();
+  const [comment, setComment] = useState('');
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [isConfirm, setIsConfirm] = useState(false);
+
+  const handleCommentFocus = () => {
+    if (!user) {
+      setIsConfirm(true);
+    } else {
+      setIsCommenting(true);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!comment.trim()) return;
+
+    try {
+      await onSubmit(comment);
+      setComment('');
+      setIsCommenting(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleCancel = () => {
+    setComment('');
+    setIsCommenting(false);
+    onCancel?.();
+  };
+
+  return (
+    <>
+      <div className="my-2 flex flex-col gap-2 px-4">
+        <div className="flex items-center gap-2">
+          <img
+            src={user?.profileImageUrl || '/icons/profile-default.svg'}
+            alt={user?.nickname}
+            className="aspect-square w-7 rounded-full"
+          />
+          <input
+            type="text"
+            placeholder={placeholder}
+            className="w-full border-b border-gray-300 p-1 text-sm focus:border-black"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            onFocus={handleCommentFocus}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (comment.trim() && isCommenting) {
+                  handleSubmit();
+                }
+              }
+            }}
+          />
+        </div>
+        {isCommenting && (
+          <div className="flex w-full justify-end gap-1 text-xs font-medium">
+            {showCancelButton && (
+              <button
+                onClick={handleCancel}
+                className="rounded-full px-3 py-2 hover:bg-gray-200"
+              >
+                취소
+              </button>
+            )}
+            <button
+              disabled={!comment.trim()}
+              onClick={handleSubmit}
+              className="rounded-full bg-black px-3 py-2 text-white hover:opacity-80 disabled:cursor-not-allowed! disabled:bg-gray-200/80 disabled:text-gray-400"
+            >
+              작성
+            </button>
+          </div>
+        )}
+      </div>
+      {isConfirm && (
+        <ConfirmModal
+          title="댓글 작성"
+          description="댓글을 작성하기 위해서는 로그인이 필요합니다."
+          setIsConfirm={setIsConfirm}
+        />
+      )}
+    </>
+  );
+}

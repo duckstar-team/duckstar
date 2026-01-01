@@ -1,7 +1,6 @@
 import React from 'react';
 
 // 이미지 assets - 답글 펼치기/접기 아이콘
-const textBalloonImg = '/icons/textBalloon.svg';
 const moreImg = '/icons/icon-more.svg';
 
 interface OpenOrFoldRepliesProps {
@@ -12,16 +11,16 @@ interface OpenOrFoldRepliesProps {
   onLoadMore?: () => void; // 더보기 버튼 클릭 시 호출
 }
 
-const OpenOrFoldReplies: React.FC<OpenOrFoldRepliesProps> = ({
+export default function OpenOrFoldReplies({
   isOpen,
   replyCount,
   hasMoreReplies = false,
   onToggle,
   onLoadMore,
-}) => {
+}: OpenOrFoldRepliesProps) {
   const element = (
     <div className="relative flex h-4 w-[50px] shrink-0 items-center justify-center">
-      <div className="h-px w-[50px] bg-[#adb5bd]"></div>
+      <div className="h-px w-[50px] bg-gray-400"></div>
     </div>
   );
 
@@ -49,11 +48,11 @@ const OpenOrFoldReplies: React.FC<OpenOrFoldRepliesProps> = ({
           // 숨기기 버튼 (더 이상 답글이 없을 때)
           <button
             onClick={onToggle}
-            className="relative flex shrink-0 cursor-pointer content-stretch items-center justify-start gap-[15px] transition-opacity hover:opacity-70"
+            className="relative flex shrink-0 content-stretch items-center justify-start gap-[15px] transition-opacity hover:opacity-70"
           >
             {element}
-            <div className="justify-start text-[16px] leading-snug font-semibold text-[#adb5bd]">
-              <p className="leading-[22px] whitespace-pre">답글 숨기기</p>
+            <div className="justify-start text-sm font-medium text-gray-500">
+              답글 숨기기
             </div>
           </button>
         )}
@@ -65,17 +64,13 @@ const OpenOrFoldReplies: React.FC<OpenOrFoldRepliesProps> = ({
     <div className="relative box-border flex size-full content-stretch items-center justify-start gap-[25px] py-0 pr-0 pl-[84px]">
       <button
         onClick={onToggle}
-        className="relative flex shrink-0 cursor-pointer content-stretch items-center justify-start gap-[15px] transition-opacity hover:opacity-70"
+        className="relative flex shrink-0 content-stretch items-center justify-start gap-[15px] transition-opacity hover:opacity-70"
       >
         {element}
-        <div className="justify-start text-[16px] leading-snug font-semibold text-[#adb5bd]">
-          <p className="leading-[22px] whitespace-pre">
-            답글 {replyCount}개 더 보기
-          </p>
+        <div className="justify-start text-sm font-medium text-gray-500">
+          답글 {replyCount}개 더 보기
         </div>
       </button>
     </div>
   );
-};
-
-export default OpenOrFoldReplies;
+}

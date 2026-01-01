@@ -77,7 +77,7 @@ export default function AwardHeader() {
             </button>
             {isDropdownOpen && (
               <div className="absolute top-full right-0 z-10">
-                <ShareDropdown ogUrl={surveyData?.ogUrl} />
+                <ShareDropdown thumbnailUrl={surveyData?.thumbnailUrl} />
               </div>
             )}
           </div>

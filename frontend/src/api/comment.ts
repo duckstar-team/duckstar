@@ -310,7 +310,7 @@ export async function likeComment(
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify(likeId),
+      body: JSON.stringify({ likeId: likeId || null }),
     });
 
     if (!response.ok) {
@@ -382,7 +382,7 @@ export async function likeReply(
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify(likeId),
+      body: JSON.stringify({ likeId: likeId || null }),
     });
 
     if (!response.ok) {
