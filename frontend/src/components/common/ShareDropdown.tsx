@@ -13,15 +13,17 @@ declare global {
   }
 }
 
-export default function ShareDropdown({ ogUrl }: { ogUrl: string }) {
+export default function ShareDropdown({
+  thumbnailUrl,
+}: {
+  thumbnailUrl: string | null;
+}) {
   const shareUrl = window.location.href;
   const shareTitle =
     typeof document !== 'undefined' ? document.title : '덕스타';
   const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
 
   useEffect(() => {
-    if (document.querySelector('script[src*="kakao"]')) return;
-
     const script = document.createElement('script');
     script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.7/kakao.min.js';
     script.async = true;
@@ -44,9 +46,9 @@ export default function ShareDropdown({ ogUrl }: { ogUrl: string }) {
     }
   };
 
-  const handleKakaoShare = () => {
+  // 카카오톡 공유 핸들러
+  const handleKakaoShare = async () => {
     if (!window.Kakao) {
-      showToast.error('카카오 SDK가 아직 로드되지 않았습니다.');
       return;
     }
 
@@ -54,13 +56,18 @@ export default function ShareDropdown({ ogUrl }: { ogUrl: string }) {
       window.Kakao.init(kakaoAppKey!);
     }
 
+    const response = await fetch(
+      `/api/v1/images/og?url=${thumbnailUrl}&format=jpg`
+    );
+    const ogImageUrl = response.url;
+
     window.Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
         title: shareTitle,
         description:
           '덕스타 어워드에서 최고의 애니메이션에 투표하고, 어워드 결과를 확인하세요.',
-        imageUrl: ogUrl,
+        imageUrl: ogImageUrl,
         link: {
           mobileWebUrl: shareUrl,
           webUrl: shareUrl,

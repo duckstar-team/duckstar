@@ -167,7 +167,7 @@ export interface SurveyDto {
   type: SurveyType;
   startDateTime: Date;
   endDateTime: Date;
-  ogUrl: string;
+  thumbnailUrl: string | null;
 }
 
 export enum VoteStatusType {

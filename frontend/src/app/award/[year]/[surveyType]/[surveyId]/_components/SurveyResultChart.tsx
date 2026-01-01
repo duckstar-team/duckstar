@@ -25,7 +25,7 @@ export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
     });
 
   if (isSurveyResultLoading) {
-    return <div>Loading...</div>;
+    return;
   }
   if (!surveyResultData || surveyResultData?.surveyRankDtos.length === 0) {
     return <div>결과가 없습니다.</div>;
@@ -33,11 +33,12 @@ export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
 
   return (
     <section className="space-y-20">
-      <div className="max-width mt-10 flex flex-col gap-16">
+      <div id="capture-area" className="max-width mt-10 flex flex-col gap-16">
         {surveyResultData?.surveyRankDtos?.map((surveyRank: SurveyRankDto) => (
           <SurveyResultCard
             key={surveyRank.animeCandidateDto.animeCandidateId}
             surveyRank={surveyRank}
+            totalCount={surveyResultData?.totalElements || 0}
           />
         ))}
       </div>

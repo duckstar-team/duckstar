@@ -97,7 +97,7 @@ function DonutChart({
             className="h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color2 }}
           />
-          <span className="text-sm break-keep text-gray-700">
+          <span className="text-sm break-keep text-gray-700 @xs:whitespace-nowrap">
             {label2} {percentage2Value.toFixed(1)}%
           </span>
         </div>
@@ -172,8 +172,10 @@ function AgeBarChart({ voteRatioDto }: { voteRatioDto: any }) {
 
 export default function SurveyResultCard({
   surveyRank,
+  totalCount,
 }: {
   surveyRank: SurveyRankDto;
+  totalCount: number;
 }) {
   const {
     animeCandidateDto,
@@ -218,11 +220,11 @@ export default function SurveyResultCard({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="relative flex flex-col gap-6">
       {/* 헤더: 분기 및 순위 */}
       <div className="flex items-center gap-6 px-4">
         <div className="flex flex-col items-center justify-center">
-          {/* 원형 border (순위에 따라 1/n만 채워짐) */}
+          {/* 원형 border (순위에 따라 1순위 전체, 2순위부터 1/n씩 차감) */}
           <svg
             className="absolute"
             width="64"
@@ -244,7 +246,7 @@ export default function SurveyResultCard({
               fill="none"
               stroke="#c30b4e"
               strokeWidth="5"
-              strokeDasharray={`${(2 * Math.PI * 28) / rank} ${2 * Math.PI * 28}`}
+              strokeDasharray={`${((totalCount - rank + 1) / totalCount) * (2 * Math.PI * 28)} ${2 * Math.PI * 28}`}
               strokeLinecap="round"
             />
           </svg>
@@ -293,7 +295,10 @@ export default function SurveyResultCard({
               <div className="flex flex-col gap-4">
                 <h4 className="text-sm font-semibold text-gray-700">득표율</h4>
                 <div className="text-3xl font-medium text-black transition @md:text-4xl">
-                  {voteRatioDto.votePercent?.toFixed(1) || '0.0'}%
+                  {(Math.floor(voteRatioDto.votePercent * 100) / 100).toFixed(
+                    2
+                  )}
+                  %
                 </div>
               </div>
 
