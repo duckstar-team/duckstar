@@ -180,8 +180,7 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
             {/* 답글 달기 */}
             <button
               onClick={() => onReply?.(replyId)}
-              className="cursor-pointer justify-start text-base leading-snug font-medium transition-colors hover:text-[#868e96]"
-              style={{ color: '#ADB5BD' }}
+              className="cursor-pointer justify-start text-sm leading-snug font-medium text-gray-400 transition-colors hover:text-[#868e96]"
             >
               답글 달기
             </button>

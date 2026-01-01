@@ -286,8 +286,7 @@ const Comment: React.FC<CommentProps> = ({
             {/* 답글 달기 */}
             <button
               onClick={() => onReply?.(commentId)}
-              className="cursor-pointer justify-start text-base leading-snug font-medium transition-colors hover:text-[#868e96]"
-              style={{ color: '#ADB5BD' }}
+              className="justify-start text-sm leading-snug font-medium text-gray-400 transition-colors hover:text-[#868e96]"
             >
               답글 달기
             </button>

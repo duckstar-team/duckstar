@@ -88,7 +88,9 @@ export default function AwardPage() {
                   >
                     <div className="relative w-full">
                       <img
-                        src={`/survey-thumb-${i + 1}.png`}
+                        src={
+                          survey.thumbnailUrl || `/survey-thumb-${i + 1}.png`
+                        }
                         alt="survey-thumbnail"
                         className="h-full w-full object-cover"
                       />
@@ -117,19 +119,21 @@ export default function AwardPage() {
                     <div className="flex w-full flex-col justify-between gap-4 p-3 @md:p-4">
                       <div className="flex flex-col gap-2">
                         <div className="max-xs:flex-col flex gap-2 sm:items-center @md:gap-3">
-                          <span
-                            className={cn(
-                              'flex h-6 w-fit items-center rounded-md px-2 py-1 text-xs font-semibold break-keep @md:text-sm',
-                              getStatusBadge(survey.status)
-                            )}
-                          >
-                            {getStatusText(survey.status)}
-                          </span>
+                          {survey.status !== VoteStatusType.ResultOpen && (
+                            <span
+                              className={cn(
+                                'flex h-6 w-fit items-center rounded-md px-2 py-1 text-xs font-semibold break-keep @md:text-sm',
+                                getStatusBadge(survey.status)
+                              )}
+                            >
+                              {getStatusText(survey.status)}
+                            </span>
+                          )}
                           <h2 className="text-base font-semibold text-gray-600 transition-all duration-300 @sm:text-lg @md:text-xl">
                             {survey.year} {getSurveyTypeLabel(survey.type)}
                           </h2>
                         </div>
-                        <div className="xs:ml-1 text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
+                        <div className="text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
                           {format(survey.startDateTime, 'M월 d일 H시')} -{' '}
                           {format(survey.endDateTime, 'M월 d일 H시')}
                         </div>

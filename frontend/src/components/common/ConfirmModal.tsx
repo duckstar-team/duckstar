@@ -26,18 +26,20 @@ export default function ConfirmModal({
   return (
     <AnimatePresence>
       <motion.div
-        ref={modalRef}
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="max-width fixed top-1/2 left-1/2 z-60 flex w-full max-w-sm -translate-x-1/2 -translate-y-1/2 transform items-center justify-center"
+        className="fixed inset-0 z-60 flex w-full transform items-center justify-center"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
-        }}
       >
-        <div className="w-fit rounded-2xl bg-white p-6 text-center shadow-2xl">
+        <div
+          ref={modalRef}
+          className="w-fit rounded-2xl bg-white p-6 text-center shadow-2xl"
+          style={{
+            marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+          }}
+        >
           <h3 className="mb-4 text-lg font-bold text-gray-900">{title}</h3>
           <p className="mb-6 text-sm leading-relaxed text-gray-600">
             {description}
