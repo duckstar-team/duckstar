@@ -26,7 +26,7 @@ public class Survey extends BaseEntity {
     private SurveyType surveyType;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(10)")
+    @Column(columnDefinition = "varchar(20)")
     private SurveyStatus status = SurveyStatus.CLOSED;
 
     private LocalDateTime startDateTime;
@@ -36,6 +36,9 @@ public class Survey extends BaseEntity {
     private Integer votes = 0;
 
     private Integer voterCount = 0;
+
+    @Column(length = 1024)
+    private String thumbnailUrl;
 
 //    private Boolean announcePrepared = false;
 
