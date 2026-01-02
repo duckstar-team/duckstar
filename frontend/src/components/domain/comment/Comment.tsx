@@ -159,7 +159,7 @@ const Comment: React.FC<CommentProps> = ({
         className
       )}
     >
-      <div className="relative flex h-full w-full shrink-0 content-stretch items-start justify-start gap-[15px] pr-[20px] pl-[31px]">
+      <div className="relative flex h-full w-full shrink-0 content-stretch items-start justify-start gap-[15px] px-4">
         {/* 프로필 이미지 */}
         <div className="relative size-10 shrink-0">
           <img
@@ -176,8 +176,8 @@ const Comment: React.FC<CommentProps> = ({
         {/* 댓글 내용 */}
         <div className="relative box-border flex min-h-px min-w-px shrink-0 grow basis-0 flex-col content-stretch items-start justify-start gap-2.5 px-0 pt-[3px] pb-0">
           {/* 헤더 (작성자, 에피소드, 시간, 삭제 버튼) */}
-          <div className="relative flex w-full items-center justify-start gap-[15px]">
-            <div className="relative flex flex-shrink-0 items-center justify-start gap-[5px]">
+          <div className="relative flex w-full flex-wrap items-center justify-start gap-2">
+            <div className="flex flex-wrap items-center justify-start gap-[5px]">
               {/* 작성자명 */}
               <div className="justify-start text-base leading-snug font-semibold whitespace-nowrap text-black">
                 {author}

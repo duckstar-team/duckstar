@@ -43,7 +43,7 @@ export default function SurveyResultComment({
     createComment: createCommentHandler,
   } = useComments(animeId);
   const { openLoginModal } = useModal();
-  const [isCommentOpen, setIsCommentOpen] = useState(commentTotalCount > 0);
+  const [isCommentOpen, setIsCommentOpen] = useState(true);
 
   // 답글 관련 상태
   const [activeReplyForm, setActiveReplyForm] = useState<{
@@ -326,6 +326,7 @@ export default function SurveyResultComment({
               height: { duration: 0.2, ease: 'easeInOut' },
               opacity: { duration: 0.2, ease: 'easeInOut' },
             }}
+            className="min-w-0 overflow-x-hidden"
           >
             {commentDtos.map((commentDto) => (
               <div key={commentDto.commentId} className="mb-6">
@@ -351,7 +352,7 @@ export default function SurveyResultComment({
                 {/* 답글 폼 */}
                 {activeReplyForm?.commentId === commentDto.commentId &&
                   !activeReplyForm.replyId && (
-                    <div className="mb-4 ml-17">
+                    <div className="mb-4 ml-17 min-w-0">
                       <CommentInputForm
                         onSubmit={handleReplySubmitWrapper}
                         placeholder="답글 추가..."
@@ -388,7 +389,7 @@ export default function SurveyResultComment({
                           />
                           {/* 답글에 답글 폼 */}
                           {activeReplyForm?.replyId === reply.replyId && (
-                            <div className="mb-6 ml-33">
+                            <div className="mb-6 ml-33 min-w-0">
                               <CommentInputForm
                                 onSubmit={handleReplySubmitWrapper}
                                 placeholder="답글 추가..."

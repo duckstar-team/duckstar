@@ -14,10 +14,6 @@ export const MAX_VOTES = 10;
  */
 export const GOOGLE_FORM_SURVEYS = [
   {
-    label: '2025년 4분기 애니 조사',
-    link: 'https://docs.google.com/forms/d/e/1FAIpQLSevH6se5MuYkrZvlSEfBOKs51UAxu_lK_9lYmXBeXbXbCbi6w/viewform',
-  },
-  {
     label: '2025년 애니메이션 연말 결산',
     link: 'https://docs.google.com/forms/d/e/1FAIpQLSeHbQol8LaDVe5uiKryIVqNr17Vx8WkshIBV7k4TF2WNuRnbQ/viewform',
   },

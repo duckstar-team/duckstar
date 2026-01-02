@@ -22,8 +22,9 @@ export default function CommentInputForm({
   const [isCommenting, setIsCommenting] = useState(false);
   const [isConfirm, setIsConfirm] = useState(false);
 
-  const handleCommentFocus = () => {
+  const handleCommentFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     if (!user) {
+      e.target.blur(); // 포커스를 제거하여 키보드가 올라오지 않도록
       setIsConfirm(true);
     } else {
       setIsCommenting(true);
@@ -50,17 +51,17 @@ export default function CommentInputForm({
 
   return (
     <>
-      <div className="my-2 flex flex-col gap-2 px-4">
-        <div className="flex items-center gap-2">
+      <div className="my-2 flex min-w-0 flex-col gap-2 px-4">
+        <div className="flex min-w-0 items-center gap-2">
           <img
             src={user?.profileImageUrl || '/icons/profile-default.svg'}
             alt={user?.nickname}
-            className="aspect-square w-7 rounded-full"
+            className="aspect-square w-7 shrink-0 rounded-full"
           />
           <input
             type="text"
             placeholder={placeholder}
-            className="w-full border-b border-gray-300 p-1 text-sm focus:border-black"
+            className="min-w-0 flex-1 border-b border-gray-300 p-1 text-sm focus:border-black"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onFocus={handleCommentFocus}
