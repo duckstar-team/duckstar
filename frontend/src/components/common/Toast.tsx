@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export interface ToastProps {
   id: string;
@@ -81,7 +82,7 @@ export const Toast = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -50, scale: 0.3 }}
       transition={{ duration: 0.2 }}
-      className={`fixed top-20 right-4 z-50 w-xs max-w-sm rounded-lg border-l-4 bg-white shadow-lg ${
+      className={`fixed top-20 right-4 z-50 ml-auto w-fit rounded-lg border-l-4 bg-white shadow-lg ${
         type === 'success'
           ? 'border-green-500'
           : type === 'error'
@@ -89,7 +90,7 @@ export const Toast = ({
             : 'border-blue-500'
       }`}
     >
-      <div className="p-4">
+      <div className="w-[80vw] p-4 sm:w-[50vw] lg:w-[30vw]">
         <div className="flex items-center">
           <div className={`flex-shrink-0 ${getToastStyles()}`}>{getIcon()}</div>
           <div className="ml-3 w-0 flex-1">
@@ -169,5 +170,17 @@ export const showToast = {
     if (typeof window !== 'undefined' && (window as any).showToast) {
       (window as any).showToast(message, 'info', duration);
     }
+  },
+  custom: (message: string, duration?: number) => {
+    toast.success(message, {
+      duration,
+      position: 'bottom-center',
+      style: {
+        fontSize: '14px',
+        backgroundColor: '#000',
+        color: '#fff',
+      },
+      icon: null,
+    });
   },
 };
