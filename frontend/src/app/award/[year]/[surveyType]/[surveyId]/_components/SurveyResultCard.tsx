@@ -1,7 +1,7 @@
 'use client';
 
 import { SurveyRankDto } from '@/types';
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import SurveyResultComment from './SurveyResultComment';
 import {
   PieChart,
@@ -17,7 +17,7 @@ import { FaArrowCircleRight } from 'react-icons/fa';
 import Link from 'next/link';
 
 // 도넛 차트 컴포넌트
-function DonutChart({
+const DonutChart = memo(function DonutChart({
   percentage1,
   percentage2,
   label1,
@@ -35,12 +35,15 @@ function DonutChart({
   const percentage1Value = percentage1 || 0;
   const percentage2Value = percentage2 || 0;
 
-  const data = [
-    { name: label1, value: percentage1Value },
-    { name: label2, value: percentage2Value },
-  ];
+  const data = useMemo(
+    () => [
+      { name: label1, value: percentage1Value },
+      { name: label2, value: percentage2Value },
+    ],
+    [label1, label2, percentage1Value, percentage2Value]
+  );
 
-  const COLORS = [color1, color2];
+  const COLORS = useMemo(() => [color1, color2], [color1, color2]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -48,7 +51,7 @@ function DonutChart({
         className="w-full"
         style={{ height: '120px', maxWidth: '120px', minWidth: '80px' }}
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" debounce={150}>
           <PieChart>
             <Pie
               data={data}
@@ -87,57 +90,69 @@ function DonutChart({
             className="h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color2 }}
           />
-          <span className="text-sm break-keep text-gray-700 @xs:whitespace-nowrap">
+          <span className="text-sm break-keep text-gray-700">
             {label2} {percentage2Value.toFixed(1)}%
           </span>
         </div>
       </div>
     </div>
   );
-}
+});
+
+// 커스텀 레이블 컴포넌트 (바 위에 퍼센트 표시) - 컴포넌트 외부로 이동하여 재생성 방지
+const CustomLabel = (props: any) => {
+  const { x, y, width, value } = props;
+  return (
+    <text
+      x={x + width / 2}
+      y={y - 5}
+      fill="#374151"
+      textAnchor="middle"
+      fontSize={12}
+      fontWeight="semibold"
+    >
+      {Math.round(value) > 0 ? Math.round(value) + '%' : null}
+    </text>
+  );
+};
 
 // 연령별 분포 바 차트 컴포넌트
-function AgeBarChart({ voteRatioDto }: { voteRatioDto: any }) {
-  const ageData = [
-    { name: '14↓', value: voteRatioDto.under14Percent || 0 },
-    { name: '15-19', value: voteRatioDto.to19Percent || 0 },
-    { name: '20-24', value: voteRatioDto.to24Percent || 0 },
-    { name: '25-29', value: voteRatioDto.to29Percent || 0 },
-    { name: '30-34', value: voteRatioDto.to34Percent || 0 },
-    { name: '35↑', value: voteRatioDto.over35Percent || 0 },
-  ];
-
-  const maxValue = Math.max(...ageData.map((d) => d.value), 1);
-  // 가장 높은 값을 가진 인덱스 찾기
-  const maxIndex = ageData.findIndex(
-    (item) => item.value === maxValue && maxValue > 0
+const AgeBarChart = memo(function AgeBarChart({
+  voteRatioDto,
+}: {
+  voteRatioDto: any;
+}) {
+  const ageData = useMemo(
+    () => [
+      { name: '14↓', value: voteRatioDto.under14Percent || 0 },
+      { name: '15-19', value: voteRatioDto.to19Percent || 0 },
+      { name: '20-24', value: voteRatioDto.to24Percent || 0 },
+      { name: '25-29', value: voteRatioDto.to29Percent || 0 },
+      { name: '30-34', value: voteRatioDto.to34Percent || 0 },
+      { name: '35↑', value: voteRatioDto.over35Percent || 0 },
+    ],
+    [
+      voteRatioDto.under14Percent,
+      voteRatioDto.to19Percent,
+      voteRatioDto.to24Percent,
+      voteRatioDto.to29Percent,
+      voteRatioDto.to34Percent,
+      voteRatioDto.over35Percent,
+    ]
   );
 
-  // 하이라이트 색상 적용을 위한 데이터 변환
-  const chartData = ageData.map((item, index) => ({
-    ...item,
-    fill: index === maxIndex ? '#c30b4e' : '#d1d5db',
-  }));
-
-  // 커스텀 레이블 컴포넌트 (바 위에 퍼센트 표시)
-  const CustomLabel = (props: any) => {
-    const { x, y, width, value } = props;
-    return (
-      <text
-        x={x + width / 2}
-        y={y - 5}
-        fill="#374151"
-        textAnchor="middle"
-        fontSize={12}
-        fontWeight="semibold"
-      >
-        {Math.round(value) > 0 ? Math.round(value) + '%' : null}
-      </text>
-    );
-  };
+  const { chartData } = useMemo(() => {
+    const max = Math.max(...ageData.map((d) => d.value), 1);
+    const maxIdx = ageData.findIndex((item) => item.value === max && max > 0);
+    const data = ageData.map((item, index) => ({
+      ...item,
+      fill: index === maxIdx ? '#c30b4e' : '#d1d5db',
+    }));
+    return { maxValue: max, maxIndex: maxIdx, chartData: data };
+  }, [ageData]);
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} debounce={150}>
       <BarChart
         data={chartData}
         margin={{ top: 30, right: 5, left: 5, bottom: 5 }}
@@ -158,7 +173,7 @@ function AgeBarChart({ voteRatioDto }: { voteRatioDto: any }) {
       </BarChart>
     </ResponsiveContainer>
   );
-}
+});
 
 export default function SurveyResultCard({
   surveyRank,
