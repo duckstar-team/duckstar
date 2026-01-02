@@ -22,8 +22,8 @@ interface RankContentsProps {
   image: string;
   rating: number;
   averageRating?: number; // 원본 전체 점수
-  rankColor?: string;
   className?: string;
+  variant?: 'default' | 'winner';
 }
 
 export default function RankContents({
@@ -37,10 +37,13 @@ export default function RankContents({
   rating,
   averageRating,
   className = '',
+  variant = 'default',
 }: RankContentsProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [tooltipVisible, setTooltipVisible] = useState(false);
+
+  const isWinner = variant === 'winner';
 
   // 실제 전체 점수 (소수점 셋째자리까지 반올림, 항상 표시)
   const fullRating =
@@ -62,7 +65,9 @@ export default function RankContents({
 
   return (
     <div
-      className={`xs:gap-3 inline-flex h-[140px] w-full max-w-[488px] items-center justify-start gap-2 sm:gap-5 ${className}`}
+      className={`xs:gap-3 inline-flex ${
+        isWinner ? 'h-52' : 'h-[140px]'
+      } w-full max-w-[488px] items-center justify-start gap-2 sm:gap-5 ${className}`}
     >
       {/* 순위 및 변동 정보 */}
       <div className="inline-flex w-9 flex-col items-center justify-start">
@@ -73,14 +78,30 @@ export default function RankContents({
       </div>
 
       {/* 애니메이션 포스터 */}
-      <div className="xs:w-[60px] xs:h-[80px] h-[65px] w-[50px] overflow-hidden rounded-2xl sm:h-[100px] sm:w-[75px]">
+      <div
+        className={`overflow-hidden rounded-md ${
+          isWinner
+            ? 'xs:w-20 xs:h-28 h-20 w-16 sm:h-36 sm:w-28'
+            : 'xs:w-[60px] xs:h-[80px] h-[65px] w-[50px] sm:h-[100px] sm:w-[75px]'
+        }`}
+      >
         <img className="h-full w-full object-cover" src={image} alt={title} />
       </div>
 
       {/* 제목, 스튜디오, 별점 정보 */}
       <div className="inline-flex flex-col items-end justify-center gap-2">
-        <div className="xs:max-w-[200px] flex w-72 max-w-[150px] flex-col items-start justify-start gap-[3px] sm:max-w-[288px]">
-          <div className="xs:text-lg line-clamp-2 justify-start self-stretch text-base leading-snug font-semibold text-black sm:text-lg">
+        <div
+          className={`flex w-72 flex-col items-start justify-start gap-[3px] ${
+            isWinner
+              ? 'xs:max-w-[179px] max-w-[130px] sm:max-w-[251px]'
+              : 'xs:max-w-[200px] max-w-[150px] sm:max-w-[288px]'
+          }`}
+        >
+          <div
+            className={`xs:text-lg line-clamp-2 justify-start self-stretch text-base leading-snug ${
+              isWinner ? 'font-bold' : 'font-semibold'
+            } text-black sm:text-lg`}
+          >
             {title}
           </div>
           <div className="xs:text-sm justify-start text-center text-xs leading-snug font-normal text-gray-400 sm:text-sm">
