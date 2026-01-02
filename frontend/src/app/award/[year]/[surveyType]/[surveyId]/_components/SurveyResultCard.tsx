@@ -76,18 +76,18 @@ const DonutChart = memo(function DonutChart({
         </ResponsiveContainer>
       </div>
       <div className="flex flex-col gap-1 @max-xs:ml-4">
-        <div className="flex items-center justify-center gap-2 @max-xs:justify-start">
+        <div className="flex items-start justify-center gap-2 @max-xs:justify-start">
           <div
-            className="h-3 w-3 shrink-0 rounded-full"
+            className="mt-1 h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color1 }}
           />
           <span className="text-sm break-keep text-gray-700">
             {label1} {percentage1Value.toFixed(1)}%
           </span>
         </div>
-        <div className="flex items-center justify-center gap-2 @max-xs:justify-start">
+        <div className="flex items-start justify-center gap-2 @max-xs:justify-start">
           <div
-            className="h-3 w-3 shrink-0 rounded-full"
+            className="mt-1 h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color2 }}
           />
           <span className="text-sm break-keep text-gray-700">
@@ -157,7 +157,7 @@ const AgeBarChart = memo(function AgeBarChart({
         data={chartData}
         margin={{ top: 30, right: 5, left: 5, bottom: 5 }}
       >
-        <Bar dataKey="value" radius={[16, 16, 0, 0]} maxBarSize={20}>
+        <Bar dataKey="value" radius={[16, 16, 0, 0]} maxBarSize={17}>
           {chartData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.fill} />
           ))}
