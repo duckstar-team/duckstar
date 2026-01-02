@@ -39,7 +39,7 @@ export default function ShareDropdown({
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      showToast.success('링크가 클립보드에 복사되었습니다.');
+      showToast.custom('링크가 클립보드에 복사되었습니다.');
     } catch (err) {
       console.error('URL 복사 실패:', err);
       showToast.error('링크 복사에 실패했습니다.');
