@@ -68,7 +68,7 @@ export default function AwardHeader() {
             ref={dropdownRef}
             className="relative ml-auto flex items-center gap-1"
           >
-            <DownloadBtn />
+            {/* <DownloadBtn /> */}
             <button
               onClick={() => setIsDropdownOpen((prev) => !prev)}
               className="rounded-full p-2 transition hover:bg-gray-200"
