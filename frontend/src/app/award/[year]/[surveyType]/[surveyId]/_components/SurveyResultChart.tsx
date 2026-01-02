@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import SurveyResultCard from './SurveyResultCard';
 import Pagination from '@/components/common/Pagination';
 import { getSurveyResult } from '@/api/chart';
+import SurveyResultSkeleton from '@/components/skeletons/SurveyResultSkeleton';
 
 export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
   const [page, setPage] = useState(0);
@@ -25,7 +26,7 @@ export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
     });
 
   if (isSurveyResultLoading) {
-    return;
+    return <SurveyResultSkeleton />;
   }
   if (!surveyResultData || surveyResultData?.surveyRankDtos.length === 0) {
     return <div>결과가 없습니다.</div>;
