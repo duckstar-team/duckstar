@@ -1,33 +1,10 @@
 import {
   AnimeCandidateDto,
+  AnimeRankDto,
   CommentDto,
-  MedalPreviewDto,
   PageInfo,
   VoteRatioDto,
-  VoteResultDto,
 } from '@/types';
-
-interface AnimeRankDto {
-  rankPreviewDto: {
-    type: string;
-    contentId: number;
-    rank: number;
-    rankDiff: number | null;
-    consecutiveWeeksAtSameRank: number;
-    mainThumbnailUrl: string;
-    title: string;
-    subTitle: string;
-  };
-  medalPreviews: MedalPreviewDto[];
-  animeStatDto: {
-    debutRank: number;
-    debutDate: string;
-    peakRank: number;
-    peakDate: string;
-    weeksOnTop10: number;
-  };
-  voteResultDto: VoteResultDto;
-}
 
 export interface ChartAnimeDto {
   animeRankDtos: AnimeRankDto[];

@@ -24,7 +24,7 @@ interface HomeRankInfoProps {
   percentage?: string;
   averageRating?: number; // 백엔드에서 받은 평균 별점
   voterCount?: number; // 백엔드에서 받은 참여자 수
-  medal?: 'Gold' | 'Silver' | 'Bronze' | 'None';
+  medal?: 'GOLD' | 'SILVER' | 'BRONZE' | 'NONE';
   type?: 'ANIME' | 'HERO' | 'HEROINE';
   contentId?: number;
   className?: string;
@@ -40,7 +40,7 @@ export default function HomeRankInfo({
   percentage = '15.18',
   averageRating = 4.5, // 기본값
   voterCount = 0, // 기본값
-  medal = 'Gold',
+  medal = 'GOLD',
   type = 'ANIME',
   contentId = 1,
   className = '',

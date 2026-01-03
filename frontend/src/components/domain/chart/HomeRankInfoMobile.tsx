@@ -25,7 +25,7 @@ interface HomeRankInfoMobileProps {
   voterCount?: number; // 백엔드에서 받은 참여자 수
   type?: 'ANIME' | 'HERO' | 'HEROINE';
   contentId?: number;
-  medal?: 'Gold' | 'Silver' | 'Bronze' | 'None';
+  medal?: 'GOLD' | 'SILVER' | 'BRONZE' | 'NONE';
   className?: string;
 }
 
@@ -41,7 +41,7 @@ export default function HomeRankInfoMobile({
   voterCount = 0, // 기본값
   type = 'ANIME',
   contentId = 1,
-  medal = 'None',
+  medal = 'NONE',
   className = '',
 }: HomeRankInfoMobileProps) {
   const router = useRouter();
@@ -169,12 +169,12 @@ export default function HomeRankInfoMobile({
           <Medal
             property1={
               rank === 1
-                ? 'Gold'
+                ? 'GOLD'
                 : rank === 2
-                  ? 'Silver'
+                  ? 'SILVER'
                   : rank === 3
-                    ? 'Bronze'
-                    : 'None'
+                    ? 'BRONZE'
+                    : 'NONE'
             }
           />
         </div>
