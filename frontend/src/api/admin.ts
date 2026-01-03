@@ -2,7 +2,7 @@ import {
   EpisodeStarDto,
   IpManagementLogSliceDto,
   SubmissionCountSliceDto,
-} from '@/types';
+} from '@/types/dtos';
 import { apiCall } from './http';
 
 // 애니메이션 등록 API

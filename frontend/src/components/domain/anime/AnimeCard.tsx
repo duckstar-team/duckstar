@@ -2,8 +2,9 @@
 
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { AnimePreviewDto } from '@/types';
+import { AnimePreviewDto } from '@/types/dtos';
 import { useNavigation } from '@/hooks/useNavigation';
+import { OttType } from '@/types/enums';
 
 interface AnimeCardProps {
   anime: AnimePreviewDto;
@@ -68,8 +69,16 @@ export default function AnimeCard({
     }
 
     // 날짜만 비교하기 위해 시간을 00:00:00으로 설정
-    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+    const nowDateOnly = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const airDateOnly = new Date(
+      airDate.getFullYear(),
+      airDate.getMonth(),
+      airDate.getDate()
+    );
 
     // 이미 지난 경우 D-DAY로 표시
     if (airDateOnly < nowDateOnly) {
@@ -117,8 +126,16 @@ export default function AnimeCard({
       const airDate = new Date(airTime);
       if (!isNaN(airDate.getTime())) {
         const now = new Date();
-        const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+        const nowDateOnly = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        const airDateOnly = new Date(
+          airDate.getFullYear(),
+          airDate.getMonth(),
+          airDate.getDate()
+        );
 
         // 지난 날짜인 경우 시간만 표시
         if (airDateOnly < nowDateOnly) {
@@ -438,7 +455,7 @@ export default function AnimeCard({
                   />
                 </div>
               )}
-              {ott.ottType === 'LAFTEL' && (
+              {ott.ottType === OttType.Lafel && (
                 <div className="absolute inset-0">
                   <img
                     src="/icons/laftel-logo.svg"

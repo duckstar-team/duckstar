@@ -6,6 +6,7 @@ import RankDiff from './RankDiff';
 import Medal from './Medal';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import StarRatingDisplay from '@/components/domain/star/StarRatingDisplay';
+import { ContentType, MedalType } from '@/types/enums';
 
 interface HomeRankInfoProps {
   rank?: number;
@@ -24,8 +25,8 @@ interface HomeRankInfoProps {
   percentage?: string;
   averageRating?: number; // 백엔드에서 받은 평균 별점
   voterCount?: number; // 백엔드에서 받은 참여자 수
-  medal?: 'GOLD' | 'SILVER' | 'BRONZE' | 'NONE';
-  type?: 'ANIME' | 'HERO' | 'HEROINE';
+  medal?: MedalType;
+  type?: ContentType;
   contentId?: number;
   className?: string;
 }
@@ -40,8 +41,8 @@ export default function HomeRankInfo({
   percentage = '15.18',
   averageRating = 4.5, // 기본값
   voterCount = 0, // 기본값
-  medal = 'GOLD',
-  type = 'ANIME',
+  medal = MedalType.Gold,
+  type = ContentType.Anime,
   contentId = 1,
   className = '',
 }: HomeRankInfoProps) {
@@ -102,7 +103,7 @@ export default function HomeRankInfo({
     }
 
     // Next.js 클라이언트 사이드 라우팅 사용 (간단한 라우터)
-    if (type === 'ANIME') {
+    if (type === ContentType.Anime) {
       router.push(`/animes/${contentId}`);
     } else {
       router.push(`/characters/${contentId}`);

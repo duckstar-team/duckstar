@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommentDto } from '@/types';
+import { CommentDto } from '@/types/dtos';
 import VoteCount from '@/components/domain/vote/VoteCount';
 import { cn } from '@/lib/utils';
 

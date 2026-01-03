@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import VoteToggle from './VoteToggle';
-import { AnimeCandidateDto } from '@/types';
+import { AnimeCandidateDto } from '@/types/dtos';
 import { MAX_VOTES } from '@/lib/constants';
 
 interface VoteCardProps {

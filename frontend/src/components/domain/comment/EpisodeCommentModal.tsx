@@ -10,43 +10,7 @@ import { useModal } from '@/components/layout/AppContainer';
 import { showToast } from '@/components/common/Toast';
 import { cn } from '@/lib/utils';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
-
-// API 응답 타입 정의
-interface EpisodeDto {
-  episodeId: number;
-  episodeNumber: number;
-  isBreak: boolean;
-  scheduledAt: string;
-  isRescheduled: boolean;
-  nextEpScheduledAt?: string;
-}
-
-interface AnimeInfoDto {
-  medium: string;
-  status: string;
-  totalEpisodes: number;
-  premiereDateTime: string;
-  titleKor: string;
-  titleOrigin?: string;
-  dayOfWeek?: string;
-  airTime?: string;
-  corp?: string;
-  director?: string;
-  genre?: string;
-  author?: string;
-  minAge?: number;
-  officalSite?: Record<string, string>;
-  mainImageUrl?: string;
-  mainThumbnailUrl?: string;
-  seasonDtos?: Array<{
-    year: number;
-    seasonType: string;
-  }>;
-  ottDtos?: Array<{
-    ottType: string;
-    watchUrl: string;
-  }>;
-}
+import { AnimeInfoDto, EpisodeDto } from '@/types/dtos';
 
 interface AnimeHomeDto {
   animeInfoDto: AnimeInfoDto;

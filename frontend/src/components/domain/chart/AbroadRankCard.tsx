@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import RankDiff from './RankDiff';
 import { cn } from '@/lib/utils';
-import { RankPreviewDto } from '@/types';
+import { RankPreviewDto } from '@/types/dtos';
 
 interface AbroadRankCardProps {
   rankPreview: RankPreviewDto;

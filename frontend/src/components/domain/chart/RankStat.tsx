@@ -5,7 +5,7 @@ import WeekRatingStats from './WeekRatingStats';
 import { getThisWeekRecord } from '@/lib/quarterUtils';
 import { format } from 'date-fns';
 import MedalGrid from './MedalGrid';
-import { AnimeRankDto } from '@/types';
+import { AnimeRankDto } from '@/types/dtos';
 import { ChevronRight, TrendingUp } from 'lucide-react';
 
 interface RankStatProps {

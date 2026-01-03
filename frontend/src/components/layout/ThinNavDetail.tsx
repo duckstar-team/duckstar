@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { WeekDto, SurveyDto } from '@/types';
+import { WeekDto, SurveyDto } from '@/types/dtos';
 import { ApiResponse } from '@/api/http';
 import { getSurveyTypeLabel } from '@/lib/surveyUtils';
 import { useChart } from './AppContainer';

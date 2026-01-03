@@ -1,4 +1,5 @@
-import { PageInfo } from '@/types';
+import { PageInfo } from '@/types/dtos';
+import { AdminTaskType } from '../enums';
 
 // Admin Submission API functions
 export interface SubmissionCountDto {
@@ -38,7 +39,7 @@ export interface IpManagementLogDto {
   quarter: number | null;
   week: number | null;
   ipHash: string;
-  taskType: 'BAN' | 'UNBAN' | 'WITHDRAW' | 'UNDO_WITHDRAW';
+  taskType: AdminTaskType;
   reason: string;
   managedAt: string;
   isUndoable: boolean;

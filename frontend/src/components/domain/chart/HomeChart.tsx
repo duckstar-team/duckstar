@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation';
 import HomeRankInfo from './HomeRankInfo';
 import HomeRankInfoMobile from './HomeRankInfoMobile';
-import { DuckstarRankPreviewDto, WeekDto } from '@/types';
+import { DuckstarRankPreviewDto, WeekDto } from '@/types/dtos';
+import { MedalType } from '@/types/enums';
 
 interface HomeChartProps {
   duckstarRankPreviews: DuckstarRankPreviewDto[];
@@ -49,11 +50,11 @@ function getRankDiffType(
 }
 
 // Medal 타입 변환 헬퍼 함수
-function getMedalType(rank: number): 'Gold' | 'Silver' | 'Bronze' | 'None' {
-  if (rank === 1) return 'Gold';
-  if (rank === 2) return 'Silver';
-  if (rank === 3) return 'Bronze';
-  return 'None';
+function getMedalType(rank: number): MedalType {
+  if (rank === 1) return MedalType.Gold;
+  if (rank === 2) return MedalType.Silver;
+  if (rank === 3) return MedalType.Bronze;
+  return MedalType.None;
 }
 
 export default function HomeChart({

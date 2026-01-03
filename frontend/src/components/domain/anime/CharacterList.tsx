@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
-import CharacterCard, { CharacterData } from './CharacterCard';
+import CharacterCard from './CharacterCard';
 import { cn } from '@/lib/utils';
+import { Character } from '@/types/dtos';
 
 interface CharacterListProps {
-  characters: CharacterData[];
+  characters: Character[];
   className?: string;
   isMobile?: boolean;
 }
@@ -13,21 +14,23 @@ interface CharacterListProps {
 export default function CharacterList({
   characters,
   className,
-  isMobile = false
+  isMobile = false,
 }: CharacterListProps) {
-
-
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn('w-full', className)}>
       {/* 캐릭터 목록 */}
       {characters.length > 0 ? (
-        <div className={`w-full ${isMobile ? 'flex justify-center px-3' : 'flex justify-center px-3'}`}>
-          <div className={`grid mt-3 ${isMobile ? 'grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-5 sm:gap-2 w-[100%] max-w-[100%]' : 'grid-cols-3 gap-x-[10px] gap-y-[10px]'}`}>
+        <div
+          className={`w-full ${isMobile ? 'flex justify-center px-3' : 'flex justify-center px-3'}`}
+        >
+          <div
+            className={`mt-3 grid ${isMobile ? 'w-[100%] max-w-[100%] grid-cols-2 gap-x-8 gap-y-5 sm:grid-cols-3 sm:gap-2' : 'grid-cols-3 gap-x-[10px] gap-y-[10px]'}`}
+          >
             {characters.map((character, index) => (
-              <div 
+              <div
                 key={character.characterId}
-                data-property-1={index % 2 === 0 ? "even" : "odd"}
-                className={`${isMobile ? 'w-[162px] h-[225px]' : 'w-[180px] h-[250px]'} flex flex-col justify-start items-center justify-self-center`}
+                data-property-1={index % 2 === 0 ? 'even' : 'odd'}
+                className={`${isMobile ? 'h-[225px] w-[162px]' : 'h-[250px] w-[180px]'} flex flex-col items-center justify-start justify-self-center`}
               >
                 <CharacterCard
                   character={character}
@@ -39,10 +42,8 @@ export default function CharacterList({
           </div>
         </div>
       ) : (
-        <div className="text-center py-8">
-          <div className="text-gray-400 text-sm">
-            등록된 캐릭터가 없습니다.
-          </div>
+        <div className="py-8 text-center">
+          <div className="text-sm text-gray-400">등록된 캐릭터가 없습니다.</div>
         </div>
       )}
     </div>

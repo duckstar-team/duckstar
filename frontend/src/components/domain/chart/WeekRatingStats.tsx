@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import StarDistributionChart from '../star/StarDistributionChart';
 import { useChart } from '@/components/layout/AppContainer';
-import { VoteResultDto } from '@/types';
+import { VoteResultDto } from '@/types/dtos';
 import { createDistributionArray } from '@/lib/chartUtils';
 
 interface WeekRatingStatsProps {

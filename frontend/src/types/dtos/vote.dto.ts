@@ -4,7 +4,16 @@ import {
   SurveyCommentDto,
   VoteResultDto,
   WeekDto,
-} from '@/types';
+} from '@/types/dtos';
+import {
+  BallotType,
+  EpEvaluateState,
+  Medium,
+  AgeGroup,
+  Gender,
+  SurveyType,
+  SurveyStatus,
+} from '../enums';
 
 // 실시간 투표 후보자 목록 DTO
 export interface LiveCandidateListDto {
@@ -25,17 +34,10 @@ export interface LiveCandidateDto extends Anime {
   result: VoteResultDto;
 }
 
-// 투표 상태 Enum
-type EvaluateState =
-  | 'CLOSED' // 투표 종료
-  | 'VOTING_WINDOW' // 투표 진행 중
-  | 'LOGIN_REQUIRED' // 로그인 필요(늦참 투표)
-  | 'ALWAYS_OPEN'; // 항상 투표 진행
-
 // 투표 후보자 목록 DTO
 export interface CandidateListDto {
   episodeId: number;
-  state: EvaluateState;
+  state: EpEvaluateState;
   hasVoted: boolean;
   mainThumbnailUrl: string;
   titleKor: string;
@@ -91,11 +93,6 @@ export interface AnimeBallotDto {
   surveyCommentDto: SurveyCommentDto;
 }
 
-export enum BallotType {
-  Bonus = 'BONUS',
-  Normal = 'NORMAL',
-}
-
 // 애니메이션 투표 상태 응답 DTO
 export interface ApiResponseAnimeVoteHistoryDto {
   isSuccess: boolean;
@@ -118,8 +115,8 @@ export interface ApiResponseAnimeCandidateListDto {
 export interface AnimeCandidateListDto {
   animeCandidates: AnimeCandidateDto[];
   candidatesCount: number;
-  memberGender: MemberGender;
-  memberAgeGroup?: MemberAgeGroup;
+  memberGender: Gender;
+  memberAgeGroup?: AgeGroup;
 }
 
 /**
@@ -134,57 +131,18 @@ export interface AnimeCandidateDto {
   quarter: number;
 }
 
-export enum Medium {
-  Movie = 'MOVIE',
-  Tva = 'TVA',
-  Ott = 'OTT',
-  Special = 'SPECIAL',
-}
-
-export enum MemberAgeGroup {
-  Age15_19 = 'AGE_15_19',
-  Age20_24 = 'AGE_20_24',
-  Age25_29 = 'AGE_25_29',
-  Age30_34 = 'AGE_30_34',
-  Over35 = 'OVER_35',
-  Under14 = 'UNDER_14',
-}
-
-export enum MemberGender {
-  Female = 'FEMALE',
-  Male = 'MALE',
-  Unknown = 'UNKNOWN',
-}
-
 /**
  * SurveyDto
  */
 export interface SurveyDto {
   surveyId: number;
   hasVoted: boolean;
-  status: VoteStatusType;
+  status: SurveyStatus;
   year: number;
   type: SurveyType;
   startDateTime: Date;
   endDateTime: Date;
   thumbnailUrl: string | null;
-}
-
-export enum VoteStatusType {
-  Closed = 'CLOSED',
-  Open = 'OPEN',
-  Paused = 'PAUSED',
-  NotYet = 'NOT_YET',
-  ResultOpen = 'RESULT_OPEN',
-}
-
-export enum SurveyType {
-  Anticipated = 'ANTICIPATED',
-  Q1End = 'Q1_END',
-  Q2End = 'Q2_END',
-  Q3End = 'Q3_END',
-  Q4End = 'Q4_END',
-  YearEnd = 'YEAR_END',
 }
 
 export interface VoteRatioDto {

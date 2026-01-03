@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
-import { SurveyDto } from '@/types';
+import { SurveyDto } from '@/types/dtos';
 import { ApiResponse } from '@/api/http';
 import { queryConfig } from '@/lib/queryConfig';
 import {

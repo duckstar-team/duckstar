@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { CommentDto, CommentRequestDto, ReplyDto } from '@/types';
+import { CommentDto, CommentRequestDto, ReplyDto } from '@/types/dtos';
 import {
   getAnimeComments,
   createComment,
@@ -129,7 +129,7 @@ export function useComments(animeId: number) {
   const deleteCommentHandler = useCallback(
     async (
       commentId: number,
-      surveyCandidateId?: number,
+      surveyCandidateId?: number | null,
       surveyId?: number
     ) => {
       const shouldDelete = confirm('댓글을 삭제하시겠습니까?');

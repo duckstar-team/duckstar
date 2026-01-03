@@ -22,7 +22,7 @@ import {
   PageInfo,
   ReplyDto,
   ReplyRequestDto,
-} from '@/types';
+} from '@/types/dtos';
 import { getThisWeekRecord } from '@/lib/quarterUtils';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';

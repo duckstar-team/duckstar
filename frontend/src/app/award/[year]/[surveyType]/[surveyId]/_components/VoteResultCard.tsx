@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import CommentPostForm from '@/components/domain/comment/CommentPostForm';
 import EpisodeCommentModal from '@/components/domain/comment/EpisodeCommentModal';
-import { AnimeBallotDto } from '@/types';
+import { AnimeBallotDto } from '@/types/dtos';
 import { getAnimeEpisodes } from '@/api/search';
 import { createComment } from '@/api/comment';
 import { showToast } from '@/components/common/Toast';

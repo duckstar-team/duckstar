@@ -1,6 +1,6 @@
 import RankDiff from './RankDiff';
 import StarRatingDisplay from '@/components/domain/star/StarRatingDisplay';
-import { AnimeRankDto } from '@/types';
+import { AnimeRankDto } from '@/types/dtos';
 import { getRankDiffType } from '@/lib/chartUtils';
 import TooltipBtn from '@/components/common/TooltipBtn';
 

@@ -1,24 +1,23 @@
+import { SeasonType } from '@/types/enums';
 import { type ClassValue, clsx } from 'clsx';
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
 
-export type Season = 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER';
-
 /**
  * 분기를 기반으로 계절을 결정합니다.
  * @param quarter - 분기 (1~4)
  * @returns 계절 ("SPRING" | "SUMMER" | "AUTUMN" | "WINTER")
  */
-export function getSeasonFromQuarter(quarter: number): Season {
-  const seasonMap: { [key: number]: Season } = {
-    1: 'WINTER', // 1분기 -> 겨울
-    2: 'SPRING', // 2분기 -> 봄
-    3: 'SUMMER', // 3분기 -> 여름
-    4: 'AUTUMN', // 4분기 -> 가을
+export function getSeasonFromQuarter(quarter: number): SeasonType {
+  const seasonMap: { [key: number]: SeasonType } = {
+    1: SeasonType.Winter, // 1분기 -> 겨울
+    2: SeasonType.Spring, // 2분기 -> 봄
+    3: SeasonType.Summer, // 3분기 -> 여름
+    4: SeasonType.Autumn, // 4분기 -> 가을
   };
-  return seasonMap[quarter] || 'WINTER';
+  return seasonMap[quarter] || SeasonType.Winter;
 }
 
 /**
@@ -26,7 +25,7 @@ export function getSeasonFromQuarter(quarter: number): Season {
  * @param startDate - 시작 날짜 (YYYY-MM-DD 형식)
  * @returns 계절 ("SPRING" | "SUMMER" | "AUTUMN" | "WINTER")
  */
-export function getSeasonFromDate(startDate: string): Season {
+export function getSeasonFromDate(startDate: string): SeasonType {
   const date = new Date(startDate);
   const month = date.getMonth() + 1; // getMonth()는 0부터 시작하므로 +1
 
@@ -41,7 +40,7 @@ export function getSeasonFromDate(startDate: string): Season {
  * @param season - 영문 계절 ("SPRING" | "SUMMER" | "AUTUMN" | "WINTER")
  * @returns 한글 계절 ("봄" | "여름" | "가을" | "겨울")
  */
-export function getSeasonInKorean(season: Season | string): string {
+export function getSeasonInKorean(season: SeasonType | string): string {
   const seasonMap: { [key: string]: string } = {
     SPRING: '봄',
     SUMMER: '여름',

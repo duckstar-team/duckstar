@@ -1,3 +1,5 @@
+import { MedalType, OttType, SeasonType } from '../enums';
+
 // Page Info
 export interface PageInfo {
   hasNext: boolean;
@@ -15,34 +17,21 @@ export interface WeekDto {
   endDate: string;
 }
 
-// Day of Week Enum
-export type DayOfWeek =
-  | 'UPCOMING'
-  | 'SUN'
-  | 'MON'
-  | 'TUE'
-  | 'WED'
-  | 'THU'
-  | 'FRI'
-  | 'SAT'
-  | 'SPECIAL'
-  | 'NONE';
-
 // Season DTO
 export interface SeasonDto {
   year: number;
-  seasonType: 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER';
+  seasonType: SeasonType;
 }
 
 // OTT DTO
 export interface OttDto {
-  ottType: 'LAFTEL' | 'NETFLIX' | 'WAVVE' | 'TVING' | 'WATCHA' | 'PRIME';
+  ottType: OttType;
   watchUrl: string;
 }
 
 // Medal Preview Dto
 export interface MedalPreviewDto {
-  type: 'GOLD' | 'SILVER' | 'BRONZE' | 'NONE';
+  type: MedalType;
   rank: number;
   year: number;
   quarter: number;
@@ -57,9 +46,9 @@ export interface VoteResultDto {
 
 // Star Info DTO
 export interface StarInfoDto {
-  isBlocked?: boolean; // 중복 투표 시도한 경우 차단 처리
-  episodeStarId: number; // 별점 투표 기록 ID
-  userStarScore: number; // 사용자가 투표한 별점
+  isBlocked: boolean | null; // 중복 투표 시도한 경우 차단 처리
+  episodeStarId: number | null; // 별점 투표 기록 ID
+  userStarScore: number | null; // 사용자가 투표한 별점
   starAverage: number;
   star_0_5: number;
   star_1_0: number;

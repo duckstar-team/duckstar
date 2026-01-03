@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReplyDto } from '@/types';
+import { ReplyDto } from '@/types/dtos';
 import VoteCount from '@/components/domain/vote/VoteCount';
 
 // 시간 포맷팅 유틸리티 함수

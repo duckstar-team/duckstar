@@ -3,7 +3,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { differenceInDays } from 'date-fns';
-import { AnimeBallotDto, ApiResponseAnimeVoteHistoryDto } from '@/types';
+import { AnimeBallotDto, ApiResponseAnimeVoteHistoryDto } from '@/types/dtos';
 import { ChevronRight, RefreshCcw } from 'lucide-react';
 import { queryConfig } from '@/lib/queryConfig';
 import { getCategoryText, getSurveyTypeLabel } from '@/lib/surveyUtils';

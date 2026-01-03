@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import RankContents from './RankContents';
 import RankStat from './RankStat';
-import { AnimeRankDto } from '@/types';
+import { AnimeRankDto } from '@/types/dtos';
 import MedalGrid from './MedalGrid';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';

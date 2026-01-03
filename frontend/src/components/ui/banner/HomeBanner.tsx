@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import BannerContent from './BannerContent';
 import BannerPagination from './BannerPagination';
-import { HomeBannerDto } from '@/types';
+import { HomeBannerDto } from '@/types/dtos';
 
 interface HomeBannerProps {
   homeBannerDtos: HomeBannerDto[];

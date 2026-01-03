@@ -4,11 +4,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import '@/styles/customScrollbar.css';
 import { cn, getSeasonInKorean } from '@/lib/utils';
 import CharacterList from '@/components/domain/anime/CharacterList';
-import { Character } from '@/types';
+import { Character, AnimeInfoDto } from '@/types/dtos';
 import ImageModal from '@/components/domain/anime/ImageModal';
 import { useImageCache } from '@/hooks/useImageCache';
 import RightCommentPanel from './RightCommentPanel';
-import { AnimeInfoDto } from '@/types';
+import { OttType } from '@/types/enums';
 import { format } from 'date-fns';
 
 export type TabOption = 'info' | 'characters' | 'performance' | 'comments';
@@ -892,7 +892,7 @@ export default function LeftInfoPanel({
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === 'LAFTEL' && (
+                    {ott.ottType === OttType.Lafel && (
                       <img
                         src="/icons/laftel-logo.svg"
                         alt="LAFTEL"

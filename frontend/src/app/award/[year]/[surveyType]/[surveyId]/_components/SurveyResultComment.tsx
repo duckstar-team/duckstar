@@ -1,6 +1,6 @@
 'use client';
 
-import { CommentDto, ReplyDto, ReplyRequestDto, PageInfo } from '@/types';
+import { CommentDto, ReplyDto, ReplyRequestDto, PageInfo } from '@/types/dtos';
 import React, { useState } from 'react';
 import Comment from '@/components/domain/comment/Comment';
 import Reply from '@/components/domain/comment/Reply';

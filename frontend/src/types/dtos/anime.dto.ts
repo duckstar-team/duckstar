@@ -1,16 +1,32 @@
 import {
-  Anime,
   MedalPreviewDto,
   OttDto,
   SeasonDto,
   VoteRatioDto,
   VoteResultDto,
   WeekDto,
-} from '@/types';
+} from '@/types/dtos';
+import {
+  AnimeStatus,
+  BannerType,
+  ContentType,
+  DayOfWeek,
+  Medium,
+} from '../enums';
+
+export interface Anime {
+  animeId: number; // TODO: 확인 필요
+  titleKor: string;
+  dayOfWeek: DayOfWeek;
+  airTime: string | null;
+  medium: Medium;
+  genre: string;
+  mainThumbnailUrl: string;
+}
 
 // Anime Info DTO (home, detail)
 export interface AnimeInfoDto extends Anime {
-  status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
+  status: AnimeStatus;
   totalEpisodes: number | null;
   premiereDateTime: string;
   titleOrigin: string;
@@ -28,7 +44,7 @@ export interface AnimeInfoDto extends Anime {
 // Anime Preview DTO (search)
 export interface AnimePreviewDto extends Anime {
   episodeId: number;
-  status: 'UPCOMING' | 'NOW_SHOWING' | 'COOLING' | 'ENDED';
+  status: AnimeStatus;
   isBreak: boolean;
   isRescheduled: boolean | null;
   scheduledAt: string;
@@ -58,7 +74,7 @@ export interface DuckstarRankPreviewDto {
 
 // Rank Preview DTO
 export interface RankPreviewDto {
-  type: 'ANIME' | 'HERO' | 'HEROINE';
+  type: ContentType;
   contentId: number;
   rank: number;
   rankDiff: number | null;
@@ -86,8 +102,8 @@ export interface WeeklyTopDto {
 
 // Home Banner DTO
 export interface HomeBannerDto {
-  bannerType: 'HOT' | 'NOTICEABLE';
-  contentType: 'ANIME' | 'HERO' | 'HEROINE';
+  bannerType: BannerType;
+  contentType: ContentType;
   animeId: number;
   characterId: number;
   mainTitle: string;
@@ -133,9 +149,9 @@ export interface EpisodeDto {
   episodeId: number;
   episodeNumber: number;
   isBreak: boolean;
-  scheduledAt: string; // ISO 8601 형식 (LocalDateTime)
+  scheduledAt: string;
   isRescheduled: boolean | null;
-  nextEpScheduledAt?: string; // ISO 8601 형식 (LocalDateTime)
+  nextEpScheduledAt?: string;
 }
 
 // Rack Unit DTO

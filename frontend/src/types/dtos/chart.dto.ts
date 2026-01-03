@@ -4,7 +4,7 @@ import {
   CommentDto,
   PageInfo,
   VoteRatioDto,
-} from '@/types';
+} from '@/types/dtos';
 
 export interface ChartAnimeDto {
   animeRankDtos: AnimeRankDto[];

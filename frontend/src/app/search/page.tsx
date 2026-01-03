@@ -15,7 +15,7 @@ import type {
   AnimePreviewDto,
   AnimePreviewListDto,
   AnimeSearchListDto,
-} from '@/types';
+} from '@/types/dtos';
 import { extractChosung } from '@/lib/searchUtils';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useQuery } from '@tanstack/react-query';

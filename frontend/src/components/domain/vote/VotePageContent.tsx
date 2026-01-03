@@ -6,7 +6,7 @@ import SmallCandidate from '@/components/domain/anime/SmallCandidate';
 import AnimeCard from '@/components/domain/anime/AnimeCard';
 import { searchMatch, extractChosung } from '@/lib/searchUtils';
 import { getStarCandidates } from '@/api/vote';
-import { AnimePreviewDto, LiveCandidateDto } from '@/types';
+import { AnimePreviewDto, LiveCandidateDto } from '@/types/dtos';
 import {
   getVotedEpisodes,
   addVotedEpisodeWithTTL,
@@ -131,6 +131,7 @@ export default function VotePageContent() {
   const lastWeekLiveCandidates =
     starCandidatesData?.result?.lastWeekLiveCandidates || [];
   const voteInfo = starCandidatesData?.result?.weekDto || null;
+  const isFirstWeek = voteInfo?.quarter === 1 && voteInfo?.week === 1;
   const error = queryError
     ? queryError instanceof Error
       ? queryError.message
@@ -1173,9 +1174,9 @@ export default function VotePageContent() {
             {!isLoading && voteInfo && (
               <VoteCandidateList
                 title="지난 주 후보 목록"
-                year={voteInfo?.year}
-                quarter={voteInfo?.quarter}
-                week={voteInfo?.week - 1}
+                year={isFirstWeek ? voteInfo?.year - 1 : voteInfo?.year}
+                quarter={isFirstWeek ? 4 : voteInfo?.quarter}
+                week={isFirstWeek ? 13 : voteInfo?.week - 1}
                 searchQuery={lastWeekSearchQuery}
               />
             )}

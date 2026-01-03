@@ -1,4 +1,4 @@
-import { MePreviewDto, UpdateProfileResponseDto } from '@/types';
+import { MePreviewDto, UpdateProfileResponseDto } from '@/types/dtos';
 import { apiCall } from './http';
 
 // 유저 정보 조회 API

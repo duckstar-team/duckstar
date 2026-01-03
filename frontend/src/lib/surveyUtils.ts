@@ -1,4 +1,5 @@
-import { SurveyDto, SurveyType, VoteStatusType } from '@/types';
+import { SurveyDto } from '@/types/dtos';
+import { SurveyType, SurveyStatus } from '@/types/enums';
 import { format } from 'date-fns';
 
 /**
@@ -100,13 +101,13 @@ export function getCategoryText(category: string): string {
 /**
  * VoteStatus를 한글 텍스트로 변환
  */
-export function getStatusText(status: VoteStatusType | string): string {
+export function getStatusText(status: SurveyStatus | string): string {
   switch (String(status)) {
-    case 'OPEN':
+    case SurveyStatus.Open:
       return '진행중';
-    case 'PAUSED':
+    case SurveyStatus.Paused:
       return '일시 중지';
-    case 'CLOSED':
+    case SurveyStatus.Closed:
       return '종료';
     default:
       return '오픈 예정';
@@ -114,11 +115,11 @@ export function getStatusText(status: VoteStatusType | string): string {
 }
 
 /**
- * VoteStatusType에 따른 뱃지 배경색 클래스 반환
- * @param status VoteStatusType
+ * SurveyStatus에 따른 뱃지 배경색 클래스 반환
+ * @param status SurveyStatus
  * @returns string
  */
-export const getStatusBadge = (status: VoteStatusType) => {
+export const getStatusBadge = (status: SurveyStatus) => {
   const colorVariants = {
     OPEN: 'bg-rose-100 text-rose-500',
     PAUSED: 'bg-yellow-100 text-amber-500',
@@ -130,24 +131,24 @@ export const getStatusBadge = (status: VoteStatusType) => {
 };
 
 /**
- * VoteStatusType에 따른 버튼 텍스트 반환
- * @param status VoteStatusType
+ * SurveyStatus에 따른 버튼 텍스트 반환
+ * @param status SurveyStatus
  * @param hasVoted boolean
  * @returns string
  */
 export const getButtonText = (
-  status: VoteStatusType,
+  status: SurveyStatus,
   hasVoted: boolean,
   endDateTime?: Date
 ) => {
-  if (status === VoteStatusType.Open && hasVoted) {
+  if (status === SurveyStatus.Open && hasVoted) {
     return '투표 완료';
-  } else if (status === VoteStatusType.Open && !hasVoted) {
+  } else if (status === SurveyStatus.Open && !hasVoted) {
     return '투표 하기';
-  } else if (status === VoteStatusType.Closed && endDateTime) {
+  } else if (status === SurveyStatus.Closed && endDateTime) {
     const endDate = format(endDateTime, 'M/d 오후 6시');
     return `결과 공개 - ${endDate}`;
-  } else if (status === VoteStatusType.ResultOpen) {
+  } else if (status === SurveyStatus.ResultOpen) {
     return '결과 보기';
   }
   return '';

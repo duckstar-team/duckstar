@@ -3,7 +3,7 @@
  * 로그인하지 않은 사용자의 투표 이력을 endDate까지 유효한 세션키로 관리
  */
 
-import { SurveyType } from '@/types';
+import { SurveyType } from '@/types/enums';
 
 const SESSION_KEY_PREFIX = 'survey_session_';
 

@@ -1,10 +1,12 @@
+import { Provider, Role } from '../enums';
+
 // Me Preview DTO
 export interface MePreviewDto {
   id: number;
-  provider: 'KAKAO' | 'GOOGLE' | 'NAVER' | 'LOCAL';
-  nickname: 'string';
+  provider: Provider;
+  nickname: string;
   profileImageUrl: string;
-  role: 'ADMIN' | 'USER';
+  role: Role;
   isProfileInitialized: boolean;
 }
 

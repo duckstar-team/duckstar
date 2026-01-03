@@ -1,6 +1,6 @@
 'use client';
 
-import { WeekDto } from '@/types';
+import { WeekDto } from '@/types/dtos';
 import { getSeasonFromDate, getSeasonInKorean } from '@/lib/utils';
 import { format } from 'date-fns';
 import { usePathname } from 'next/navigation';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CommentDto, ReplyDto } from '@/types';
+import { CommentDto, ReplyDto } from '@/types/dtos';
 import SortingMenu, { SortOption } from '@/components/ui/SortingMenu';
 import Comment from './Comment';
 import Reply from './Reply';

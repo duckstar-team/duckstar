@@ -10,7 +10,7 @@ import SearchFilters from '@/components/domain/search/SearchFilters';
 import SearchInput from '@/components/domain/search/SearchInput';
 import { getScheduleByYearAndQuarter } from '@/api/search';
 import SeasonSelector from '@/components/domain/search/SeasonSelector';
-import type { AnimePreviewDto, AnimePreviewListDto } from '@/types';
+import type { AnimePreviewDto, AnimePreviewListDto } from '@/types/dtos';
 import { extractChosung } from '@/lib/searchUtils';
 import { useQuery } from '@tanstack/react-query';
 import { queryConfig } from '@/lib/queryConfig';

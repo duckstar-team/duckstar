@@ -8,7 +8,7 @@ import {
   SurveyDto,
   SurveyRankDto,
   WeekDto,
-} from '@/types';
+} from '@/types/dtos';
 import { getBannerSubtitle } from '@/lib/surveyUtils';
 import { format, parse } from 'date-fns';
 import { cn } from '@/lib/utils';

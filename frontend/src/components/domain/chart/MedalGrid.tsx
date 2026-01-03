@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useParams } from 'next/navigation';
 import Medal from './Medal';
-import { MedalPreviewDto } from '@/types';
+import { MedalPreviewDto } from '@/types/dtos';
+import { MedalType } from '@/types/enums';
 
 interface MedalGridProps {
   medals: MedalPreviewDto[];
@@ -171,7 +172,7 @@ export default function MedalGrid({
                     key={index}
                     data-property-1={medal.type}
                     className={`xs:w-7 xs:h-11 xs:gap-2.5 relative inline-flex h-8 w-5 items-center justify-center gap-1.5 sm:h-11 sm:w-7 sm:gap-2.5 ${
-                      medal.type === 'NONE'
+                      medal.type === MedalType.None
                         ? 'cursor-pointer rounded-md border-2 border-dashed border-gray-400/50 bg-gray-100/40 transition-all duration-200 hover:border-gray-500/60 hover:bg-gray-200/50'
                         : 'cursor-pointer transition-opacity hover:opacity-80'
                     }`}

@@ -3,10 +3,10 @@
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LiveCandidateDto } from '@/types';
+import { LiveCandidateDto } from '@/types/dtos';
 import StarSubmissionBox from '@/components/domain/star/StarSubmissionBox';
 import { submitStarVote, withdrawStar } from '@/api/vote';
-import { StarInfoDto, LiveVoteResultDto } from '@/types';
+import { StarInfoDto, LiveVoteResultDto } from '@/types/dtos';
 import { Clock } from 'lucide-react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
@@ -173,7 +173,7 @@ export default function BigCandidate({
 
   // episodeStarId를 state로 관리 (투표 후 응답에서 받아옴)
   const [episodeStarId, setEpisodeStarId] = useState<number | undefined>(
-    starInfo?.episodeStarId
+    starInfo?.episodeStarId ?? undefined
   );
 
   // starInfo가 변경되면 episodeStarId 동기화
@@ -192,6 +192,7 @@ export default function BigCandidate({
     if (
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       const newVoterCount = voterCount + 1;
@@ -229,6 +230,7 @@ export default function BigCandidate({
       starInfo &&
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       return voterCount + 1;
@@ -242,6 +244,7 @@ export default function BigCandidate({
       starInfo &&
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       setLocalVoterCount(voterCount + 1);
@@ -257,6 +260,7 @@ export default function BigCandidate({
     if (
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       const newVoterCount = voterCount + 1;
@@ -505,8 +509,16 @@ export default function BigCandidate({
     }
 
     // 날짜만 비교하기 위해 시간을 00:00:00으로 설정
-    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+    const nowDateOnly = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const airDateOnly = new Date(
+      airDate.getFullYear(),
+      airDate.getMonth(),
+      airDate.getDate()
+    );
 
     // 이미 지난 경우 D-DAY로 표시
     if (airDateOnly < nowDateOnly) {
@@ -554,8 +566,16 @@ export default function BigCandidate({
       const airDate = new Date(airTime);
       if (!isNaN(airDate.getTime())) {
         const now = new Date();
-        const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+        const nowDateOnly = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        const airDateOnly = new Date(
+          airDate.getFullYear(),
+          airDate.getMonth(),
+          airDate.getDate()
+        );
 
         // 지난 날짜인 경우 시간만 표시
         if (airDateOnly < nowDateOnly) {

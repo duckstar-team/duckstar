@@ -5,6 +5,7 @@ import { useState } from 'react';
 import RankDiff from './RankDiff';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import Medal from './Medal';
+import { ContentType, MedalType } from '@/types/enums';
 
 interface HomeRankInfoMobileProps {
   rank?: number;
@@ -23,9 +24,9 @@ interface HomeRankInfoMobileProps {
   percentage?: string;
   averageRating?: number; // 백엔드에서 받은 평균 별점
   voterCount?: number; // 백엔드에서 받은 참여자 수
-  type?: 'ANIME' | 'HERO' | 'HEROINE';
+  type?: ContentType;
   contentId?: number;
-  medal?: 'GOLD' | 'SILVER' | 'BRONZE' | 'NONE';
+  medal?: MedalType;
   className?: string;
 }
 
@@ -39,9 +40,9 @@ export default function HomeRankInfoMobile({
   percentage = '15.18',
   averageRating = 4.5, // 기본값
   voterCount = 0, // 기본값
-  type = 'ANIME',
+  type,
   contentId = 1,
-  medal = 'NONE',
+  medal = MedalType.None,
   className = '',
 }: HomeRankInfoMobileProps) {
   const router = useRouter();
@@ -169,12 +170,12 @@ export default function HomeRankInfoMobile({
           <Medal
             property1={
               rank === 1
-                ? 'GOLD'
+                ? MedalType.Gold
                 : rank === 2
-                  ? 'SILVER'
+                  ? MedalType.Silver
                   : rank === 3
-                    ? 'BRONZE'
-                    : 'NONE'
+                    ? MedalType.Bronze
+                    : MedalType.None
             }
           />
         </div>
