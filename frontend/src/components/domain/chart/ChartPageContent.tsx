@@ -557,7 +557,7 @@ export default function ChartPageContent({
                 abroadData.map((rankPreview, index) => {
                   const isWinner = index === 0; // 1등만 Winner
 
-                  // rankDiff 타입 결정 (기존 로직 재사용)
+                // rankDiff 타입 결정
                   const safeRankDiff = rankPreview.rankDiff ?? 0;
                   const safeConsecutiveWeeks =
                     rankPreview.consecutiveWeeksAtSameRank ?? 0;
@@ -572,18 +572,13 @@ export default function ChartPageContent({
                   return (
                     <AbroadRankCard
                       key={rankPreview.contentId || `abroad-${index}`}
-                      rank={rankPreview.rank}
+                    rankPreview={rankPreview}
                       rankDiff={finalRankDiffType}
                       rankDiffValue={
                         finalRankDiffType === 'same-rank'
                           ? safeConsecutiveWeeks.toString()
                           : safeRankDiff.toString()
                       }
-                      title={rankPreview.title}
-                      studio={rankPreview.subTitle}
-                      image={rankPreview.mainThumbnailUrl}
-                      weeks={safeConsecutiveWeeks}
-                      contentId={rankPreview.contentId}
                       isWinner={isWinner}
                     />
                   );
