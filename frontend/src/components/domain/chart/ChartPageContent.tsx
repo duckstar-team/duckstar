@@ -235,7 +235,6 @@ export default function ChartPageContent({
     data?.pages?.flatMap((page) => page.result.animeRankDtos || []) || [];
 
   return (
-    <div className="bg-gray-50">
       <div className="w-full">
         {/* 배너 */}
         <div className="mb-4 flex justify-center">
@@ -268,7 +267,7 @@ export default function ChartPageContent({
         </div>
 
         {/* 차트 헤더 배경 */}
-        <div className="sticky top-[60px] z-40 mb-8 flex justify-center">
+      <div className="sticky top-[60px] z-40 flex justify-center">
           <div className="relative h-[48px] w-full overflow-visible">
             <img
               src="/banners/chart-header-bg.svg"
@@ -368,8 +367,7 @@ export default function ChartPageContent({
                     >
                       <span
                         className={`whitespace-nowrap ${
-                          activeView === 'anime-corner' ||
-                          activeView === 'anilab'
+                        activeView === 'anime-corner' || activeView === 'anilab'
                             ? 'font-semibold text-[#FED783]'
                             : 'text-gray-400'
                         }`}
@@ -382,8 +380,7 @@ export default function ChartPageContent({
                       </span>
                       <svg
                         className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''} ${
-                          activeView === 'anime-corner' ||
-                          activeView === 'anilab'
+                        activeView === 'anime-corner' || activeView === 'anilab'
                             ? 'text-[#FED783]'
                             : 'text-gray-400'
                         }`}
@@ -439,10 +436,13 @@ export default function ChartPageContent({
         </div>
 
         {/* 메인 컨텐츠 - 차트 리스트와 해외 랭킹 나란히 */}
-        <div className="mt-[10px] flex flex-col items-center justify-center gap-[70px] pb-12 sm:mt-[46px] xl:flex-row xl:items-start">
+      <div className="max-width mt-[10px] flex items-start justify-around gap-15 pb-12">
           {/* 차트 리스트 - 1등부터 쭉 간격 20 */}
           <div
-            className={`${isDesktop ? 'flex' : activeView === 'duckstar' ? 'flex' : 'hidden'} w-full max-w-[768px] flex-col items-center gap-5 px-4`}
+          className={cn(
+            'flex max-w-md flex-1 flex-col gap-5',
+            !isDesktop && activeView !== 'duckstar' ? 'hidden' : 'flex'
+          )}
           >
             {/* 덕스타 차트가 없는 경우 스켈레톤 */}
             {!allAnimeList || allAnimeList.length === 0 ? (
@@ -462,10 +462,7 @@ export default function ChartPageContent({
             {/* 로딩 인디케이터 */}
             {isFetchingNextPage && (
               <div className="flex justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
-                <span className="ml-3 text-gray-600">
-                  더 많은 데이터 로딩 중...
-                </span>
+              <Loader className="animate-spin" />
               </div>
             )}
 
@@ -479,7 +476,11 @@ export default function ChartPageContent({
 
           {/* 해외 랭킹 리스트 */}
           <div
-            className={`${isDesktop ? 'hidden lg:flex' : activeView !== 'duckstar' ? 'flex' : 'hidden'} flex-col items-center gap-5`}
+          className={cn(
+            'flex flex-col gap-2 lg:gap-4',
+            isDesktop && 'hidden lg:flex',
+            activeView !== 'duckstar' ? 'flex' : 'hidden'
+          )}
           >
             {(() => {
               // 선택된 탭에 따라 모든 페이지의 데이터 합치기
@@ -495,7 +496,7 @@ export default function ChartPageContent({
               // 데이터가 없을 때 스켈레톤 UI 표시
               if (abroadData && abroadData.length === 0) {
                 return (
-                  <div className="relative h-[220px] w-[370px]">
+                <div className="relative h-[220px] w-full">
                     {/* 스켈레톤 UI (뒷배경) */}
                     <div className="absolute inset-0 space-y-4 p-4">
                       {[...Array(8)].map((_, index) => (
@@ -585,7 +586,6 @@ export default function ChartPageContent({
                 })
               );
             })()}
-          </div>
         </div>
       </div>
     </div>
