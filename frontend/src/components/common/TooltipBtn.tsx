@@ -12,6 +12,7 @@ interface TooltipBtnProps {
   defaultIsOpen?: boolean;
   isOpen?: boolean;
   variant?: 'dark' | 'light' | 'success' | 'warning' | 'error' | 'info';
+  noArrow?: boolean;
 }
 
 export default function TooltipBtn({
@@ -23,6 +24,7 @@ export default function TooltipBtn({
   defaultIsOpen,
   isOpen,
   variant = 'dark',
+  noArrow = false,
 }: TooltipBtnProps) {
   const tooltipId = useId();
   const tooltipContent = content || text || '';
@@ -53,6 +55,7 @@ export default function TooltipBtn({
           }}
           clickable={true}
           opacity={1}
+          noArrow={noArrow}
         >
           {typeof tooltipContent === 'string' ? null : tooltipContent}
         </Tooltip>

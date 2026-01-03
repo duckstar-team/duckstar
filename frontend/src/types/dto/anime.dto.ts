@@ -4,6 +4,7 @@ import {
   OttDto,
   SeasonDto,
   VoteRatioDto,
+  VoteResultDto,
   WeekDto,
 } from '@/types';
 
@@ -114,11 +115,10 @@ export interface AnimeStatDto {
 
 // Anime Rank DTO
 export interface AnimeRankDto {
-  animeId: number;
   rankPreviewDto: RankPreviewDto;
   medalPreviews: MedalPreviewDto[];
   animeStatDto: AnimeStatDto;
-  voteRatioDto: VoteRatioDto;
+  voteResultDto: VoteResultDto;
 }
 
 // Cast Preview DTO
