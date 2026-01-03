@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import StarDistributionChart from '../star/StarDistributionChart';
+import StarDistributionChart from '@/components/domain/star/StarDistributionChart';
 import { useChart } from '@/components/layout/AppContainer';
 import { VoteResultDto } from '@/types/dtos';
 import { createDistributionArray } from '@/lib';

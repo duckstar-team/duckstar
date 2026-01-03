@@ -14,8 +14,8 @@ import CommentHeader from '@/components/domain/comment/CommentHeader';
 import Comment from '@/components/domain/comment/Comment';
 import Reply from '@/components/domain/comment/Reply';
 import OpenOrFoldReplies from '@/components/domain/comment/OpenOrFoldReplies';
-import SortingMenu from '@/components/ui/SortingMenu';
-import { SortOption } from '@/components/ui/SortingMenu';
+import SortingMenu from '@/components/common/SortingMenu';
+import { SortOption } from '@/components/common/SortingMenu';
 import {
   CommentDto,
   CommentRequestDto,

@@ -12,7 +12,7 @@ import {
 import { getBannerSubtitle, cn, getRankDiffType } from '@/lib';
 import { format, parse } from 'date-fns';
 import logo from '@/assets/logo-white.svg';
-import RankDiff from '../domain/chart/RankDiff';
+import RankDiff from './RankDiff';
 
 type TopTenListProps =
   | {

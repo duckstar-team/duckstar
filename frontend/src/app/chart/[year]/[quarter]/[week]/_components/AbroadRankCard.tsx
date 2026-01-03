@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
-import RankDiff from './RankDiff';
+import RankDiff from '@/components/domain/chart/RankDiff';
 import { cn } from '@/lib';
 import { RankPreviewDto } from '@/types/dtos';
 

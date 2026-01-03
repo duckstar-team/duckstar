@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import HomeBanner from '@/components/ui/banner/HomeBanner';
-import ButtonVote from '@/components/ui/ButtonVote';
+import HomeBanner from './HomeBanner';
+import ButtonVote from './ButtonVote';
 import HeaderList from './HeaderList';
-import HomeChart from '@/components/domain/chart/HomeChart';
+import HomeChart from './HomeChart';
 import RightHeaderList from './RightHeaderList';
 import RightPanel from '@/components/domain/chart/RightPanel';
 import { homeApi } from '@/api/home';

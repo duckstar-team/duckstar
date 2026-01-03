@@ -11,7 +11,7 @@ import { queryConfig, getBannerTitle, getBannerSubtitle } from '@/lib';
 import DownloadBtn from '@/components/common/DownloadBtn';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import ShareDropdown from '@/components/common/ShareDropdown';
-import TopTenList from '@/components/common/TopTenList';
+import TopTenList from '@/components/domain/chart/TopTenList';
 import { getSurveyResult } from '@/api/chart';
 import { SurveyStatus } from '@/types/enums';
 

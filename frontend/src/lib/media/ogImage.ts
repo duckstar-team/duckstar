@@ -3,7 +3,7 @@
  * WebP 이미지를 JPG/PNG로 변환하는 API를 호출
  */
 
-import { OG_LOGO_URL } from '../constants';
+import { OG_LOGO_URL } from '../constants/constants';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
 

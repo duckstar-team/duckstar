@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
-import { NAV_ITEMS } from './navItems';
+import { NAV_ITEMS } from '@/lib';
 import ThinNavDetail from './ThinNavDetail';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';

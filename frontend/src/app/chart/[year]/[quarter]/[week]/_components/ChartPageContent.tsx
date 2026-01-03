@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import RankCard from '@/components/domain/chart/RankCard';
-import AbroadRankCard from '@/components/domain/chart/AbroadRankCard';
+import RankCard from '@/app/chart/[year]/[quarter]/[week]/_components/RankCard';
+import AbroadRankCard from './AbroadRankCard';
 import { getChartData, getWeeks } from '@/api/chart';
 import { queryConfig, cn, getRankDiffType, getSeasonFromQuarter } from '@/lib';
 import DownloadBtn from '@/components/common/DownloadBtn';
-import TopTenList from '@/components/common/TopTenList';
+import TopTenList from '@/components/domain/chart/TopTenList';
 import { useChart } from '@/components/layout/AppContainer';
 import { Loader } from 'lucide-react';
 

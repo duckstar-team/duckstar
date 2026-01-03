@@ -8,7 +8,7 @@ import {
   unlikeComment,
   mapSortOptionToBackend,
 } from '@/api/comment';
-import { SortOption } from '@/components/ui/SortingMenu';
+import { SortOption } from '@/components/common/SortingMenu';
 import { useModal } from '@/components/layout/AppContainer';
 import { useQueryClient } from '@tanstack/react-query';
 import { showToast } from '@/components/common/Toast';

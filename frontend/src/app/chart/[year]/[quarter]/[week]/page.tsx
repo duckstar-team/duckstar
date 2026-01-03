@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useChart } from '@/components/layout/AppContainer';
-import ChartPageContent from '@/components/domain/chart/ChartPageContent';
+import ChartPageContent from './_components/ChartPageContent';
 
 export default function ChartPage() {
   const params = useParams();

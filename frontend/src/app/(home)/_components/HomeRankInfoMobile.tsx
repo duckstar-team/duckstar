@@ -2,9 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import RankDiff from './RankDiff';
+import RankDiff from '@/components/domain/chart/RankDiff';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
-import Medal from './Medal';
+import Medal from '@/components/domain/chart/Medal';
 import { ContentType, MedalType } from '@/types/enums';
 
 interface HomeRankInfoMobileProps {

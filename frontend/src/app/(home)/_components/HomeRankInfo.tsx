@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import RankDiff from './RankDiff';
-import Medal from './Medal';
+import RankDiff from '@/components/domain/chart/RankDiff';
+import Medal from '@/components/domain/chart/Medal';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import StarRatingDisplay from '@/components/domain/star/StarRatingDisplay';
 import { ContentType, MedalType } from '@/types/enums';

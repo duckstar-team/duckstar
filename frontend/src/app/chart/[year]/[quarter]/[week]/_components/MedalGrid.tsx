@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useParams } from 'next/navigation';
-import Medal from './Medal';
+import Medal from '@/components/domain/chart/Medal';
 import { MedalPreviewDto } from '@/types/dtos';
 import { MedalType } from '@/types/enums';
 
