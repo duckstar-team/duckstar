@@ -103,7 +103,8 @@ export default function AwardHeader() {
       <div className="fixed top-0 left-full">
         <TopTenList
           topTen={topTenData?.surveyRankDtos || []}
-          titleData={surveyData}
+          type="award"
+          titleData={surveyData || null}
         />
       </div>
     </>
