@@ -3,25 +3,24 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import StarDistributionChart from '../star/StarDistributionChart';
+import { useChart } from '@/components/layout/AppContainer';
+import { VoteResultDto } from '@/types';
+import { createDistributionArray } from '@/lib/chartUtils';
 
 interface WeekRatingStatsProps {
-  week: string; // "25년 3분기 1주차"
-  averageRating: number; // 4.78
-  participantCount: number; // 136
-  distribution: number[]; // 별점 분포 배열 (10개 또는 5개 요소)
-  className?: string;
+  voteResult: VoteResultDto;
 }
 
-export default function WeekRatingStats({
-  week,
-  averageRating,
-  participantCount,
-  distribution,
-  className = '',
-}: WeekRatingStatsProps) {
+export default function WeekRatingStats({ voteResult }: WeekRatingStatsProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const { selectedWeek } = useChart();
+
+  const week = `${selectedWeek?.year}년 ${selectedWeek?.quarter}분기 ${selectedWeek?.week}주차`;
+  const averageRating = voteResult.info?.starAverage || 0;
+  const participantCount = voteResult.voterCount || 0;
+  const distribution = createDistributionArray(voteResult, week);
 
   // 25년 4분기 1-2주차인지 확인 (1점 단위 모드)
   const isIntegerMode =
@@ -48,9 +47,7 @@ export default function WeekRatingStats({
   }, [showTooltip]);
 
   return (
-    <div
-      className={`inline-flex min-w-0 flex-shrink-0 flex-col items-center gap-1 sm:items-end ${className}`}
-    >
+    <div className="inline-flex min-w-0 flex-shrink-0 flex-col items-center gap-1 sm:items-end">
       {/* 주차 정보 */}
       <div className="xs:text-lg ml-2 text-left text-sm font-normal text-white sm:ml-0 sm:text-right sm:text-lg">
         {week.includes('25년 4분기 1주차') ||

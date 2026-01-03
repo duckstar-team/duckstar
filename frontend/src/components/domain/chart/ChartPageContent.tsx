@@ -451,63 +451,12 @@ export default function ChartPageContent({
               </div>
             ) : (
               /* 모든 RankCard (1등 포함) */
-              allAnimeList.map((anime, index) => {
-                const animeMedals = anime.medalPreviews.map(
-                  (medal, medalIndex) => ({
-                    id: `anime-${anime.rankPreviewDto.contentId}-medal-${medalIndex}`,
-                    type: convertMedalType(medal.type),
-                    title: anime.rankPreviewDto.title,
-                    image: anime.rankPreviewDto.mainThumbnailUrl,
-                    rank: medal.rank,
-                    year: medal.year,
-                    quarter: medal.quarter,
-                    week: medal.week,
-                  })
-                );
-
-                return (
+            allAnimeList.map((anime, index) => (
                   <RankCard
                     key={`${anime.rankPreviewDto.contentId}-${index}`}
-                    medals={animeMedals}
-                    rank={anime.rankPreviewDto.rank}
-                    rankDiff={anime.rankPreviewDto.rankDiff || 0}
-                    rankDiffType={getRankDiffType(
-                      anime.rankPreviewDto.rankDiff,
-                      anime.rankPreviewDto.consecutiveWeeksAtSameRank
-                    )}
-                    rankDiffValue={
-                      getRankDiffType(
-                        anime.rankPreviewDto.rankDiff,
-                        anime.rankPreviewDto.consecutiveWeeksAtSameRank
-                      ) === 'same-rank'
-                        ? anime.rankPreviewDto.consecutiveWeeksAtSameRank.toString()
-                        : (anime.rankPreviewDto.rankDiff || 0).toString()
-                    }
-                    title={anime.rankPreviewDto.title}
-                    studio={anime.rankPreviewDto.subTitle}
-                    image={anime.rankPreviewDto.mainThumbnailUrl}
-                    rating={
-                      Math.round(
-                        (anime.voteResultDto?.info?.starAverage ?? 0) * 10
-                      ) / 10
-                    }
-                    debutRank={anime.animeStatDto.debutRank}
-                    debutDate={anime.animeStatDto.debutDate}
-                    peakRank={anime.animeStatDto.peakRank}
-                    peakDate={anime.animeStatDto.peakDate}
-                    top10Weeks={anime.animeStatDto.weeksOnTop10}
-                    week={weekLabel}
-                    averageRating={anime.voteResultDto?.info?.starAverage ?? 0}
-                    participantCount={anime.voteResultDto?.voterCount ?? 0}
-                    distribution={createDistributionArray(
-                      anime.voteResultDto,
-                      weekLabel
-                    )}
-                    animeId={anime.rankPreviewDto.contentId}
-                    hideMedalsOnMobile={true}
+                anime={anime}
                   />
-                );
-              })
+            ))
             )}
 
             {/* 로딩 인디케이터 */}
