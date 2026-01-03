@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { updateProfile } from '@/api/member';
-import { extractFirstFrameFromGif, isGifFile } from '@/utils/gifFrameExtractor';
+import { extractFirstFrameFromGif, isGifFile } from '@/lib';
 
 export default function ProfileSetupPage() {
   const router = useRouter();

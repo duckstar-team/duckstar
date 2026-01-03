@@ -1,24 +1,4 @@
 /**
- * 메달 타입 변환 함수
- */
-export function convertMedalType(
-  apiType: string
-): 'Gold' | 'Silver' | 'Bronze' | 'None' {
-  switch (apiType) {
-    case 'GOLD':
-      return 'Gold';
-    case 'SILVER':
-      return 'Silver';
-    case 'BRONZE':
-      return 'Bronze';
-    case 'NONE':
-      return 'None';
-    default:
-      return 'None';
-  }
-}
-
-/**
  * 순위 변동 타입 결정 함수
  */
 export function getRankDiffType(
@@ -45,39 +25,6 @@ export function getRankDiffType(
 
   // rankDiff가 0인 경우 consecutiveWeeks로 판단
   if (consecutiveWeeks && consecutiveWeeks >= 2) {
-    return 'same-rank';
-  }
-
-  if (consecutiveWeeks === 1 && !isAnilab) {
-    return 'new';
-  }
-
-  return 'Zero';
-}
-
-/**
- * 해외 순위 변동 타입 결정 함수
- */
-function getRankDiffTypeAbroad(
-  rankDiff: number,
-  consecutiveWeeks: number,
-  isAnilab: boolean = false
-):
-  | 'new'
-  | 'up-greater-equal-than-5'
-  | 'up-less-than-5'
-  | 'down-less-than-5'
-  | 'down-greater-equal-than-5'
-  | 'same-rank'
-  | 'Zero' {
-  if (rankDiff > 0) {
-    return rankDiff >= 5 ? 'up-greater-equal-than-5' : 'up-less-than-5';
-  }
-  if (rankDiff < 0) {
-    return rankDiff <= -5 ? 'down-greater-equal-than-5' : 'down-less-than-5';
-  }
-
-  if (consecutiveWeeks >= 2) {
     return 'same-rank';
   }
 
@@ -143,23 +90,5 @@ export function createDistributionArray(
       (starInfo.star_4_5 ?? 0) / totalVoters,
       (starInfo.star_5_0 ?? 0) / totalVoters,
     ];
-  }
-}
-
-/**
- * 분기 이름 매핑 (영어 대문자)
- */
-export function getQuarterName(quarter: number): string {
-  switch (quarter) {
-    case 1:
-      return 'SPRING';
-    case 2:
-      return 'SUMMER';
-    case 3:
-      return 'AUTUMN';
-    case 4:
-      return 'AUTUMN'; // 4분기도 AUTUMN
-    default:
-      return 'SUMMER';
   }
 }

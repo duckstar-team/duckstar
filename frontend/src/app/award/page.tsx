@@ -2,26 +2,26 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
 import { SurveyDto } from '@/types/dtos';
 import { SurveyStatus } from '@/types/enums';
 import VoteBanner from '@/components/domain/vote/VoteBanner';
 import { ApiResponse } from '@/api/http';
 import Link from 'next/link';
 import {
+  queryConfig,
+  cn,
   getSurveyTypeLabel,
   getStatusText,
   getStatusBadge,
   getButtonText,
-} from '@/lib/surveyUtils';
+  GOOGLE_FORM_SURVEYS,
+} from '@/lib';
 import { AwardListSkeleton } from '@/components/skeletons';
 import { useRouter } from 'next/navigation';
 import { ExternalLink } from 'lucide-react';
 import SurveyCountdown from './[year]/[surveyType]/[surveyId]/_components/SurveyCountdown';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useSurveySession } from '@/hooks/useSurveySession';
-import { GOOGLE_FORM_SURVEYS } from '@/lib/constants';
 
 export default function AwardPage() {
   const router = useRouter();

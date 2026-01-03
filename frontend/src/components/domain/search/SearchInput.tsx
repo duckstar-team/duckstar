@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { useState, useEffect, useRef } from 'react';
 
 interface SearchInputProps {

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import '@/styles/customScrollbar.css';
-import { cn, getSeasonInKorean } from '@/lib/utils';
+import { cn, getSeasonInKorean } from '@/lib';
 import CharacterList from '@/components/domain/anime/CharacterList';
 import { Character, AnimeInfoDto } from '@/types/dtos';
 import ImageModal from '@/components/domain/anime/ImageModal';

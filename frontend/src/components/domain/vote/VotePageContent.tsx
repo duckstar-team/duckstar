@@ -4,14 +4,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import BigCandidate from '@/components/domain/anime/BigCandidate';
 import SmallCandidate from '@/components/domain/anime/SmallCandidate';
 import AnimeCard from '@/components/domain/anime/AnimeCard';
-import { searchMatch, extractChosung } from '@/lib/searchUtils';
 import { getStarCandidates } from '@/api/vote';
 import { AnimePreviewDto, LiveCandidateDto } from '@/types/dtos';
 import {
+  searchMatch,
+  extractChosung,
   getVotedEpisodes,
   addVotedEpisodeWithTTL,
   removeVotedEpisode,
-} from '@/lib/voteStorage';
+  queryConfig,
+} from '@/lib';
 import { useModal } from '@/components/layout/AppContainer';
 import { useAuth } from '@/context/AuthContext';
 import { getUpcomingAnimes } from '@/api/search';
@@ -19,7 +21,6 @@ import VoteBanner from './VoteBanner';
 import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
 import SearchBar from '@/components/domain/search/SearchBar';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 

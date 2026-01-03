@@ -23,7 +23,7 @@ import {
   ReplyDto,
   ReplyRequestDto,
 } from '@/types/dtos';
-import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { getThisWeekRecord } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import EpisodeCommentModal from '@/components/domain/comment/EpisodeCommentModal';

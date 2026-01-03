@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import LoginButton from '@/components/common/LoginButton';
 import { useAuth } from '@/context/AuthContext';
 import { Menu } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
   const { isAuthenticated } = useAuth();

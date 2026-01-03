@@ -5,16 +5,12 @@ import { useParams } from 'next/navigation';
 import { SurveyDto } from '@/types/dtos';
 import { SurveyStatus, SurveyType } from '@/types/enums';
 import { useQuery } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
+import { queryConfig, hasValidSurveySession, isVoteHistorySaved } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import VoteResultView from './_components/VoteResultView';
 import VoteFormView from './_components/VoteFormView';
 import { SurveyDetailSkeleton } from '@/components/skeletons';
 import { useModal } from '@/components/layout/AppContainer';
-import {
-  hasValidSurveySession,
-  isVoteHistorySaved,
-} from '@/lib/surveySessionStorage';
 import { useSurveySession } from '@/hooks/useSurveySession';
 import SurveyResultChart from './_components/SurveyResultChart';
 import SurveyDisabled from './_components/SurveyDisabled';

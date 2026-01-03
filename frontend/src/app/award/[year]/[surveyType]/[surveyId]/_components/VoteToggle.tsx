@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { MAX_VOTES } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { MAX_VOTES, cn } from '@/lib';
 
 type VoteToggleProps = {
   selected: boolean;

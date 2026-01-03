@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
 import { NAV_ITEMS } from './navItems';
 import ThinNavDetail from './ThinNavDetail';

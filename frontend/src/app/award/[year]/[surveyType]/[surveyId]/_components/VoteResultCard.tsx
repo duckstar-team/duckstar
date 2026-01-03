@@ -10,9 +10,8 @@ import { AnimeBallotDto } from '@/types/dtos';
 import { getAnimeEpisodes } from '@/api/search';
 import { createComment } from '@/api/comment';
 import { showToast } from '@/components/common/Toast';
-import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { getThisWeekRecord, cn } from '@/lib';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { createSurveyComment } from '@/api/vote';
 
 interface VoteResultCardProps {

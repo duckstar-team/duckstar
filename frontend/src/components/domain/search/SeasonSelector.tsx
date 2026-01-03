@@ -3,7 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSeasons, type SeasonResponseItem } from '@/api/search';
 import { useQuery } from '@tanstack/react-query';
-import { cn, getSeasonFromQuarter, getSeasonInKorean } from '@/lib/utils';
+import {
+  cn,
+  getSeasonFromQuarter,
+  getSeasonInKorean,
+} from '@/lib';
 
 interface SeasonSelectorProps {
   onSeasonSelect: (year: number, quarter: number) => void;

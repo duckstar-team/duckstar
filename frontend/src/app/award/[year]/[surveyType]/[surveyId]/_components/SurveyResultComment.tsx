@@ -7,7 +7,7 @@ import Reply from '@/components/domain/comment/Reply';
 import OpenOrFoldReplies from '@/components/domain/comment/OpenOrFoldReplies';
 import CommentInputForm from './CommentInputForm';
 import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import {

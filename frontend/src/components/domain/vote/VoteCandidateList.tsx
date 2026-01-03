@@ -8,7 +8,7 @@ import { getCandidateList } from '@/api/vote';
 import { CandidateListDto } from '@/types/dtos';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useModal } from '@/components/layout/AppContainer';
-import { searchMatch } from '@/lib/searchUtils';
+import { searchMatch } from '@/lib';
 
 interface VoteCandidateListProps {
   title?: string;

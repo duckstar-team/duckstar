@@ -4,11 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import EpisodeSection from '../anime/EpisodeSection';
 import CommentPostForm from './CommentPostForm';
-import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { getThisWeekRecord, cn } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import { showToast } from '@/components/common/Toast';
-import { cn } from '@/lib/utils';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 import { AnimeInfoDto, EpisodeDto } from '@/types/dtos';
 

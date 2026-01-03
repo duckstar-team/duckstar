@@ -15,7 +15,7 @@ import {
   withdrawNaver,
 } from '@/api/auth';
 import { getCurrentUser } from '@/api/member';
-import { setUserId } from '@/utils/gtag';
+import { setUserId } from '@/lib';
 
 interface User {
   id: number;

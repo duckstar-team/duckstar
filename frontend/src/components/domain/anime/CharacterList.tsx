@@ -2,7 +2,7 @@
 
 import React from 'react';
 import CharacterCard from './CharacterCard';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { Character } from '@/types/dtos';
 
 interface CharacterListProps {

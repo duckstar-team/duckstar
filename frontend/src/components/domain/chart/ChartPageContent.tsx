@@ -5,13 +5,11 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import RankCard from '@/components/domain/chart/RankCard';
 import AbroadRankCard from '@/components/domain/chart/AbroadRankCard';
 import { getChartData, getWeeks } from '@/api/chart';
-import { queryConfig } from '@/lib/queryConfig';
+import { queryConfig, cn, getRankDiffType, getSeasonFromQuarter } from '@/lib';
 import DownloadBtn from '@/components/common/DownloadBtn';
 import TopTenList from '@/components/common/TopTenList';
-import { getRankDiffType, getQuarterName } from '@/lib/chartUtils';
 import { useChart } from '@/components/layout/AppContainer';
 import { Loader } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function ChartPageContent() {
   const [activeView, setActiveView] = useState<
@@ -130,7 +128,7 @@ export default function ChartPageContent() {
     return { start: `${year}/06/29`, end: `${year}/07/06` };
   };
 
-  const quarterName = getQuarterName(quarter);
+  const quarterName = getSeasonFromQuarter(quarter);
   const dateRange = getDateRangeFromData();
 
   // 무한 스크롤 트리거

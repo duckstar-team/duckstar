@@ -5,10 +5,9 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WeekDto, SurveyDto } from '@/types/dtos';
 import { ApiResponse } from '@/api/http';
-import { getSurveyTypeLabel } from '@/lib/surveyUtils';
+import { getSurveyTypeLabel, cn } from '@/lib';
 import { useChart } from './AppContainer';
 import { ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface ThinNavDetailProps {
   mode: 'chart' | 'award';

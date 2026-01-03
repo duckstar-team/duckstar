@@ -28,15 +28,17 @@ import {
   SurveyType,
 } from '@/types/enums';
 import { Megaphone } from 'lucide-react';
-import { MAX_VOTES } from '@/lib/constants';
-import { queryConfig } from '@/lib/queryConfig';
-import { searchMatch } from '@/lib/searchUtils';
-import { getCategoryText } from '@/lib/surveyUtils';
+import {
+  cn,
+  queryConfig,
+  searchMatch,
+  getCategoryText,
+  setSurveySession,
+  MAX_VOTES,
+} from '@/lib';
 import { revoteAnime } from '@/api/vote';
 import { apiCall } from '@/api/http';
 import { CandidateCardSkeleton } from '@/components/skeletons';
-import { cn } from '@/lib/utils';
-import { setSurveySession } from '@/lib/surveySessionStorage';
 import { useAuth } from '@/context/AuthContext';
 import VoteButton from './VoteButton';
 import QuarterNavigation from './QuarterNavigation';

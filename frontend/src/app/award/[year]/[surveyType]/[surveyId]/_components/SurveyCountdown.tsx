@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { SurveyStatus } from '@/types/enums';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';

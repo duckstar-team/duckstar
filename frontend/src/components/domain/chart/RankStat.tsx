@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import WeekRatingStats from './WeekRatingStats';
-import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { getThisWeekRecord } from '@/lib';
 import { format } from 'date-fns';
 import MedalGrid from './MedalGrid';
 import { AnimeRankDto } from '@/types/dtos';

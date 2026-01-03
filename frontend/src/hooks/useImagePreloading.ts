@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import type { AnimePreviewDto } from '@/types';
+import type { AnimePreviewDto } from '@/types/dtos';
 import { useSmartImagePreloader } from './useSmartImagePreloader';
-import { imageMemoryManager } from '@/utils/imageMemoryManager';
+import { imageMemoryManager } from '@/lib';
 
 export function useImagePreloading() {
   const { addToQueue, getQueueStatus } = useSmartImagePreloader({

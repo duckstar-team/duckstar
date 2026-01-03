@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
 import { AnimePreviewDto } from '@/types/dtos';
 import { useNavigation } from '@/hooks/useNavigation';

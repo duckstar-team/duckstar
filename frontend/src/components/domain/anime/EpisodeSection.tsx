@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import EpisodeItem from './EpisodeItem';
 import QuarterWeekLabel from './QuarterWeekLabel';
-import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { getThisWeekRecord } from '@/lib';
 import {
   updateAnimeTotalEpisodes,
   setAnimeTotalEpisodesUnknown,

@@ -1,9 +1,4 @@
 import { SeasonType } from '@/types/enums';
-import { type ClassValue, clsx } from 'clsx';
-
-export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs);
-}
 
 /**
  * 분기를 기반으로 계절을 결정합니다.
@@ -17,7 +12,7 @@ export function getSeasonFromQuarter(quarter: number): SeasonType {
     3: SeasonType.Summer, // 3분기 -> 여름
     4: SeasonType.Autumn, // 4분기 -> 가을
   };
-  return seasonMap[quarter] || SeasonType.Winter;
+  return seasonMap[quarter];
 }
 
 /**

@@ -15,8 +15,7 @@ import {
   DuckstarRankPreviewDto,
   HomeDto,
 } from '@/types/dtos';
-import { scrollToTop } from '@/utils/scrollUtils';
-import { queryConfig } from '@/lib/queryConfig';
+import { scrollToTop, queryConfig } from '@/lib';
 import React from 'react';
 import { ApiResponse } from '@/api/http';
 

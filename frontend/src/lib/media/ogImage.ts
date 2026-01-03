@@ -3,7 +3,7 @@
  * WebP 이미지를 JPG/PNG로 변환하는 API를 호출
  */
 
-import { OG_LOGO_URL } from './constants';
+import { OG_LOGO_URL } from '../constants';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
 
@@ -46,7 +46,10 @@ export function getOgImageUrl(
   }
 
   // S3 URL이 아니거나 이미 JPG/PNG인 경우 (HTTPS로 변환)
-  if (!absoluteImageUrl.includes('img.duckstar.kr') && !absoluteImageUrl.includes('duckstar.kr')) {
+  if (
+    !absoluteImageUrl.includes('img.duckstar.kr') &&
+    !absoluteImageUrl.includes('duckstar.kr')
+  ) {
     // HTTP를 HTTPS로 변환 (카카오톡은 HTTPS 필요)
     if (absoluteImageUrl.startsWith('http://')) {
       absoluteImageUrl = absoluteImageUrl.replace('http://', 'https://');
@@ -75,7 +78,8 @@ export function getOgImageUrl(
  * @param thumbnailUrl 썸네일 URL
  * @returns OG 이미지 URL
  */
-export function getAnimeOgImageUrl(thumbnailUrl: string | null | undefined): string {
+export function getAnimeOgImageUrl(
+  thumbnailUrl: string | null | undefined
+): string {
   return getOgImageUrl(thumbnailUrl, 'jpg', 1200, 630);
 }
-

@@ -6,7 +6,7 @@ import RankStat from './RankStat';
 import { AnimeRankDto } from '@/types/dtos';
 import MedalGrid from './MedalGrid';
 import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 interface RankCardProps {
   anime: AnimeRankDto;

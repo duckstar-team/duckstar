@@ -3,11 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { SurveyDto } from '@/types/dtos';
 import { ApiResponse } from '@/api/http';
-import { queryConfig } from '@/lib/queryConfig';
-import {
-  hasValidSurveySession,
-  setSurveySession,
-} from '@/lib/surveySessionStorage';
+import { queryConfig, hasValidSurveySession, setSurveySession } from '@/lib';
 
 /**
  * 로그인 시 hasVoted=true인 모든 survey에 대해 세션키를 생성하는 훅

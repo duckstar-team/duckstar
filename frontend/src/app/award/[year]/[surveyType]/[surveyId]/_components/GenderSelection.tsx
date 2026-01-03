@@ -2,7 +2,7 @@
 
 import { AgeGroup, Gender } from '@/types/enums';
 import VoteButton from './VoteButton';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { useState } from 'react';
 
 interface GenderSelectionProps {

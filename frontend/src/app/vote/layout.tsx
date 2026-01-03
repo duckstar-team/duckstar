@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { OG_LOGO_URL } from '@/lib/constants';
+import { OG_LOGO_URL } from '@/lib';
 
 export const metadata: Metadata = {
   title: '애니메이션 투표 - 덕스타',

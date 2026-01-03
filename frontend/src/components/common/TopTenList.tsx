@@ -9,12 +9,10 @@ import {
   SurveyRankDto,
   WeekDto,
 } from '@/types/dtos';
-import { getBannerSubtitle } from '@/lib/surveyUtils';
+import { getBannerSubtitle, cn, getRankDiffType } from '@/lib';
 import { format, parse } from 'date-fns';
-import { cn } from '@/lib/utils';
 import logo from '@/assets/logo-white.svg';
 import RankDiff from '../domain/chart/RankDiff';
-import { getRankDiffType } from '@/lib/chartUtils';
 
 type TopTenListProps =
   | {

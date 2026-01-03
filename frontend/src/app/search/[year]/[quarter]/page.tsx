@@ -11,9 +11,8 @@ import SearchInput from '@/components/domain/search/SearchInput';
 import { getScheduleByYearAndQuarter } from '@/api/search';
 import SeasonSelector from '@/components/domain/search/SeasonSelector';
 import type { AnimePreviewDto, AnimePreviewListDto } from '@/types/dtos';
-import { extractChosung } from '@/lib/searchUtils';
+import { extractChosung, queryConfig } from '@/lib';
 import { useQuery } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
 import { SearchSkeleton } from '@/components/skeletons';
 
 function SeasonPageContent() {

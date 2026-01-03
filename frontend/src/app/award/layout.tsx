@@ -1,5 +1,5 @@
 import React from 'react';
-import { OG_LOGO_URL } from '@/lib/constants';
+import { OG_LOGO_URL } from '@/lib';
 import { Metadata } from 'next';
 import AwardHeader from './_components/AwardHeader';
 

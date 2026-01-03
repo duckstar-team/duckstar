@@ -1,6 +1,6 @@
 'use client';
 
-import { queryConfig } from '@/lib/queryConfig';
+import { queryConfig } from '@/lib';
 import { SurveyRankDto, SurveyResultDto } from '@/types/dtos';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';

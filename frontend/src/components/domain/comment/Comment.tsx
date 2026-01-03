@@ -1,7 +1,7 @@
 import React from 'react';
 import { CommentDto } from '@/types/dtos';
 import VoteCount from '@/components/domain/vote/VoteCount';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 // 시간 포맷팅 유틸리티 함수
 const formatTimeAgo = (dateString: string): string => {

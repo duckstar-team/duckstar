@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import StarDistributionChart from '../star/StarDistributionChart';
 import { useChart } from '@/components/layout/AppContainer';
 import { VoteResultDto } from '@/types/dtos';
-import { createDistributionArray } from '@/lib/chartUtils';
+import { createDistributionArray } from '@/lib';
 
 interface WeekRatingStatsProps {
   voteResult: VoteResultDto;
