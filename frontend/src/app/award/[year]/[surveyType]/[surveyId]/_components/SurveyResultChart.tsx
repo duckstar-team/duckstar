@@ -34,7 +34,7 @@ export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
 
   return (
     <section className="space-y-20">
-      <div id="capture-area" className="max-width mt-10 flex flex-col gap-16">
+      <div className="max-width mt-10 flex flex-col gap-16">
         {surveyResultData?.surveyRankDtos?.map((surveyRank: SurveyRankDto) => (
           <SurveyResultCard
             key={surveyRank.animeCandidateDto.animeCandidateId}

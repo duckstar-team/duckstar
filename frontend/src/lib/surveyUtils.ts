@@ -31,7 +31,8 @@ export function getSurveyTypeLabel(
  * 예시: "2025/12/22 - 2025/12/28 | 4분기 결산"
  */
 export function getBannerSubtitle(
-  surveyData: SurveyDto | undefined
+  surveyData: SurveyDto | undefined,
+  full: boolean = true
 ): string | undefined {
   if (!surveyData) return undefined;
 
@@ -64,7 +65,7 @@ export function getBannerSubtitle(
       summaryText = '어워드';
   }
 
-  return `${rangeText} | ${summaryText}`;
+  return full ? `${rangeText} | ${summaryText}` : `${summaryText}`;
 }
 
 /**
