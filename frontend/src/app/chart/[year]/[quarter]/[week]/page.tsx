@@ -7,7 +7,7 @@ import ChartPageContent from '@/components/domain/chart/ChartPageContent';
 
 export default function ChartPage() {
   const params = useParams();
-  const { setSelectedWeek } = useChart();
+  const { selectedWeek, setSelectedWeek, weeks } = useChart();
 
   const year = Number(params.year);
   const quarter = Number(params.quarter);
@@ -20,20 +20,15 @@ export default function ChartPage() {
         year,
         quarter,
         week,
-        startDate: '',
-        endDate: '',
+        startDate:
+          weeks?.find((week) => week.week === selectedWeek?.week)?.startDate ||
+          '',
+        endDate:
+          weeks?.find((week) => week.week === selectedWeek?.week)?.endDate ||
+          '',
       });
     }
   }, [year, quarter, week, setSelectedWeek]);
 
-  const weekLabel = `${year}년 ${quarter}분기 ${week}주차`;
-
-  return (
-    <ChartPageContent
-      year={year}
-      quarter={quarter}
-      week={week}
-      weekLabel={weekLabel}
-    />
-  );
+  return <ChartPageContent />;
 }
