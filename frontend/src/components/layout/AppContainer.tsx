@@ -132,26 +132,6 @@ export default function AppContainer({ children }: AppContainerProps) {
     }
   }, [isChartPage, weeks.length]);
 
-  // /chart 페이지로 돌아왔을 때 selectedWeek를 최신 주차로 리셋 (동적 라우팅 제외)
-  useEffect(() => {
-    if (isChartPage && pathname === '/chart' && weeks.length > 0) {
-      const latestWeek = weeks.sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
-        if (a.quarter !== b.quarter) return b.quarter - a.quarter;
-        return b.week - a.week;
-      })[0];
-      setSelectedWeek(latestWeek);
-    }
-  }, [isChartPage, pathname, weeks, setSelectedWeek]);
-
-  // 동적 라우팅 페이지에서는 selectedWeek를 리셋하지 않음
-  useEffect(() => {
-    if (isChartPage && pathname !== '/chart' && pathname.includes('/chart/')) {
-      // 동적 라우팅 페이지에서는 selectedWeek를 리셋하지 않음
-      // 해당 페이지에서 URL 파라미터를 기반으로 설정
-    }
-  }, [isChartPage, pathname]);
-
   /**
    * 사이드바 Open/Close 상태 관리
    * 데스크탑: 세션 스토리지에서 읽어오거나 기본값 false
