@@ -23,7 +23,7 @@ import { extractChosung, queryConfig } from '@/lib';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useQuery } from '@tanstack/react-query';
 import { SearchSkeleton } from '@/components/skeletons';
-import { ChevronLeft, FileSearch } from 'lucide-react';
+import { ChevronDown, ChevronLeft, FileSearch } from 'lucide-react';
 
 interface SearchPageContentProps {
   /** 연도 (null이면 "이번 주") */
@@ -48,10 +48,8 @@ export default function SearchPageContent({
   const [isInitialized, setIsInitialized] = useState(!isThisWeek);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [isDaySelectionSticky, setIsDaySelectionSticky] = useState(false);
   const [isSeasonSelectorSticky, setIsSeasonSelectorSticky] = useState(false);
-  const [seasonSelectorHeight, setSeasonSelectorHeight] = useState(0);
   const [isMobileMenuSticky, setIsMobileMenuSticky] = useState(false);
   const [isSmallDesktop, setIsSmallDesktop] = useState(false);
 
@@ -59,53 +57,6 @@ export default function SearchPageContent({
   const daySelectionRef = useRef<HTMLDivElement>(null);
   const seasonSelectorRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
-  // 뷰포트 설정 (두 페이지 동일)
-  useEffect(() => {
-    const head = document.head;
-    if (!head) return;
-
-    const existing = document.querySelector(
-      'meta[name="viewport"]'
-    ) as HTMLMetaElement | null;
-    const prevContent = existing?.getAttribute('content') || '';
-
-    if (existing) {
-      existing.setAttribute(
-        'content',
-        'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
-      );
-    } else {
-      const meta = document.createElement('meta');
-      meta.name = 'viewport';
-      meta.content =
-        'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
-      head.appendChild(meta);
-    }
-
-    const body = document.body;
-    const originalMinWidth = body.style.minWidth;
-    const originalOverflowX = body.style.overflowX;
-
-    body.style.minWidth = 'auto';
-    body.style.overflowX = 'hidden';
-
-    return () => {
-      const current = document.querySelector(
-        'meta[name="viewport"]'
-      ) as HTMLMetaElement | null;
-      if (current) {
-        if (prevContent) {
-          current.setAttribute('content', prevContent);
-        } else {
-          current.parentElement?.removeChild(current);
-        }
-      }
-
-      body.style.minWidth = originalMinWidth;
-      body.style.overflowX = originalOverflowX;
-    };
-  }, []);
 
   // 화면 크기 감지
   useEffect(() => {
@@ -139,16 +90,7 @@ export default function SearchPageContent({
       ? getCurrentSchedule
       : () => getScheduleByYearAndQuarter(year!, quarter!),
     enabled: isThisWeek ? true : isInitialized,
-    ...(isThisWeek
-      ? {
-          staleTime: 2 * 60 * 1000,
-          gcTime: 10 * 60 * 1000,
-          refetchOnWindowFocus: false,
-          refetchOnReconnect: true,
-          retry: 2,
-          retryDelay: 3000,
-        }
-      : queryConfig.search),
+    ...queryConfig.search,
   });
 
   // 검색 쿼리
@@ -160,12 +102,7 @@ export default function SearchPageContent({
     queryKey: ['search', searchQuery],
     queryFn: () => searchAnimes(searchQuery),
     enabled: searchQuery.trim().length > 0,
-    staleTime: 1 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: 1,
-    retryDelay: 2000,
+    ...queryConfig.searchQuery,
   });
 
   // 이미지 프리로딩
@@ -181,7 +118,6 @@ export default function SearchPageContent({
     if (keywordParam) {
       setSearchQuery(keywordParam);
       setSearchInput(keywordParam);
-      setIsSearching(true);
 
       if (fromAnimeDetail === 'true') {
         sessionStorage.removeItem('from-anime-detail');
@@ -195,7 +131,6 @@ export default function SearchPageContent({
     ) {
       setSearchQuery(queryParam);
       setSearchInput(queryParam);
-      setIsSearching(true);
 
       if (fromHeaderSearch === 'true') {
         sessionStorage.removeItem('from-header-search');
@@ -248,7 +183,6 @@ export default function SearchPageContent({
 
   // 현재 사용할 데이터 결정
   const isSearchMode = searchQuery.trim().length > 0;
-  const currentData = isSearchMode ? searchData : scheduleData;
   const currentError = isSearchMode ? searchError : error;
   const currentIsLoading = isSearchMode ? isSearchLoading : isLoading;
 
@@ -848,7 +782,6 @@ export default function SearchPageContent({
 
       setTimeout(() => {
         setSearchQuery(query);
-        setIsSearching(true);
         if (isThisWeek) {
           router.push(`/search?keyword=${encodeURIComponent(query)}`);
         } else {
@@ -857,7 +790,6 @@ export default function SearchPageContent({
       }, 200);
     } else {
       setSearchQuery('');
-      setIsSearching(false);
     }
   };
 
@@ -874,7 +806,6 @@ export default function SearchPageContent({
     setTimeout(() => {
       setSearchQuery('');
       setSearchInput('');
-      setIsSearching(false);
       if (isThisWeek) {
         router.push('/search');
       }
@@ -1042,21 +973,6 @@ export default function SearchPageContent({
       window.removeEventListener('scroll', handleSeasonSelectorStickyScroll);
     };
   }, [isSeasonSelectorSticky, isSmallDesktop]);
-
-  useEffect(() => {
-    const updateHeights = () => {
-      if (seasonSelectorRef.current) {
-        setSeasonSelectorHeight(seasonSelectorRef.current.offsetHeight);
-      }
-    };
-
-    updateHeights();
-    window.addEventListener('resize', updateHeights);
-
-    return () => {
-      window.removeEventListener('resize', updateHeights);
-    };
-  }, [isSeasonSelectorSticky]);
 
   // 3. 모바일 메뉴 스티키 처리
   useEffect(() => {
@@ -1254,10 +1170,7 @@ export default function SearchPageContent({
   // 실제로는 두 원본 파일의 UI 부분을 그대로 가져와서 props로 분기 처리하면 됩니다.
 
   return (
-    <main
-      className="min-h-screen w-full overflow-x-hidden overflow-y-visible"
-      style={{ backgroundColor: '#F8F9FA' }}
-    >
+    <main>
       {/* SearchSection */}
       <div className="relative h-[170px] w-full bg-[#F1F3F5] md:h-[196px]">
         <div className="absolute top-5 left-0 z-10 h-[100px] w-full border-t border-b border-[#DADCE0] bg-white" />
@@ -1427,19 +1340,7 @@ export default function SearchPageContent({
                         </option>
                       </select>
                       <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 transform">
-                        <svg
-                          className="h-3 w-3 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
+                        <ChevronDown className="size-3.5 text-gray-400" />
                       </div>
                     </div>
                   </div>
@@ -1620,7 +1521,7 @@ export default function SearchPageContent({
                         )}
                       </div>
 
-                      <div className="mb-12 grid grid-cols-2 gap-[15px] sm:gap-[30px] lg:grid-cols-3 xl:grid-cols-4">
+                      <div className="mb-12 grid grid-cols-2 justify-items-center gap-[15px] sm:gap-[30px] lg:grid-cols-3 xl:grid-cols-4">
                         {dayAnimes.map((anime) => (
                           <AnimeCard
                             key={anime.animeId}
@@ -1838,33 +1739,17 @@ export default function SearchPageContent({
               </div>
 
               {!searchQuery.trim() && (
-                <>
-                  <div className="flex justify-end md:hidden">
-                    <div className="relative box-border flex w-fit content-stretch items-center justify-center gap-2.5 rounded-[12px] bg-white px-[25px] py-2.5">
-                      <DaySelection
-                        selectedDay={selectedDay}
-                        onDaySelect={handleDaySelect}
-                        initialPosition={true}
-                        emptyDays={emptyDays}
-                        isThisWeek={isThisWeek}
-                        isSticky={true}
-                        className="w-fit"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:block lg:left-1/2 lg:-translate-x-1/2 lg:transform">
-                    <DaySelection
-                      selectedDay={selectedDay}
-                      onDaySelect={handleDaySelect}
-                      initialPosition={true}
-                      emptyDays={emptyDays}
-                      isThisWeek={isThisWeek}
-                      isSticky={true}
-                      className="w-fit"
-                    />
-                  </div>
-                </>
+                <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:block lg:left-1/2 lg:-translate-x-1/2 lg:transform">
+                  <DaySelection
+                    selectedDay={selectedDay}
+                    onDaySelect={handleDaySelect}
+                    initialPosition={true}
+                    emptyDays={emptyDays}
+                    isThisWeek={isThisWeek}
+                    isSticky={true}
+                    className="w-fit"
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -1948,6 +1833,9 @@ export default function SearchPageContent({
                           특별편성 및 극장판
                         </option>
                       </select>
+                      <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 transform">
+                        <ChevronDown className="size-3.5 text-gray-400" />
+                      </div>
                     </div>
                   </div>
                 )}
