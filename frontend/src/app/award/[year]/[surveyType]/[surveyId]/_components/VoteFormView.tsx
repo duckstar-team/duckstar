@@ -764,7 +764,11 @@ export default function VoteFormView({
             ) : (
               <div className="order-1 flex w-full items-center justify-between @lg:order-2 @lg:w-auto">
                 <div className="min-w-2/3 @lg:min-w-100">
-                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                  <SearchBar
+                    variant="simple"
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                  />
                 </div>
 
                 <VoteButton
@@ -819,7 +823,11 @@ export default function VoteFormView({
           ) : (
             <div className="order-1 flex w-full items-center justify-between @lg:order-2 @lg:w-auto">
               <div className="min-w-2/3 @lg:min-w-100">
-                <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                <SearchBar
+                  variant="simple"
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                />
               </div>
 
               <VoteButton

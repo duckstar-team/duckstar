@@ -7,7 +7,7 @@ import DaySelection, {
   DayOfWeek,
 } from '@/components/domain/search/DaySelection';
 import SearchFilters from '@/components/domain/search/SearchFilters';
-import SearchInput from '@/components/domain/search/SearchInput';
+import SearchBar from '@/components/domain/search/SearchBar';
 import {
   getCurrentSchedule,
   getScheduleByYearAndQuarter,
@@ -1284,14 +1284,13 @@ export default function SearchPageContent({
             </div>
 
             <div className="relative">
-              <SearchInput
+              <SearchBar
                 value={searchInput}
                 onChange={handleSearchInputChange}
                 onSearch={handleSearch}
                 placeholder={
                   randomAnimeTitle || '분기 신작 애니/캐릭터를 검색해보세요...'
                 }
-                className="h-[62px] w-full"
               />
             </div>
           </div>

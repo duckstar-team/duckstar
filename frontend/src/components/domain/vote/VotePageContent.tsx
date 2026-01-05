@@ -919,6 +919,7 @@ export default function VotePageContent() {
           <div className="flex min-w-0 flex-1 justify-between">
             <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
               <SearchBar
+                variant="simple"
                 value={currentWeekSearchQuery}
                 onChange={handleCurrentWeekSearchQueryChange}
                 placeholder={randomAnimeTitle || '애니메이션 제목을 입력하세요'}
@@ -1099,6 +1100,7 @@ export default function VotePageContent() {
               <div className="flex min-w-0 flex-1 justify-between">
                 <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
                   <SearchBar
+                    variant="simple"
                     value={lastWeekSearchQuery}
                     onChange={handleLastWeekSearchQueryChange}
                     placeholder={
