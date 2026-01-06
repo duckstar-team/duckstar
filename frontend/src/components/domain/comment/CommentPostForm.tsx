@@ -258,7 +258,7 @@ export default function CommentPostForm({
             className={`${footerSectionHeight} relative shrink-0 ${footerSectionWidth}`}
           >
             <div
-              className={`box-border flex content-stretch justify-between ${footerSectionHeight} relative w-full items-center overflow-clip px-3`}
+              className={`flex content-stretch justify-between ${footerSectionHeight} relative w-full items-center overflow-clip px-3`}
             >
               {phase ? (
                 <div className="flex items-center gap-2">

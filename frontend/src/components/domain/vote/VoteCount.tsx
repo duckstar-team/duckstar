@@ -30,8 +30,8 @@ const VoteCount: React.FC<VoteCountProps> = ({ voteCount }) => {
           {iconVote}
           {iconVote}
           {iconVote}
-          <div className="relative box-border flex shrink-0 flex-col content-stretch items-end justify-center gap-2.5 py-0 pr-0 pl-0.5">
-            <div className="relative box-border flex h-4 shrink-0 content-stretch items-center justify-center gap-2.5 rounded-[6px] bg-[#990033] px-1 py-0">
+          <div className="relative flex shrink-0 flex-col content-stretch items-end justify-center gap-2.5 py-0 pr-0 pl-0.5">
+            <div className="relative flex h-4 shrink-0 content-stretch items-center justify-center gap-2.5 rounded-[6px] bg-[#990033] px-1 py-0">
               <div className="justify-start text-[13px] leading-snug font-semibold text-white">
                 +{remainingCount}
               </div>

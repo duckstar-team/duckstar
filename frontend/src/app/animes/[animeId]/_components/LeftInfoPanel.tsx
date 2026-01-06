@@ -841,7 +841,7 @@ export default function LeftInfoPanel({
           }}
         >
           <div
-            className={`absolute right-[0.1px] bottom-0 left-0 box-border flex flex-col content-stretch items-start justify-start gap-[9.653px] overflow-clip bg-gradient-to-b from-[#00000000] via-[#00000033] via-[11.628%] to-[#00000073] to-[93.023%] pt-[29.701px] pb-[15px] ${isMobile ? 'pr-4 pl-4' : 'pr-[11.88px] pl-[22.276px]'}`}
+            className={`absolute right-[0.1px] bottom-0 left-0 flex flex-col content-stretch items-start justify-start gap-[9.653px] overflow-clip bg-gradient-to-b from-[#00000000] via-[#00000033] via-[11.628%] to-[#00000073] to-[93.023%] pt-[29.701px] pb-[15px] ${isMobile ? 'pr-4 pl-4' : 'pr-[11.88px] pl-[22.276px]'}`}
           >
             {/* 한글 제목 */}
             <div
@@ -955,7 +955,7 @@ export default function LeftInfoPanel({
 
         {/* 하단 정보 패널 */}
         <div
-          className={`${isSmallScreen ? 'relative' : 'absolute'} left-0 box-border flex w-full flex-col content-stretch items-center justify-start gap-[9.653px] overflow-clip rounded-br-[12px] rounded-bl-[12px] bg-white pb-[10px] ${isMobile ? 'px-1' : 'px-0'}`}
+          className={`${isSmallScreen ? 'relative' : 'absolute'} left-0 flex w-full flex-col content-stretch items-center justify-start gap-[9.653px] overflow-clip rounded-br-[12px] rounded-bl-[12px] bg-white pb-[10px] ${isMobile ? 'px-1' : 'px-0'}`}
           style={{
             top: isSmallScreen ? 'auto' : `${lowerPanelTop}px`,
             height: isSmallScreen ? 'auto' : `${lowerPanelHeight}px`,
@@ -1098,7 +1098,7 @@ export default function LeftInfoPanel({
           {/* 정보 내용 - 애니 정보와 분기 성적 탭용 */}
           {currentTab !== 'characters' && currentTab !== 'comments' && (
             <div
-              className={`relative box-border w-full shrink-0 rounded-[12px] bg-[#f8f9fa] ${isMobile ? 'pr-2 pl-2' : 'pl-[25px]'}`}
+              className={`relative w-full shrink-0 rounded-[12px] bg-[#f8f9fa] ${isMobile ? 'pr-2 pl-2' : 'pl-[25px]'}`}
               style={{
                 height: isSmallScreen ? 'auto' : `${infoContentHeight}px`,
                 paddingTop: '10px',
@@ -1128,10 +1128,10 @@ export default function LeftInfoPanel({
                   >
                     {/* 왼쪽 정보 */}
                     <div
-                      className={`box-border flex flex-col ${isMobile ? 'items-center' : 'items-start'} relative shrink-0 justify-start ${isMobile ? 'w-full p-2' : 'p-[11.138px]'}`}
+                      className={`flex flex-col ${isMobile ? 'items-center' : 'items-start'} relative shrink-0 justify-start ${isMobile ? 'w-full p-2' : 'p-[11.138px]'}`}
                     >
                       <div
-                        className={`box-border flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? 'text-[20px]' : 'text-[18.25px]'} w-full`}
+                        className={`flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? 'text-[20px]' : 'text-[18.25px]'} w-full`}
                         style={{
                           height: `${Math.max(77.41 * heightRatio, 50)}px`,
                         }}
@@ -1158,7 +1158,7 @@ export default function LeftInfoPanel({
                       </div>
 
                       <div
-                        className={`box-border flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
+                        className={`flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
                         style={{
                           height: `${Math.max(77.41 * heightRatio, 50)}px`,
                         }}
@@ -1185,7 +1185,7 @@ export default function LeftInfoPanel({
                       </div>
 
                       <div
-                        className={`box-border flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
+                        className={`flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[11.138px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
                       >
                         <div
                           className={`relative shrink-0 font-normal text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}
@@ -1208,10 +1208,10 @@ export default function LeftInfoPanel({
 
                     {/* 오른쪽 정보 */}
                     <div
-                      className={`box-border flex flex-col ${isMobile ? 'items-center' : 'items-start'} relative shrink-0 justify-start ${isMobile ? 'w-full p-2' : 'p-[11.138px]'}`}
+                      className={`flex flex-col ${isMobile ? 'items-center' : 'items-start'} relative shrink-0 justify-start ${isMobile ? 'w-full p-2' : 'p-[11.138px]'}`}
                     >
                       <div
-                        className={`box-border flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
+                        className={`flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
                         style={{
                           height: `${Math.max(77.41 * heightRatio, 50)}px`,
                         }}
@@ -1238,7 +1238,7 @@ export default function LeftInfoPanel({
                       </div>
 
                       <div
-                        className={`box-border flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
+                        className={`flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-center leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
                         style={{
                           height: `${Math.max(77.41 * heightRatio, 50)}px`,
                         }}
@@ -1265,7 +1265,7 @@ export default function LeftInfoPanel({
                       </div>
 
                       <div
-                        className={`box-border flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
+                        className={`flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
                       >
                         <div
                           className={`relative shrink-0 font-normal text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}
@@ -1289,7 +1289,7 @@ export default function LeftInfoPanel({
                       </div>
 
                       <div
-                        className={`box-border flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
+                        className={`flex flex-col content-stretch gap-[11.138px] ${isMobile ? 'items-center' : 'items-start'} justify-start leading-[0] not-italic ${isMobile ? 'px-2 py-2' : 'px-[17.821px] py-[2.97px]'} relative shrink-0 ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} w-full`}
                       >
                         <div
                           className={`relative shrink-0 font-normal text-[#adb5bd] ${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18.25px]'} text-center`}

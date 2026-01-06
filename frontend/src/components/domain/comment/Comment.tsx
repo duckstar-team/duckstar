@@ -87,7 +87,7 @@ const Comment: React.FC<CommentProps> = ({
   // 삭제된 댓글의 경우 다른 UI 렌더링
   if (isDeleted && deletedInfo) {
     return (
-      <div className="relative box-border flex h-full w-full content-stretch items-start justify-start gap-5 bg-white pb-2">
+      <div className="relative flex h-full w-full content-stretch items-start justify-start gap-5 bg-white pb-2">
         <div className="relative flex h-full w-full shrink-0 content-stretch items-start justify-start gap-[15px] pr-[20px] pl-[31px]">
           {/* 프로필 이미지 */}
           <div className="relative size-10 shrink-0">
@@ -101,7 +101,7 @@ const Comment: React.FC<CommentProps> = ({
           </div>
 
           {/* 삭제된 댓글 내용 */}
-          <div className="relative box-border flex min-h-px min-w-px shrink-0 grow basis-0 flex-col content-stretch items-start justify-start gap-2.5 px-0 pt-[3px] pb-0">
+          <div className="relative flex min-h-px min-w-px shrink-0 grow basis-0 flex-col content-stretch items-start justify-start gap-2.5 px-0 pt-[3px] pb-0">
             {/* 헤더 (작성자, 에피소드, 시간) */}
             <div className="relative flex w-full items-center justify-start gap-[15px]">
               <div className="relative flex flex-shrink-0 items-center justify-start gap-[5px]">
@@ -155,7 +155,7 @@ const Comment: React.FC<CommentProps> = ({
   return (
     <div
       className={cn(
-        'relative box-border flex h-fit w-full content-stretch items-start justify-start gap-5 bg-white pb-2',
+        'relative flex h-fit w-full content-stretch items-start justify-start gap-5 bg-white pb-2',
         className
       )}
     >
@@ -174,7 +174,7 @@ const Comment: React.FC<CommentProps> = ({
         </div>
 
         {/* 댓글 내용 */}
-        <div className="relative box-border flex min-h-px min-w-px shrink-0 grow basis-0 flex-col content-stretch items-start justify-start gap-2.5 px-0 pt-[3px] pb-0">
+        <div className="relative flex min-h-px min-w-px shrink-0 grow basis-0 flex-col content-stretch items-start justify-start gap-2.5 px-0 pt-[3px] pb-0">
           {/* 헤더 (작성자, 에피소드, 시간, 삭제 버튼) */}
           <div className="relative flex w-full flex-wrap items-center justify-start gap-2">
             <div className="flex flex-wrap items-center justify-start gap-[5px]">

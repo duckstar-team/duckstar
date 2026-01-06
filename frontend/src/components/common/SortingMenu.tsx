@@ -152,7 +152,7 @@ const SortingMenu: React.FC<SortingMenuProps> = ({
   }, [currentSort, hoveredSort]);
 
   return (
-    <div className="relative box-border flex size-full content-stretch items-center justify-start gap-4">
+    <div className="relative flex size-full content-stretch items-center justify-start gap-4">
       <div
         ref={containerRef}
         className="relative flex w-full shrink-0 content-stretch items-center justify-center"

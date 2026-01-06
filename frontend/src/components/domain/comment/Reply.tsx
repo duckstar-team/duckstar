@@ -64,7 +64,7 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
         </div>
 
         {/* 댓글 내용 */}
-        <div className="relative box-border flex min-h-px min-w-px shrink-0 grow basis-0 flex-col content-stretch items-start justify-start gap-[5px] px-0 pt-[3px] pb-0">
+        <div className="relative flex min-h-px min-w-px shrink-0 grow basis-0 flex-col content-stretch items-start justify-start gap-[5px] px-0 pt-[3px] pb-0">
           {/* 헤더 (작성자, 투표, 시간, 삭제 버튼) */}
           <div className="relative flex w-full items-center justify-start gap-[15px]">
             <div className="relative flex flex-shrink-0 items-center justify-start gap-[5px]">
