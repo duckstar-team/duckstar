@@ -128,7 +128,7 @@ export default function VoteCard({
     >
       <div className="flex h-full gap-4 p-4 lg:items-start">
         {/* 썸네일 */}
-        <div className="relative h-full w-20 flex-shrink-0 lg:w-28">
+        <div className="relative h-full max-h-40 w-20 flex-shrink-0 lg:w-28">
           <img
             src={anime.mainThumbnailUrl}
             alt={anime.titleKor}
