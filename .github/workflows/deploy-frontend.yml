@@ -12,27 +12,11 @@ on:
 # 동시 배포 제어: 같은 EC2 인스턴스에 대한 배포는 순차적으로 실행
 concurrency:
   group: deploy-ec2
-  cancel-in-progress: false  # 진행 중인 배포는 취소하지 않고 대기
+  cancel-in-progress: false # 진행 중인 배포는 취소하지 않고 대기
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-
-    env:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-      SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-      SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      SECURITY_IP_HASH_KEY: ${{ secrets.SECURITY_IP_HASH_KEY }}
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
-      NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
-      KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-      KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
-      KAKAO_ADMIN_KEY: ${{ secrets.KAKAO_ADMIN_KEY }}
-      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
     steps:
       - name: Checkout code
@@ -42,19 +26,19 @@ jobs:
         if: always()
         run: |
           curl -H "Content-Type: application/json" \
-               -d '{
-                 "embeds": [{
-                   "title": "🚀 Frontend 배포 시작",
-                   "color": 3447003,
-                   "fields": [
-                     {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
-                     {"name": "커밋", "value": "${{ github.sha }}", "inline": false},
-                     {"name": "작성자", "value": "${{ github.actor }}", "inline": true}
-                   ],
-                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-                 }]
-               }' \
-               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
+            -d '{
+            "embeds": [{
+              "title": "🚀 Frontend 배포 시작",
+              "color": 3447003,
+              "fields": [
+                {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
+                {"name": "커밋", "value": "${{ github.sha }}", "inline": false},
+                {"name": "작성자", "value": "${{ github.actor }}", "inline": true}
+              ],
+              "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+            }]
+          }' \
+            ${{ secrets.DISCORD_WEBHOOK_URL }} || true
 
       - name: Get public IP of GitHub Actions runner
         id: ip
@@ -92,20 +76,21 @@ jobs:
       - name: Create .env file
         run: |
           cat <<EOF > .env
-          SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
-          SPRING_DATASOURCE_URL=${{ env.SPRING_DATASOURCE_URL }}
-          SPRING_DATASOURCE_USERNAME=${{ env.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD=${{ env.SPRING_DATASOURCE_PASSWORD }}
-          JWT_SECRET=${{ env.JWT_SECRET }}
-          SECURITY_IP_HASH_KEY=${{ env.SECURITY_IP_HASH_KEY }}
-          GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}
-          NAVER_CLIENT_ID=${{ env.NAVER_CLIENT_ID }}
-          NAVER_CLIENT_SECRET=${{ env.NAVER_CLIENT_SECRET }}
-          KAKAO_CLIENT_ID=${{ env.KAKAO_CLIENT_ID }}
-          KAKAO_CLIENT_SECRET=${{ env.KAKAO_CLIENT_SECRET }}
-          KAKAO_ADMIN_KEY=${{ env.KAKAO_ADMIN_KEY }}
-          NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+          SPRING_PROFILES_ACTIVE=prod
+          SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          SECURITY_IP_HASH_KEY=${{ secrets.SECURITY_IP_HASH_KEY }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
+          KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_KAKAO_APP_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_APP_KEY }}
           EOF
 
       - name: Upload code to EC2
@@ -121,91 +106,100 @@ jobs:
             docker-compose.yml \
             nginx/ \
             .env
-          
+
           echo "📤 EC2로 코드 전송 중..."
           scp -o StrictHostKeyChecking=no /tmp/duckstar-code.tar.gz ubuntu@${{ secrets.EC2_HOST }}:/tmp/duckstar-code.tar.gz
-          
-          echo "📂 EC2에서 코드 압축 해제 중..."
+
+          echo "📂 EC2에서 기존 코드 삭제 및 새 코드 압축 해제 중..."
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
-            set -e
-            cd /home/ubuntu/duckstar
-            
-            # 기존 파일 백업 (선택사항)
-            if [ -d "frontend" ]; then
-              echo "기존 frontend 디렉토리 백업 중..."
+          set -e
+          cd /home/ubuntu/duckstar
+
+          # 🔥 기존 frontend와 nginx 디렉토리를 삭제하여 중복 파일 방지
+          echo "기존 디렉토리 정리 중..."
+          for dir in "frontend" "nginx"; do
+            if [ -d "$dir" ]; then
+              echo "$dir 디렉토리 삭제 중..."
+              rm -rf "$dir"
             fi
-            
-            # 압축 해제
-            tar -xzf /tmp/duckstar-code.tar.gz -C /home/ubuntu/duckstar
-            
-            # 임시 파일 정리
-            rm -f /tmp/duckstar-code.tar.gz
-            
-            echo "✅ 코드 업데이트 완료"
+          done
+
+          # 압축 해제 (깨끗한 상태에서 새 파일들만 들어오게 됨)
+          tar -xzf /tmp/duckstar-code.tar.gz -C /home/ubuntu/duckstar
+
+          # 임시 파일 정리
+          rm -f /tmp/duckstar-code.tar.gz
+
+          echo "✅ 코드 업데이트 완료"
           EOF
-          
+
           # 로컬 임시 파일 정리
           rm -f /tmp/duckstar-code.tar.gz
 
       - name: Deploy Frontend and Nginx to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
-            set -e
-            cd /home/ubuntu/duckstar
+          set -e
+          cd /home/ubuntu/duckstar
 
-            echo "🧹 빌드 공간 확보: 오래된 도커 데이터 정리 (빌드 전)"
-            # 사용하지 않는 컨테이너, 네트워크, 이미지 모두 삭제 (실행 중인 건 건드리지 않음)
-            docker system prune -af
-            # 빌드 캐시 삭제 (이게 용량을 가장 많이 차지함)
-            docker builder prune -af
+          echo "🧹 빌드 공간 확보: 오래된 도커 데이터 정리 (빌드 전)"
+          # 중지된 컨테이너만 삭제 (실행 중인 컨테이너는 유지)
+          docker container prune -f
+          # 태그가 없는(dangling) 이미지만 삭제 (빌드 캐시는 유지)
+          docker image prune -f
+          # 24시간 이상 사용되지 않은 빌드 캐시만 삭제 (최근 캐시는 유지하여 빌드 속도 향상)
+          docker builder prune -f --filter "until=24h"
 
-            echo "🛠 프론트엔드 빌드 시작"
-            # 이제 깨끗한 상태에서 빌드
-            docker compose up -d --build frontend nginx
+          echo "🛠 프론트엔드 및 Nginx 빌드 시작"
+          # 이제 깨끗한 상태에서 빌드
+          docker compose up -d --build frontend nginx
 
-            echo "📋 컨테이너 상태"
-            docker ps -a
+          echo "📋 컨테이너 상태"
+          docker ps -a
 
-            echo "📄 프론트엔드 최근 로그"
-            docker compose logs --tail=50 frontend
+          echo "📄 프론트엔드 최근 로그"
+          docker compose logs --tail=50 frontend
+
+          echo "📄 Nginx 최근 로그"
+          docker compose logs --tail=50 nginx
           EOF
 
       - name: Discord Notification - 배포 성공
         if: success()
         run: |
           curl -H "Content-Type: application/json" \
-               -d '{
-                 "embeds": [{
-                   "title": "✅ Frontend 배포 성공",
-                   "color": 3066993,
-                   "fields": [
-                     {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
-                     {"name": "커밋", "value": "[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})", "inline": false},
-                     {"name": "작성자", "value": "${{ github.actor }}", "inline": true}
-                   ],
-                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-                 }]
-               }' \
-               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
+            -d '{
+            "embeds": [{
+              "title": "✅ Frontend 배포 성공",
+              "color": 3066993,
+              "fields": [
+                {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
+                {"name": "커밋", "value": "[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})", "inline": false},
+                {"name": "작성자", "value": "${{ github.actor }}", "inline": true}
+              ],
+              "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+            }]
+          }' \
+            ${{ secrets.DISCORD_WEBHOOK_URL }} || true
 
       - name: Discord Notification - 배포 실패
         if: failure()
         run: |
           curl -H "Content-Type: application/json" \
-               -d '{
-                 "embeds": [{
-                   "title": "❌ Frontend 배포 실패",
-                   "color": 15158332,
-                   "fields": [
-                     {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
-                     {"name": "커밋", "value": "[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})", "inline": false},
-                     {"name": "작성자", "value": "${{ github.actor }}", "inline": true},
-                     {"name": "워크플로우", "value": "[상세 보기](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": false}
-                   ],
-                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-                 }]
-               }' \
-               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
+            -d '{
+            "embeds": [{
+              "title": "❌ Frontend 배포 실패",
+              "color": 15158332,
+              "fields": [
+                {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
+                {"name": "커밋", "value": "[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})", "inline": false},
+                {"name": "작성자", "value": "${{ github.actor }}", "inline": true},
+                {"name": "워크플로우", "value": "[상세 보기](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": false}
+              ],
+              "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+            }]
+          }' \
+            ${{ secrets.DISCORD_WEBHOOK_URL }} || true
 
       - name: Remove IP from EC2 Security Group
         if: always() && steps.add_ip.outputs.ip_added == 'true'
@@ -220,4 +214,3 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ap-northeast-2
-
