@@ -49,8 +49,10 @@ export default function Pagination({
       <button
         type="button"
         className={cn(
-          'mr-1.5',
-          !paginationData.hasPrev && 'cursor-not-allowed! opacity-20'
+          'flex h-8 w-8 items-center justify-center rounded-full',
+          !paginationData.hasPrev
+            ? 'cursor-not-allowed! opacity-20'
+            : 'text-gray-500 hover:bg-gray-200/50'
         )}
         onClick={handlePrev}
         disabled={!paginationData.hasPrev}
