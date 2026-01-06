@@ -485,7 +485,7 @@ export default function ChartPageContent() {
         {/* 해외 랭킹 리스트 */}
         <div
           className={cn(
-            'flex flex-col gap-2 lg:gap-4',
+            'flex w-[352px] flex-col gap-4',
             isDesktop && 'hidden lg:flex',
             activeView !== 'duckstar' ? 'flex' : 'hidden'
           )}
