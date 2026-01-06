@@ -114,24 +114,19 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
           set -e
           cd /home/ubuntu/duckstar
-
-          # 🔥 기존 frontend와 nginx 디렉토리를 삭제하여 중복 파일 방지
-          echo "기존 디렉토리 정리 중..."
-          for dir in "frontend" "nginx"; do
-            if [ -d "$dir" ]; then
-              echo "$dir 디렉토리 삭제 중..."
-              rm -rf "$dir"
-            fi
-          done
-
-          # 압축 해제 (깨끗한 상태에서 새 파일들만 들어오게 됨)
+          
+          if [ -d "frontend" ]; then
+            echo "frontend 내의 public을 제외하고 정리 중..."
+            # public 폴더만 남기고 나머지 삭제
+            find frontend -mindepth 1 -maxdepth 1 ! -name 'public' -exec rm -rf {} +
+          fi
+          
+          if [ -d "nginx" ]; then
+            rm -rf nginx
+          fi
+          
           tar -xzf /tmp/duckstar-code.tar.gz -C /home/ubuntu/duckstar
-
-          # 임시 파일 정리
-          rm -f /tmp/duckstar-code.tar.gz
-
-          echo "✅ 코드 업데이트 완료"
-          EOF
+        EOF
 
           # 로컬 임시 파일 정리
           rm -f /tmp/duckstar-code.tar.gz
