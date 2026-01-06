@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import Winner from '@/components/domain/chart/Winner';
 import RankCard from '@/components/domain/chart/RankCard';
+import Winner from '@/components/domain/chart/Winner';
 import AbroadRankCard from '@/components/domain/chart/AbroadRankCard';
 import { getChartData, getWeeks } from '@/api/chart';
 import { queryConfig } from '@/lib/queryConfig';
@@ -196,15 +196,15 @@ export default function ChartPage() {
   const getQuarterName = (quarter: number) => {
     switch (quarter) {
       case 1:
-        return 'SPRING';
+        return 'WINTER';
       case 2:
-        return 'SUMMER';
+        return 'SPRING';
       case 3:
-        return 'AUTUMN';
-      case 4:
-        return 'AUTUMN'; // 4분기도 AUTUMN
-      default:
         return 'SUMMER';
+      case 4:
+        return 'AUTUMN';
+      default:
+        return 'WINTER';
     }
   };
 

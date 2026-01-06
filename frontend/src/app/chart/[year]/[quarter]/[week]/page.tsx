@@ -180,15 +180,15 @@ export default function ChartPage() {
   const getQuarterName = (quarter: number) => {
     switch (quarter) {
       case 1:
-        return 'SPRING';
+        return 'WINTER';
       case 2:
-        return 'SUMMER';
+        return 'SPRING';
       case 3:
-        return 'AUTUMN';
-      case 4:
-        return 'AUTUMN'; // 4분기도 AUTUMN
-      default:
         return 'SUMMER';
+      case 4:
+        return 'AUTUMN';
+      default:
+        return 'WINTER';
     }
   };
 

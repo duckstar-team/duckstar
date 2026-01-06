@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactElement } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WeekDto, SurveyDto } from '@/types';
 import { ApiResponse } from '@/api/http';
@@ -251,74 +251,147 @@ export default function ThinNavDetail({ mode }: ThinNavDetailProps) {
           })}
         </div>
       ) : (
-        <>
-          {/* 연도 정보 (차트 모드) */}
-          {menuItems
-            .filter((item) => item.type === 'year')
-            .map((item, index) => (
-              <div
-                key={`year-${index}`}
-                className="mt-7 mb-4 inline-flex self-stretch px-4 font-semibold text-white"
-              >
-                {item.label}
-              </div>
-            ))}
+        <div className="flex flex-col">
+          {(() => {
+            const result: ReactElement[] = [];
+            let weekContainer: ReactElement[] | null = null;
+            let currentQuarterKey: string | null = null;
 
-          {/* 분기 정보 - chart 모드에서만 렌더링 */}
-          {menuItems
-            .filter((item) => item.type === 'quarter')
-            .map((item) => (
-              <button
-                key={`${item.quarterKey}`}
-                onClick={() => {
-                  const [year, quarter] = item.quarterKey
-                    .split('-')
-                    .map(Number);
-                  toggleQuarter(year, quarter);
-                }}
-                className="mx-auto mb-2 flex h-10 w-full min-w-30 items-center gap-1 rounded-lg pl-3 font-medium text-white transition hover:bg-white/10"
-              >
-                {/* 드롭다운 아이콘 */}
-                <ChevronRight
-                  className={cn(
-                    'size-4 transition',
-                    expandedQuarters.has(item.quarterKey) && 'rotate-90'
-                  )}
-                />
-                {item.label}
-              </button>
-            ))}
+            menuItems.forEach((item, index) => {
+              if (item.type === 'year') {
+                // 주차 컨테이너가 열려있으면 닫기
+                if (weekContainer) {
+                  result.push(
+                    <div
+                      key={`week-container-${currentQuarterKey}`}
+                      className="flex flex-col items-end gap-1 pr-2"
+                    >
+                      {weekContainer}
+                    </div>
+                  );
+                  weekContainer = null;
+                  currentQuarterKey = null;
+                }
 
-          {/* 하위 항목 - chart 모드: week만 렌더링 */}
-          <div className="flex flex-col items-end gap-1 pr-2">
-            {menuItems
-              .filter((item) => item.type === 'week')
-              .map((item, index) => (
-                <button
-                  key={`week-${index}`}
-                  className={cn(
-                    'relative inline-flex h-7 items-center justify-start rounded-lg px-2.5 text-nowrap transition hover:bg-white/10 max-md:text-sm',
-                    item.state === 'selected'
-                      ? 'bg-amber-200/20 font-bold text-amber-200'
-                      : 'text-white',
-                    'min-w-22'
-                  )}
-                  onClick={() => {
-                    if (item.weekData) {
-                      router.push(
-                        `/chart/${item.weekData.year}/${item.weekData.quarter}/${item.weekData.week}`
-                      );
-                    }
-                  }}
+                result.push(
+                  <div
+                    key={`year-${item.label}-${index}`}
+                    className="mt-7 mb-4 inline-flex self-stretch px-4 font-semibold text-white"
+                  >
+                    {item.label}
+                  </div>
+                );
+                return;
+              }
+
+              if (item.type === 'quarter') {
+                // 주차 컨테이너가 열려있으면 닫기
+                if (weekContainer) {
+                  result.push(
+                    <div
+                      key={`week-container-${currentQuarterKey}`}
+                      className="flex flex-col items-end gap-1 pr-2"
+                    >
+                      {weekContainer}
+                    </div>
+                  );
+                  weekContainer = null;
+                  currentQuarterKey = null;
+                }
+
+                result.push(
+                  <button
+                    key={`${item.quarterKey}`}
+                    onClick={() => {
+                      const [year, quarter] = item.quarterKey
+                        .split('-')
+                        .map(Number);
+                      toggleQuarter(year, quarter);
+                    }}
+                    className="mx-auto mb-2 flex h-10 w-full min-w-30 items-center gap-1 rounded-lg pl-3 font-medium text-white transition hover:bg-white/10"
+                  >
+                    {/* 드롭다운 아이콘 */}
+                    <ChevronRight
+                      className={cn(
+                        'size-4 transition',
+                        expandedQuarters.has(item.quarterKey) && 'rotate-90'
+                      )}
+                    />
+                    {item.label}
+                  </button>
+                );
+                return;
+              }
+
+              if (item.type === 'week') {
+                // 주차의 분기 키 생성
+                const quarterKey = item.weekData
+                  ? `${item.weekData.year}-${item.weekData.quarter}`
+                  : null;
+
+                // 새로운 분기의 주차이거나 컨테이너가 없으면 새로 시작
+                if (!weekContainer || currentQuarterKey !== quarterKey) {
+                  // 기존 컨테이너가 있으면 닫기
+                  if (weekContainer) {
+                    result.push(
+                      <div
+                        key={`week-container-${currentQuarterKey}`}
+                        className="flex flex-col items-end gap-1 pr-2"
+                      >
+                        {weekContainer}
+                      </div>
+                    );
+                  }
+
+                  // 새 컨테이너 시작
+                  weekContainer = [];
+                  currentQuarterKey = quarterKey;
+                }
+
+                // 주차 버튼 추가
+                weekContainer.push(
+                  <button
+                    key={`week-${index}`}
+                    className={cn(
+                      'relative inline-flex h-7 items-center justify-start rounded-lg px-2.5 text-nowrap transition hover:bg-white/10 max-md:text-sm',
+                      item.state === 'selected'
+                        ? 'bg-amber-200/20 font-bold text-amber-200'
+                        : 'text-white',
+                      'min-w-22'
+                    )}
+                    onClick={() => {
+                      if (item.weekData) {
+                        router.push(
+                          `/chart/${item.weekData.year}/${item.weekData.quarter}/${item.weekData.week}`
+                        );
+                      }
+                    }}
+                  >
+                    {item.label}
+                    {item.state === 'selected' && (
+                      <div className="absolute top-1/2 -right-2 h-4.5 -translate-y-1/2 rounded-full border-2 border-amber-300" />
+                    )}
+                  </button>
+                );
+                return;
+              }
+            });
+
+            // 마지막 주차 컨테이너 닫기
+            if (weekContainer) {
+              result.push(
+                <div
+                  key={`week-container-${currentQuarterKey}`}
+                  className="flex flex-col items-end gap-1 pr-2"
                 >
-                  {item.label}
-                  {item.state === 'selected' && (
-                    <div className="absolute top-1/2 -right-2 h-4.5 -translate-y-1/2 rounded-full border-2 border-amber-300" />
-                  )}
-                </button>
-              ))}
-          </div>
-        </>
+                  {weekContainer}
+                </div>
+              );
+            }
+
+            return result;
+          })()}
+        </div>
       )}
     </div>
   );
