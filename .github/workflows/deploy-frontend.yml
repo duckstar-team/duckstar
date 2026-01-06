@@ -126,7 +126,7 @@ jobs:
           fi
           
           tar -xzf /tmp/duckstar-code.tar.gz -C /home/ubuntu/duckstar
-        EOF
+          EOF
 
           # 로컬 임시 파일 정리
           rm -f /tmp/duckstar-code.tar.gz
