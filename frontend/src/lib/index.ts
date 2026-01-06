@@ -24,3 +24,4 @@ export * from './utils/scroll';
 export * from './utils/search';
 export * from './utils/season';
 export * from './utils/survey';
+export * from './utils/schedule';

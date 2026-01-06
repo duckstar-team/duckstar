@@ -42,5 +42,16 @@ export function getSeasonInKorean(season: SeasonType | string): string {
     AUTUMN: '가을',
     WINTER: '겨울',
   };
-  return seasonMap[season] || season;
+  return seasonMap[season];
+}
+
+// 시즌 타입을 분기로 변환
+export function getQuarterFromSeason(season: string): number | null {
+  const seasonMap: { [key: string]: number } = {
+    WINTER: 1, // 겨울
+    SPRING: 2, // 봄
+    SUMMER: 3, // 여름
+    AUTUMN: 4, // 가을
+  };
+  return seasonMap[season] || null;
 }
