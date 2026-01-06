@@ -36,6 +36,7 @@ export default function TooltipBtn({
         data-tooltip-content={
           typeof tooltipContent === 'string' ? tooltipContent : undefined
         }
+        className="w-full"
       >
         {children}
       </div>

@@ -438,7 +438,7 @@ export default function AnimeCard({
           {(ottDtos || []).slice(0, 5).map((ott, index) => (
             <div
               key={index}
-              className="relative size-[28px] shrink-0 cursor-pointer drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110 sm:size-[36px]"
+              className="relative shrink-0 cursor-pointer drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation(); // 카드 클릭 이벤트 방지
                 if (ott.watchUrl) {
@@ -447,58 +447,39 @@ export default function AnimeCard({
               }}
             >
               {ott.ottType === 'NETFLIX' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/netflix-logo.svg"
-                    alt="Netflix"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+                <img
+                  src="/icons/netflix-logo.svg"
+                  alt="Netflix"
+                  className="h-full w-full object-contain"
+                />
               )}
               {ott.ottType === OttType.Lafel && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/laftel-logo.svg"
-                    alt="LAFTEL"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+                <img
+                  src="/icons/laftel-logo.svg"
+                  alt="LAFTEL"
+                  className="h-full w-full object-contain"
+                />
               )}
               {ott.ottType === 'TVING' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/tving-logo.svg"
-                    alt="Tving"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+                <img
+                  src="/icons/tving-logo.svg"
+                  alt="Tving"
+                  className="h-full w-full object-contain"
+                />
               )}
               {ott.ottType === 'WAVVE' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/wavve-logo.svg"
-                    alt="Wavve"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+                <img
+                  src="/icons/wavve-logo.svg"
+                  alt="Wavve"
+                  className="h-full w-full object-contain"
+                />
               )}
               {ott.ottType === 'WATCHA' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/watcha-logo.svg"
-                    alt="Watcha"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-              )}
-              {!['NETFLIX', 'LAFTEL', 'TVING', 'WAVVE', 'WATCHA'].includes(
-                ott.ottType
-              ) && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold text-gray-800">
-                    {ott.ottType ? ott.ottType.charAt(0) : '?'}
-                  </span>
-                </div>
+                <img
+                  src="/icons/watcha-logo.svg"
+                  alt="Watcha"
+                  className="h-full w-full object-contain"
+                />
               )}
             </div>
           ))}
@@ -561,7 +542,7 @@ export default function AnimeCard({
       {/* Content Section */}
       <div
         className={cn(
-          'flex flex-1 flex-col',
+          'flex flex-1 flex-col text-left',
           screenSize === 'mobile' ? 'p-2' : 'p-3 sm:p-4'
         )}
       >
@@ -659,7 +640,7 @@ export default function AnimeCard({
                 </span>
               )}
             </div>
-            {timeRemaining && (
+            {timeRemaining && screenSize === 'desktop' && (
               <>
                 <div className="hidden w-[7px] sm:block"></div>
                 <div
