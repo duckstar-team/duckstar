@@ -41,12 +41,11 @@ export default function Sidebar() {
         {/* Navigation items */}
         <div className="space-y-1">
           {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.href === '/chart'
-                ? pathname.startsWith('/chart')
-                : item.href.startsWith('/award')
-                  ? pathname.startsWith('/award')
-                  : pathname === item.href;
+            // startsWith를 사용해야 하는 경로들
+            const prefixPaths = ['/chart', '/award', '/search'];
+            const isActive = prefixPaths.includes(item.href)
+              ? pathname.startsWith(item.href)
+              : pathname === item.href;
             const iconSrc = isActive ? item.activeIcon : item.defaultIcon;
 
             return (
