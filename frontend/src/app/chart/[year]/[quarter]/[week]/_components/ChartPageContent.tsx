@@ -445,7 +445,7 @@ export default function ChartPageContent() {
       </div>
 
       {/* 메인 컨텐츠 - 차트 리스트와 해외 랭킹 나란히 */}
-      <div className="max-width mt-[10px] flex items-start justify-around gap-15 pb-12">
+      <div className="max-width mt-[10px] flex items-start justify-around gap-10 pb-12">
         {/* 차트 리스트 - 1등부터 쭉 간격 20 */}
         <div
           className={cn(
@@ -453,7 +453,6 @@ export default function ChartPageContent() {
             !isDesktop && activeView !== 'duckstar' ? 'hidden' : 'flex'
           )}
         >
-          {/* 덕스타 차트가 없는 경우 스켈레톤 */}
           {!allAnimeList || allAnimeList.length === 0 ? (
             <div className="flex h-[200px] w-[768px] items-center justify-center rounded-lg bg-gray-200">
               <div className="text-gray-500">덕스타 차트 데이터 없음</div>
@@ -502,33 +501,10 @@ export default function ChartPageContent() {
                     (page) => page.result?.aniLabRankPreviews || []
                   );
 
-            // 데이터가 없을 때 스켈레톤 UI 표시
+            // 데이터가 없을 때 준비중 메세지 표시
             if (abroadData && abroadData.length === 0) {
               return (
                 <div className="relative h-[220px] w-full">
-                  {/* 스켈레톤 UI (뒷배경) */}
-                  <div className="absolute inset-0 space-y-4 p-4">
-                    {[...Array(8)].map((_, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-10 h-24 w-full rounded-xl opacity-50"
-                      >
-                        <div className="flex h-full items-center justify-center space-x-4 p-4">
-                          <div className="h-5 w-5 rounded bg-gray-100"></div>
-                          <div className="h-20 w-14 rounded-lg bg-gray-100"></div>
-                          <div className="flex-1 space-y-2">
-                            <div className="h-4 w-3/4 rounded bg-gray-100"></div>
-                            <div className="h-3 w-1/2 rounded bg-gray-100"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 블러 처리 레이어 */}
-                  <div className="absolute inset-0 rounded-xl"></div>
-
-                  {/* 로딩 메시지 (앞배경) */}
                   <div className="relative z-10 flex h-full flex-col items-center justify-center">
                     {activeView === 'anilab' ? (
                       <>

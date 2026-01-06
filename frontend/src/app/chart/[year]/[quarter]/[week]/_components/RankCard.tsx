@@ -17,7 +17,7 @@ export default function RankCard({ anime }: RankCardProps) {
   const isWinner = anime.rankPreviewDto.rank === 1;
 
   return (
-    <div className="mx-auto flex w-full flex-col @max-md:max-w-sm">
+    <div className="mx-auto flex w-full flex-col transition @max-md:max-w-sm @lg:@max-xl:w-[680px]">
       {/* 메인 카드 */}
       <div
         className={cn(
