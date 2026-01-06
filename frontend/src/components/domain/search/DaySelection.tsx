@@ -137,34 +137,49 @@ export default function DaySelection({
     });
   };
 
-  // 선택된 탭 변경 시 네비게이션 바 위치 업데이트
-  useEffect(() => {
+  const updateBars = () => {
     if (selectedDay) {
       updateNavigationBar(selectedDay);
-
-      // 호버된 상태라면 호버된 바도 업데이트
-      if (hoveredDay) {
-        updateHoveredBar(hoveredDay);
-      }
     }
-  }, [selectedDay]);
+    if (hoveredDay) {
+      updateHoveredBar(hoveredDay);
+    }
+  };
 
-  // 화면 크기 변경 시 네비게이션 바 위치 업데이트
+  // 선택된 탭 변경 시 네비게이션 바 위치 업데이트
   useEffect(() => {
+    updateBars();
+  }, [selectedDay, hoveredDay]);
+
+  // sticky 상태 변경 및 컨테이너 크기 변경 감지
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // ResizeObserver로 컨테이너 크기 변경 감지
+    const resizeObserver = new ResizeObserver(() => {
+      updateBars();
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    // sticky 상태 변경 시에도 업데이트 (ResizeObserver가 즉시 트리거되지 않을 수 있음)
+    const timeoutId = setTimeout(() => {
+      updateBars();
+    }, 100);
+
+    // 윈도우 리사이즈 이벤트
     const handleResize = () => {
-      if (selectedDay) {
-        updateNavigationBar(selectedDay);
-        if (hoveredDay) {
-          updateHoveredBar(hoveredDay);
-        }
-      }
+      updateBars();
     };
 
     window.addEventListener('resize', handleResize);
+
     return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timeoutId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [selectedDay, hoveredDay]);
+  }, [isSticky, selectedDay, hoveredDay]);
 
   return (
     <>
