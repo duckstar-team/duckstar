@@ -1,6 +1,7 @@
 import {
   MedalPreviewDto,
   OttDto,
+  PageInfo,
   SeasonDto,
   VoteRatioDto,
   VoteResultDto,
@@ -135,6 +136,16 @@ export interface AnimeRankDto {
   medalPreviews: MedalPreviewDto[];
   animeStatDto: AnimeStatDto;
   voteResultDto: VoteResultDto;
+}
+
+// Anime Rank Slice DTO
+export interface AnimeRankSliceDto {
+  voterCount: number;
+  voteTotalCount: number;
+  animeRankDtos: AnimeRankDto[];
+  animeTrendRankPreviews: RankPreviewDto[];
+  aniLabRankPreviews: RankPreviewDto[];
+  pageInfo: PageInfo;
 }
 
 // Cast Preview DTO
