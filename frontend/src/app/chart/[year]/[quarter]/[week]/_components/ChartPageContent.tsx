@@ -437,11 +437,13 @@ export default function ChartPageContent() {
         <DownloadBtn />
       </div>
       <div className="fixed top-0 left-full">
-        <TopTenList
-          topTen={allAnimeList.slice(0, 10)}
-          type="weekly"
-          titleData={currentWeekInfo || null}
-        />
+        {data?.pages?.[0]?.result && (
+          <TopTenList
+            topTen={data?.pages?.[0]?.result}
+            type="weekly"
+            titleData={currentWeekInfo || null}
+          />
+        )}
       </div>
 
       {/* 메인 컨텐츠 - 차트 리스트와 해외 랭킹 나란히 */}

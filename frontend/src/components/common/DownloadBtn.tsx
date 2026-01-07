@@ -88,7 +88,7 @@ export default function DownloadBtn() {
 
   const handleClick = () => {
     toast.promise(handleDownload(), {
-      loading: '이미지를 다운로드 중입니다...',
+      loading: '이미지 다운로드 중입니다...',
       success: '이미지 다운로드가 완료되었습니다.',
       error: '이미지 다운로드에 실패했습니다.',
     });
