@@ -447,35 +447,35 @@ export default function AnimeCard({
                 }
               }}
             >
-              {ott.ottType === 'NETFLIX' && (
+              {ott.ottType === OttType.Netflix && (
                 <img
                   src="/icons/netflix-logo.svg"
                   alt="Netflix"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Lafel && (
+              {ott.ottType === OttType.Laftel && (
                 <img
                   src="/icons/laftel-logo.svg"
                   alt="LAFTEL"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === 'TVING' && (
+              {ott.ottType === OttType.Tving && (
                 <img
                   src="/icons/tving-logo.svg"
                   alt="Tving"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === 'WAVVE' && (
+              {ott.ottType === OttType.Wavve && (
                 <img
                   src="/icons/wavve-logo.svg"
                   alt="Wavve"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === 'WATCHA' && (
+              {ott.ottType === OttType.Watcha && (
                 <img
                   src="/icons/watcha-logo.svg"
                   alt="Watcha"

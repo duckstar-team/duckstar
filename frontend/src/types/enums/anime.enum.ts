@@ -19,10 +19,10 @@ export enum SeasonType {
 }
 
 export enum OttType {
-  Lafel = 'LAFEL',
+  Laftel = 'LAFTEL',
   Netflix = 'NETFLIX',
   Wavve = 'WAVVE',
-  Tvning = 'TVING',
+  Tving = 'TVING',
   Watcha = 'WATCHA',
   Prime = 'PRIME',
 }
