@@ -13,7 +13,9 @@ export default function OttFilterQueue({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm font-medium text-gray-700">선택됨:</span>
+      <span className="max-xs:hidden text-sm font-medium text-gray-700">
+        선택됨:
+      </span>
 
       {selectedOttServices.map((ottService, index) => (
         <div key={index} className="relative flex items-center">

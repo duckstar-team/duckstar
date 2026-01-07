@@ -49,15 +49,18 @@ export default function SeasonDaySelector({
   const renderContent = () => (
     <div
       className={cn(
-        'mx-auto flex w-full max-w-7xl items-start gap-4 px-6 max-md:justify-between md:flex-col',
-        hasSearchQuery && 'max-md:items-center',
+        'mx-auto flex w-full max-w-7xl items-start px-6 max-md:justify-between md:flex-col',
+        hasSearchQuery ? 'flex-col' : 'gap-4',
         isSticky && !hasSearchQuery && 'md:items-center'
       )}
     >
       {hasSearchQuery && (
         <BackButton
           onClick={onSearchReset}
-          className={cn(!isSticky && 'md:-translate-y-1/2 md:px-6')}
+          className={cn(
+            'md:px-6',
+            !isSticky && 'mb-2 px-0 md:-translate-y-1/2'
+          )}
         />
       )}
       <>
@@ -129,7 +132,7 @@ export default function SeasonDaySelector({
             width: `calc(100vw - ${sidebarWidth}px)`,
           }}
         >
-          <div className="mx-auto max-w-7xl py-3 md:px-6 md:py-2.5">
+          <div className="mx-auto max-w-7xl py-3 md:py-2.5">
             {renderContent()}
           </div>
         </div>

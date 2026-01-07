@@ -104,7 +104,7 @@ export default function SeasonSelector({
       </button>
       {/* 드롭다운 메뉴 */}
       {isOpen && (
-        <div className="absolute top-full left-0 z-30 mt-1 w-full max-w-[280px] min-w-[200px] rounded-lg bg-white shadow-lg sm:max-w-[320px]">
+        <div className="absolute top-full left-0 z-30 mt-1 w-full max-w-[280px] min-w-[200px] overflow-hidden rounded-lg bg-white shadow-lg sm:max-w-[320px]">
           {seasonOptions.map((option) => (
             <button
               key={
