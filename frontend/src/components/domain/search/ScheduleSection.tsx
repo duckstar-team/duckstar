@@ -1,13 +1,11 @@
 import AnimeGrid from './AnimeGrid';
 import type { AnimePreviewDto } from '@/types/dtos';
-import { DayOfWeek } from './DaySelection';
 
 interface ScheduleSectionProps {
   day: string;
   dayAnimes: AnimePreviewDto[];
   isCurrentSeason: boolean;
   sectionId: string;
-  onDayClick: (day: DayOfWeek) => void;
 }
 
 const DAY_LABELS: Record<string, string> = {
@@ -22,35 +20,18 @@ const DAY_LABELS: Record<string, string> = {
   SPECIAL: '특별편성 및 극장판',
 };
 
-const DAY_TO_KOREAN: Record<string, DayOfWeek> = {
-  UPCOMING: '곧 시작',
-  SUN: '일',
-  MON: '월',
-  TUE: '화',
-  WED: '수',
-  THU: '목',
-  FRI: '금',
-  SAT: '토',
-  SPECIAL: '특별편성 및 극장판',
-};
-
 export default function ScheduleSection({
   day,
   dayAnimes,
   isCurrentSeason,
   sectionId,
-  onDayClick,
 }: ScheduleSectionProps) {
   const dayInKorean = DAY_LABELS[day];
-  const koreanDay = DAY_TO_KOREAN[day];
 
   return (
     <div>
       <div key={day} id={sectionId} className="mb-6 flex items-end gap-3">
-        <h2
-          className="cursor-pointer text-lg font-bold text-gray-900 transition-colors hover:text-blue-600 sm:text-2xl"
-          onClick={() => koreanDay && onDayClick(koreanDay)}
-        >
+        <h2 className="text-lg font-bold text-gray-900 sm:text-2xl">
           {dayInKorean}
         </h2>
         {day === 'UPCOMING' && (
@@ -63,7 +44,7 @@ export default function ScheduleSection({
       <AnimeGrid animes={dayAnimes} isCurrentSeason={isCurrentSeason} />
 
       {day !== 'SPECIAL' && (
-        <div className="h-6 border-t border-gray-200"></div>
+        <div className="my-10 h-px w-full bg-gray-200"></div>
       )}
     </div>
   );

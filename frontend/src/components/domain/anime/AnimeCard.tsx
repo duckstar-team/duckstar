@@ -418,6 +418,7 @@ export default function AnimeCard({
         className
       )}
       onClick={handleCardClick}
+      title={titleKor}
     >
       {/* Thumbnail Image */}
       <div
@@ -612,7 +613,7 @@ export default function AnimeCard({
                             ? getDayInKorean(dayOfWeek)
                             : getDayInKorean(dayOfWeek)}
                       </span>
-                      <span className="hidden rounded bg-black px-2 py-1 text-[13px] font-bold text-white sm:inline-block">
+                      <span className="hidden rounded-md bg-black px-2 py-0.5 text-[13px] font-bold text-white sm:inline-block">
                         {airTimeText}
                       </span>
                       <span className="text-[14px] font-medium text-[#868E96]">
@@ -692,7 +693,7 @@ export default function AnimeCard({
 
               if (isUpcomingCountdown) {
                 return (
-                  <span className="rounded bg-black px-2 py-1 text-[12px] font-bold text-white">
+                  <span className="rounded-md bg-black px-2 py-1 text-[12px] font-bold text-white">
                     {airTimeText}
                   </span>
                 );

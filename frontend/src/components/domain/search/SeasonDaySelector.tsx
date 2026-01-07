@@ -74,10 +74,12 @@ export default function SeasonDaySelector({
                 currentYear={isThisWeek ? null : year}
                 currentQuarter={isThisWeek ? null : quarter}
               />
-              <AiringCheckbox
-                checked={showOnlyAiring}
-                onChange={onShowOnlyAiringChange}
-              />
+              {!isThisWeek && (
+                <AiringCheckbox
+                  checked={showOnlyAiring}
+                  onChange={onShowOnlyAiringChange}
+                />
+              )}
             </div>
             <DaySelection
               selectedDay={selectedDay}

@@ -563,7 +563,7 @@ export default function SearchPageContent({
       </div>
 
       {/* 애니 시간표 */}
-      <div className="mx-auto max-w-7xl px-3 pb-0 sm:px-6">
+      <div className="mx-auto max-w-7xl px-3 pb-20 sm:px-6">
         <AnimeSchedule
           isThisWeek={isThisWeek}
           year={year}
@@ -572,7 +572,6 @@ export default function SearchPageContent({
           selectedOttServices={selectedOttServices}
           groupedAnimes={groupedAnimes}
           getSectionId={getSectionId}
-          onDayClick={setSelectedDay}
         />
       </div>
     </main>

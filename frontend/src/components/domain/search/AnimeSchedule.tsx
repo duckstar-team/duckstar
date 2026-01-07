@@ -3,7 +3,6 @@ import FilteredResultsSection from './FilteredResultsSection';
 import ScheduleSection from './ScheduleSection';
 import EmptyState from './EmptyState';
 import type { AnimePreviewDto } from '@/types/dtos';
-import { DayOfWeek } from './DaySelection';
 
 interface AnimeScheduleProps {
   isThisWeek: boolean;
@@ -13,7 +12,6 @@ interface AnimeScheduleProps {
   selectedOttServices: string[];
   groupedAnimes: { [key: string]: AnimePreviewDto[] };
   getSectionId: (baseId: string) => string;
-  onDayClick: (day: DayOfWeek) => void;
 }
 
 export default function AnimeSchedule({
@@ -24,7 +22,6 @@ export default function AnimeSchedule({
   selectedOttServices,
   groupedAnimes,
   getSectionId,
-  onDayClick,
 }: AnimeScheduleProps) {
   if (searchQuery.trim()) {
     return (
@@ -67,7 +64,6 @@ export default function AnimeSchedule({
             dayAnimes={dayAnimes}
             isCurrentSeason={isThisWeek}
             sectionId={sectionId}
-            onDayClick={onDayClick}
           />
         );
       })}
