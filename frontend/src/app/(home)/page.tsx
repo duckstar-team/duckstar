@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import HomeClient from './_components/HomeClient';
 import WebsiteStructuredData from '@/components/seo/WebsiteStructuredData';
-import { OG_LOGO_URL } from '@/lib/constants';
+import { OG_LOGO_URL } from '@/lib';
 
 export const metadata: Metadata = {
   title: '덕스타 - 애니메이션 투표 플랫폼',

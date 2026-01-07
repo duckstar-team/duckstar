@@ -14,7 +14,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import LoginModal from '@/components/common/LoginModal';
 import { getWeeks } from '@/api/chart';
-import { WeekDto } from '@/types';
+import { WeekDto } from '@/types/dtos';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 import { Toaster } from 'react-hot-toast';
 
@@ -131,26 +131,6 @@ export default function AppContainer({ children }: AppContainerProps) {
       fetchWeeks();
     }
   }, [isChartPage, weeks.length]);
-
-  // /chart 페이지로 돌아왔을 때 selectedWeek를 최신 주차로 리셋 (동적 라우팅 제외)
-  useEffect(() => {
-    if (isChartPage && pathname === '/chart' && weeks.length > 0) {
-      const latestWeek = weeks.sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
-        if (a.quarter !== b.quarter) return b.quarter - a.quarter;
-        return b.week - a.week;
-      })[0];
-      setSelectedWeek(latestWeek);
-    }
-  }, [isChartPage, pathname, weeks, setSelectedWeek]);
-
-  // 동적 라우팅 페이지에서는 selectedWeek를 리셋하지 않음
-  useEffect(() => {
-    if (isChartPage && pathname !== '/chart' && pathname.includes('/chart/')) {
-      // 동적 라우팅 페이지에서는 selectedWeek를 리셋하지 않음
-      // 해당 페이지에서 URL 파라미터를 기반으로 설정
-    }
-  }, [isChartPage, pathname]);
 
   /**
    * 사이드바 Open/Close 상태 관리

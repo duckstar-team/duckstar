@@ -1,6 +1,6 @@
 'use client';
 
-import { SurveyRankDto } from '@/types';
+import { SurveyRankDto } from '@/types/dtos';
 import React, { useMemo, memo } from 'react';
 import SurveyResultComment from './SurveyResultComment';
 import {

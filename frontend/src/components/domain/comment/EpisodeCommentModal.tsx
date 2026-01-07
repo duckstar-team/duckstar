@@ -4,49 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import EpisodeSection from '../anime/EpisodeSection';
 import CommentPostForm from './CommentPostForm';
-import { getThisWeekRecord } from '@/lib/quarterUtils';
+import { getThisWeekRecord, cn } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import { showToast } from '@/components/common/Toast';
-import { cn } from '@/lib/utils';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
-
-// API 응답 타입 정의
-interface EpisodeDto {
-  episodeId: number;
-  episodeNumber: number;
-  isBreak: boolean;
-  scheduledAt: string;
-  isRescheduled: boolean;
-  nextEpScheduledAt?: string;
-}
-
-interface AnimeInfoDto {
-  medium: string;
-  status: string;
-  totalEpisodes: number;
-  premiereDateTime: string;
-  titleKor: string;
-  titleOrigin?: string;
-  dayOfWeek?: string;
-  airTime?: string;
-  corp?: string;
-  director?: string;
-  genre?: string;
-  author?: string;
-  minAge?: number;
-  officalSite?: Record<string, string>;
-  mainImageUrl?: string;
-  mainThumbnailUrl?: string;
-  seasonDtos?: Array<{
-    year: number;
-    seasonType: string;
-  }>;
-  ottDtos?: Array<{
-    ottType: string;
-    watchUrl: string;
-  }>;
-}
+import { AnimeInfoDto, EpisodeDto } from '@/types/dtos';
 
 interface AnimeHomeDto {
   animeInfoDto: AnimeInfoDto;

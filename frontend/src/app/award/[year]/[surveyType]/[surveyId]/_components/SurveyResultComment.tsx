@@ -1,13 +1,13 @@
 'use client';
 
-import { CommentDto, ReplyDto, ReplyRequestDto, PageInfo } from '@/types';
+import { CommentDto, ReplyDto, ReplyRequestDto, PageInfo } from '@/types/dtos';
 import React, { useState } from 'react';
 import Comment from '@/components/domain/comment/Comment';
 import Reply from '@/components/domain/comment/Reply';
 import OpenOrFoldReplies from '@/components/domain/comment/OpenOrFoldReplies';
 import CommentInputForm from './CommentInputForm';
 import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import {

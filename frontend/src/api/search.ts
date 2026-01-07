@@ -3,7 +3,7 @@ import type {
   AnimeSearchListDto,
   AnimeHomeDto,
   EpisodeDto,
-} from '@/types';
+} from '@/types/dtos';
 import { ApiResponse } from './http';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';

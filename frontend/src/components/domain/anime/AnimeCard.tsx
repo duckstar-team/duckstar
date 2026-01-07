@@ -1,9 +1,10 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
-import { AnimePreviewDto } from '@/types';
+import { AnimePreviewDto } from '@/types/dtos';
 import { useNavigation } from '@/hooks/useNavigation';
+import { OttType } from '@/types/enums';
 
 interface AnimeCardProps {
   anime: AnimePreviewDto;
@@ -68,8 +69,16 @@ export default function AnimeCard({
     }
 
     // 날짜만 비교하기 위해 시간을 00:00:00으로 설정
-    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+    const nowDateOnly = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const airDateOnly = new Date(
+      airDate.getFullYear(),
+      airDate.getMonth(),
+      airDate.getDate()
+    );
 
     // 이미 지난 경우 D-DAY로 표시
     if (airDateOnly < nowDateOnly) {
@@ -117,8 +126,16 @@ export default function AnimeCard({
       const airDate = new Date(airTime);
       if (!isNaN(airDate.getTime())) {
         const now = new Date();
-        const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const airDateOnly = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+        const nowDateOnly = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        const airDateOnly = new Date(
+          airDate.getFullYear(),
+          airDate.getMonth(),
+          airDate.getDate()
+        );
 
         // 지난 날짜인 경우 시간만 표시
         if (airDateOnly < nowDateOnly) {
@@ -401,6 +418,7 @@ export default function AnimeCard({
         className
       )}
       onClick={handleCardClick}
+      title={titleKor}
     >
       {/* Thumbnail Image */}
       <div
@@ -421,7 +439,7 @@ export default function AnimeCard({
           {(ottDtos || []).slice(0, 5).map((ott, index) => (
             <div
               key={index}
-              className="relative size-[28px] shrink-0 cursor-pointer drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110 sm:size-[36px]"
+              className="relative shrink-0 cursor-pointer drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation(); // 카드 클릭 이벤트 방지
                 if (ott.watchUrl) {
@@ -429,59 +447,40 @@ export default function AnimeCard({
                 }
               }}
             >
-              {ott.ottType === 'NETFLIX' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/netflix-logo.svg"
-                    alt="Netflix"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+              {ott.ottType === OttType.Netflix && (
+                <img
+                  src="/icons/netflix-logo.svg"
+                  alt="Netflix"
+                  className="h-full w-full object-contain"
+                />
               )}
-              {ott.ottType === 'LAFTEL' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/laftel-logo.svg"
-                    alt="LAFTEL"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+              {ott.ottType === OttType.Laftel && (
+                <img
+                  src="/icons/laftel-logo.svg"
+                  alt="LAFTEL"
+                  className="h-full w-full object-contain"
+                />
               )}
-              {ott.ottType === 'TVING' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/tving-logo.svg"
-                    alt="Tving"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+              {ott.ottType === OttType.Tving && (
+                <img
+                  src="/icons/tving-logo.svg"
+                  alt="Tving"
+                  className="h-full w-full object-contain"
+                />
               )}
-              {ott.ottType === 'WAVVE' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/wavve-logo.svg"
-                    alt="Wavve"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+              {ott.ottType === OttType.Wavve && (
+                <img
+                  src="/icons/wavve-logo.svg"
+                  alt="Wavve"
+                  className="h-full w-full object-contain"
+                />
               )}
-              {ott.ottType === 'WATCHA' && (
-                <div className="absolute inset-0">
-                  <img
-                    src="/icons/watcha-logo.svg"
-                    alt="Watcha"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-              )}
-              {!['NETFLIX', 'LAFTEL', 'TVING', 'WAVVE', 'WATCHA'].includes(
-                ott.ottType
-              ) && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold text-gray-800">
-                    {ott.ottType ? ott.ottType.charAt(0) : '?'}
-                  </span>
-                </div>
+              {ott.ottType === OttType.Watcha && (
+                <img
+                  src="/icons/watcha-logo.svg"
+                  alt="Watcha"
+                  className="h-full w-full object-contain"
+                />
               )}
             </div>
           ))}
@@ -544,7 +543,7 @@ export default function AnimeCard({
       {/* Content Section */}
       <div
         className={cn(
-          'flex flex-1 flex-col',
+          'flex flex-1 flex-col text-left',
           screenSize === 'mobile' ? 'p-2' : 'p-3 sm:p-4'
         )}
       >
@@ -614,7 +613,7 @@ export default function AnimeCard({
                             ? getDayInKorean(dayOfWeek)
                             : getDayInKorean(dayOfWeek)}
                       </span>
-                      <span className="hidden rounded bg-black px-2 py-1 text-[13px] font-bold text-white sm:inline-block">
+                      <span className="hidden rounded-md bg-black px-2 py-0.5 text-[13px] font-bold text-white sm:inline-block">
                         {airTimeText}
                       </span>
                       <span className="text-[14px] font-medium text-[#868E96]">
@@ -642,7 +641,7 @@ export default function AnimeCard({
                 </span>
               )}
             </div>
-            {timeRemaining && (
+            {timeRemaining && screenSize === 'desktop' && (
               <>
                 <div className="hidden w-[7px] sm:block"></div>
                 <div
@@ -694,7 +693,7 @@ export default function AnimeCard({
 
               if (isUpcomingCountdown) {
                 return (
-                  <span className="rounded bg-black px-2 py-1 text-[12px] font-bold text-white">
+                  <span className="rounded-md bg-black px-2 py-1 text-[12px] font-bold text-white">
                     {airTimeText}
                   </span>
                 );

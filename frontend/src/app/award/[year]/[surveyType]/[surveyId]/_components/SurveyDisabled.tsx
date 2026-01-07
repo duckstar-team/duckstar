@@ -1,9 +1,10 @@
-import { SurveyDto, VoteStatusType } from '@/types';
+import { SurveyDto } from '@/types/dtos';
+import { SurveyStatus } from '@/types/enums';
 import React from 'react';
 import SurveyCountdown from './SurveyCountdown';
 
 export default function SurveyDisabled({ survey }: { survey: SurveyDto }) {
-  const isNotYet = survey.status === VoteStatusType.NotYet;
+  const isNotYet = survey.status === SurveyStatus.NotYet;
 
   if (isNotYet) {
     return (
@@ -41,7 +42,7 @@ export default function SurveyDisabled({ survey }: { survey: SurveyDto }) {
         </h2>
         <p className="my-6 text-center text-gray-600">
           <SurveyCountdown
-            type={VoteStatusType.Closed}
+            type={SurveyStatus.Closed}
             text="결과 공개까지"
             startDate={survey?.endDateTime}
             className="text-[1.5rem] font-bold! text-red-400! @md:text-[2rem]"

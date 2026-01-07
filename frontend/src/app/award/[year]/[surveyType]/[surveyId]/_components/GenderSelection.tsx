@@ -1,17 +1,17 @@
 'use client';
 
-import { MemberAgeGroup, MemberGender } from '@/types';
+import { AgeGroup, Gender } from '@/types/enums';
 import VoteButton from './VoteButton';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { useState } from 'react';
 
 interface GenderSelectionProps {
   genderSelectionStep: 'gender' | 'age' | null;
   setGenderSelectionStep: (step: 'gender' | 'age' | null) => void;
-  selectedGender: MemberGender | null;
-  selectedAgeGroup: MemberAgeGroup | null;
-  setSelectedGender: (gender: MemberGender) => void;
-  setSelectedAgeGroup: (ageGroup: MemberAgeGroup) => void;
+  selectedGender: Gender | null;
+  selectedAgeGroup: AgeGroup | null;
+  setSelectedGender: (gender: Gender) => void;
+  setSelectedAgeGroup: (ageGroup: AgeGroup) => void;
   onBackClick: () => void;
   onSubmitClick: () => void;
   isSubmitting?: boolean;
@@ -19,28 +19,28 @@ interface GenderSelectionProps {
 }
 
 type GenderOption = {
-  value: MemberGender;
+  value: Gender;
   label: string;
 };
 
 type AgeGroupOption = {
-  value: MemberAgeGroup;
+  value: AgeGroup;
   label: string;
 };
 
 // Constants
 const GENDER_OPTIONS: GenderOption[] = [
-  { value: MemberGender.Male, label: '남성' },
-  { value: MemberGender.Female, label: '여성' },
+  { value: Gender.Male, label: '남성' },
+  { value: Gender.Female, label: '여성' },
 ] as const;
 
 const AGE_GROUP_OPTIONS: AgeGroupOption[] = [
-  { value: MemberAgeGroup.Under14, label: '14세 이하' },
-  { value: MemberAgeGroup.Age15_19, label: '15-19세' },
-  { value: MemberAgeGroup.Age20_24, label: '20-24세' },
-  { value: MemberAgeGroup.Age25_29, label: '25-29세' },
-  { value: MemberAgeGroup.Age30_34, label: '30-34세' },
-  { value: MemberAgeGroup.Over35, label: '35세 이상' },
+  { value: AgeGroup.Under14, label: '14세 이하' },
+  { value: AgeGroup.Age15_19, label: '15-19세' },
+  { value: AgeGroup.Age20_24, label: '20-24세' },
+  { value: AgeGroup.Age25_29, label: '25-29세' },
+  { value: AgeGroup.Age30_34, label: '30-34세' },
+  { value: AgeGroup.Over35, label: '35세 이상' },
 ] as const;
 
 // Main component
@@ -83,12 +83,12 @@ export default function GenderSelection({
     onSubmitClick();
   };
 
-  const handleGenderClick = (gender: MemberGender) => {
+  const handleGenderClick = (gender: Gender) => {
     setSelectedGender(gender);
     setGenderSelectionStep('age');
   };
 
-  const handleAgeClick = (ageGroup: MemberAgeGroup) => {
+  const handleAgeClick = (ageGroup: AgeGroup) => {
     setSelectedAgeGroup(ageGroup);
     onSubmitClick();
   };

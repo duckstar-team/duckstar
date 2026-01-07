@@ -8,7 +8,7 @@ import {
   ReplyDto,
   ReplyRequestDto,
   ReplySliceDto,
-} from '@/types';
+} from '@/types/dtos';
 import { ApiResponse } from './http';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';

@@ -6,7 +6,9 @@ import { useState, useEffect } from 'react';
 import LoginButton from '@/components/common/LoginButton';
 import { useAuth } from '@/context/AuthContext';
 import { Menu } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
+import SearchBar from '@/components/domain/search/SearchBar';
+import { IoSearch } from 'react-icons/io5';
 
 export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
   const { isAuthenticated } = useAuth();
@@ -15,9 +17,7 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // 검색 실행
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSearch = () => {
     if (searchQuery.trim()) {
       // 검색 페이지로 이동 (keyword 파라미터 사용)
       router.push(`/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
@@ -26,11 +26,6 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
       setSearchQuery('');
       setIsSearchOpen(false);
     }
-  };
-
-  // 모바일 검색 토글
-  const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen);
   };
 
   // ESC 키로 검색창 닫기
@@ -65,7 +60,7 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
       }
 
       // 모바일 검색창 외부 클릭 시 닫기
-      if (isSearchOpen && !target.closest('form')) {
+      if (isSearchOpen && !target.closest('[data-search-bar]')) {
         setIsSearchOpen(false);
       }
     };
@@ -104,72 +99,42 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
           isAuthenticated ? 'gap-1 pr-2' : 'gap-6'
         )}
       >
-        {/* Desktop Search Bar */}
-        <form
-          onSubmit={handleSearch}
-          className="hidden w-[150px] items-center justify-start gap-4 overflow-hidden rounded-xl border border-[#E9ECEF] bg-[#F1F3F5] pt-[9px] pr-4 pb-[9px] pl-4 transition-opacity hover:opacity-100 sm:w-[200px] md:flex md:w-[248px]"
+        {/* Search Bar - Desktop: 항상 표시, Mobile: isSearchOpen일 때만 표시 */}
+        <div
+          className={cn(
+            'w-[160px] sm:w-[200px]',
+            'md:flex md:w-full',
+            isSearchOpen ? 'flex' : 'hidden'
+          )}
         >
-          {/* Search Icon */}
-          <div className="relative h-5 w-5 overflow-hidden">
-            <img
-              src="/icons/header-search.svg"
-              alt="Search"
-              className="h-full w-full"
-            />
-          </div>
+          <SearchBar
+            variant="header"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+            placeholder={
+              isSearchOpen ? '애니 검색' : '제목, 초성으로 애니 찾기'
+            }
+          />
+        </div>
 
-          {/* Search Input */}
-          <div className="flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="제목, 초성으로 애니 찾기"
-              className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
-            />
-          </div>
-        </form>
-
-        {/* Mobile Search Bar */}
-        {isSearchOpen ? (
-          <form
-            onSubmit={handleSearch}
-            className="flex h-[50px] w-[160px] items-center justify-start gap-4 overflow-hidden rounded-xl border border-[#E9ECEF] bg-[#F1F3F5] pt-[9px] pr-4 pb-[9px] pl-4 sm:w-[200px] md:hidden"
-          >
-            {/* Search Icon */}
-            <div className="relative h-5 w-5 overflow-hidden">
-              <img
-                src="/icons/header-search.svg"
-                alt="Search"
-                className="h-full w-full"
-              />
-            </div>
-
-            {/* Search Input */}
-            <div className="flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="애니 검색"
-                className="w-full bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
-                autoFocus
-              />
-            </div>
-          </form>
-        ) : (
+        {/* Mobile: 검색바가 닫혀있을 때만 버튼 표시 */}
+        {!isSearchOpen && (
           <button
-            onClick={toggleSearch}
+            onClick={() => setIsSearchOpen(true)}
             className="md:hidden"
             aria-label="검색"
           >
-            <img src="/icons/header-search.svg" alt="검색" />
+            <IoSearch className="size-5 text-gray-400" />
           </button>
         )}
 
         {/* Login/Logout Button */}
         <div
-          className={`flex items-center ${isSearchOpen ? 'hidden md:block' : ''}`}
+          className={cn(
+            'flex shrink-0 items-center',
+            isSearchOpen && 'hidden md:block'
+          )}
         >
           <LoginButton
             variant="default"

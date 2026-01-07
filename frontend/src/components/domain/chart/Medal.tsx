@@ -1,13 +1,15 @@
+import { MedalType } from '@/types/enums';
+
 interface MedalProps {
-  property1?: 'GOLD' | 'SILVER' | 'BRONZE' | 'NONE';
+  property1?: MedalType;
   className?: string;
 }
 
 export default function Medal({
-  property1 = 'GOLD',
+  property1 = MedalType.Gold,
   className = '',
 }: MedalProps) {
-  if (property1 === 'SILVER') {
+  if (property1 === MedalType.Silver) {
     return (
       <div
         className={`xs:gap-[10px] relative flex size-full content-stretch items-center justify-center gap-[6px] sm:gap-[10px] ${className}`}
@@ -22,7 +24,7 @@ export default function Medal({
       </div>
     );
   }
-  if (property1 === 'BRONZE') {
+  if (property1 === MedalType.Bronze) {
     return (
       <div
         className={`xs:gap-[10px] relative flex size-full content-stretch items-center justify-center gap-[6px] sm:gap-[10px] ${className}`}
@@ -39,7 +41,7 @@ export default function Medal({
       </div>
     );
   }
-  if (property1 === 'NONE') {
+  if (property1 === MedalType.None) {
     return <div className={`size-full ${className}`} />;
   }
   return (

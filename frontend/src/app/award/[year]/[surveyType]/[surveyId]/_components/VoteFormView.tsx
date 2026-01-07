@@ -19,21 +19,26 @@ import {
   ApiResponseAnimeCandidateListDto,
   ApiResponseAnimeVoteHistoryDto,
   AnimeCandidateDto,
-  MemberAgeGroup,
-  VoteStatusType,
-  MemberGender,
+} from '@/types/dtos';
+import {
+  AgeGroup,
+  BallotType,
+  Gender,
+  SurveyStatus,
   SurveyType,
-} from '@/types';
+} from '@/types/enums';
 import { Megaphone } from 'lucide-react';
-import { MAX_VOTES } from '@/lib/constants';
-import { queryConfig } from '@/lib/queryConfig';
-import { searchMatch } from '@/lib/searchUtils';
-import { getCategoryText } from '@/lib/surveyUtils';
+import {
+  cn,
+  queryConfig,
+  searchMatch,
+  getCategoryText,
+  setSurveySession,
+  MAX_VOTES,
+} from '@/lib';
 import { revoteAnime } from '@/api/vote';
 import { apiCall } from '@/api/http';
 import { CandidateCardSkeleton } from '@/components/skeletons';
-import { cn } from '@/lib/utils';
-import { setSurveySession } from '@/lib/surveySessionStorage';
 import { useAuth } from '@/context/AuthContext';
 import VoteButton from './VoteButton';
 import QuarterNavigation from './QuarterNavigation';
@@ -44,7 +49,7 @@ interface VoteFormViewProps {
   surveyId: number;
   isRevoteMode: boolean;
   onRevoteSuccess: () => void;
-  voteStatus?: VoteStatusType;
+  voteStatus?: SurveyStatus;
   surveyType?: SurveyType;
   surveyEndDate?: Date;
 }
@@ -72,11 +77,10 @@ export default function VoteFormView({
   const [genderSelectionStep, setGenderSelectionStep] = useState<
     'gender' | 'age' | null
   >(null);
-  const [selectedGender, setSelectedGender] = useState<MemberGender | null>(
+  const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(
     null
   );
-  const [selectedAgeGroup, setSelectedAgeGroup] =
-    useState<MemberAgeGroup | null>(null);
   const [showNextError, setShowNextError] = useState(false);
   const [scrollCompleted, setScrollCompleted] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -124,7 +128,7 @@ export default function VoteFormView({
   useEffect(() => {
     if (
       candidateData?.result?.memberGender &&
-      candidateData.result.memberGender !== 'UNKNOWN' &&
+      candidateData.result.memberGender !== Gender.Unknown &&
       !selectedGender
     ) {
       setSelectedGender(candidateData.result.memberGender);
@@ -156,10 +160,10 @@ export default function VoteFormView({
         voteStatusData.result.animeBallotDtos.length > 0
       ) {
         const normalVotes = voteStatusData.result.animeBallotDtos
-          .filter((ballot) => ballot.ballotType === 'NORMAL')
+          .filter((ballot) => ballot.ballotType === BallotType.Normal)
           .map((ballot) => ballot.animeCandidateId);
         const bonusVotes = voteStatusData.result.animeBallotDtos
-          .filter((ballot) => ballot.ballotType === 'BONUS')
+          .filter((ballot) => ballot.ballotType === BallotType.Bonus)
           .map((ballot) => ballot.animeCandidateId);
 
         // 기존 투표 데이터를 즉시 상태에 설정
@@ -175,7 +179,7 @@ export default function VoteFormView({
         // 성별 정보 설정
         if (
           candidateData?.result?.memberGender &&
-          candidateData.result.memberGender !== 'UNKNOWN'
+          candidateData.result.memberGender !== Gender.Unknown
         ) {
           setSelectedGender(candidateData.result.memberGender);
         }
@@ -542,39 +546,39 @@ export default function VoteFormView({
       if (isRevoteMode && voteStatusData?.result?.submissionId) {
         const currentVotes = voteStatusData.result.animeBallotDtos || [];
         const currentNormalVotes = currentVotes
-          .filter((ballot) => ballot.ballotType === 'NORMAL')
+          .filter((ballot) => ballot.ballotType === BallotType.Normal)
           .map((ballot) => ballot.animeCandidateId);
         const currentBonusVotes = currentVotes
-          .filter((ballot) => ballot.ballotType === 'BONUS')
+          .filter((ballot) => ballot.ballotType === BallotType.Bonus)
           .map((ballot) => ballot.animeCandidateId);
 
         const added = [
           ...selected
             .filter((id) => !currentNormalVotes.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: 'NORMAL' as const })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.Normal })),
           ...bonusSelected
             .filter((id) => !currentBonusVotes.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: 'BONUS' as const })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.Bonus })),
         ];
 
         const removed = [
           ...currentNormalVotes
             .filter((id) => !selected.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: 'NORMAL' as const })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.Normal })),
           ...currentBonusVotes
             .filter((id) => !bonusSelected.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: 'BONUS' as const })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.Bonus })),
         ];
 
         const updated = [];
         for (const id of selected) {
           if (currentBonusVotes.includes(id)) {
-            updated.push({ candidateId: id, ballotType: 'NORMAL' as const });
+            updated.push({ candidateId: id, ballotType: BallotType.Normal });
           }
         }
         for (const id of bonusSelected) {
           if (currentNormalVotes.includes(id)) {
-            updated.push({ candidateId: id, ballotType: 'BONUS' as const });
+            updated.push({ candidateId: id, ballotType: BallotType.Bonus });
           }
         }
 
@@ -760,7 +764,11 @@ export default function VoteFormView({
             ) : (
               <div className="order-1 flex w-full items-center justify-between @lg:order-2 @lg:w-auto">
                 <div className="min-w-2/3 @lg:min-w-100">
-                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                  <SearchBar
+                    variant="simple"
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                  />
                 </div>
 
                 <VoteButton
@@ -815,7 +823,11 @@ export default function VoteFormView({
           ) : (
             <div className="order-1 flex w-full items-center justify-between @lg:order-2 @lg:w-auto">
               <div className="min-w-2/3 @lg:min-w-100">
-                <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                <SearchBar
+                  variant="simple"
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                />
               </div>
 
               <VoteButton

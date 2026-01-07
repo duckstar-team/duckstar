@@ -1,5 +1,5 @@
 import { apiCall } from './http';
-import { ChartAnimeDto, SurveyResultDto, WeekDto } from '@/types';
+import { ChartAnimeDto, SurveyResultDto, WeekDto } from '@/types/dtos';
 
 export async function getChartData(
   year: number,

@@ -14,7 +14,7 @@ import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import CommentPostForm from '@/components/domain/comment/CommentPostForm';
 import { getCandidate, submitVoteForm } from '@/api/vote';
-import { CandidateDto } from '@/types';
+import { CandidateDto } from '@/types/dtos';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import StarDetailPopup from '@/components/domain/star/StarDetailPopup';
 import { useAuth } from '@/context/AuthContext';
@@ -182,7 +182,11 @@ export default function VoteModal({
     let totalVotes = voterCount;
     let computedAverage = starInfo.starAverage ?? 0;
 
-    if (starInfo.isBlocked && starInfo.userStarScore > 0) {
+    if (
+      starInfo.isBlocked &&
+      starInfo.userStarScore &&
+      starInfo.userStarScore > 0
+    ) {
       totalVotes += 1;
       const idx = starInfo.userStarScore - 1;
       if (idx >= 0 && idx < counts.length) {

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import AnimeDetailClient from './_components/AnimeDetailClient';
 import { getAnimeDetail } from '@/api/search';
 import AnimeStructuredData from '@/components/seo/AnimeStructuredData';
-import { getAnimeOgImageUrl } from '@/lib/ogImage';
+import { getAnimeOgImageUrl } from '@/lib';
 
 // SEO를 위한 동적 메타데이터 생성 (서버 사이드에서만 실행)
 export async function generateMetadata({
