@@ -377,9 +377,17 @@ export function groupAnimesByDay(
   // 검색 중일 때
   if (isSearchMode) {
     if (searchResults.length > 0) {
-      return {
-        SEARCH_RESULTS: searchResults,
-      };
+      // 검색 결과에 OTT 필터와 방영 중 필터 적용
+      const filteredResults = filterOttAnimes(
+        filterAiringAnimes(searchResults, showOnlyAiring),
+        selectedOttServices
+      );
+      
+      if (filteredResults.length > 0) {
+        return {
+          SEARCH_RESULTS: filteredResults,
+        };
+      }
     }
     return {};
   }
