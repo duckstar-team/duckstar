@@ -17,6 +17,7 @@ import { getWeeks } from '@/api/chart';
 import { WeekDto } from '@/types/dtos';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 import { Toaster } from 'react-hot-toast';
+import ScrollToBtn from '../common/ScrollToBtn';
 
 // 모달 상태를 관리하는 Context
 interface ModalContextType {
@@ -230,6 +231,7 @@ export default function AppContainer({ children }: AppContainerProps) {
         {/* Global Modals - 전체 앱 레벨에서 관리 */}
         <LoginModal />
         <Toaster />
+        <ScrollToBtn />
       </ChartContext.Provider>
     </ModalContext.Provider>
   );
