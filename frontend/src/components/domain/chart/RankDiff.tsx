@@ -1,3 +1,5 @@
+import { cn } from '@/lib';
+
 interface RankDiffProps {
   property1:
     | 'up-greater-equal-than-5'
@@ -22,7 +24,9 @@ export default function RankDiff({
   if (property1 === 'new') {
     return (
       <div className={CONTAINER_CLASS}>
-        <span className="text-xs text-blue-400">NEW</span>
+        <span className={cn('text-xs text-blue-400', isTopTen && 'text-base')}>
+          NEW
+        </span>
       </div>
     );
   }
@@ -43,7 +47,9 @@ export default function RankDiff({
           alt="same-rank"
           className="size-2.5"
         />
-        <span className="text-xs">{value}주</span>
+        <span className={cn('text-xs', isTopTen && 'text-base')}>
+          {value}주
+        </span>
       </div>
     );
   }
@@ -79,10 +85,13 @@ export default function RankDiff({
       <img
         src={config.icon}
         alt={property1}
-        className={`object-contain ${isTopTen ? 'h-4 w-4' : 'h-2.5 w-2.5'}`}
+        className={cn('object-contain', isTopTen ? 'size-4' : 'size-2.5')}
       />
       <span
-        className={`${isTopTen ? 'text-lg' : 'text-xs md:text-sm'} ${config.color}`}
+        className={cn(
+          isTopTen ? 'text-base' : 'text-xs md:text-sm',
+          config.color
+        )}
       >
         {value}
       </span>

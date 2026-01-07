@@ -3,26 +3,27 @@
 import React from 'react';
 import { MdOutlineHowToVote } from 'react-icons/md';
 import {
-  AnimeRankDto,
+  AnimeRankSliceDto,
   RankPreviewDto,
   SurveyDto,
   SurveyRankDto,
+  SurveyResultDto,
   WeekDto,
 } from '@/types/dtos';
 import { getBannerSubtitle, cn, getRankDiffType } from '@/lib';
-import { format, parse } from 'date-fns';
-import logo from '@/assets/logo-white.svg';
+import { format } from 'date-fns';
 import RankDiff from './RankDiff';
+import { Users } from 'lucide-react';
 
 type TopTenListProps =
   | {
       type: 'award';
-      topTen: SurveyRankDto[];
+      topTen: SurveyResultDto;
       titleData: SurveyDto | null;
     }
   | {
       type: 'weekly';
-      topTen: AnimeRankDto[];
+      topTen: AnimeRankSliceDto;
       titleData: WeekDto | null;
     };
 
@@ -41,13 +42,13 @@ export default function TopTenList({
   const renderAwardItem = (item: SurveyRankDto) => (
     <div
       key={item.animeId}
-      className="flex items-center gap-5 rounded-lg bg-white px-4 py-2"
+      className="flex items-center gap-5 rounded-xl border border-gray-200 bg-white px-4 py-2"
     >
       {/* 순위 */}
       <div
         className={cn(
-          'flex w-8 shrink-0 items-center justify-center text-3xl font-bold',
-          item.rank === 1 ? 'text-red-500' : 'text-black/60'
+          'flex w-8 shrink-0 items-center justify-center text-3xl font-medium',
+          item.rank === 1 ? 'text-red-500' : 'text-gray-500/80'
         )}
       >
         {item.rank}
@@ -69,7 +70,7 @@ export default function TopTenList({
 
       {/* 제목 및 정보 */}
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <h3 className="text-xl font-bold text-black">
+        <h3 className="text-xl font-medium text-black">
           {item.animeCandidateDto.titleKor}
         </h3>
         <p className="text-sm font-medium text-black/60">
@@ -88,13 +89,13 @@ export default function TopTenList({
   const renderWeeklyItem = (item: RankPreviewDto) => (
     <div
       key={item.contentId}
-      className="flex items-center gap-5 rounded-lg bg-white px-4 py-2"
+      className="flex items-center gap-5 rounded-xl border border-gray-200 bg-white py-2"
     >
       {/* 순위 */}
       <div
         className={cn(
-          'flex w-8 shrink-0 items-center justify-center text-3xl font-bold',
-          item.rank === 1 ? 'text-red-500' : 'text-black/60'
+          'ml-4 flex w-8 shrink-0 items-center justify-center text-3xl font-medium',
+          item.rank === 1 ? 'text-red-500' : 'text-gray-500/80'
         )}
       >
         {item.rank}
@@ -116,95 +117,99 @@ export default function TopTenList({
 
       {/* 제목  */}
       <div className="flex min-w-0 flex-1">
-        <h3 className="text-xl font-bold text-black">{item.title}</h3>
+        <h3 className="text-xl font-medium text-black">{item.title}</h3>
       </div>
 
       {/* 순위 변동 */}
-      <div className="w-20 text-center">
+      <div className="flex h-10 w-20 items-center justify-center border-l border-gray-200">
         <RankDiff
-          property1={getRankDiffType(item.rankDiff)}
-          value={item.rankDiff}
+          property1={getRankDiffType(
+            item.rankDiff,
+            item.consecutiveWeeksAtSameRank
+          )}
+          value={item.consecutiveWeeksAtSameRank}
           isTopTen={true}
         />
       </div>
     </div>
   );
 
-  const renderAwardTitle = (surveyDto: SurveyDto) => (
-    <>
-      <h2 className="text-3xl font-bold text-white">
+  const renderAwardTitle = (surveyDto: SurveyDto, voteTotalCount: number) => (
+    <div className="flex items-center justify-between rounded-lg bg-white px-4 py-2.5">
+      <h2 className="text-2xl font-bold text-black">
         {surveyDto.year}년 {getBannerSubtitle(surveyDto, false)}{' '}
-        <span className="text-red-500">TOP 10</span>
+        <span className="text-brand">TOP 10</span>
       </h2>
-      <div className="flex flex-col text-white/60">
-        <span>{`${format(surveyDto.startDateTime, 'yy.MM.dd')} - ${format(surveyDto.endDateTime, 'yy.MM.dd')}`}</span>
-        <span>
-          <MdOutlineHowToVote className="inline-block size-5" /> 총 투표수:
+      <div className="flex flex-col items-end text-black/60">
+        <span className="text-sm">{`${format(surveyDto.startDateTime, 'yy.MM.dd')} - ${format(surveyDto.endDateTime, 'yy.MM.dd')}`}</span>
+        <span className="flex items-center gap-2">
+          <MdOutlineHowToVote size={20} />총 투표 수: {voteTotalCount}표
         </span>
       </div>
-    </>
+    </div>
   );
 
-  const renderWeeklyTitle = (weekDto: WeekDto) => {
-    // 날짜 포맷팅 헬퍼 함수
-    const formatDate = (dateStr: string): string => {
-      if (!dateStr) return '';
-      const dateObj = parse(dateStr, 'yyyy-MM-dd', new Date());
-      return format(dateObj, 'yy.MM.dd');
-    };
-
+  const renderWeeklyTitle = (
+    weekDto: WeekDto,
+    voterCount: number,
+    voteTotalCount: number
+  ) => {
     return (
-      <>
-        <h2 className="text-3xl font-bold text-white">
+      <div className="flex items-center justify-between rounded-lg bg-white px-4 py-2.5">
+        <h2 className="text-2xl font-bold text-black">
           {weekDto.year}년 {weekDto.quarter}분기 {weekDto.week}
-          주차 <span className="text-red-500">TOP 10</span>
+          주차 <span className="text-brand">TOP 10</span>
         </h2>
-        <div className="flex flex-col text-white/60">
-          <span>
-            {formatDate(weekDto.startDate)} - {formatDate(weekDto.endDate)}
+        <div className="flex flex-col text-sm text-black/60">
+          <span className="flex items-center gap-2">
+            <Users size={18} />
+            전체 투표자: {voterCount}명
           </span>
-          <span>
-            <MdOutlineHowToVote className="inline-block size-5" /> 총 투표수:
+          <span className="flex items-center gap-2">
+            <MdOutlineHowToVote size={20} />총 투표 수: {voteTotalCount}표
           </span>
         </div>
-      </>
+      </div>
     );
   };
 
   return (
     <div
       id="top-ten-list-download"
-      className="flex flex-col items-center"
-      style={{ minWidth: '700px', maxWidth: '900px' }}
+      className="flex w-[700px] flex-col items-center bg-gray-100"
     >
       {/* 헤더 */}
       {titleData && (
-        <header
-          className="flex h-20 w-full items-center"
-          style={{ background: 'linear-gradient(to right, #460e06, #212529)' }}
-        >
-          <img src={logo} alt="duckstar logo" className="h-full p-4" />
-          <div className="mx-2 flex w-full items-center justify-between rounded-lg px-4 py-3">
+        <header className="flex w-full items-center bg-gray-200">
+          <img
+            src="/logo.svg"
+            alt="duckstar logo"
+            className="h-full w-40 object-contain"
+          />
+          <div className="w-full px-4">
             {type === 'award'
-              ? renderAwardTitle(titleData)
-              : renderWeeklyTitle(titleData)}
+              ? renderAwardTitle(titleData, topTen.voteTotalCount)
+              : renderWeeklyTitle(
+                  titleData,
+                  topTen.voterCount,
+                  topTen.voteTotalCount
+                )}
           </div>
         </header>
       )}
 
       {/* Top 10 리스트 */}
-      <div
-        className="w-full px-6 py-4"
-        style={{ background: 'linear-gradient(to right, #460e06, #212529)' }}
-      >
+      <div className="w-full px-6 py-4">
         <div className="space-y-3">
           {type === 'award'
-            ? topTen.map((item) => renderAwardItem(item))
-            : topTen.map((item) => renderWeeklyItem(item.rankPreviewDto))}
+            ? topTen.surveyRankDtos.map((item) => renderAwardItem(item))
+            : topTen.animeRankDtos
+                .slice(0, 10)
+                .map((item) => renderWeeklyItem(item.rankPreviewDto))}
         </div>
 
         {/* 푸터 */}
-        <footer className="w-full pt-2 text-right text-sm font-medium text-white/60">
+        <footer className="w-full pt-2 text-right text-sm font-medium text-black/60">
           ©Duckstar All Rights Reserved
         </footer>
       </div>

@@ -101,11 +101,13 @@ export default function AwardHeader() {
 
       {/* Top 10 리스트 (숨김 처리, 다운로드용) */}
       <div className="fixed top-0 left-full">
-        <TopTenList
-          topTen={topTenData?.surveyRankDtos || []}
-          type="award"
-          titleData={surveyData || null}
-        />
+        {topTenData && (
+          <TopTenList
+            topTen={topTenData}
+            type="award"
+            titleData={surveyData || null}
+          />
+        )}
       </div>
     </>
   );

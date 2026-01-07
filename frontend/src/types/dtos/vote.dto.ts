@@ -1,5 +1,6 @@
 import {
   Anime,
+  CommentDto,
   StarInfoDto,
   SurveyCommentDto,
   VoteResultDto,
@@ -143,6 +144,32 @@ export interface SurveyDto {
   startDateTime: Date;
   endDateTime: Date;
   thumbnailUrl: string | null;
+}
+
+/**
+ * SurveyRankDto
+ */
+export interface SurveyRankDto {
+  rank: number;
+  animeId: number;
+  animeCandidateDto: AnimeCandidateDto;
+  voteRatioDto: VoteRatioDto;
+  commentDtos: CommentDto[];
+  commentTotalCount: number;
+}
+
+/**
+ * SurveyResultDto
+ */
+export interface SurveyResultDto {
+  isFirst: boolean;
+  isLast: boolean;
+  page: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+  voteTotalCount: number;
+  surveyRankDtos: SurveyRankDto[];
 }
 
 export interface VoteRatioDto {
