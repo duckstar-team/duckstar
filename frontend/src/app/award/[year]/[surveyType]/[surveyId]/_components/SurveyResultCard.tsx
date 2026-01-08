@@ -315,12 +315,14 @@ export default function SurveyResultCard({
           </div>
 
           {/* 댓글 섹션 */}
-          <SurveyResultComment
-            animeId={animeId}
-            commentDtos={commentDtos}
-            commentTotalCount={commentTotalCount}
-            surveyCandidateId={animeCandidateDto.animeCandidateId}
-          />
+          {animeId && (
+            <SurveyResultComment
+              animeId={animeId}
+              commentDtos={commentDtos}
+              commentTotalCount={commentTotalCount}
+              surveyCandidateId={animeCandidateDto.animeCandidateId}
+            />
+          )}
         </div>
       </div>
     </div>

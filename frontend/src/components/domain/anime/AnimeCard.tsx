@@ -435,11 +435,11 @@ export default function AnimeCard({
         />
 
         {/* OTT Services Overlay */}
-        <div className="absolute bottom-3 left-3 flex items-center justify-start gap-[10px]">
+        <div className="xs:px-3 absolute bottom-3 flex items-center justify-start gap-1.5 px-1 sm:gap-[10px]">
           {(ottDtos || []).slice(0, 5).map((ott, index) => (
             <div
               key={index}
-              className="relative shrink-0 cursor-pointer drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110"
+              className="relative min-w-0 cursor-pointer drop-shadow-[0_0_5.35px_rgba(0,0,0,0.5)] transition-transform duration-200 hover:scale-110"
               onClick={(e) => {
                 e.stopPropagation(); // 카드 클릭 이벤트 방지
                 if (ott.watchUrl) {
@@ -487,7 +487,6 @@ export default function AnimeCard({
         </div>
 
         {/* Status Badge */}
-        {screenSize !== 'mobile' && (
           <div className="absolute top-3 left-3">
             <span
               className={cn(
@@ -498,7 +497,6 @@ export default function AnimeCard({
               {getStatusText(status)}
             </span>
           </div>
-        )}
 
         {/* Live Badge - 현재 방영중인 경우에만 표시 */}
         {isCurrentlyAiring() && (
