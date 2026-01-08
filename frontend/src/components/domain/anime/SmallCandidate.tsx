@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { StarInfoDto, LiveVoteResultDto, AnimePreviewDto } from '@/types';
+import { StarInfoDto, LiveVoteResultDto, AnimePreviewDto } from '@/types/dtos';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import StarDistributionChart from '@/components/domain/star/StarDistributionChart';
 import { submitStarVote, withdrawStar } from '@/api/vote';
@@ -260,7 +260,7 @@ export default function SmallCandidate({
 
   // episodeStarId를 state로 관리 (투표 후 응답에서 받아옴)
   const [episodeStarId, setEpisodeStarId] = useState<number | undefined>(
-    starInfo?.episodeStarId
+    starInfo?.episodeStarId ?? undefined
   );
 
   // starInfo가 변경되면 episodeStarId 동기화
@@ -286,6 +286,7 @@ export default function SmallCandidate({
     if (
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       const newVoterCount = voterCount + 1;
@@ -323,6 +324,7 @@ export default function SmallCandidate({
       starInfo &&
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       return voterCount + 1;
@@ -336,6 +338,7 @@ export default function SmallCandidate({
       starInfo &&
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       setLocalVoterCount(voterCount + 1);
@@ -351,6 +354,7 @@ export default function SmallCandidate({
     if (
       starInfo.isBlocked &&
       starInfo.userStarScore !== undefined &&
+      starInfo.userStarScore &&
       starInfo.userStarScore > 0
     ) {
       const newVoterCount = voterCount + 1;

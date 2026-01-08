@@ -26,7 +26,7 @@ export default function OpenOrFoldReplies({
 
   if (isOpen) {
     return (
-      <div className="relative box-border flex size-full content-stretch items-center justify-start gap-[25px] py-0 pr-0 pl-[84px]">
+      <div className="relative flex size-full content-stretch items-center justify-start gap-[25px] py-0 pr-0 pl-[84px]">
         {hasMoreReplies && onLoadMore ? (
           // 더보기 버튼 (더 많은 답글이 있을 때)
           <button
@@ -61,7 +61,7 @@ export default function OpenOrFoldReplies({
   }
 
   return (
-    <div className="relative box-border flex size-full content-stretch items-center justify-start gap-[25px] py-0 pr-0 pl-[84px]">
+    <div className="relative flex size-full content-stretch items-center justify-start gap-[25px] py-0 pr-0 pl-[84px]">
       <button
         onClick={onToggle}
         className="relative flex shrink-0 content-stretch items-center justify-start gap-[15px] transition-opacity hover:opacity-70"

@@ -14,16 +14,16 @@ import CommentHeader from '@/components/domain/comment/CommentHeader';
 import Comment from '@/components/domain/comment/Comment';
 import Reply from '@/components/domain/comment/Reply';
 import OpenOrFoldReplies from '@/components/domain/comment/OpenOrFoldReplies';
-import SortingMenu from '@/components/ui/SortingMenu';
-import { SortOption } from '@/components/ui/SortingMenu';
+import SortingMenu from '@/components/common/SortingMenu';
+import { SortOption } from '@/components/common/SortingMenu';
 import {
   CommentDto,
   CommentRequestDto,
   PageInfo,
   ReplyDto,
   ReplyRequestDto,
-} from '@/types';
-import { getThisWeekRecord } from '@/lib/quarterUtils';
+} from '@/types/dtos';
+import { getThisWeekRecord } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import EpisodeCommentModal from '@/components/domain/comment/EpisodeCommentModal';

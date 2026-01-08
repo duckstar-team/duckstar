@@ -4,14 +4,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import BigCandidate from '@/components/domain/anime/BigCandidate';
 import SmallCandidate from '@/components/domain/anime/SmallCandidate';
 import AnimeCard from '@/components/domain/anime/AnimeCard';
-import { searchMatch, extractChosung } from '@/lib/searchUtils';
 import { getStarCandidates } from '@/api/vote';
-import { AnimePreviewDto, LiveCandidateDto } from '@/types';
+import { AnimePreviewDto, LiveCandidateDto } from '@/types/dtos';
 import {
+  searchMatch,
+  extractChosung,
   getVotedEpisodes,
   addVotedEpisodeWithTTL,
   removeVotedEpisode,
-} from '@/lib/voteStorage';
+  queryConfig,
+} from '@/lib';
 import { useModal } from '@/components/layout/AppContainer';
 import { useAuth } from '@/context/AuthContext';
 import { getUpcomingAnimes } from '@/api/search';
@@ -19,7 +21,6 @@ import VoteBanner from './VoteBanner';
 import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
 import SearchBar from '@/components/domain/search/SearchBar';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
@@ -131,6 +132,7 @@ export default function VotePageContent() {
   const lastWeekLiveCandidates =
     starCandidatesData?.result?.lastWeekLiveCandidates || [];
   const voteInfo = starCandidatesData?.result?.weekDto || null;
+  const isFirstWeek = voteInfo?.quarter === 1 && voteInfo?.week === 1;
   const error = queryError
     ? queryError instanceof Error
       ? queryError.message
@@ -917,6 +919,7 @@ export default function VotePageContent() {
           <div className="flex min-w-0 flex-1 justify-between">
             <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
               <SearchBar
+                variant="simple"
                 value={currentWeekSearchQuery}
                 onChange={handleCurrentWeekSearchQueryChange}
                 placeholder={randomAnimeTitle || '애니메이션 제목을 입력하세요'}
@@ -1097,6 +1100,7 @@ export default function VotePageContent() {
               <div className="flex min-w-0 flex-1 justify-between">
                 <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
                   <SearchBar
+                    variant="simple"
                     value={lastWeekSearchQuery}
                     onChange={handleLastWeekSearchQueryChange}
                     placeholder={
@@ -1173,9 +1177,9 @@ export default function VotePageContent() {
             {!isLoading && voteInfo && (
               <VoteCandidateList
                 title="지난 주 후보 목록"
-                year={voteInfo?.year}
-                quarter={voteInfo?.quarter}
-                week={voteInfo?.week - 1}
+                year={isFirstWeek ? voteInfo?.year - 1 : voteInfo?.year}
+                quarter={isFirstWeek ? 4 : voteInfo?.quarter}
+                week={isFirstWeek ? 13 : voteInfo?.week - 1}
                 searchQuery={lastWeekSearchQuery}
               />
             )}

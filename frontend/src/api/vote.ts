@@ -3,11 +3,11 @@ import {
   CandidateDto,
   CandidateListDto,
   LiveVoteResultDto,
-  MemberAgeGroup,
-  MemberGender,
   SurveyCommentDto,
-} from '@/types';
+  AnimeVoteHistoryDto,
+} from '@/types/dtos';
 import { apiCall } from './http';
+import { AgeGroup, BallotType, Gender } from '@/types/enums';
 
 // Device fingerprint 생성 함수
 async function generateDeviceFingerprint(): Promise<string> {
@@ -130,16 +130,21 @@ export async function withdrawStar(episodeId: number, episodeStarId: number) {
   });
 }
 
+// Survey 투표 기록 조회 API
+export async function getVoteHistory(surveyId: number) {
+  return apiCall<AnimeVoteHistoryDto>(`/api/v1/vote/surveys/${surveyId}/me`);
+}
+
 // Survey 재투표 API
 export async function revoteAnime(
   submissionId: number,
   requestBody: {
     surveyId: number;
-    gender: MemberGender;
-    ageGroup: MemberAgeGroup;
-    added: Array<{ candidateId: number; ballotType: 'NORMAL' | 'BONUS' }>;
-    removed: Array<{ candidateId: number; ballotType: 'NORMAL' | 'BONUS' }>;
-    updated: Array<{ candidateId: number; ballotType: 'NORMAL' | 'BONUS' }>;
+    gender: Gender;
+    ageGroup: AgeGroup;
+    added: Array<{ candidateId: number; ballotType: BallotType }>;
+    removed: Array<{ candidateId: number; ballotType: BallotType }>;
+    updated: Array<{ candidateId: number; ballotType: BallotType }>;
   }
 ) {
   const response = await apiCall<{ isSuccess: boolean }>(

@@ -6,10 +6,10 @@ import LeftInfoPanel from './LeftInfoPanel';
 import RightCommentPanel from './RightCommentPanel';
 import { getAnimeDetail } from '@/api/search';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
-import { Character } from '@/types';
+import { Character } from '@/types/dtos';
 import { useAuth } from '@/context/AuthContext';
 import { updateAnimeImage } from '@/api/admin';
-import { AnimeInfoDto, AnimePreviewDto } from '@/types';
+import { AnimeInfoDto, AnimePreviewDto } from '@/types/dtos';
 
 export default function AnimeDetailClient() {
   const params = useParams();

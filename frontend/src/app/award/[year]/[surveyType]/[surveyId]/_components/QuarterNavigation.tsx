@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 interface QuarterNavigationProps {
   quarters: number[];
@@ -16,7 +16,9 @@ export default function QuarterNavigation({
   activeQuarter,
 }: QuarterNavigationProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>(
+    'desktop'
+  );
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -54,12 +56,12 @@ export default function QuarterNavigation({
 
   return (
     <div
-      className="fixed right-2 sm:right-3 md:right-4 top-1/2 z-[100] -translate-y-1/2"
+      className="fixed top-1/2 right-2 z-[100] -translate-y-1/2 sm:right-3 md:right-4"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <motion.nav
-        className="flex flex-col items-center rounded-lg border border-gray-200 bg-white/95 backdrop-blur-sm shadow-lg overflow-hidden"
+        className="flex flex-col items-center overflow-hidden rounded-lg border border-gray-200 bg-white/95 shadow-lg backdrop-blur-sm"
         animate={{
           width: getWidth(),
           padding: getPadding(),
@@ -74,11 +76,11 @@ export default function QuarterNavigation({
             key={quarter}
             onClick={() => onQuarterClick(quarter)}
             className={cn(
-              'relative rounded-md text-xs sm:text-sm font-medium transition-colors duration-150',
-              'whitespace-nowrap overflow-hidden w-full',
+              'relative rounded-md text-xs font-medium transition-colors duration-150 sm:text-sm',
+              'w-full overflow-hidden whitespace-nowrap',
               'flex items-center',
-              isHovered 
-                ? 'justify-start px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-1.5 md:py-2' 
+              isHovered
+                ? 'justify-start px-2 py-1.5 sm:px-2.5 sm:py-1.5 md:px-3 md:py-2'
                 : 'justify-center py-1.5 sm:py-1.5 md:py-2',
               activeQuarter === quarter
                 ? 'bg-[#990033]/10 text-gray-900'
@@ -88,17 +90,19 @@ export default function QuarterNavigation({
             whileTap={{ scale: 0.98 }}
           >
             {/* 항상 클릭 가능한 영역 */}
-            <div className={cn(
-              'flex items-center',
-              isHovered ? 'justify-start gap-2 w-full' : 'justify-center'
-            )}>
+            <div
+              className={cn(
+                'flex items-center',
+                isHovered ? 'w-full justify-start gap-2' : 'justify-center'
+              )}
+            >
               {/* 기본 상태: 점 표시 */}
               <motion.div
                 className={cn(
                   'flex-shrink-0 rounded-full transition-all duration-150',
                   activeQuarter === quarter
-                    ? 'w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#990033]'
-                    : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#990033]/30'
+                    ? 'h-2.5 w-2.5 bg-[#990033] sm:h-3 sm:w-3'
+                    : 'h-1.5 w-1.5 bg-[#990033]/30 sm:h-2 sm:w-2'
                 )}
                 animate={{
                   scale: activeQuarter === quarter && !isHovered ? 1 : 1,
@@ -106,9 +110,7 @@ export default function QuarterNavigation({
               />
               {/* 호버 시 텍스트 표시 */}
               <motion.span
-                className={cn(
-                  isHovered ? 'flex-1' : 'w-0'
-                )}
+                className={cn(isHovered ? 'flex-1' : 'w-0')}
                 animate={{
                   opacity: isHovered ? 1 : 0,
                   x: isHovered ? 0 : -8,

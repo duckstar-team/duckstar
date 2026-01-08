@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { CommentDto, ReplyDto } from '@/types';
-import SortingMenu, { SortOption } from '@/components/ui/SortingMenu';
+import { CommentDto, ReplyDto } from '@/types/dtos';
+import SortingMenu, { SortOption } from '@/components/common/SortingMenu';
 import Comment from './Comment';
 import Reply from './Reply';
 import OpenOrFoldReplies from './OpenOrFoldReplies';

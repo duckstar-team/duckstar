@@ -2,18 +2,15 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { SurveyDto, SurveyType, VoteStatusType } from '@/types';
+import { SurveyDto } from '@/types/dtos';
+import { SurveyStatus, SurveyType } from '@/types/enums';
 import { useQuery } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
+import { queryConfig, hasValidSurveySession, isVoteHistorySaved } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import VoteResultView from './_components/VoteResultView';
 import VoteFormView from './_components/VoteFormView';
 import { SurveyDetailSkeleton } from '@/components/skeletons';
 import { useModal } from '@/components/layout/AppContainer';
-import {
-  hasValidSurveySession,
-  isVoteHistorySaved,
-} from '@/lib/surveySessionStorage';
 import { useSurveySession } from '@/hooks/useSurveySession';
 import SurveyResultChart from './_components/SurveyResultChart';
 import SurveyDisabled from './_components/SurveyDisabled';
@@ -56,13 +53,13 @@ export default function SurveyPage() {
   const voteHistorySaved = isVoteHistorySaved(surveyType);
 
   // 종료된 어워드 결과 차트
-  if (surveyStatusData?.status === VoteStatusType.ResultOpen) {
+  if (surveyStatusData?.status === SurveyStatus.ResultOpen) {
     return <SurveyResultChart surveyId={surveyId} />;
   }
 
   if (
-    surveyStatusData?.status === VoteStatusType.NotYet ||
-    surveyStatusData?.status === VoteStatusType.Closed
+    surveyStatusData?.status === SurveyStatus.NotYet ||
+    surveyStatusData?.status === SurveyStatus.Closed
   ) {
     return <SurveyDisabled survey={surveyStatusData} />;
   }

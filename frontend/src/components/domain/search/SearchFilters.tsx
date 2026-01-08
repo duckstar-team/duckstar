@@ -1,13 +1,7 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/lib/utils';
-
-interface OttService {
-  id: string;
-  name: string;
-  icon: string;
-}
+import { cn } from '@/lib';
 
 interface SearchFiltersProps {
   className?: string;
@@ -21,22 +15,22 @@ export default function SearchFilters({
   selectedOttServices = [],
 }: SearchFiltersProps) {
   const ottServices = [
-    { id: 'netflix', name: 'Netflix', icon: '/icons/netflix-logo.svg' },
-    { id: 'laftel', name: 'LAFTEL', icon: '/icons/laftel-logo.svg' },
-    { id: 'tving', name: 'TVING', icon: '/icons/tving-logo.svg' },
-    { id: 'wavve', name: 'WAVVE', icon: '/icons/wavve-logo.svg' },
-    { id: 'watcha', name: 'WATCHA', icon: '/icons/watcha-logo.svg' },
+    { name: 'netflix', icon: '/icons/netflix-logo.svg' },
+    { name: 'laftel', icon: '/icons/laftel-logo.svg' },
+    { name: 'tving', icon: '/icons/tving-logo.svg' },
+    { name: 'wavve', icon: '/icons/wavve-logo.svg' },
+    { name: 'watcha', icon: '/icons/watcha-logo.svg' },
   ];
 
-  const handleOttClick = (ottId: string) => {
-    const ottService = ottServices.find((ott) => ott.id === ottId);
+  const handleOttClick = (ottName: string) => {
+    const ottService = ottServices.find((ott) => ott.name === ottName);
     if (ottService) {
-      onOttFilterChange?.(ottService.name.toLowerCase());
+      onOttFilterChange?.(ottService.name);
     }
   };
 
   return (
-    <div className={cn('flex w-full items-center justify-between', className)}>
+    <div className={cn('flex w-full items-center', className)}>
       {/* 툴팁 - 데스크톱에서만 표시 */}
       <div className="hidden items-center md:flex">
         <div className="flex h-9 items-center justify-center rounded-[8px] bg-[#f1f2f3] py-0 pr-5 pl-2">
@@ -52,7 +46,7 @@ export default function SearchFilters({
           <div className="ml-2 flex flex-col items-start justify-start">
             <div className="relative flex shrink-0 flex-col justify-center text-[14px] leading-[0] font-semibold text-nowrap text-[#23272b] not-italic">
               <p className="leading-[normal] whitespace-pre">
-                신작 애니메이션을 검색해보세요...
+                신작 애니메이션을 검색해보세요.
               </p>
             </div>
           </div>
@@ -62,16 +56,14 @@ export default function SearchFilters({
       {/* OTT 필터 목록 - 선택된 OTT는 대기 리스트에서 숨김 */}
       <div className="ml-2 flex items-center justify-center gap-[9px] sm:ml-8">
         {ottServices.map((ott) => {
-          const isSelected = selectedOttServices.includes(
-            ott.name.toLowerCase()
-          );
+          const isSelected = selectedOttServices.includes(ott.name);
 
           return (
             <button
-              key={ott.id}
-              onClick={() => handleOttClick(ott.id)}
+              key={ott.name}
+              onClick={() => handleOttClick(ott.name)}
               className={cn(
-                'relative h-7 w-7 cursor-pointer rounded-lg transition-all duration-200 hover:scale-110 md:h-9 md:w-9',
+                'relative h-7 w-7 rounded-lg transition-all duration-200 hover:scale-110 md:h-9 md:w-9',
                 'flex items-center justify-center'
               )}
               style={{

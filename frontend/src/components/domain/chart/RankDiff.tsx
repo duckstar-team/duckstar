@@ -1,7 +1,7 @@
-'use client';
+import { cn } from '@/lib';
 
 interface RankDiffProps {
-  property1?:
+  property1:
     | 'up-greater-equal-than-5'
     | 'up-less-than-5'
     | 'down-less-than-5'
@@ -9,127 +9,92 @@ interface RankDiffProps {
     | 'same-rank'
     | 'new'
     | 'Zero';
-  value?: string | number;
-  className?: string;
+  value: string | number | null;
+  isTopTen?: boolean;
 }
 
 export default function RankDiff({
-  property1 = 'up-greater-equal-than-5',
-  value = '5',
-  className = '',
+  property1,
+  value,
+  isTopTen = false,
 }: RankDiffProps) {
-  if (property1 === 'up-less-than-5') {
-    return (
-      <div
-        className={`relative flex size-full content-stretch items-center justify-center gap-px ${className}`}
-      >
-        <div className="relative h-[8px] w-[12px] shrink-0">
-          <img
-            alt=""
-            className="block size-full max-w-none"
-            src="/icons/up.svg"
-          />
-        </div>
-        <p className="relative shrink-0 text-center text-[14px] leading-[22px] font-normal text-nowrap whitespace-pre text-[#18b700] not-italic">
-          {value}
-        </p>
-      </div>
-    );
-  }
-  if (property1 === 'same-rank') {
-    return (
-      <div
-        className={`relative flex size-full content-stretch items-center justify-center gap-px ${className}`}
-      >
-        <div className="relative flex h-[12px] w-[8px] shrink-0 items-center justify-center">
-          <div className="rotate+90 flex-none">
-            <div className="relative h-[8px] w-[12px]">
-              <img
-                alt=""
-                className="block size-full max-w-none"
-                src="/icons/consecutive.svg"
-              />
-            </div>
-          </div>
-        </div>
-        <p className="relative shrink-0 text-center text-[12px] leading-[22px] font-normal text-nowrap whitespace-pre text-black not-italic">
-          {value}주
-        </p>
-      </div>
-    );
-  }
-  if (property1 === 'down-less-than-5') {
-    return (
-      <div
-        className={`relative flex size-full content-stretch items-center justify-center gap-px ${className}`}
-      >
-        <div className="relative h-[8px] w-[12px] shrink-0">
-          <img
-            alt=""
-            className="block size-full max-w-none"
-            src="/icons/down.svg"
-          />
-        </div>
-        <p className="relative shrink-0 text-center text-[14px] leading-[22px] font-normal text-nowrap whitespace-pre text-[#b70000] not-italic">
-          {value}
-        </p>
-      </div>
-    );
-  }
-  if (property1 === 'down-greater-equal-than-5') {
-    return (
-      <div
-        className={`relative flex size-full content-stretch items-center justify-center gap-px ${className}`}
-      >
-        <div className="relative h-[10px] w-[10.392px] shrink-0">
-          <img
-            alt=""
-            className="block size-full max-w-none"
-            src="/icons/double-down.svg"
-          />
-        </div>
-        <p className="relative shrink-0 text-center text-[14px] leading-[22px] font-normal text-nowrap whitespace-pre text-[#b70000] not-italic">
-          {value}
-        </p>
-      </div>
-    );
-  }
+  const CONTAINER_CLASS =
+    'flex shrink-0 whitespace-nowrap font-medium items-center justify-center gap-0.5';
+
   if (property1 === 'new') {
     return (
-      <div
-        className={`relative flex size-full content-stretch items-center justify-center gap-px ${className}`}
-      >
-        <p className="relative shrink-0 text-center text-[12px] leading-[22px] font-normal text-nowrap whitespace-pre text-[#0088ff] not-italic">
+      <div className={CONTAINER_CLASS}>
+        <span className={cn('text-xs text-blue-400', isTopTen && 'text-base')}>
           NEW
-        </p>
+        </span>
       </div>
     );
   }
+
   if (property1 === 'Zero') {
     return (
-      <div
-        className={`relative flex size-full content-stretch items-center justify-center gap-px ${className}`}
-      >
-        <div className="relative mt-1 h-[2px] w-[10px] shrink-0">
-          <div className="h-full w-full bg-black"></div>
-        </div>
+      <div className={CONTAINER_CLASS}>
+        <div className="w-3 border-b-[1.5px] bg-gray-500" />
       </div>
     );
   }
-  return (
-    <div
-      className={`relative flex size-full content-stretch items-center justify-center gap-px ${className}`}
-    >
-      <div className="relative h-[10px] w-[10.392px] shrink-0">
+
+  if (property1 === 'same-rank') {
+    return (
+      <div className={CONTAINER_CLASS}>
         <img
-          alt=""
-          className="block size-full max-w-none"
-          src="/icons/double-up.svg"
+          src="/icons/consecutive.svg"
+          alt="same-rank"
+          className="size-2.5"
         />
+        <span className={cn('text-xs', isTopTen && 'text-base')}>
+          {value}주
+        </span>
       </div>
-      <p className="relative shrink-0 text-center text-[14px] leading-[22px] font-normal text-nowrap whitespace-pre text-[#18b700] not-italic">
+    );
+  }
+
+  type IconConfig = {
+    icon: string;
+    color: string;
+  };
+
+  const configs: Record<string, IconConfig> = {
+    'up-less-than-5': {
+      icon: '/icons/up.svg',
+      color: 'text-[#18b700]',
+    },
+    'down-less-than-5': {
+      icon: '/icons/down.svg',
+      color: 'text-[#b70000]',
+    },
+    'down-greater-equal-than-5': {
+      icon: '/icons/double-down.svg',
+      color: 'text-[#b70000]',
+    },
+    'up-greater-equal-than-5': {
+      icon: '/icons/double-up.svg',
+      color: 'text-[#18b700]',
+    },
+  };
+
+  const config = configs[property1] || configs['up-greater-equal-than-5'];
+
+  return (
+    <div className={CONTAINER_CLASS}>
+      <img
+        src={config.icon}
+        alt={property1}
+        className={cn('object-contain', isTopTen ? 'size-4' : 'size-2.5')}
+      />
+      <span
+        className={cn(
+          isTopTen ? 'text-base' : 'text-xs md:text-sm',
+          config.color
+        )}
+      >
         {value}
-      </p>
+      </span>
     </div>
   );
 }

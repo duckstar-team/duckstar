@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { WeekDto } from '@/types';
+import { WeekDto } from '@/types/dtos';
 import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 interface HeaderListProps {
   weekDtos: WeekDto[];

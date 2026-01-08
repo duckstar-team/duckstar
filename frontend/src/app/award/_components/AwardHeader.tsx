@@ -6,12 +6,14 @@ import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { SurveyDto, VoteStatusType } from '@/types';
-import { queryConfig } from '@/lib/queryConfig';
-import { getBannerTitle, getBannerSubtitle } from '@/lib/surveyUtils';
+import { SurveyDto, SurveyResultDto } from '@/types/dtos';
+import { queryConfig, getBannerTitle, getBannerSubtitle } from '@/lib';
 import DownloadBtn from '@/components/common/DownloadBtn';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import ShareDropdown from '@/components/common/ShareDropdown';
+import TopTenList from '@/components/domain/chart/TopTenList';
+import { getSurveyResult } from '@/api/chart';
+import { SurveyStatus } from '@/types/enums';
 
 export default function AwardHeader() {
   const params = useParams();
@@ -46,6 +48,19 @@ export default function AwardHeader() {
     e.stopPropagation();
   });
 
+  // Top 10 데이터 가져오기
+  const { data: topTenData } = useQuery<SurveyResultDto>({
+    queryKey: ['survey-result-top10', surveyId],
+    queryFn: async () => {
+      if (!surveyId) throw new Error('Survey ID가 없습니다');
+      const response = await getSurveyResult(surveyId, 0, 10);
+      if (!response.isSuccess) throw new Error('Survey Result 조회 실패');
+      return response.result;
+    },
+    enabled: !!surveyId,
+    ...queryConfig.vote,
+  });
+
   return (
     <>
       <VoteBanner
@@ -63,12 +78,12 @@ export default function AwardHeader() {
             <span className="text-gray-700">{getBannerTitle(surveyData)}</span>
           </>
         )}
-        {surveyData?.status === VoteStatusType.ResultOpen && (
+        {surveyData?.status === SurveyStatus.ResultOpen && (
           <div
             ref={dropdownRef}
             className="relative ml-auto flex items-center gap-1"
           >
-            {/* <DownloadBtn /> */}
+            <DownloadBtn />
             <button
               onClick={() => setIsDropdownOpen((prev) => !prev)}
               className="rounded-full p-2 transition hover:bg-gray-200"
@@ -83,6 +98,17 @@ export default function AwardHeader() {
           </div>
         )}
       </nav>
+
+      {/* Top 10 리스트 (숨김 처리, 다운로드용) */}
+      <div className="fixed top-0 left-full">
+        {topTenData && (
+          <TopTenList
+            topTen={topTenData}
+            type="award"
+            titleData={surveyData || null}
+          />
+        )}
+      </div>
     </>
   );
 }

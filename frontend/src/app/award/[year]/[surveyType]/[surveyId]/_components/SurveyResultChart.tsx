@@ -1,7 +1,7 @@
 'use client';
 
-import { queryConfig } from '@/lib/queryConfig';
-import { SurveyRankDto, SurveyResultDto } from '@/types';
+import { queryConfig } from '@/lib';
+import { SurveyRankDto, SurveyResultDto } from '@/types/dtos';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import SurveyResultCard from './SurveyResultCard';
@@ -34,7 +34,7 @@ export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
 
   return (
     <section className="space-y-20">
-      <div id="capture-area" className="max-width mt-10 flex flex-col gap-16">
+      <div className="max-width mt-10 flex flex-col gap-16">
         {surveyResultData?.surveyRankDtos?.map((surveyRank: SurveyRankDto) => (
           <SurveyResultCard
             key={surveyRank.animeCandidateDto.animeCandidateId}

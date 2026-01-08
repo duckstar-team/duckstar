@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { Character } from '@/types';
+import { cn } from '@/lib';
+import { Character } from '@/types/dtos';
 
 interface CharacterCardProps {
   character: Character;

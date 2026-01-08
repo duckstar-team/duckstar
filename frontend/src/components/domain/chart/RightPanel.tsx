@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import AbroadRankInfo from './AbroadRankInfo';
-import { RankPreviewDto, WeekDto } from '@/types';
+import { RankPreviewDto, WeekDto } from '@/types/dtos';
 
 interface RightPanelProps {
   rightPanelData: RankPreviewDto[];

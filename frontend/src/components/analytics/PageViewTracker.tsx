@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { pageview } from '@/utils/gtag';
+import { pageview } from '@/lib';
 
 /**
  * 페이지뷰 자동 추적 컴포넌트
@@ -14,12 +14,13 @@ export default function PageViewTracker() {
 
   useEffect(() => {
     // URL 생성 (쿼리 파라미터 포함)
-    const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
-    
+    const url =
+      pathname +
+      (searchParams?.toString() ? `?${searchParams.toString()}` : '');
+
     // 페이지뷰 추적
     pageview(url);
   }, [pathname, searchParams]);
 
   return null;
 }
-

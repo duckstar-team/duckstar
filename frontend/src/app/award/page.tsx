@@ -2,25 +2,26 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { queryConfig } from '@/lib/queryConfig';
-import { SurveyDto, VoteStatusType } from '@/types';
+import { SurveyDto } from '@/types/dtos';
+import { SurveyStatus } from '@/types/enums';
 import VoteBanner from '@/components/domain/vote/VoteBanner';
 import { ApiResponse } from '@/api/http';
 import Link from 'next/link';
 import {
+  queryConfig,
+  cn,
   getSurveyTypeLabel,
   getStatusText,
   getStatusBadge,
   getButtonText,
-} from '@/lib/surveyUtils';
+  GOOGLE_FORM_SURVEYS,
+} from '@/lib';
 import { AwardListSkeleton } from '@/components/skeletons';
 import { useRouter } from 'next/navigation';
 import { ExternalLink } from 'lucide-react';
 import SurveyCountdown from './[year]/[surveyType]/[surveyId]/_components/SurveyCountdown';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useSurveySession } from '@/hooks/useSurveySession';
-import { GOOGLE_FORM_SURVEYS } from '@/lib/constants';
 
 export default function AwardPage() {
   const router = useRouter();
@@ -77,8 +78,8 @@ export default function AwardPage() {
             </h1>
             <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
               {surveys.map((survey, i) => {
-                const isNotYet = survey.status === VoteStatusType.NotYet;
-                const isClosed = survey.status === VoteStatusType.Closed;
+                const isNotYet = survey.status === SurveyStatus.NotYet;
+                const isClosed = survey.status === SurveyStatus.Closed;
 
                 return (
                   <Link
@@ -119,7 +120,7 @@ export default function AwardPage() {
                     <div className="flex w-full flex-col justify-between gap-4 p-3 @md:p-4">
                       <div className="flex flex-col gap-2">
                         <div className="max-xs:flex-col flex gap-2 sm:items-center @md:gap-3">
-                          {survey.status !== VoteStatusType.ResultOpen && (
+                          {survey.status !== SurveyStatus.ResultOpen && (
                             <span
                               className={cn(
                                 'flex h-6 w-fit items-center rounded-md px-2 py-1 text-xs font-semibold break-keep @md:text-sm',

@@ -1,7 +1,7 @@
 'use client';
 
 import TooltipBtn from '@/components/common/TooltipBtn';
-import { MAX_VOTES } from '@/lib/constants';
+import { MAX_VOTES } from '@/lib';
 import { Infinity, X } from 'lucide-react';
 import { useState } from 'react';
 

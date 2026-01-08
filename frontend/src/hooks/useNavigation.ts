@@ -1,5 +1,5 @@
+import { ScrollStateManager } from '@/lib';
 import { useRouter } from 'next/navigation';
-import ScrollStateManager from '@/lib/scrollStateManager';
 
 /**
  * 네비게이션 훅

@@ -11,7 +11,8 @@ import {
   undoWithdrawnSubmissions,
   getAdminLogsOnIpManagement,
 } from '@/api/admin';
-import { IpManagementLogDto, OttDto, SubmissionCountDto } from '@/types';
+import { IpManagementLogDto, OttDto, SubmissionCountDto } from '@/types/dtos';
+import { OttType } from '@/types/enums';
 
 // 기존 AnimeData 인터페이스와 컴포넌트는 그대로 유지
 
@@ -945,7 +946,10 @@ export default function AdminPage() {
   const addOttData = () => {
     setAnimeData((prev) => ({
       ...prev,
-      ottDtos: [...(prev.ottDtos || []), { ottType: 'NETFLIX', watchUrl: '' }],
+      ottDtos: [
+        ...(prev.ottDtos || []),
+        { ottType: OttType.Netflix, watchUrl: '' },
+      ],
     }));
   };
 

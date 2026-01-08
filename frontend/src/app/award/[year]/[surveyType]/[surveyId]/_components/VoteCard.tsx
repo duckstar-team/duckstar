@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import VoteToggle from './VoteToggle';
-import { AnimeCandidateDto } from '@/types';
-import { MAX_VOTES } from '@/lib/constants';
+import { AnimeCandidateDto } from '@/types/dtos';
+import { MAX_VOTES } from '@/lib';
 
 interface VoteCardProps {
   anime: AnimeCandidateDto;
@@ -128,7 +128,7 @@ export default function VoteCard({
     >
       <div className="flex h-full gap-4 p-4 lg:items-start">
         {/* 썸네일 */}
-        <div className="relative h-full w-20 flex-shrink-0 lg:w-28">
+        <div className="relative h-full max-h-40 w-20 flex-shrink-0 lg:w-28">
           <img
             src={anime.mainThumbnailUrl}
             alt={anime.titleKor}

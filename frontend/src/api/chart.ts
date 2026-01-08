@@ -1,5 +1,5 @@
 import { apiCall } from './http';
-import { ChartAnimeDto, SurveyResultDto, WeekDto } from '@/types';
+import { AnimeRankSliceDto, SurveyResultDto, WeekDto } from '@/types/dtos';
 
 export async function getChartData(
   year: number,
@@ -7,7 +7,7 @@ export async function getChartData(
   week: number,
   page: number = 0
 ) {
-  return apiCall<ChartAnimeDto>(
+  return apiCall<AnimeRankSliceDto>(
     `/api/v1/chart/${year}/${quarter}/${week}/anime?page=${page}&size=20`
   );
 }

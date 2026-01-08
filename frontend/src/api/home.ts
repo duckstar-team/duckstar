@@ -1,4 +1,4 @@
-import { HomeDto, RankPreviewDto, WeeklyTopDto } from '@/types';
+import { HomeDto, RankPreviewDto, WeeklyTopDto } from '@/types/dtos';
 import { apiCall } from './http';
 
 export const homeApi = {

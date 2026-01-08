@@ -1,7 +1,7 @@
 'use client';
 
 import Script from 'next/script';
-import { GA_MEASUREMENT_ID, isDevelopment } from '@/utils/gtag';
+import { GA_MEASUREMENT_ID, isDevelopment } from '@/lib';
 
 /**
  * Google Analytics 스크립트 컴포넌트
@@ -30,4 +30,3 @@ export default function GoogleAnalytics() {
     </>
   );
 }
-
