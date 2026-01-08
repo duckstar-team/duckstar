@@ -46,12 +46,12 @@ export default function RankStat({ anime }: RankStatProps) {
     }
   };
   return (
-    <div className="xs:px-4 xs:gap-4 flex w-full items-center justify-center gap-2 bg-black px-2 py-4 sm:px-8 md:gap-10 @max-md:flex-col">
+    <div className="xs:gap-4 flex w-full items-center justify-center gap-2 bg-black px-2 py-4 sm:px-8 md:gap-10 @max-md:flex-col">
       {/* 아랫줄: 별분산과 평균별점 + 메달 섹션 (768px 미만에서만 별도 줄) */}
       <div className="xs:gap-2 flex w-full flex-nowrap items-center justify-between gap-1 sm:gap-4 @md:hidden">
         <WeekRatingStats voteResult={anime.voteResultDto} />
         {/* 모바일용 메달 섹션 */}
-        <div className="xs:p-1 min-w-0 flex-shrink-0 rounded-lg bg-[#212529] p-0.5 sm:p-2">
+        <div className="xs:p-1 min-w-0 rounded-lg bg-[#212529] p-0.5 sm:p-2">
           <MedalGrid medals={anime.medalPreviews} hideSeparators={true} />
         </div>
       </div>

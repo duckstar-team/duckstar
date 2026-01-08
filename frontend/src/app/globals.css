@@ -156,19 +156,25 @@ input:focus {
   }
 }
 
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out;
-}
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 
-.transition {
-  transition: all 0.3s ease-out;
-}
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
 
-.max-width {
-  width: 100%;
-  max-width: 1240px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 16px;
-  padding-right: 16px;
+  .transition {
+    transition: all 0.3s ease-out;
+  }
+
+  .max-width {
+    width: 100%;
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }

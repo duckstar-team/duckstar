@@ -100,6 +100,9 @@ export default function SeasonDaySelector({
                   onSeasonSelect={onSeasonSelect}
                   currentYear={isThisWeek ? null : year}
                   currentQuarter={isThisWeek ? null : quarter}
+                  className={
+                    selectedOttServices.length === 0 ? 'w-full' : 'w-[45vw]'
+                  }
                 />
               </div>
             )}

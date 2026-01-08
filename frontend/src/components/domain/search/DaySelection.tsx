@@ -198,7 +198,7 @@ export default function DaySelection({
             ))}
           </select>
           <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 transform">
-            <ChevronDown className="size-3.5 text-gray-400" />
+            <ChevronDown className="size-4.5 text-gray-400" />
           </div>
         </div>
       </div>

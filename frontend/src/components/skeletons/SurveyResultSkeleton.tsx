@@ -12,8 +12,6 @@ export default function SurveyResultSkeleton() {
               <div className="relative h-16 w-16">
                 <div className="h-16 w-16 animate-pulse rounded-full bg-gray-200" />
               </div>
-              <div className="h-3 w-12 translate-y-1 animate-pulse rounded bg-gray-200" />
-              <div className="h-8 w-8 animate-pulse rounded bg-gray-200" />
             </div>
             <div className="h-8 w-64 animate-pulse rounded bg-gray-200" />
           </div>
