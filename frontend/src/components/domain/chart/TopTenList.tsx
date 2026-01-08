@@ -39,9 +39,9 @@ export default function TopTenList({
     return '';
   };
 
-  const renderAwardItem = (item: SurveyRankDto) => (
+  const renderAwardItem = (item: SurveyRankDto, index: number) => (
     <div
-      key={item.animeId}
+      key={`${item.animeId}-${index}`}
       className="flex items-center gap-5 rounded-xl border border-gray-200 bg-white px-4 py-2"
     >
       {/* 순위 */}
@@ -202,7 +202,9 @@ export default function TopTenList({
       <div className="w-full px-6 py-4">
         <div className="space-y-3">
           {type === 'award'
-            ? topTen.surveyRankDtos.map((item) => renderAwardItem(item))
+            ? topTen.surveyRankDtos.map((item, index) =>
+                renderAwardItem(item, index)
+              )
             : topTen.animeRankDtos
                 .slice(0, 10)
                 .map((item) => renderWeeklyItem(item.rankPreviewDto))}
