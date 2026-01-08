@@ -92,13 +92,13 @@ export default function SeasonSelector({
     <div className={cn('relative', className)} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between gap-2 rounded-xl bg-white px-6 py-2.5 max-md:border max-md:border-gray-300 sm:max-w-[320px] md:w-fit md:justify-center md:py-3"
+        className="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 max-md:border max-md:border-gray-300 sm:max-w-[320px] md:w-fit md:justify-center md:py-3"
       >
-        <span className="shrink-0 font-medium text-black transition-colors duration-200 hover:text-gray-400 max-sm:text-sm">
+        <span className="text-left font-medium break-keep text-black transition-colors duration-200 hover:text-gray-400 max-sm:text-sm">
           {currentSeasonLabel}
         </span>
         <ChevronDown
-          className="size-4.5 text-gray-400 transition-transform duration-200"
+          className="size-4.5 shrink-0 text-gray-400 transition-transform duration-200"
           style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
         />
       </button>

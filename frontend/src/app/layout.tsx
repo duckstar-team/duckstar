@@ -53,7 +53,7 @@ export default function RootLayout({
         {/* 반응형 뷰포트 설정 */}
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1.0, user-scalable=no"
+          content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"
         />
         <link rel="icon" href="/icons/favicon.svg" />
       </head>

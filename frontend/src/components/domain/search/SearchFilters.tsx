@@ -30,7 +30,12 @@ export default function SearchFilters({
   };
 
   return (
-    <div className={cn('flex w-full items-center', className)}>
+    <div
+      className={cn(
+        'scrollbar-hide flex w-full items-center overflow-x-scroll pt-5 pb-4',
+        className
+      )}
+    >
       {/* 툴팁 - 데스크톱에서만 표시 */}
       <div className="hidden items-center md:flex">
         <div className="flex h-9 items-center justify-center rounded-[8px] bg-[#f1f2f3] py-0 pr-5 pl-2">
