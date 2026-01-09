@@ -45,8 +45,9 @@ const nextConfig: NextConfig = {
         source: '/login/:path*',
         destination: 'http://localhost:8080/login/:path*',
       },
+      // /api/image-proxy는 Next.js 라우트 핸들러로 처리되므로 제외
       {
-        source: '/api/:path*',
+        source: '/api/:path((?!image-proxy).*)',
         destination: 'http://localhost:8080/api/:path*',
       },
     ];

@@ -75,6 +75,18 @@ const formatAirTime = (anime: AnimePreviewDto) => {
 
   // airTime이 있는 경우 우선 사용 (검색 결과 포함)
   if (airTime) {
+    // HH:MM 또는 HH:MM:SS 형식인 경우 (LocalTime은 HH:MM:SS로 올 수 있음)
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(airTime)) {
+      const [hoursStr, minutesStr] = airTime.split(':');
+      let hours = parseInt(hoursStr, 10);
+      // 00:00 ~ 04:59인 경우 24시간 더하기
+      if (hours < 5) {
+        hours += 24;
+      }
+      const formattedTime = `${hours.toString().padStart(2, '0')}:${minutesStr}`;
+      return `${getKoreanDayOfWeek(dayOfWeek || '')} ${formattedTime}`;
+    }
+
     // airTime에 이미 요일이 포함되어 있으면 그대로 사용
     if (
       airTime.includes('요일') ||
@@ -95,9 +107,13 @@ const formatAirTime = (anime: AnimePreviewDto) => {
   // airTime이 없는 경우 scheduledAt 사용
   if (scheduledAt) {
     const date = new Date(scheduledAt);
-    const hours = date.getHours().toString().padStart(2, '0');
+    let hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${getKoreanDayOfWeek(dayOfWeek || '')} ${hours}:${minutes}`;
+    // 00:00 ~ 04:59인 경우 24시간 더하기
+    if (hours < 5) {
+      hours += 24;
+    }
+    return `${getKoreanDayOfWeek(dayOfWeek || '')} ${hours.toString().padStart(2, '0')}:${minutes}`;
   }
 
   // 종영 애니메이션의 경우 "(종영)" 표시

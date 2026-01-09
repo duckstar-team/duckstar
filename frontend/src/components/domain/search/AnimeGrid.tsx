@@ -5,12 +5,14 @@ interface AnimeGridProps {
   animes: AnimePreviewDto[];
   isCurrentSeason: boolean;
   showDataAttribute?: boolean;
+  isUpcomingGroup?: boolean;
 }
 
 export default function AnimeGrid({
   animes,
   isCurrentSeason,
   showDataAttribute = false,
+  isUpcomingGroup = false,
 }: AnimeGridProps) {
   return (
     <div className="grid grid-cols-2 justify-items-center gap-[15px] sm:gap-[30px] lg:grid-cols-3 xl:grid-cols-4">
@@ -19,6 +21,7 @@ export default function AnimeGrid({
           key={anime.animeId}
           anime={anime}
           isCurrentSeason={isCurrentSeason}
+          isUpcomingGroup={isUpcomingGroup}
           {...(showDataAttribute && { 'data-anime-item': true })}
         />
       ))}
