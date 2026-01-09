@@ -579,9 +579,13 @@ export default function BigCandidate({
 
         // 지난 날짜인 경우 시간만 표시
         if (airDateOnly < nowDateOnly) {
-          const hours = airDate.getHours().toString().padStart(2, '0');
+          let hours = airDate.getHours();
           const minutes = airDate.getMinutes().toString().padStart(2, '0');
-          return `${hours}:${minutes}`;
+          // 00:00 ~ 04:59인 경우 24시간 더하기
+          if (hours < 5) {
+            hours += 24;
+          }
+          return `${hours.toString().padStart(2, '0')}:${minutes}`;
         }
 
         // 오늘 또는 미래 날짜인 경우 디데이 계산
@@ -600,10 +604,27 @@ export default function BigCandidate({
       if (isDateTimeFormat(airTime)) {
         const airDate = new Date(airTime);
         if (!isNaN(airDate.getTime())) {
-          const hours = airDate.getHours().toString().padStart(2, '0');
+          let hours = airDate.getHours();
           const minutes = airDate.getMinutes().toString().padStart(2, '0');
-          return `${hours}:${minutes}`;
+          // 00:00 ~ 04:59인 경우 24시간 더하기
+          if (hours < 5) {
+            hours += 24;
+          }
+          const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes}`;
+          return `${getDayInKorean(dayOfWeek)} ${formattedTime}`;
         }
+      }
+
+      // HH:MM 또는 HH:MM:SS 형식인 경우 (LocalTime은 HH:MM:SS로 올 수 있음)
+      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(airTime)) {
+        const [hoursStr, minutesStr] = airTime.split(':');
+        let hours = parseInt(hoursStr, 10);
+        // 00:00 ~ 04:59인 경우 24시간 더하기
+        if (hours < 5) {
+          hours += 24;
+        }
+        const formattedTime = `${hours.toString().padStart(2, '0')}:${minutesStr}`;
+        return `${getDayInKorean(dayOfWeek)} ${formattedTime}`;
       }
 
       // airTime에 이미 요일이 포함되어 있으면 그대로 사용
@@ -626,9 +647,13 @@ export default function BigCandidate({
     // airTime이 없는 경우 scheduledAt 사용
     if (scheduledAt) {
       const date = new Date(scheduledAt);
-      const hours = date.getHours().toString().padStart(2, '0');
+      let hours = date.getHours();
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${getDayInKorean(dayOfWeek)} ${hours}:${minutes}`;
+      // 00:00 ~ 04:59인 경우 24시간 더하기
+      if (hours < 5) {
+        hours += 24;
+      }
+      return `${getDayInKorean(dayOfWeek)} ${hours.toString().padStart(2, '0')}:${minutes}`;
     }
 
     // 종영 애니메이션의 경우 "(종영)" 표시 (시즌별 조회에서만)
@@ -756,12 +781,16 @@ export default function BigCandidate({
                   const getTimeFromScheduledAt = (scheduledAt: string) => {
                     if (!scheduledAt) return '';
                     const date = new Date(scheduledAt);
-                    const hours = date.getHours().toString().padStart(2, '0');
+                    let hours = date.getHours();
                     const minutes = date
                       .getMinutes()
                       .toString()
                       .padStart(2, '0');
-                    return `${hours}:${minutes}`;
+                    // 00:00 ~ 04:59인 경우 24시간 더하기
+                    if (hours < 5) {
+                      hours += 24;
+                    }
+                    return `${hours.toString().padStart(2, '0')}:${minutes}`;
                   };
 
                   return (

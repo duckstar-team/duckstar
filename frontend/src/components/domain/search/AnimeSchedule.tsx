@@ -46,27 +46,35 @@ export default function AnimeSchedule({
     );
   }
 
+  // groupedAnimes의 키 순서를 보장하기 위해 dayOrder 사용
+  const dayOrder = isThisWeek
+    ? ['NONE', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'SPECIAL']
+    : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'SPECIAL'];
+
   return (
     <>
-      {Object.entries(groupedAnimes).map(([day, dayAnimes]) => {
-        const baseSectionId =
-          day === 'UPCOMING'
-            ? 'upcoming'
-            : day === 'SPECIAL'
-              ? 'special'
-              : day.toLowerCase();
-        const sectionId = getSectionId(baseSectionId);
+      {dayOrder
+        .filter((dayKey) => groupedAnimes[dayKey] && groupedAnimes[dayKey].length > 0)
+        .map((dayKey) => {
+          const dayAnimes = groupedAnimes[dayKey];
+          const baseSectionId =
+            dayKey === 'NONE'
+              ? 'upcoming'
+              : dayKey === 'SPECIAL'
+                ? 'special'
+                : dayKey.toLowerCase();
+          const sectionId = getSectionId(baseSectionId);
 
-        return (
-          <ScheduleSection
-            key={day}
-            day={day}
-            dayAnimes={dayAnimes}
-            isCurrentSeason={isThisWeek}
-            sectionId={sectionId}
-          />
-        );
-      })}
+          return (
+            <ScheduleSection
+              key={dayKey}
+              day={dayKey}
+              dayAnimes={dayAnimes}
+              isCurrentSeason={isThisWeek}
+              sectionId={sectionId}
+            />
+          );
+        })}
     </>
   );
 }

@@ -458,7 +458,10 @@ export default function VotePageContent() {
       setIsUsingFallback(true);
 
       const upcomingData = await getUpcomingAnimes();
-      const upcomingAnimes = upcomingData.schedule['곧 시작'] || [];
+      const noneSchedule = upcomingData.scheduleDtos.find(
+        (dto) => dto.dayOfWeekShort === 'NONE'
+      );
+      const upcomingAnimes = noneSchedule?.animePreviews || [];
 
       // 남은 시간 순으로 정렬 (가장 가까운 시간부터)
       const sortedAnimes = upcomingAnimes.sort((a, b) => {

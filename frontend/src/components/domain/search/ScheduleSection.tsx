@@ -9,7 +9,7 @@ interface ScheduleSectionProps {
 }
 
 const DAY_LABELS: Record<string, string> = {
-  UPCOMING: '곧 시작',
+  NONE: '곧 시작',
   SUN: '일요일',
   MON: '월요일',
   TUE: '화요일',
@@ -34,14 +34,18 @@ export default function ScheduleSection({
         <h2 className="text-lg font-bold text-gray-900 sm:text-2xl">
           {dayInKorean}
         </h2>
-        {day === 'UPCOMING' && (
+        {day === 'NONE' && (
           <span className="text-[12px] font-normal text-[#868E96]">
             앞으로 12시간 이내
           </span>
         )}
       </div>
 
-      <AnimeGrid animes={dayAnimes} isCurrentSeason={isCurrentSeason} />
+      <AnimeGrid
+        animes={dayAnimes}
+        isCurrentSeason={isCurrentSeason}
+        isUpcomingGroup={day === 'NONE'}
+      />
 
       {day !== 'SPECIAL' && (
         <div className="my-10 h-px w-full bg-gray-200"></div>

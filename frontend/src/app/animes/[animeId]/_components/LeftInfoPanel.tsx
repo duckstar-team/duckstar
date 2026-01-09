@@ -574,8 +574,18 @@ export default function LeftInfoPanel({
   const formatAirTime = (scheduledAt: string) => {
     if (!scheduledAt) return '';
 
-    // ISO 문자열이 아닌 경우 (예: "21:25") 직접 반환
+    // ISO 문자열이 아닌 경우 (예: "21:25" 또는 "21:25:00") 직접 반환
     if (scheduledAt.includes(':') && !scheduledAt.includes('T')) {
+      // HH:MM 또는 HH:MM:SS 형식인 경우 (LocalTime은 HH:MM:SS로 올 수 있음)
+      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(scheduledAt)) {
+        const [hoursStr, minutesStr] = scheduledAt.split(':');
+        let hours = parseInt(hoursStr, 10);
+        // 00:00 ~ 04:59인 경우 24시간 더하기
+        if (hours < 5) {
+          hours += 24;
+        }
+        return `${hours.toString().padStart(2, '0')}:${minutesStr}`;
+      }
       return scheduledAt;
     }
 
@@ -585,9 +595,13 @@ export default function LeftInfoPanel({
       if (isNaN(date.getTime())) {
         return '';
       }
-      const hours = date.getHours().toString().padStart(2, '0');
+      let hours = date.getHours();
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
+      // 00:00 ~ 04:59인 경우 24시간 더하기
+      if (hours < 5) {
+        hours += 24;
+      }
+      return `${hours.toString().padStart(2, '0')}:${minutes}`;
     } catch (error) {
       return '';
     }
