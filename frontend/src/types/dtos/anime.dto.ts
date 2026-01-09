@@ -42,23 +42,36 @@ export interface AnimeInfoDto extends Anime {
   ottDtos: OttDto[];
 }
 
-// Anime Preview DTO (search)
-export interface AnimePreviewDto extends Anime {
-  episodeId: number;
+// DayOfWeekShort enum (백엔드와 일치)
+export type DayOfWeekShort = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN' | 'SPECIAL' | 'NONE';
+
+// Anime Preview DTO (search) - 백엔드 SearchResponseDto.AnimePreviewDto와 일치
+export interface AnimePreviewDto {
+  animeId: number;
+  titleKor: string;
+  mainThumbnailUrl: string;
   status: AnimeStatus;
   isBreak: boolean;
   isRescheduled: boolean | null;
-  scheduledAt: string;
+  genre: string;
+  medium: Medium;
   ottDtos: OttDto[];
+  dayOfWeek: DayOfWeekShort;
+  scheduledAt: string; // LocalDateTime
+  airTime: string | null; // LocalTime (분기 시간표에서만 사용)
 }
 
-// Anime Preview List DTO
+// Schedule DTO - 백엔드 SearchResponseDto.ScheduleDto와 일치
+export interface ScheduleDto {
+  dayOfWeekShort: DayOfWeekShort;
+  animePreviews: AnimePreviewDto[];
+}
+
+// Anime Preview List DTO - 백엔드 SearchResponseDto.AnimePreviewListDto와 일치
 export interface AnimePreviewListDto {
   year: number;
   quarter: number;
-  schedule: {
-    [key: string]: AnimePreviewDto[];
-  };
+  scheduleDtos: ScheduleDto[];
 }
 
 // Search API Response DTO

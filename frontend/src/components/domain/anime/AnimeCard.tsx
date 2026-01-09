@@ -10,12 +10,14 @@ interface AnimeCardProps {
   anime: AnimePreviewDto;
   className?: string;
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
+  isUpcomingGroup?: boolean; // "곧 시작" 그룹인지 여부
 }
 
 export default function AnimeCard({
   anime,
   className,
   isCurrentSeason = true,
+  isUpcomingGroup = false,
 }: AnimeCardProps) {
   const {
     animeId,
@@ -56,41 +58,43 @@ export default function AnimeCard({
     navigateToDetail(animeId);
   };
 
-  // 디데이 계산 함수 (dateTime 문자열에서 현재 날짜까지의 차이)
-  const calculateDaysUntilAir = (airTime: string) => {
-    const now = new Date();
-
-    // airTime을 dateTime 문자열로 파싱 (예: "2025-01-11T00:00:00")
-    const airDate = new Date(airTime);
-
-    // 유효하지 않은 날짜인 경우
-    if (isNaN(airDate.getTime())) {
+  // 디데이 계산 함수 (DayOfWeekShort 기준)
+  const calculateDaysUntilAir = (targetDayOfWeek: string) => {
+    if (!targetDayOfWeek || targetDayOfWeek === 'NONE' || targetDayOfWeek === 'SPECIAL') {
       return 0;
     }
 
-    // 날짜만 비교하기 위해 시간을 00:00:00으로 설정
-    const nowDateOnly = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
-    const airDateOnly = new Date(
-      airDate.getFullYear(),
-      airDate.getMonth(),
-      airDate.getDate()
-    );
+    // DayOfWeekShort를 숫자로 변환 (MON=1, TUE=2, ..., SUN=0)
+    const dayMap: Record<string, number> = {
+      MON: 1,
+      TUE: 2,
+      WED: 3,
+      THU: 4,
+      FRI: 5,
+      SAT: 6,
+      SUN: 0,
+    };
 
-    // 이미 지난 경우 D-DAY로 표시
-    if (airDateOnly < nowDateOnly) {
-      return 0; // D-DAY로 표시
+    const targetDay = dayMap[targetDayOfWeek];
+    if (targetDay === undefined) {
+      return 0;
     }
 
-    // 날짜 차이 계산 (밀리초 단위)
-    const diffTime = airDateOnly.getTime() - nowDateOnly.getTime();
-    // 날짜 차이를 일 단위로 변환 (Math.floor 사용하여 정확한 일 수 계산)
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    // 현재 요일 구하기 (0=일요일, 1=월요일, ..., 6=토요일)
+    const now = new Date();
+    const currentDay = now.getDay();
 
-    return diffDays;
+    // 현재 요일부터 목표 요일까지의 차이 계산
+    let daysDiff = targetDay - currentDay;
+
+    // 음수이면 다음 주로 계산
+    if (daysDiff < 0) {
+      daysDiff += 7;
+    }
+
+    // 오늘이 목표 요일이면 D-DAY (0)
+    // 다음 요일이면 D-1, 그 다음이면 D-2, ...
+    return daysDiff;
   };
 
   // 방영 시간 포맷팅
@@ -121,31 +125,36 @@ export default function AnimeCard({
       return `${month}/${day} 개봉`;
     }
 
-    // UPCOMING 상태이고 airTime이 dateTime 형식인 경우 디데이 계산
-    if (status === 'UPCOMING' && airTime && isDateTimeFormat(airTime)) {
-      const airDate = new Date(airTime);
-      if (!isNaN(airDate.getTime())) {
+    // UPCOMING 상태인 경우 DayOfWeekShort 기준으로 디데이 계산
+    // 단, scheduledAt이 현재 시각을 지나지 않았을 때만 표시
+    if (status === 'UPCOMING' && dayOfWeek && dayOfWeek !== 'NONE' && dayOfWeek !== 'SPECIAL') {
+      // scheduledAt이 현재 시각을 지나지 않았는지 확인
+      if (scheduledAt) {
+        const scheduledDate = new Date(scheduledAt);
         const now = new Date();
-        const nowDateOnly = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate()
-        );
-        const airDateOnly = new Date(
-          airDate.getFullYear(),
-          airDate.getMonth(),
-          airDate.getDate()
-        );
-
-        // 지난 날짜인 경우 시간만 표시
-        if (airDateOnly < nowDateOnly) {
-          const hours = airDate.getHours().toString().padStart(2, '0');
-          const minutes = airDate.getMinutes().toString().padStart(2, '0');
-          return `${hours}:${minutes}`;
+        
+        // scheduledAt이 현재 시각보다 미래인 경우에만 디데이 표시
+        if (!isNaN(scheduledDate.getTime()) && scheduledDate > now) {
+          const daysUntil = calculateDaysUntilAir(dayOfWeek);
+          if (daysUntil > 0) {
+            return `D-${daysUntil}`;
+          } else if (daysUntil === 0) {
+            return 'D-DAY';
+          }
         }
-
-        // 오늘 또는 미래 날짜인 경우 디데이 계산
-        const daysUntil = calculateDaysUntilAir(airTime);
+        // scheduledAt이 현재 시각을 지났으면 시간만 표시
+        if (!isNaN(scheduledDate.getTime()) && scheduledDate <= now) {
+          let hours = scheduledDate.getHours();
+          const minutes = scheduledDate.getMinutes().toString().padStart(2, '0');
+          // 00:00 ~ 04:59인 경우 24시간 더하기
+          if (hours < 5) {
+            hours += 24;
+          }
+          return `${hours.toString().padStart(2, '0')}:${minutes}`;
+        }
+      } else {
+        // scheduledAt이 없으면 요일 기준으로만 계산
+        const daysUntil = calculateDaysUntilAir(dayOfWeek);
         if (daysUntil > 0) {
           return `D-${daysUntil}`;
         } else if (daysUntil === 0) {
@@ -160,10 +169,24 @@ export default function AnimeCard({
       if (isDateTimeFormat(airTime)) {
         const airDate = new Date(airTime);
         if (!isNaN(airDate.getTime())) {
-          const hours = airDate.getHours().toString().padStart(2, '0');
+          let hours = airDate.getHours();
           const minutes = airDate.getMinutes().toString().padStart(2, '0');
-          return `${hours}:${minutes}`;
+          // 00:00 ~ 04:59인 경우 24시간 더하기
+          if (hours < 5) {
+            hours += 24;
+          }
+          return `${hours.toString().padStart(2, '0')}:${minutes}`;
         }
+      }
+      // HH:MM 또는 HH:MM:SS 형식인 경우 (LocalTime은 HH:MM:SS로 올 수 있음)
+      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(airTime)) {
+        const [hoursStr, minutesStr] = airTime.split(':');
+        let hours = parseInt(hoursStr, 10);
+        // 00:00 ~ 04:59인 경우 24시간 더하기
+        if (hours < 5) {
+          hours += 24;
+        }
+        return `${hours.toString().padStart(2, '0')}:${minutesStr}`;
       }
       return airTime;
     }
@@ -171,9 +194,13 @@ export default function AnimeCard({
     // airTime이 없는 경우 scheduledAt 사용
     if (scheduledAt) {
       const date = new Date(scheduledAt);
-      const hours = date.getHours().toString().padStart(2, '0');
+      let hours = date.getHours();
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
+      // 00:00 ~ 04:59인 경우 24시간 더하기
+      if (hours < 5) {
+        hours += 24;
+      }
+      return `${hours.toString().padStart(2, '0')}:${minutes}`;
     }
 
     // 종영 애니메이션의 경우 "(종영)" 표시 (시즌별 조회에서만)
@@ -486,17 +513,22 @@ export default function AnimeCard({
           ))}
         </div>
 
-        {/* Status Badge */}
-          <div className="absolute top-3 left-3">
-            <span
-              className={cn(
-                'rounded px-2 py-1 text-xs font-medium',
-                getStatusColor(status)
-              )}
-            >
-              {getStatusText(status)}
-            </span>
-          </div>
+        {/* Status Badge - 모바일 375px 미만에서 "곧 시작" 그룹에서는 숨김 */}
+        <div
+          className={cn(
+            'absolute top-3 left-3',
+            isUpcomingGroup && 'max-[374px]:hidden'
+          )}
+        >
+          <span
+            className={cn(
+              'rounded px-2 py-1 text-xs font-medium',
+              getStatusColor(status)
+            )}
+          >
+            {getStatusText(status)}
+          </span>
+        </div>
 
         {/* Live Badge - 현재 방영중인 경우에만 표시 */}
         {isCurrentlyAiring() && (
@@ -593,12 +625,16 @@ export default function AnimeCard({
                   const getTimeFromScheduledAt = (scheduledAt: string) => {
                     if (!scheduledAt) return '';
                     const date = new Date(scheduledAt);
-                    const hours = date.getHours().toString().padStart(2, '0');
+                    let hours = date.getHours();
                     const minutes = date
                       .getMinutes()
                       .toString()
                       .padStart(2, '0');
-                    return `${hours}:${minutes}`;
+                    // 00:00 ~ 04:59인 경우 24시간 더하기
+                    if (hours < 5) {
+                      hours += 24;
+                    }
+                    return `${hours.toString().padStart(2, '0')}:${minutes}`;
                   };
 
                   return (

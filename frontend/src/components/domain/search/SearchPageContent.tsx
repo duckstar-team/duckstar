@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getCurrentSchedule,
@@ -9,6 +9,7 @@ import {
 } from '@/api/search';
 import type { AnimePreviewListDto, AnimeSearchListDto } from '@/types/dtos';
 import { extractChosung, queryConfig } from '@/lib';
+import { isUpcomingAnime, sortUpcomingAnimes } from '@/lib/utils/schedule';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
 import { useQuery } from '@tanstack/react-query';
 import { SearchSkeleton } from '@/components/skeletons';
@@ -18,7 +19,6 @@ import SeasonDaySelector from './SeasonDaySelector';
 import AnimeSchedule from './AnimeSchedule';
 import { useSearchQuery } from '@/hooks/useSearchParams';
 import { useScrollNavigation } from '@/hooks/useScrollNavigation';
-import { getEmptyDays, groupAnimesByDay } from '@/lib';
 import { showToast } from '@/components/common/Toast';
 
 interface SearchPageContentProps {
@@ -136,165 +136,252 @@ export default function SearchPageContent({
   const searchResults =
     isSearchMode && searchData ? searchData.animePreviews : [];
 
-  // 애니메이션 데이터 처리
-  const processedData = useMemo(() => {
-    if (!scheduleData) return null;
+  // 섹션 ID 생성 함수 (메모이제이션)
+  const getSectionId = useCallback(
+    (baseId: string): string => {
+      if (isThisWeek) {
+        return baseId;
+      }
+      return `${baseId}-${year}-${quarter}`;
+    },
+    [isThisWeek, year, quarter]
+  );
 
-    if (isThisWeek) {
-      return {
-        schedule: scheduleData.schedule,
-      };
-    } else {
-      return {
-        year: year!,
-        quarter: quarter!,
-        schedule: scheduleData.schedule,
-      };
-    }
-  }, [scheduleData, isThisWeek, year, quarter]);
+  // 백엔드 응답을 그대로 사용하되, 필터링만 적용
+  const filteredScheduleDtos = useMemo(() => {
+    if (!scheduleData || isSearchMode) return [];
 
-  // 섹션 ID 생성 함수
-  const getSectionId = (baseId: string): string => {
-    if (isThisWeek) {
-      return baseId;
-    }
-    return `${baseId}-${year}-${quarter}`;
-  };
+    return scheduleData.scheduleDtos.map((scheduleDto) => {
+      // OTT 필터 적용
+      let filteredAnimes = scheduleDto.animePreviews;
+      if (selectedOttServices.length > 0) {
+        filteredAnimes = filteredAnimes.filter((anime) => {
+          if (!anime.ottDtos || anime.ottDtos.length === 0) return false;
+          return anime.ottDtos.some((ott) =>
+            selectedOttServices.includes(ott.ottType.toLowerCase())
+          );
+        });
+      }
+
+      // 방영 중 필터 적용
+      if (showOnlyAiring) {
+        filteredAnimes = filteredAnimes.filter(
+          (anime) => anime.status === 'NOW_SHOWING'
+        );
+      }
+
+      return {
+        ...scheduleDto,
+        animePreviews: filteredAnimes,
+      };
+    });
+  }, [
+    scheduleData,
+    isSearchMode,
+    selectedOttServices,
+    showOnlyAiring,
+  ]);
 
   // 빈 요일 확인
   const emptyDays = useMemo(() => {
-    if (!processedData) return new Set<DayOfWeek>();
+    if (!scheduleData || isSearchMode) return new Set<DayOfWeek>();
 
-    const emptyDaysSet = getEmptyDays(
-      processedData,
-      isSearchMode,
-      showOnlyAiring,
-      selectedOttServices,
-      isThisWeek
-    );
+    const emptyDaysSet = new Set<string>();
+    const dayMap: Record<string, DayOfWeek> = {
+      MON: '월',
+      TUE: '화',
+      WED: '수',
+      THU: '목',
+      FRI: '금',
+      SAT: '토',
+      SUN: '일',
+      SPECIAL: '특별편성 및 극장판',
+    };
+
+    filteredScheduleDtos.forEach((scheduleDto) => {
+      if (scheduleDto.animePreviews.length === 0) {
+        const koreanDay = dayMap[scheduleDto.dayOfWeekShort];
+        if (koreanDay) {
+          emptyDaysSet.add(koreanDay);
+        }
+      }
+    });
+
+    // "곧 시작" 그룹 확인 (이번 주만, NONE 그룹이 있는 경우)
+    if (isThisWeek && selectedOttServices.length === 0) {
+      const upcomingSchedule = filteredScheduleDtos.find(
+        (dto) => dto.dayOfWeekShort === 'NONE'
+      );
+      if (!upcomingSchedule || upcomingSchedule.animePreviews.length === 0) {
+        emptyDaysSet.add('곧 시작');
+      }
+    }
 
     return new Set(Array.from(emptyDaysSet) as DayOfWeek[]);
   }, [
-    processedData,
+    scheduleData,
+    filteredScheduleDtos,
+    isSearchMode,
     showOnlyAiring,
     selectedOttServices,
-    isSearchMode,
     isThisWeek,
   ]);
 
-  // 요일별 그룹핑
+  // 그룹핑된 애니메이션 (백엔드 응답을 그대로 사용)
   const groupedAnimes = useMemo(() => {
-    if (!processedData) return {};
+    if (isSearchMode) {
+      // 검색 모드: 검색 결과를 필터링하여 반환
+      let filteredResults = searchResults;
+      if (selectedOttServices.length > 0) {
+        filteredResults = filteredResults.filter((anime) => {
+          if (!anime.ottDtos || anime.ottDtos.length === 0) return false;
+          return anime.ottDtos.some((ott) =>
+            selectedOttServices.includes(ott.ottType.toLowerCase())
+          );
+        });
+      }
+      if (showOnlyAiring) {
+        filteredResults = filteredResults.filter(
+          (anime) => anime.status === 'NOW_SHOWING'
+        );
+      }
+      return filteredResults.length > 0
+        ? { SEARCH_RESULTS: filteredResults }
+        : {};
+    }
 
-    return groupAnimesByDay(
-      processedData,
-      isSearchMode,
-      searchResults,
-      searchQuery,
-      showOnlyAiring,
-      selectedOttServices,
-      isThisWeek
-    );
+    // 스케줄 모드: 백엔드 응답을 그대로 사용하되, "곧 시작" 그룹 추가
+    if (!scheduleData) return {};
+
+    const grouped: { [key: string]: typeof searchResults } = {};
+    
+    // "곧 시작" 그룹 생성 (이번 주만, OTT 필터가 없을 때)
+    if (isThisWeek && selectedOttServices.length === 0) {
+      // 모든 scheduleDtos에서 애니메이션을 가져와서 12시간 이내인 것들 필터링
+      const allAnimes = filteredScheduleDtos.flatMap(
+        (dto) => dto.animePreviews
+      );
+      
+      const upcomingAnimes = allAnimes.filter((anime) => {
+        // NOW_SHOWING 또는 UPCOMING 상태이고 scheduledAt이 있어야 함
+        if (
+          (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
+          !anime.scheduledAt
+        ) {
+          return false;
+        }
+        
+        // isUpcomingAnime 함수 사용 (12시간 이내 체크)
+        return isUpcomingAnime(anime);
+      });
+
+      if (upcomingAnimes.length > 0) {
+        // 중복 제거 (같은 애니메이션이 여러 그룹에 있을 수 있음)
+        const uniqueUpcomingAnimes = Array.from(
+          new Map(upcomingAnimes.map((anime) => [anime.animeId, anime])).values()
+        );
+        
+        // 정렬 후 "곧 시작" 그룹에 추가
+        const sorted = sortUpcomingAnimes(uniqueUpcomingAnimes);
+        grouped['NONE'] = sorted;
+      }
+    }
+
+    // 백엔드 응답의 scheduleDtos를 그대로 사용
+    filteredScheduleDtos.forEach((scheduleDto) => {
+      // "곧 시작" 그룹은 이미 위에서 처리했으므로 제외
+      if (scheduleDto.dayOfWeekShort === 'NONE') return;
+      
+      if (scheduleDto.animePreviews.length > 0) {
+        grouped[scheduleDto.dayOfWeekShort] = scheduleDto.animePreviews;
+      }
+    });
+
+    return grouped;
   }, [
-    processedData,
-    selectedOttServices,
-    showOnlyAiring,
     isSearchMode,
     searchResults,
-    searchQuery,
-    isThisWeek,
+    scheduleData,
+    filteredScheduleDtos,
+    selectedOttServices,
+    showOnlyAiring,
   ]);
 
-  // 스크롤 네비게이션 섹션 생성
+  // 스크롤 네비게이션 섹션 생성 (groupedAnimes를 기반으로 생성하여 동기화)
   const navigationSections = useMemo(() => {
-    if (!groupedAnimes || Object.keys(groupedAnimes).length === 0) return [];
+    if (!scheduleData || isSearchMode) return [];
 
-    const hasUpcomingGroup =
-      isThisWeek &&
-      groupedAnimes['UPCOMING'] &&
-      groupedAnimes['UPCOMING'].length > 0;
+    const dayMap: Record<string, { id: string; day: DayOfWeek }> = {
+      MON: { id: getSectionId('mon'), day: '월' as DayOfWeek },
+      TUE: { id: getSectionId('tue'), day: '화' as DayOfWeek },
+      WED: { id: getSectionId('wed'), day: '수' as DayOfWeek },
+      THU: { id: getSectionId('thu'), day: '목' as DayOfWeek },
+      FRI: { id: getSectionId('fri'), day: '금' as DayOfWeek },
+      SAT: { id: getSectionId('sat'), day: '토' as DayOfWeek },
+      SUN: { id: getSectionId('sun'), day: '일' as DayOfWeek },
+      SPECIAL: { id: getSectionId('special'), day: '특별편성 및 극장판' as DayOfWeek },
+      NONE: { id: getSectionId('upcoming'), day: '곧 시작' as DayOfWeek },
+    };
 
-    const sections = hasUpcomingGroup
-      ? [
-          { id: getSectionId('upcoming'), day: '곧 시작' as DayOfWeek },
-          { id: getSectionId('mon'), day: '월' as DayOfWeek },
-          { id: getSectionId('tue'), day: '화' as DayOfWeek },
-          { id: getSectionId('wed'), day: '수' as DayOfWeek },
-          { id: getSectionId('thu'), day: '목' as DayOfWeek },
-          { id: getSectionId('fri'), day: '금' as DayOfWeek },
-          { id: getSectionId('sat'), day: '토' as DayOfWeek },
-          { id: getSectionId('sun'), day: '일' as DayOfWeek },
-          {
-            id: getSectionId('special'),
-            day: '특별편성 및 극장판' as DayOfWeek,
-          },
-        ]
-      : [
-          { id: getSectionId('mon'), day: '월' as DayOfWeek },
-          { id: getSectionId('tue'), day: '화' as DayOfWeek },
-          { id: getSectionId('wed'), day: '수' as DayOfWeek },
-          { id: getSectionId('thu'), day: '목' as DayOfWeek },
-          { id: getSectionId('fri'), day: '금' as DayOfWeek },
-          { id: getSectionId('sat'), day: '토' as DayOfWeek },
-          { id: getSectionId('sun'), day: '일' as DayOfWeek },
-          {
-            id: getSectionId('special'),
-            day: '특별편성 및 극장판' as DayOfWeek,
-          },
-        ];
+    // groupedAnimes의 키 순서대로 섹션 생성 (실제 표시 순서와 동기화)
+    const dayOrder = isThisWeek
+      ? ['NONE', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'SPECIAL']
+      : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'SPECIAL'];
 
-    return sections;
-  }, [groupedAnimes, isThisWeek, year, quarter]);
+    return dayOrder
+      .filter((dayKey) => groupedAnimes[dayKey] && groupedAnimes[dayKey].length > 0)
+      .map((dayKey) => dayMap[dayKey])
+      .filter(Boolean);
+  }, [scheduleData, groupedAnimes, isSearchMode, isThisWeek, year, quarter, getSectionId]);
 
-  // 스크롤 네비게이션
-  useScrollNavigation(navigationSections, setSelectedDay);
+  // 스크롤 네비게이션 (offset: 헤더 60 + 요일 선택 바 44 + 여유 공간 50 = 154)
+  useScrollNavigation(navigationSections, setSelectedDay, 154);
 
   // "이번 주" 데이터 로드 후 첫 번째 존재하는 섹션으로 요일 설정
   useEffect(() => {
     if (scheduleData && isThisWeek && !searchQuery.trim()) {
       setTimeout(() => {
-        const dayOrder = [
-          'upcoming',
-          'mon',
-          'tue',
-          'wed',
-          'thu',
-          'fri',
-          'sat',
-          'sun',
-          'special',
-        ];
-        const dayMap: { [key: string]: DayOfWeek } = {
-          upcoming: '곧 시작',
-          mon: '월',
-          tue: '화',
-          wed: '수',
-          thu: '목',
-          fri: '금',
-          sat: '토',
-          sun: '일',
-          special: '특별편성 및 극장판',
+        const dayOrder = ['NONE', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN', 'SPECIAL'];
+        const dayMap: Record<string, DayOfWeek> = {
+          NONE: '곧 시작',
+          MON: '월',
+          TUE: '화',
+          WED: '수',
+          THU: '목',
+          FRI: '금',
+          SAT: '토',
+          SUN: '일',
+          SPECIAL: '특별편성 및 극장판',
         };
 
-        for (const day of dayOrder) {
-          const element = document.getElementById(day);
-          if (element && element.children.length > 0) {
-            const firstDay = dayMap[day];
-            if (firstDay) {
-              setSelectedDay(firstDay);
-              break;
+        for (const dayKey of dayOrder) {
+          const scheduleDto = filteredScheduleDtos.find(
+            (dto) => dto.dayOfWeekShort === dayKey && dto.animePreviews.length > 0
+          );
+          if (scheduleDto) {
+            const baseId = dayKey === 'NONE' ? 'upcoming' : dayKey.toLowerCase();
+            const sectionId = getSectionId(baseId);
+            const element = document.getElementById(sectionId);
+            if (element && element.children.length > 0) {
+              const firstDay = dayMap[dayKey];
+              if (firstDay) {
+                setSelectedDay(firstDay);
+                break;
+              }
             }
           }
         }
       }, 100);
     }
-  }, [scheduleData, isThisWeek, searchQuery]);
+  }, [scheduleData, filteredScheduleDtos, isThisWeek, searchQuery, getSectionId]);
 
   // 랜덤 애니메이션 제목 설정 (이번 주만)
   useEffect(() => {
     if (scheduleData && isThisWeek && !randomAnimeTitle) {
-      if (scheduleData.schedule) {
-        const allAnimes = Object.values(scheduleData.schedule).flat();
+      if (scheduleData.scheduleDtos) {
+        const allAnimes = scheduleData.scheduleDtos.flatMap(
+          (dto) => dto.animePreviews
+        );
         if (allAnimes.length > 0) {
           preloadSearchResults(allAnimes);
           const randomIndex = Math.floor(Math.random() * allAnimes.length);
@@ -397,24 +484,20 @@ export default function SearchPageContent({
   const handleDaySelect = (day: DayOfWeek) => {
     setSelectedDay(day);
 
-    const dayKey =
-      day === '일'
-        ? 'sun'
-        : day === '월'
-          ? 'mon'
-          : day === '화'
-            ? 'tue'
-            : day === '수'
-              ? 'wed'
-              : day === '목'
-                ? 'thu'
-                : day === '금'
-                  ? 'fri'
-                  : day === '토'
-                    ? 'sat'
-                    : day === '곧 시작'
-                      ? 'upcoming'
-                      : 'special';
+    const dayMap: Record<DayOfWeek, string> = {
+      '일': 'sun',
+      '월': 'mon',
+      '화': 'tue',
+      '수': 'wed',
+      '목': 'thu',
+      '금': 'fri',
+      '토': 'sat',
+      '곧 시작': 'upcoming',
+      '특별편성 및 극장판': 'special',
+    };
+
+    const dayKey = dayMap[day];
+    if (!dayKey) return;
 
     const sectionId = getSectionId(dayKey);
     const element = document.getElementById(sectionId);

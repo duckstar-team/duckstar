@@ -104,30 +104,37 @@ export async function getUpcomingAnimes(): Promise<AnimePreviewListDto> {
       throw new Error(apiResponse.message);
     }
 
-    // 곧 시작 그룹만 필터링 (12시간 이내 방영 예정)
+    // 백엔드 응답 구조에 맞게 NONE 그룹에서 애니메이션 가져오기
+    const noneSchedule = apiResponse.result.scheduleDtos.find(
+      (dto) => dto.dayOfWeekShort === 'NONE'
+    );
+    const upcomingAnimes = noneSchedule?.animePreviews || [];
+
+    // 12시간 이내 방영 예정인 애니메이션만 필터링 (백엔드에서 이미 처리되었을 수 있음)
     const now = new Date();
-    const upcomingAnimes = Object.values(apiResponse.result.schedule)
-      .flat()
-      .filter((anime) => {
-        if (
-          (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
-          !anime.scheduledAt
-        )
-          return false;
+    const filteredAnimes = upcomingAnimes.filter((anime) => {
+      if (
+        (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
+        !anime.scheduledAt
+      )
+        return false;
 
-        const scheduled = new Date(anime.scheduledAt);
-        if (isNaN(scheduled.getTime())) return false;
+      const scheduled = new Date(anime.scheduledAt);
+      if (isNaN(scheduled.getTime())) return false;
 
-        // 12시간 이내 방영 예정인 애니메이션만 필터링
-        const timeDiff = scheduled.getTime() - now.getTime();
-        return timeDiff >= 0 && timeDiff <= 12 * 60 * 60 * 1000; // 12시간 = 12 * 60 * 60 * 1000ms
-      });
+      // 12시간 이내 방영 예정인 애니메이션만 필터링
+      const timeDiff = scheduled.getTime() - now.getTime();
+      return timeDiff >= 0 && timeDiff <= 12 * 60 * 60 * 1000; // 12시간 = 12 * 60 * 60 * 1000ms
+    });
 
     return {
       ...apiResponse.result,
-      schedule: {
-        '곧 시작': upcomingAnimes,
-      },
+      scheduleDtos: [
+        {
+          dayOfWeekShort: 'NONE',
+          animePreviews: filteredAnimes,
+        },
+      ],
     };
   } catch (error) {
     throw error;
