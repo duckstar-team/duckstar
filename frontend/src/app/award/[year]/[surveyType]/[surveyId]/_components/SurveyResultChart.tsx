@@ -3,7 +3,7 @@
 import { queryConfig } from '@/lib';
 import { SurveyRankDto, SurveyResultDto } from '@/types/dtos';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SurveyResultCard from './SurveyResultCard';
 import Pagination from '@/components/common/Pagination';
 import { getSurveyResult } from '@/api/chart';
@@ -24,6 +24,11 @@ export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
       enabled: !!surveyId,
       ...queryConfig.vote,
     });
+
+  // 페이지 변경 시 스크롤을 맨 위로 즉시 이동
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [page]);
 
   if (isSurveyResultLoading) {
     return <SurveyResultSkeleton />;

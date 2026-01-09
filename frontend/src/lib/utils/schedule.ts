@@ -53,7 +53,12 @@ export function getNextWeekScheduledTime(
  * "곧 시작" 애니메이션 필터링 (12시간 이내)
  */
 export function isUpcomingAnime(anime: AnimePreviewDto): boolean {
-  if (anime.status !== 'NOW_SHOWING' || !anime.scheduledAt) return false;
+  // NOW_SHOWING 또는 UPCOMING 상태여야 함
+  if (
+    (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
+    !anime.scheduledAt
+  )
+    return false;
 
   const now = new Date();
   const scheduled = new Date(anime.scheduledAt);

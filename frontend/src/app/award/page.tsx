@@ -165,37 +165,39 @@ export default function AwardPage() {
             </div>
           </div>
 
-          {/* 커스텀 어워드 투표 링크 (우측 패널 형태) */}
-          <div className="w-full @lg:w-[373px]">
-            <h1 className="mb-5 text-xl font-bold text-gray-600 @lg:text-2xl">
-              커스텀 어워드 투표 링크
-            </h1>
-            <div className="flex w-full flex-col gap-4">
-              {GOOGLE_FORM_SURVEYS.map((survey) => {
-                return (
-                  <div
-                    key={survey.link}
-                    className="flex h-fit rounded-lg bg-white shadow-lg shadow-gray-200/80"
-                  >
-                    <Link
-                      href={survey.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-brand flex items-center gap-4 p-3 text-base font-semibold text-gray-600 @md:p-4 @md:text-lg @lg:text-xl"
+          {/* 커스텀 어워드 투표 링크 (우측 패널 형태) - 링크가 있을 때만 표시 */}
+          {GOOGLE_FORM_SURVEYS.length > 0 && (
+            <div className="w-full @lg:w-[373px]">
+              <h1 className="mb-5 text-xl font-bold text-gray-600 @lg:text-2xl">
+                커스텀 어워드 투표 링크
+              </h1>
+              <div className="flex w-full flex-col gap-4">
+                {GOOGLE_FORM_SURVEYS.map((survey) => {
+                  return (
+                    <div
+                      key={survey.link}
+                      className="flex h-fit rounded-lg bg-white shadow-lg shadow-gray-200/80"
                     >
-                      <img
-                        src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico"
-                        alt="survey-thumbnail"
-                        className="size-5"
-                      />
-                      {survey.label}
-                      <ExternalLink className="ml-1 shrink-0 transition-transform duration-300" />
-                    </Link>
-                  </div>
-                );
-              })}
+                      <Link
+                        href={survey.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-brand flex items-center gap-4 p-3 text-base font-semibold text-gray-600 @md:p-4 @md:text-lg @lg:text-xl"
+                      >
+                        <img
+                          src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico"
+                          alt="survey-thumbnail"
+                          className="size-5"
+                        />
+                        {survey.label}
+                        <ExternalLink className="ml-1 shrink-0 transition-transform duration-300" />
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </main>

@@ -12,9 +12,4 @@ export const MAX_VOTES = 10;
 /**
  * 커스텀 어워드 투표 링크
  */
-export const GOOGLE_FORM_SURVEYS = [
-  {
-    label: '2025년 애니메이션 연말 결산',
-    link: 'https://docs.google.com/forms/d/e/1FAIpQLSeHbQol8LaDVe5uiKryIVqNr17Vx8WkshIBV7k4TF2WNuRnbQ/viewform',
-  },
-];
+export const GOOGLE_FORM_SURVEYS: Array<{ label: string; link: string }> = [];
