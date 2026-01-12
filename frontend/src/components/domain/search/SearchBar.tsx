@@ -62,7 +62,11 @@ export default function SearchBar({
   const IconComponent = config.icon.asButton ? 'button' : 'div';
 
   return (
-    <div
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSearch?.();
+      }}
       data-search-bar={variant === 'header' ? true : undefined}
       className={cn(config.container, className)}
     >
@@ -84,7 +88,6 @@ export default function SearchBar({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && onSearch?.()}
         placeholder={placeholder}
         className={cn(
           'w-full text-sm text-gray-700 placeholder-gray-400',
@@ -93,6 +96,6 @@ export default function SearchBar({
         autoComplete="off"
         spellCheck="false"
       />
-    </div>
+    </form>
   );
 }
