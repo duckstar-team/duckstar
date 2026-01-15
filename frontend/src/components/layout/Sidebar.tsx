@@ -7,6 +7,7 @@ import { NAV_ITEMS } from '@/lib';
 import ThinNavDetail from './ThinNavDetail';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
+import ThemeToggle from '../common/ThemeToggle';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -95,29 +96,37 @@ export default function Sidebar() {
           })}
         </div>
 
-        {/* Footer - 일반 페이지에만 표시 */}
-        {!isThinNavPage && (
-          <footer className="ml-1 flex flex-col text-sm text-gray-500">
-            {/* 상단 링크 */}
-            <Link href="/about" className="hover:text-gray-800">
-              덕스타 소개
-            </Link>
+        <div className="flex flex-col gap-4">
+          {/* Footer - 일반 페이지에만 표시 */}
+          {!isThinNavPage && (
+            <footer className="ml-1 flex flex-col text-sm text-gray-500">
+              {/* 상단 링크 */}
+              <Link href="/about" className="hover:text-gray-800">
+                덕스타 소개
+              </Link>
 
-            {/* 하단 링크들 */}
-            <div className="flex items-center gap-[5px]">
-              <Link href="/terms" className="hover:text-gray-800">
-                이용약관
-              </Link>
-              <span>·</span>
-              <Link href="/privacy-policy" className="hover:text-gray-800">
-                개인정보처리방침
-              </Link>
+              {/* 하단 링크들 */}
+              <div className="flex items-center gap-[5px]">
+                <Link href="/terms" className="hover:text-gray-800">
+                  이용약관
+                </Link>
+                <span>·</span>
+                <Link href="/privacy-policy" className="hover:text-gray-800">
+                  개인정보처리방침
+                </Link>
+              </div>
+
+              {/* 저작권 텍스트 */}
+              <div className="mt-5">© 2025 DUCKSTAR</div>
+            </footer>
+          )}
+
+          {(!isThinNavPage || isExpanded) && (
+            <div className="ml-auto">
+              <ThemeToggle />
             </div>
-
-            {/* 저작권 텍스트 */}
-            <div className="mt-5">© 2025 DUCKSTAR</div>
-          </footer>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ThinNavDetail - Chart 또는 Award 페이지에만 표시 */}
