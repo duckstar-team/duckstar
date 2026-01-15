@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* CSS Variables */
 :root {
   --background: #f9fafb;
@@ -35,12 +37,10 @@
   --container-xl: 80rem; /* 1280px */
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #f9fafb; /* TODO: 임시 */
-    --foreground: #171717; /* TODO: 임시 */
-  }
+/* Dark Mode */
+.dark {
+  --background: #171717;
+  --foreground: #f9fafb;
 }
 
 /* Base Styles */
