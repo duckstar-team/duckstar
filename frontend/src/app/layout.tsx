@@ -9,6 +9,7 @@ import { ToastContainer } from '@/components/common/Toast';
 import PageViewTracker from '@/components/analytics/PageViewTracker';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AppContainer from '@/components/layout/AppContainer';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 
 // Pretendard 폰트만 사용 (성능 최적화)
 const pretendard = localFont({
@@ -48,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         {/* 반응형 뷰포트 설정 */}
         <meta
@@ -67,17 +68,19 @@ export default function RootLayout({
         </Suspense>
 
         <QueryProvider>
-          <AuthProvider>
-            <AppContainer>{children}</AppContainer>
+          <ThemeProvider>
+            <AuthProvider>
+              <AppContainer>{children}</AppContainer>
 
-            {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
-            <Suspense fallback={null}>
-              <MigrationToast />
-            </Suspense>
+              {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
+              <Suspense fallback={null}>
+                <MigrationToast />
+              </Suspense>
 
-            {/* 토스트 컨테이너 - 모든 페이지에서 작동 */}
-            <ToastContainer />
-          </AuthProvider>
+              {/* 토스트 컨테이너 - 모든 페이지에서 작동 */}
+              <ToastContainer />
+            </AuthProvider>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>
