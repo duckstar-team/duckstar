@@ -50,11 +50,6 @@ export default function HomeRankInfo({
   const [showTooltip, setShowTooltip] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  // 평균 별점을 정수 부분과 소수 부분으로 분리 (소수점 첫째 자리에서 버림)
-  const integerPart = Math.floor(averageRating);
-  const decimalPart = Math.floor((averageRating - integerPart) * 10) / 10; // 소수점 첫째 자리에서 버림
-  const decimalString = decimalPart.toFixed(1).substring(1); // ".9" 형태
-
   // 컴포넌트 상태 정의
   const isTopThree = rank <= 3;
   const isFirst = rank === 1;
@@ -193,12 +188,12 @@ export default function HomeRankInfo({
                 <span
                   className={`text-2xl ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {integerPart}
+                  {Math.floor(averageRating)}
                 </span>
                 <span
                   className={`text-base ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {decimalString}
+                  {averageRating.toFixed(1).substring(1)}
                 </span>
               </div>
             </div>
@@ -245,12 +240,12 @@ export default function HomeRankInfo({
                 <span
                   className={`text-2xl ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {integerPart}
+                  {Math.floor(averageRating)}
                 </span>
                 <span
                   className={`text-base ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {decimalString}
+                  {averageRating.toFixed(1).substring(1)}
                   <br />
                   {voterCount}명 참여
                 </span>
