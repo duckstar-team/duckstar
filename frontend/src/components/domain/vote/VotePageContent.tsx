@@ -374,15 +374,7 @@ export default function VotePageContent() {
           ) : (
             <SmallCandidate
               key={candidate.episodeId}
-              anime={
-                {
-                  ...candidate,
-                  ottDtos: [],
-                  status: 'NOW_SHOWING' as const,
-                  isBreak: false,
-                  isRescheduled: null,
-                } as AnimePreviewDto
-              }
+              anime={candidate}
               isCurrentSeason={true}
               voteInfo={{
                 year: candidate.year,

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { StarInfoDto, LiveVoteResultDto, AnimePreviewDto } from '@/types/dtos';
+import { StarInfoDto, LiveVoteResultDto, LiveCandidateDto } from '@/types/dtos';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import StarDistributionChart from '@/components/domain/star/StarDistributionChart';
 import { submitStarVote, withdrawStar } from '@/api/vote';
@@ -17,7 +17,7 @@ import {
 import { ApiResponse } from '@/api/http';
 
 interface SmallCandidateProps {
-  anime: AnimePreviewDto;
+  anime: LiveCandidateDto;
   isCurrentSeason: boolean;
   voteInfo: {
     year: number;
@@ -44,8 +44,8 @@ const getKoreanDayOfWeek = (dayOfWeek: string): string => {
 };
 
 // 방영 시간 포맷팅 (BigCandidate와 동일한 로직)
-const formatAirTime = (anime: AnimePreviewDto) => {
-  const { scheduledAt, airTime, dayOfWeek, status, medium } = anime;
+const formatAirTime = (anime: LiveCandidateDto) => {
+  const { scheduledAt, airTime, dayOfWeek, medium } = anime;
 
   // dateTime 형식인지 확인 (ISO 8601 형식: "T" 포함 또는 숫자와 하이픈/콜론 포함)
   const isDateTimeFormat = (str: string) => {
