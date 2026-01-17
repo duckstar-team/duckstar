@@ -23,6 +23,7 @@ import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SearchBar from '@/components/domain/search/SearchBar';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
+import { Stamp } from 'lucide-react';
 
 export default function VotePageContent() {
   const { openLoginModal } = useModal();
@@ -373,15 +374,7 @@ export default function VotePageContent() {
           ) : (
             <SmallCandidate
               key={candidate.episodeId}
-              anime={
-                {
-                  ...candidate,
-                  ottDtos: [],
-                  status: 'NOW_SHOWING' as const,
-                  isBreak: false,
-                  isRescheduled: null,
-                } as AnimePreviewDto
-              }
+              anime={candidate}
               isCurrentSeason={true}
               voteInfo={{
                 year: candidate.year,
@@ -759,7 +752,7 @@ export default function VotePageContent() {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div>
       <div className="w-full">
         {/* 배너 */}
         <div className="mb-4 flex justify-center">
@@ -805,7 +798,7 @@ export default function VotePageContent() {
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="mb-4 bg-white pt-4 pb-2">
+      <div className="mb-4 pt-4 pb-2 dark:bg-zinc-900">
         <div
           className={`w-full ${getOptimalContainerWidth()} mx-auto ${
             isUsingFallback ? 'mb-0' : 'mb-2'
@@ -813,24 +806,12 @@ export default function VotePageContent() {
         >
           {/* 투표 안내 텍스트 */}
           <div className="flex w-full items-center justify-between gap-4 px-10 max-lg:flex-col">
-            <div className="flex h-8 w-fit max-w-full items-center justify-start rounded-lg bg-[#f1f2f3] py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
-              <div className="flex items-center justify-start gap-1 px-1 py-0 sm:gap-2 sm:px-2 lg:gap-2.5 lg:px-2.5">
-                <div className="relative size-3 overflow-hidden sm:size-4">
-                  <img
-                    src="/icons/voteSection-notify-icon.svg"
-                    alt="Notification Icon"
-                    className="h-full w-full"
-                  />
-                </div>
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-[#23272b] sm:text-base">
-                <p className="leading-normal break-words">
-                  마음에 든 애니메이션을 투표해주세요!
-                </p>
-              </div>
+            <div className="flex w-fit max-w-full items-center justify-start gap-2 rounded-lg bg-zinc-200/50 py-1.5 pr-3 pl-2 text-sm font-medium dark:bg-zinc-800">
+              <Stamp size={16} />
+              마음에 든 애니메이션에 투표해주세요!
             </div>
 
-            <div className="text-center text-gray-700 lg:text-right">
+            <div className="text-center text-gray-700 lg:text-right dark:text-zinc-300">
               <p className="mb-2">
                 <span className="sm:hidden">
                   모든 후보는 방영 이후
@@ -841,7 +822,7 @@ export default function VotePageContent() {
                   모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.
                 </span>
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-zinc-400">
                 <span className="sm:hidden">
                   *덕스타 투표 시 중복 방지를 위해
                   <br />
@@ -861,7 +842,7 @@ export default function VotePageContent() {
               <div className="group relative">
                 <button
                   onClick={openLoginModal}
-                  className="flex cursor-pointer items-center gap-1 text-base text-gray-500 transition-colors duration-200 hover:text-gray-700"
+                  className="flex cursor-pointer items-center gap-1 text-base text-gray-500 transition-colors duration-200 hover:text-gray-700 dark:text-zinc-400"
                   style={{
                     borderBottom: '1px solid #c4c7cc',
                     lineHeight: '1.1',
@@ -906,10 +887,10 @@ export default function VotePageContent() {
       {/* 이번주차 검색창 섹션 */}
       <div
         ref={currentWeekSearchBarRef}
-        className={`p-4 shadow-sm ${
+        className={`p-4 shadow-sm dark:shadow-none ${
           isCurrentWeekSearchBarSticky && !isLastWeekSearchBarSticky
-            ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px]'
-            : 'mb-7 bg-white md:mb-8'
+            ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px] dark:bg-zinc-900/80'
+            : 'mb-7 bg-white md:mb-8 dark:bg-zinc-900'
         }`}
         style={{
           left: `${sidebarWidth}px`,
@@ -933,23 +914,23 @@ export default function VotePageContent() {
           {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
           {currentWeekLiveCandidates.length > 0 &&
             filteredcurrentWeekLiveCandidates.length > 0 && (
-              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-none dark:bg-zinc-800">
                 <button
                   onClick={() => handleCurrentViewModeChange('large')}
-                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                  className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors duration-200 sm:text-sm ${
                     currentViewMode === 'large'
-                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                   }`}
                 >
                   크게 보기
                 </button>
                 <button
                   onClick={() => handleCurrentViewModeChange('small')}
-                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                  className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors duration-200 sm:text-sm ${
                     currentViewMode === 'small'
-                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border border-gray-200 bg-white text-gray-900 dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                   }`}
                 >
                   작게 보기
@@ -971,7 +952,7 @@ export default function VotePageContent() {
       >
         {/* 이번주차 실시간 투표 섹션 */}
         <div className="mb-8">
-          <div className="mb-8 text-2xl font-bold text-black">실시간 투표</div>
+          <div className="mb-8 text-2xl font-bold">실시간 투표</div>
           {!isUsingFallback ? (
             <>
               {renderLiveCandidates(
@@ -999,7 +980,7 @@ export default function VotePageContent() {
                 <div className="mb-8">
                   <div className="mb-6">
                     <div className="mb-6 flex items-end gap-2">
-                      <h3 className="text-xl font-semibold text-black">
+                      <h3 className="text-xl font-semibold">
                         이번 주차 곧 시작!
                       </h3>
                       <p className="text-sm text-gray-500">
@@ -1152,9 +1133,7 @@ export default function VotePageContent() {
           <div
             className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
           >
-            <h1 className="mb-8 text-2xl font-bold text-black">
-              지난 주 실시간 투표
-            </h1>
+            <h1 className="mb-8 text-2xl font-bold">지난 주 실시간 투표</h1>
 
             {renderLiveCandidates(
               lastWeekLiveCandidates,

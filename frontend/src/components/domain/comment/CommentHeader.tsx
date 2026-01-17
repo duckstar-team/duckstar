@@ -67,21 +67,16 @@ export default function CommentHeader({
             />
           </div>
           <div
-            className={`justify-start text-center leading-snug font-semibold text-black ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
+            className={`justify-start text-center leading-snug font-semibold ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
           >
             애니 댓글
           </div>
           <div className="justify-start text-center">
-            <span className="text-base leading-snug font-semibold text-black">
-              총{' '}
-            </span>
+            <span className="text-base leading-snug font-semibold">총 </span>
             <span className="text-base leading-snug font-semibold text-rose-800">
               {totalComments}
             </span>
-            <span className="text-base leading-snug font-semibold text-black">
-              {' '}
-              개
-            </span>
+            <span className="text-base leading-snug font-semibold"> 개</span>
           </div>
         </div>
       ) : (
@@ -97,21 +92,16 @@ export default function CommentHeader({
               />
             </div>
             <div
-              className={`ml-3.5 justify-start text-center leading-snug font-semibold text-black ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
+              className={`ml-3.5 justify-start text-center leading-snug font-semibold ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
             >
               애니 댓글
             </div>
             <div className="ml-3.5 justify-start text-center">
-              <span className="text-base leading-snug font-semibold text-black">
-                총{' '}
-              </span>
+              <span className="text-base leading-snug font-semibold">총 </span>
               <span className="text-base leading-snug font-semibold text-rose-800">
                 {totalComments}
               </span>
-              <span className="text-base leading-snug font-semibold text-black">
-                {' '}
-                개
-              </span>
+              <span className="text-base leading-snug font-semibold"> 개</span>
             </div>
             <button
               onClick={onClearFilters}

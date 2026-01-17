@@ -58,7 +58,7 @@ export default function HomeRankInfo({
 
   // 색상 및 스타일 결정
   const getStarColor = () => {
-    if (isFirst) return 'text-[#990033] opacity-80';
+    if (isFirst) return 'text-brand opacity-80';
     if (isSecond) return 'text-[#868E96] opacity-70';
     if (isThird) return 'text-[#E37429] opacity-70';
     return 'text-[#ADB5BD]';
@@ -106,16 +106,16 @@ export default function HomeRankInfo({
   };
   return (
     <div
-      className={`inline-flex h-24 w-full items-center justify-start gap-5 overflow-hidden rounded-xl bg-white px-4 outline outline-gray-200 ${className}`}
+      className={`inline-flex h-24 w-full items-center justify-start gap-5 overflow-hidden rounded-xl px-4 outline outline-gray-200 dark:bg-zinc-900 dark:outline-none ${className}`}
     >
       {/* 왼쪽 영역 - 클릭 가능 */}
       <div
-        className={`flex flex-1 items-center justify-start gap-5 pl-0.5 ${contentId ? '-m-2 cursor-pointer rounded-lg p-2 transition-colors duration-200 hover:bg-gray-50' : 'cursor-default'}`}
+        className={`flex flex-1 items-center justify-start gap-5 pl-0.5 dark:hover:bg-zinc-800/40 ${contentId ? '-m-2 cursor-pointer rounded-lg p-2 transition-colors duration-200 hover:bg-gray-50' : 'cursor-default'}`}
         onClick={handleClick}
       >
         {/* 순위와 변화 */}
         <div className="ml-2 inline-flex w-8 flex-col items-center justify-center self-stretch pb-1">
-          <div className="justify-start text-center text-3xl leading-snug font-bold text-gray-500">
+          <div className="justify-start text-center text-3xl leading-snug font-bold text-gray-500 dark:text-gray-300">
             {rank}
           </div>
           <div className="inline-flex items-center justify-center gap-px self-stretch">
@@ -151,7 +151,7 @@ export default function HomeRankInfo({
 
         {/* 제목과 스튜디오 */}
         <div className="inline-flex flex-1 flex-col items-start justify-start gap-0.5">
-          <div className="w-96 justify-start text-lg leading-snug font-semibold text-black">
+          <div className="w-96 justify-start text-lg leading-snug font-semibold">
             {title}
           </div>
           <div className="justify-start text-center text-sm leading-snug font-normal text-gray-400">
@@ -260,7 +260,7 @@ export default function HomeRankInfo({
         )}
 
         {/* 구분선 */}
-        <div className="absolute top-[24px] left-0 h-12 w-0 outline outline-offset-[-0.50px] outline-gray-200" />
+        <div className="absolute top-[24px] left-0 h-12 w-0 outline outline-offset-[-0.50px] outline-gray-200 dark:outline-zinc-800" />
       </div>
     </div>
   );

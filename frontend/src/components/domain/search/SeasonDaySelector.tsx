@@ -122,14 +122,17 @@ export default function SeasonDaySelector({
   return (
     <>
       {/* 원본 요소 */}
-      <div className="mt-10 mb-6 bg-white pb-4 max-md:pt-4 md:mt-20" ref={ref}>
+      <div
+        className="mt-10 mb-6 bg-white pb-4 max-md:pt-4 md:mt-20 dark:bg-zinc-900"
+        ref={ref}
+      >
         {renderContent()}
       </div>
 
       {/* Fixed 복사본 (스크롤 시 표시) */}
       {isSticky && (
         <div
-          className="fixed top-[60px] z-40 bg-white/80 backdrop-blur-md"
+          className="fixed top-[60px] z-40 bg-white/80 backdrop-blur-md dark:bg-zinc-900/80"
           style={{
             left: `${sidebarWidth}px`,
             width: `calc(100vw - ${sidebarWidth}px)`,

@@ -61,7 +61,7 @@ export default function CommentInputForm({
           <input
             type="text"
             placeholder={placeholder}
-            className="min-w-0 flex-1 border-b border-gray-300 p-1 text-sm focus:border-black"
+            className="min-w-0 flex-1 border-b border-gray-300 p-1 text-sm focus:border-black dark:border-zinc-600"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onFocus={handleCommentFocus}

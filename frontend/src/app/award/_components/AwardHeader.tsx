@@ -75,7 +75,7 @@ export default function AwardHeader() {
         {isSurveyPage && surveyData && (
           <>
             <ChevronRight className="size-4 shrink-0 text-gray-500/80" />
-            <span className="text-gray-700">{getBannerTitle(surveyData)}</span>
+            <span className="text-gray-500">{getBannerTitle(surveyData)}</span>
           </>
         )}
         {surveyData?.status === SurveyStatus.ResultOpen && (
@@ -86,7 +86,7 @@ export default function AwardHeader() {
             <DownloadBtn />
             <button
               onClick={() => setIsDropdownOpen((prev) => !prev)}
-              className="rounded-full p-2 transition hover:bg-gray-200"
+              className="rounded-full p-2 transition hover:bg-gray-200 dark:hover:bg-zinc-800"
             >
               <Share2 className="size-5" />
             </button>

@@ -1,10 +1,19 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* CSS Variables */
 :root {
-  --background: #f9fafb;
-  --foreground: #171717;
+  --background: var(--color-gray-50);
+  --foreground: var(--color-black);
   --brand: #990033;
+}
+
+/* Dark Mode */
+.dark {
+  --background: var(--color-zinc-900);
+  --foreground: var(--color-white);
+  --brand: #e04686;
 }
 
 /* Theme Configuration */
@@ -33,14 +42,6 @@
   --container-md: 48rem; /* 768px */
   --container-lg: 64rem; /* 1024px */
   --container-xl: 80rem; /* 1280px */
-}
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #f9fafb; /* TODO: 임시 */
-    --foreground: #171717; /* TODO: 임시 */
-  }
 }
 
 /* Base Styles */

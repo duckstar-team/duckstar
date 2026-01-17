@@ -11,7 +11,7 @@ export default function BackButton({ onClick, className }: BackButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        'flex w-fit items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-gray-600 transition-colors hover:text-gray-400',
+        'flex w-fit items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-gray-600 transition-colors hover:text-gray-400 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-white',
         className
       )}
     >

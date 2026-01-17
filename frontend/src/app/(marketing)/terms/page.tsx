@@ -5,7 +5,7 @@ interface TermsSectionProps {
 
 const TermsSection: React.FC<TermsSectionProps> = ({ title, children }) => (
   <section>
-    <h2 className="mb-3 text-xl font-semibold text-gray-900">{title}</h2>
+    <h2 className="mb-3 text-xl font-semibold">{title}</h2>
     {children}
   </section>
 );
@@ -13,7 +13,7 @@ const TermsSection: React.FC<TermsSectionProps> = ({ title, children }) => (
 const TermsList: React.FC<{ items: string[] }> = ({ items }) => (
   <ul className="list-inside list-disc space-y-2 leading-relaxed">
     {items.map((item, index) => (
-      <li key={index} className="text-gray-700">
+      <li key={index} className="text-gray-700 dark:text-zinc-400">
         {item}
       </li>
     ))}
@@ -46,12 +46,12 @@ export default function TermsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="mx-auto max-w-4xl px-4">
-        <div className="rounded-lg bg-white p-8 shadow-sm">
-          <h1 className="mb-8 text-3xl font-bold text-gray-900">이용약관</h1>
+        <div className="rounded-lg bg-white p-8 shadow-sm dark:bg-zinc-800">
+          <h1 className="mb-8 text-3xl font-bold">이용약관</h1>
 
-          <div className="space-y-6 text-gray-700">
+          <div className="space-y-6">
             <TermsSection title="1. 서비스 개요">
               <p className="leading-relaxed">
                 덕스타는 애니메이션 투표 서비스를 제공합니다. 사용자는 주간

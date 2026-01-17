@@ -81,7 +81,7 @@ const DonutChart = memo(function DonutChart({
             className="mt-1 h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color1 }}
           />
-          <span className="text-sm break-keep text-gray-700">
+          <span className="text-sm break-keep text-gray-700 dark:text-zinc-200">
             {label1} {percentage1Value.toFixed(1)}%
           </span>
         </div>
@@ -90,7 +90,7 @@ const DonutChart = memo(function DonutChart({
             className="mt-1 h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: color2 }}
           />
-          <span className="text-sm break-keep text-gray-700">
+          <span className="text-sm break-keep text-gray-700 dark:text-zinc-200">
             {label2} {percentage2Value.toFixed(1)}%
           </span>
         </div>
@@ -106,7 +106,7 @@ const CustomLabel = (props: any) => {
     <text
       x={x + width / 2}
       y={y - 5}
-      fill="#374151"
+      fill="currentColor"
       textAnchor="middle"
       fontSize={12}
       fontWeight="semibold"
@@ -167,7 +167,7 @@ const AgeBarChart = memo(function AgeBarChart({
           dataKey="name"
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: 12, fill: '#6b7280' }}
+          tick={{ fontSize: 12, fill: '#A3A3A3' }}
           height={30}
         />
       </BarChart>
@@ -222,14 +222,12 @@ export default function SurveyResultCard({
               strokeLinecap="round"
             />
           </svg>
-          <span className="translate-y-1 text-xs font-medium whitespace-nowrap text-black">
+          <span className="translate-y-1 text-xs font-medium whitespace-nowrap">
             {animeCandidateDto.quarter}분기
           </span>
-          <span className="text-2xl font-bold text-black">{rank}</span>
+          <span className="text-2xl font-bold">{rank}</span>
         </div>
-        <h3 className="text-2xl font-bold text-black">
-          {animeCandidateDto.titleKor}
-        </h3>
+        <h3 className="text-2xl font-bold">{animeCandidateDto.titleKor}</h3>
       </div>
 
       {/* 메인 콘텐츠 영역 */}
@@ -243,17 +241,17 @@ export default function SurveyResultCard({
               className="h-full w-full object-cover"
             />
           </div>
-          <span className="text-sm font-medium text-gray-500 @sm:self-start">
+          <span className="text-sm font-medium text-gray-500 @sm:self-start dark:text-zinc-400">
             {animeCandidateDto.year}년 {animeCandidateDto.quarter}분기{' '}
             {animeCandidateDto.medium}
           </span>
           {animeId && (
             <Link
               href={`/animes/${animeId}`}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-400 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               <span>애니 정보</span>
-              <FaArrowCircleRight className="h-4 w-4 text-[#c30b4e]" />
+              <FaArrowCircleRight className="text-brand h-4 w-4" />
             </Link>
           )}
         </div>
@@ -261,12 +259,14 @@ export default function SurveyResultCard({
         {/* 통계 정보 + 댓글 */}
         <div className="flex w-full flex-col gap-6">
           {/* 통계 정보 섹션 */}
-          <div className="flex gap-10 rounded-lg bg-gray-100 p-4 @max-lg:flex-col">
+          <div className="flex gap-10 rounded-lg bg-gray-100 p-4 @max-lg:flex-col dark:bg-zinc-700">
             <div className="max-xs:flex-col flex gap-10 transition xl:gap-16">
               {/* 득표율 */}
               <div className="flex flex-col gap-4">
-                <h4 className="text-sm font-semibold text-gray-700">득표율</h4>
-                <div className="text-3xl font-medium text-black transition @md:text-4xl">
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
+                  득표율
+                </h4>
+                <div className="text-3xl font-medium transition @md:text-4xl">
                   {(Math.floor(voteRatioDto.votePercent * 100) / 100).toFixed(
                     2
                   )}
@@ -277,7 +277,7 @@ export default function SurveyResultCard({
               <div className="grid grid-cols-2 gap-6">
                 {/* 표 비율 도넛 차트 */}
                 <div className="flex flex-col gap-4">
-                  <h4 className="text-sm font-semibold text-gray-700">
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
                     표 비율
                   </h4>
                   <DonutChart
@@ -292,7 +292,9 @@ export default function SurveyResultCard({
 
                 {/* 성비 도넛 차트 */}
                 <div className="flex flex-col gap-4">
-                  <h4 className="text-sm font-semibold text-gray-700">성비</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
+                    성비
+                  </h4>
                   <DonutChart
                     percentage1={voteRatioDto.malePercent || 0}
                     percentage2={voteRatioDto.femalePercent || 0}
@@ -307,7 +309,7 @@ export default function SurveyResultCard({
 
             {/* 연령별 투표 분포 */}
             <div className="flex max-w-100 flex-1 flex-col gap-2">
-              <h4 className="text-sm font-semibold text-gray-700">
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
                 연령별 투표 분포
               </h4>
               <AgeBarChart voteRatioDto={voteRatioDto} />

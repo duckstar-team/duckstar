@@ -54,19 +54,21 @@ export default function LoginModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="w-full max-w-100 rounded-2xl bg-white shadow-2xl"
+            className="w-full max-w-100 rounded-2xl bg-white shadow-2xl dark:bg-zinc-800"
             style={{
               marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
             }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 p-6">
-              <h2 className="text-xl font-bold text-gray-900">로그인</h2>
+            <div className="flex items-center justify-between border-b border-gray-100 p-6 dark:border-zinc-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-100">
+                로그인
+              </h2>
               <button
                 onClick={closeLoginModal}
-                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-zinc-700"
               >
-                <X className="h-5 w-5 text-gray-500" />
+                <X className="h-5 w-5 text-zinc-500" />
               </button>
             </div>
 
@@ -102,7 +104,9 @@ export default function LoginModal() {
                 </button>
               </div>
 
-              <p className="text-center text-gray-600">로그인 / 회원가입</p>
+              <p className="text-center text-zinc-600 dark:text-zinc-200">
+                로그인 / 회원가입
+              </p>
             </div>
           </motion.div>
         </motion.div>

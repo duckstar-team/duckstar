@@ -54,7 +54,7 @@ export default function EpisodeItem({
               onClick?.();
             }}
           >
-            <div className="text-center text-lg leading-tight font-normal text-white">
+            <div className="text-center text-lg leading-tight font-normal text-white dark:text-black">
               {episodeNumber}
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function EpisodeItem({
           onMouseLeave={onMouseLeave}
         >
           <div
-            className={`inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl bg-white outline outline-offset-[-1px] ${disableCursor ? '' : 'cursor-pointer'} relative z-10 transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
+            className={`inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl outline outline-offset-[-1px] ${disableCursor ? '' : 'cursor-pointer'} relative z-10 transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
             style={{ outlineColor: '#FFB310' }}
             onMouseMove={onMouseMove}
             onClick={(e) => {
@@ -129,8 +129,7 @@ export default function EpisodeItem({
           onMouseLeave={onMouseLeave}
         >
           <div
-            className={`relative z-10 inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl outline outline-offset-[-1px] transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
-            style={{ backgroundColor: '#F8F9FA', outlineColor: '#CED4DA' }}
+            className={`relative z-10 inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl outline outline-offset-[-1px] outline-zinc-300 transition-transform duration-200 dark:outline-white ${isHovered ? 'scale-110' : ''}`}
             onMouseMove={onMouseMove}
           >
             <div

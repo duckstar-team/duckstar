@@ -515,7 +515,7 @@ export default function HomeClient() {
         </div>
 
         {/* 헤더 리스트 영역 */}
-        <div className="sticky top-[60px] z-20 w-full bg-white px-4 pt-2 sm:pt-3">
+        <div className="sticky top-[60px] z-20 w-full bg-white px-4 pt-2 sm:pt-3 dark:bg-zinc-900">
           <div className="mx-auto flex w-full max-w-[1147px] flex-col gap-4 xl:flex-row xl:items-end xl:justify-center xl:gap-6">
             {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
             <div className="w-full xl:w-[750px] xl:flex-shrink-0">
@@ -579,7 +579,7 @@ export default function HomeClient() {
 
             {/* 모바일용 해외 순위 헤더 - 한국 순위 패널 아래, 해외 순위 패널 위에 위치 */}
             <div className="w-full xl:hidden">
-              <div className="mx-auto w-full rounded-lg bg-white py-1">
+              <div className="mx-auto w-full rounded-lg py-1">
                 <div className="mx-auto flex justify-center">
                   <RightHeaderList
                     selectedTab={selectedRightTab}

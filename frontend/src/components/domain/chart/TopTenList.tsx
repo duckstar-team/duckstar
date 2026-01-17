@@ -80,7 +80,7 @@ export default function TopTenList({
       </div>
 
       {/* 메달 이미지 */}
-      {item.rank <= 3 && (
+      {item.rank && item.rank <= 3 && (
         <img src={getMedalImg(item.rank)} alt="medal" width={30} height={30} />
       )}
     </div>

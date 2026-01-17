@@ -117,11 +117,11 @@ export default function ShareDropdown({
   };
 
   return (
-    <div className="flex min-w-44 flex-col gap-4 overflow-hidden rounded-lg bg-white p-4 text-sm shadow-lg">
+    <div className="flex min-w-44 flex-col gap-4 overflow-hidden rounded-lg bg-white p-4 text-sm shadow-lg dark:bg-zinc-800">
       <button
         onClick={handleCopyLink}
         aria-label="링크 복사"
-        className="flex items-center gap-2 hover:text-black"
+        className="flex items-center gap-2 hover:text-black dark:hover:text-zinc-200"
       >
         <Link size={16} />
         링크 복사
@@ -129,7 +129,7 @@ export default function ShareDropdown({
       <button
         onClick={handleKakaoShare}
         aria-label="카카오톡 공유"
-        className="flex items-center gap-2 hover:text-black"
+        className="flex items-center gap-2 hover:text-black dark:hover:text-zinc-200"
       >
         <SiKakaotalk size={16} />
         카카오톡 공유
@@ -137,7 +137,7 @@ export default function ShareDropdown({
       <button
         onClick={handleTwitterShare}
         aria-label="트위터 공유"
-        className="flex items-center gap-2 hover:text-black"
+        className="flex items-center gap-2 hover:text-black dark:hover:text-zinc-200"
       >
         <FaXTwitter size={16} />
         트위터 공유
@@ -145,7 +145,7 @@ export default function ShareDropdown({
       <button
         onClick={handleLineShare}
         aria-label="라인 공유"
-        className="flex items-center gap-2 hover:text-black"
+        className="flex items-center gap-2 hover:text-black dark:hover:text-zinc-200"
       >
         <FaLine size={16} />
         라인 공유

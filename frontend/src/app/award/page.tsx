@@ -73,7 +73,7 @@ export default function AwardPage() {
         <div className="flex flex-col gap-10 @lg:flex-row @lg:items-start @lg:gap-8">
           {/* 덕스타 어워드 리스트 (좌측) */}
           <div className="flex-1">
-            <h1 className="mb-5 text-xl font-bold text-gray-600 @lg:text-2xl">
+            <h1 className="mb-5 text-xl font-bold @lg:text-2xl">
               덕스타 어워드
             </h1>
             <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
@@ -85,7 +85,7 @@ export default function AwardPage() {
                   <Link
                     key={survey.surveyId}
                     href={`/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`}
-                    className="group relative flex min-h-32 flex-col overflow-hidden rounded-lg bg-white shadow-lg shadow-gray-200/80 @lg:min-h-48"
+                    className="group relative flex min-h-32 flex-col overflow-hidden rounded-lg shadow-lg shadow-gray-200/80 @lg:min-h-48 dark:bg-zinc-800 dark:shadow-none"
                   >
                     <div className="relative w-full">
                       <img
@@ -130,11 +130,11 @@ export default function AwardPage() {
                               {getStatusText(survey.status)}
                             </span>
                           )}
-                          <h2 className="text-base font-semibold text-gray-600 transition-all duration-300 @sm:text-lg @md:text-xl">
+                          <h2 className="text-base font-semibold text-gray-600 transition-all duration-300 @sm:text-lg @md:text-xl dark:text-white">
                             {survey.year} {getSurveyTypeLabel(survey.type)}
                           </h2>
                         </div>
-                        <div className="text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base">
+                        <div className="text-sm font-medium text-gray-500/80 @max-sm:text-xs @md:text-base dark:text-white/80">
                           {format(survey.startDateTime, 'M월 d일 H시')} -{' '}
                           {format(survey.endDateTime, 'M월 d일 H시')}
                         </div>
@@ -148,7 +148,7 @@ export default function AwardPage() {
                                 `/award/${survey.year}/${survey.type.toLowerCase()}/${survey.surveyId}`
                               );
                             }}
-                            className="flex w-full items-center justify-center rounded-full bg-white/80 px-6 text-xs font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-sm"
+                            className="flex w-full items-center justify-center rounded-full bg-white/80 px-6 text-xs font-semibold text-gray-500 transition-all duration-300 hover:opacity-80 @md:text-sm dark:bg-zinc-800 dark:text-zinc-200"
                           >
                             {getButtonText(
                               survey.status,

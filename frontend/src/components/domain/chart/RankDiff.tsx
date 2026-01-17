@@ -1,4 +1,5 @@
 import { cn } from '@/lib';
+import { BiSolidRightArrow } from 'react-icons/bi';
 
 interface RankDiffProps {
   property1:
@@ -41,12 +42,8 @@ export default function RankDiff({
 
   if (property1 === 'same-rank') {
     return (
-      <div className={CONTAINER_CLASS}>
-        <img
-          src="/icons/consecutive.svg"
-          alt="same-rank"
-          className="size-2.5"
-        />
+      <div className={`${CONTAINER_CLASS} dark:text-zinc-400`}>
+        <BiSolidRightArrow size={10} />
         <span className={cn('text-xs', isTopTen && 'text-base')}>
           {value}주
         </span>

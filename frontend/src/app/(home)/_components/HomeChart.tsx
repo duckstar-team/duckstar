@@ -93,7 +93,7 @@ export default function HomeChart({
         }
       `}</style>
       <div
-        className={`w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[750px] ${className}`}
+        className={`w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[750px] dark:border-none dark:bg-zinc-800 ${className}`}
       >
         {/* 차트 컨텐츠 */}
         <div className="relative p-5">
@@ -252,7 +252,7 @@ export default function HomeChart({
           <div className="mt-4 flex justify-end">
             <button
               onClick={handleMoreClick}
-              className="cursor-pointer text-sm font-normal text-gray-600 transition-colors duration-200 hover:text-gray-800 sm:text-base md:text-lg"
+              className="cursor-pointer text-sm font-normal text-zinc-500 transition-colors duration-200 hover:text-zinc-400 sm:text-base md:text-lg"
             >
               더보기
             </button>
