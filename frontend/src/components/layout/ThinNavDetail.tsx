@@ -200,7 +200,7 @@ export default function ThinNavDetail({ mode }: ThinNavDetailProps) {
   const menuItems = generateMenuItems();
 
   return (
-    <div className="h-screen space-y-4 bg-[#212529] px-2 pt-6">
+    <div className="h-screen space-y-4 bg-zinc-800 px-2 pt-6">
       {/* 차트/결산 투표 제목 */}
       <h2 className="px-4 text-xl font-semibold text-white">
         {mode === 'award' ? '결산 투표' : '차트'}

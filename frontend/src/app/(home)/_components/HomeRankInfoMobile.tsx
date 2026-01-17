@@ -99,7 +99,7 @@ export default function HomeRankInfoMobile({
 
   return (
     <div
-      className={`relative h-24 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-3 transition-colors hover:bg-gray-50 sm:px-4 ${className}`}
+      className={`relative h-24 w-full cursor-pointer rounded-xl border border-gray-200 px-3 py-3 transition-colors hover:bg-gray-50 sm:px-4 dark:border-none dark:bg-zinc-900 dark:hover:bg-zinc-900/50 ${className}`}
       onClick={handleClick}
     >
       <div className="flex h-full w-full items-center gap-2 sm:gap-3 md:gap-4">
@@ -152,7 +152,7 @@ export default function HomeRankInfoMobile({
           </div>
 
           <div
-            className={`line-clamp-2 w-full justify-start text-sm leading-snug font-semibold text-black sm:text-base md:text-lg ${isTopThree ? 'pr-8' : ''}`}
+            className={`line-clamp-2 w-full justify-start text-sm leading-snug font-semibold sm:text-base md:text-lg ${isTopThree ? 'pr-8' : ''}`}
           >
             {title}
           </div>

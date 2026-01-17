@@ -52,7 +52,7 @@ const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
           filter: candidate.state === 'CLOSED' ? 'grayscale(100%)' : 'none',
         }}
       />
-      <p className="line-clamp-2 text-sm leading-tight font-semibold text-black">
+      <p className="line-clamp-2 text-sm leading-tight font-medium">
         {candidate.titleKor}
       </p>
     </div>
@@ -155,7 +155,7 @@ export default function VoteCandidateList({
   return (
     <div className="mt-16">
       <div className="flex items-end gap-4">
-        <h1 className="text-2xl font-bold text-black">{title}</h1>
+        <h1 className="text-2xl font-bold">{title}</h1>
         <span className="text-xs text-gray-400">
           {searchQuery.trim()
             ? `검색 결과 ${filteredCandidates.length}개 / 전체 ${candidates.length}개 작품`
@@ -177,7 +177,7 @@ export default function VoteCandidateList({
             aria-label="이전 페이지"
             onClick={handlePrev}
             disabled={totalPages <= 1}
-            className="absolute top-1/3 -left-4 z-1 rounded-full border border-white/20 bg-white p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30"
+            className="absolute top-1/3 -left-4 z-1 rounded-full border border-white/20 p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30 dark:hover:bg-zinc-900/80"
           >
             <ChevronLeft className="h-8 w-8 stroke-1 text-gray-500" />
           </button>
@@ -187,7 +187,7 @@ export default function VoteCandidateList({
             aria-label="다음 페이지"
             onClick={handleNext}
             disabled={totalPages <= 1}
-            className="absolute top-1/3 -right-4 z-1 rounded-full border border-white/20 bg-white p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30"
+            className="absolute top-1/3 -right-4 z-1 rounded-full border border-white/20 p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30 dark:hover:bg-zinc-900/80"
           >
             <ChevronRight className="h-8 w-8 stroke-1 text-gray-500" />
           </button>
@@ -237,7 +237,9 @@ export default function VoteCandidateList({
                   type="button"
                   onClick={() => setCurrentPage(index)}
                   className={`h-2.5 w-2.5 rounded-full transition ${
-                    index === currentPage ? 'bg-amber-400' : 'bg-gray-800/30'
+                    index === currentPage
+                      ? 'bg-amber-400'
+                      : 'bg-gray-800/30 dark:bg-zinc-400/30'
                   }`}
                   aria-label={`${index + 1}번째 페이지로 이동`}
                 />

@@ -185,11 +185,11 @@ export default function DaySelection({
     <>
       {/* 모바일: select option 형태 */}
       <div className="flex-1 md:hidden">
-        <div className="relative rounded-xl border border-gray-300 bg-white px-3 py-2">
+        <div className="relative rounded-xl border border-gray-300 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
           <select
             value={selectedDay}
             onChange={(e) => onDaySelect(e.target.value as DayOfWeek)}
-            className="w-full cursor-pointer appearance-none border-none pr-6 text-sm font-medium text-gray-900 outline-none"
+            className="w-full cursor-pointer appearance-none border-none pr-6 text-sm font-medium text-gray-900 outline-none dark:text-white"
           >
             {getDays(isThisWeek).map((day) => (
               <option key={day} value={day}>

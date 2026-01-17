@@ -317,7 +317,7 @@ export default function AnimeDetailClient() {
               {/* 왼쪽 영역: 스켈레톤 로딩 */}
               <div className="max-w-[584px] min-w-0 flex-1">
                 <div
-                  className="animate-pulse rounded-2xl bg-white shadow-lg"
+                  className="animate-pulse rounded-2xl shadow-lg"
                   style={{ minHeight: 'calc(100vh - 120px)' }}
                 >
                   {/* 메인 이미지 스켈레톤 */}
@@ -407,7 +407,7 @@ export default function AnimeDetailClient() {
             <div className="mx-auto max-w-7xl">
               <div className="mx-auto max-w-[584px] pt-[30px]">
                 <div
-                  className="animate-pulse rounded-2xl bg-white shadow-lg"
+                  className="animate-pulse rounded-2xl shadow-lg"
                   style={{ minHeight: 'calc(100vh - 120px)' }}
                 >
                   {/* 메인 이미지 스켈레톤 */}
@@ -500,7 +500,7 @@ export default function AnimeDetailClient() {
   return (
     <main
       className="w-full max-w-full overflow-x-hidden overflow-y-visible"
-      style={{ backgroundColor: '#F8F9FA', minHeight: 'calc(100vh - 60px)' }}
+      style={{ minHeight: 'calc(100vh - 60px)' }}
     >
       {/* 숨겨진 파일 입력 필드 */}
       <input

@@ -62,13 +62,13 @@ export default function AbroadRankInfo({
   };
   return (
     <div
-      className={`relative h-24 w-full overflow-hidden rounded-xl bg-white px-3 outline outline-gray-200 sm:px-4 xl:w-80 ${contentId ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'} transition-colors ${className}`}
+      className={`relative h-24 w-full overflow-hidden rounded-xl bg-white px-3 outline outline-gray-200 sm:px-4 xl:w-80 dark:bg-zinc-900 dark:outline-none ${contentId ? 'cursor-pointer hover:bg-gray-50 hover:dark:bg-zinc-900/50' : 'cursor-default'} transition-colors ${className}`}
       onClick={handleClick}
     >
       <div className="flex h-full w-full items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5">
         {/* 순위와 변화 - HomeRankInfo와 동일한 레이아웃 */}
         <div className="flex w-5 flex-col items-center gap-1">
-          <div className="justify-start text-center text-xl leading-snug font-bold text-gray-500 sm:text-2xl md:text-3xl">
+          <div className="justify-start text-center text-xl leading-snug font-bold text-gray-500 sm:text-2xl md:text-3xl dark:text-zinc-100">
             {rank}
           </div>
           <div className="inline-flex items-center justify-center gap-px self-stretch">
@@ -104,7 +104,7 @@ export default function AbroadRankInfo({
 
         {/* 제목과 스튜디오 */}
         <div className="inline-flex flex-1 flex-col items-start justify-start">
-          <div className="line-clamp-2 w-full justify-start text-sm leading-snug font-semibold text-black sm:text-base md:text-lg">
+          <div className="line-clamp-2 w-full justify-start text-sm leading-snug font-semibold sm:text-base md:text-lg">
             {title}
           </div>
           <div className="justify-start truncate text-center text-xs leading-snug font-normal text-gray-400 sm:text-sm">

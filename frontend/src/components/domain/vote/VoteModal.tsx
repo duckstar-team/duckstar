@@ -295,7 +295,10 @@ export default function VoteModal({
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex h-full w-full items-center justify-center bg-white/20 p-4"
         >
-          <div className="fixed inset-0 bg-black/20" onClick={onClose} />
+          <div
+            className="fixed inset-0 bg-black/20 dark:bg-black/80"
+            onClick={onClose}
+          />
           <motion.div
             ref={modalRef}
             layout
@@ -303,7 +306,7 @@ export default function VoteModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="relative z-60 rounded-lg border border-gray-200 bg-white p-6 pr-8"
+            className="relative z-60 rounded-lg border border-gray-200 bg-white p-6 pr-8 dark:border-none dark:bg-zinc-800"
             style={{
               marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
             }}
@@ -314,7 +317,7 @@ export default function VoteModal({
               onClick={onClose}
             />
             <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-black dark:text-white">
                 {hasVoted ? (
                   <>
                     <FaCheckCircle size={24} className="text-amber-400" />
@@ -324,7 +327,7 @@ export default function VoteModal({
                   '투표 시간 이후 참여'
                 )}
               </h2>
-              <span className="rounded-full border border-gray-400 px-2 py-0.5 text-xs text-gray-500">
+              <span className="rounded-full border border-zinc-400 px-2 py-0.5 text-xs text-zinc-500 dark:text-zinc-200">
                 {quarter}분기 {week}주차 투표
               </span>
             </div>
@@ -350,7 +353,7 @@ export default function VoteModal({
                 </Link>
                 <Link
                   href={`/animes/${candidate?.animeId}`}
-                  className="line-clamp-2 text-left text-sm font-semibold text-gray-900 hover:text-[#990033]"
+                  className="hover:text-brand line-clamp-2 text-left text-sm font-semibold text-gray-900 dark:text-zinc-100"
                 >
                   {titleKor}
                 </Link>

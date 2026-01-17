@@ -13,9 +13,7 @@ export default function FilteredResultsSection({
   return (
     <div>
       <div className="mb-6 flex items-end gap-3">
-        <h2 className="text-lg font-bold text-gray-900 sm:text-2xl">
-          필터링 결과
-        </h2>
+        <h2 className="text-lg font-bold sm:text-2xl">필터링 결과</h2>
         <span className="text-[12px] font-normal text-[#868E96]">
           {animes.length}개의 애니메이션
         </span>

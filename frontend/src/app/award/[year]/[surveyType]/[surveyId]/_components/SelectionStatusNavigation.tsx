@@ -72,8 +72,8 @@ export default function SelectionStatusNavigation({
             ? 'justify-start px-2 py-1.5 sm:px-2.5 sm:py-1.5 md:px-3 md:py-2'
             : 'justify-center py-1.5 sm:py-1.5 md:py-2',
           isFiltered
-            ? 'text-brand bg-[#990033]/10 font-semibold'
-            : 'bg-white text-gray-900 hover:bg-[#990033]/5'
+            ? 'text-brand bg-brand/10 font-semibold'
+            : 'hover:bg-brand/5 bg-white text-gray-900'
         )}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -89,7 +89,7 @@ export default function SelectionStatusNavigation({
           )}
         >
           {/* 기본 상태: 체크박스 아이콘 표시 */}
-          <CheckSquare2 className="h-3 w-3 flex-shrink-0 text-[#990033] transition-all duration-150 sm:h-4 sm:w-4" />
+          <CheckSquare2 className="text-brand h-3 w-3 flex-shrink-0 transition-all duration-150 sm:h-4 sm:w-4" />
           {/* 호버 시 텍스트 표시 */}
           <motion.span
             className={cn(isHovered ? 'flex-1' : 'w-0')}

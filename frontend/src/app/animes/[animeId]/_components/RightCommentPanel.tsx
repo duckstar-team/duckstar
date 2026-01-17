@@ -1044,7 +1044,7 @@ export default function RightCommentPanel({
       ) : (
         <div
           ref={rightPanelRef}
-          className="w-full border-r border-l border-gray-300 bg-white"
+          className="w-full border-r border-l border-gray-300 dark:border-zinc-800"
           style={{
             minHeight: '100% + 60px',
             maxWidth: '100%',
@@ -1078,7 +1078,7 @@ export default function RightCommentPanel({
               )}
               <div
                 ref={commentHeaderRef}
-                className="z-30 bg-white pb-3"
+                className="z-30 pb-3"
                 style={{
                   position: isCommentHeaderSticky ? 'fixed' : 'static',
                   top: isCommentHeaderSticky ? '60px' : 'auto',
@@ -1095,7 +1095,7 @@ export default function RightCommentPanel({
                     : '100%',
                 }}
               >
-                <div className="size- flex flex-col items-start justify-start gap-5">
+                <div className="flex flex-col items-start justify-start gap-5">
                   <CommentHeader
                     totalComments={totalCommentCount}
                     variant={
@@ -1114,9 +1114,9 @@ export default function RightCommentPanel({
           {!isImageModalOpen && (
             <div
               data-comment-form
-              className="flex w-full flex-col items-center justify-center gap-2.5 px-0 pt-5"
+              className="flex w-full flex-col items-center justify-center gap-2.5"
             >
-              <div className="flex w-full max-w-[100%] flex-col items-center justify-center gap-[10px] self-stretch overflow-hidden bg-[#F8F9FA] px-[11px] pt-[10px] pb-[16px]">
+              <div className="flex w-full max-w-[100%] flex-col items-center justify-center gap-[10px] self-stretch overflow-hidden px-6 pb-[16px]">
                 {/* First Row - Episode Comment Header */}
                 <div className="inline-flex w-full items-center justify-end">
                   <button
@@ -1188,7 +1188,7 @@ export default function RightCommentPanel({
               )}
               <div
                 ref={sortingMenuRef}
-                className="z-30 bg-white"
+                className="z-30"
                 style={{
                   position: isSortingMenuSticky ? 'fixed' : 'static',
                   top: isSortingMenuSticky
@@ -1219,7 +1219,7 @@ export default function RightCommentPanel({
           )}
 
           {/* 댓글 목록 */}
-          <div className="flex w-full flex-col bg-white">
+          <div className="flex w-full flex-col">
             {/* 댓글 목록 */}
             <div
               ref={commentListRef}

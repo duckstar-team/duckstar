@@ -604,7 +604,7 @@ export default function SearchPageContent({
 
   return (
     <main>
-      <div className="relative w-full bg-gray-100">
+      <div className="relative w-full bg-gray-100 dark:bg-zinc-800">
         {/* OTT 필터 탭 + 검색 바 */}
         <SearchFilterSection
           selectedOttServices={selectedOttServices}

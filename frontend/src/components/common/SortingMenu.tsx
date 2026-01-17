@@ -160,7 +160,7 @@ const SortingMenu: React.FC<SortingMenuProps> = ({
       >
         {/* 모든 탭 아래에 이어지는 회색 선 */}
         <div
-          className="absolute bottom-0 h-[0.743px] bg-[#adb5bd]"
+          className="absolute bottom-0 h-[0.743px] bg-[#adb5bd] dark:bg-gray-700"
           style={{
             left: '0px',
             right: '0px',
@@ -169,7 +169,7 @@ const SortingMenu: React.FC<SortingMenuProps> = ({
 
         {/* 선택된 정렬의 네비게이션 바 */}
         <div
-          className="absolute bottom-0 h-[1.856px] bg-[#990033]"
+          className="bg-brand absolute bottom-0 h-[1.856px]"
           style={{
             width: selectedBarStyle.width,
             left: selectedBarStyle.left,
@@ -180,7 +180,7 @@ const SortingMenu: React.FC<SortingMenuProps> = ({
 
         {/* 호버된 정렬의 네비게이션 바 */}
         <div
-          className="absolute bottom-0 h-[1.856px] bg-[#990033]"
+          className="bg-brand absolute bottom-0 h-[1.856px]"
           style={{
             width: hoveredBarStyle.width,
             left: hoveredBarStyle.left,
@@ -217,7 +217,7 @@ const SortingMenu: React.FC<SortingMenuProps> = ({
                 className={cn(
                   `justify-start text-center leading-snug font-normal transition-colors duration-200 ${isVerySmallScreen ? 'text-[16px]' : 'text-[18px]'}`,
                   isSelected || isHovered
-                    ? 'font-semibold text-[#990033]'
+                    ? 'text-brand font-semibold'
                     : 'font-normal text-[#adb5bd]'
                 )}
               >

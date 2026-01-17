@@ -437,11 +437,11 @@ export default function AnimeCard({
     <div
       data-anime-item
       className={cn(
-        'overflow-hidden rounded-lg bg-white transition-all duration-200 hover:scale-[1.02] sm:rounded-2xl',
+        'overflow-hidden rounded-lg bg-white transition-all duration-200 hover:scale-[1.02] sm:rounded-2xl dark:bg-zinc-800',
         'flex h-full w-full max-w-[250px] flex-col sm:max-w-[280px]',
         'shadow-[0_1.9px_7.2px_rgba(0,0,0,0.1)]',
         'cursor-pointer',
-        isCurrentlyAiring() && 'ring-2 ring-[#990033]',
+        isCurrentlyAiring() && 'ring-brand ring-2',
         className
       )}
       onClick={handleCardClick}
@@ -533,7 +533,7 @@ export default function AnimeCard({
         {/* Live Badge - 현재 방영중인 경우에만 표시 */}
         {isCurrentlyAiring() && (
           <div className="absolute top-3 left-16">
-            <span className="rounded bg-[#990033] px-2 py-1 text-xs font-bold text-white">
+            <span className="bg-brand rounded px-2 py-1 text-xs font-bold text-white">
               라이브
             </span>
           </div>
@@ -554,7 +554,9 @@ export default function AnimeCard({
             <div
               className={cn(
                 'flex items-center rounded-md px-2 py-1',
-                isCurrentlyAiring() ? 'bg-[#990033]' : 'bg-yellow-400'
+                isCurrentlyAiring()
+                  ? 'bg-brand'
+                  : 'bg-yellow-400 dark:bg-[#FED783]'
               )}
             >
               <span
@@ -588,7 +590,7 @@ export default function AnimeCard({
           >
             <h3
               className={cn(
-                'line-clamp-2 leading-tight font-bold text-gray-900',
+                'line-clamp-2 leading-tight font-bold',
                 screenSize === 'mobile'
                   ? 'text-[12px]'
                   : 'text-[14px] sm:text-[16px]'
@@ -599,7 +601,7 @@ export default function AnimeCard({
 
             {/* 제목 아래 회색선 - 제목 프레임 내에서 아래 왼쪽 정렬 */}
             <div className="absolute bottom-0 left-0 h-0 w-[90px]">
-              <div className="h-[1px] w-full bg-[#ced4da]"></div>
+              <div className="h-[1px] w-full bg-[#ced4da] dark:bg-zinc-700"></div>
             </div>
           </div>
 
@@ -681,7 +683,9 @@ export default function AnimeCard({
                 <div
                   className={cn(
                     'flex items-center rounded-md px-2 py-0.5',
-                    isCurrentlyAiring() ? 'bg-[#990033]' : 'bg-yellow-400'
+                    isCurrentlyAiring()
+                      ? 'bg-brand'
+                      : 'bg-yellow-400 dark:bg-[#FED783]'
                   )}
                 >
                   <span
@@ -740,7 +744,9 @@ export default function AnimeCard({
               <div
                 className={cn(
                   'flex items-center rounded-md px-2 py-1',
-                  isCurrentlyAiring() ? 'bg-[#990033]' : 'bg-yellow-400'
+                  isCurrentlyAiring()
+                    ? 'bg-brand'
+                    : 'bg-yellow-400 dark:bg-[#FED783]'
                 )}
               >
                 <span

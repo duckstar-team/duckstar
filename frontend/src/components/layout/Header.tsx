@@ -75,7 +75,7 @@ export default function Header({ toggleMenu }: { toggleMenu: () => void }) {
   }, [isSearchOpen]);
 
   return (
-    <header className="flex h-15 w-full items-center justify-between border-b border-[#DADCE0] bg-white/80 p-4 backdrop-blur-sm transition md:pr-6 md:pl-4">
+    <header className="flex h-15 w-full items-center justify-between border-b border-[#DADCE0] bg-white/80 p-4 backdrop-blur-sm transition md:pr-6 md:pl-4 dark:border-zinc-800 dark:bg-zinc-900/80">
       <div className="flex items-center gap-4 md:gap-5">
         {/* Hamburger Menu Button */}
         <button type="button" aria-label="Open menu" onClick={toggleMenu}>

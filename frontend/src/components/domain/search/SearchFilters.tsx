@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib';
+import { MessageSquareMore } from 'lucide-react';
 
 interface SearchFiltersProps {
   className?: string;
@@ -37,29 +38,13 @@ export default function SearchFilters({
       )}
     >
       {/* 툴팁 - 데스크톱에서만 표시 */}
-      <div className="hidden items-center md:flex">
-        <div className="flex h-9 items-center justify-center rounded-[8px] bg-[#f1f2f3] py-0 pr-5 pl-2">
-          <div className="flex w-[34px] items-center justify-start gap-2.5 px-2.5 py-0">
-            <div className="relative h-3 w-3.5">
-              <img
-                src="/icons/searchSection-notify-icon.svg"
-                alt="Notification"
-                className="h-full w-full object-contain"
-              />
-            </div>
-          </div>
-          <div className="ml-2 flex flex-col items-start justify-start">
-            <div className="relative flex shrink-0 flex-col justify-center text-[14px] leading-[0] font-semibold text-nowrap text-[#23272b] not-italic">
-              <p className="leading-[normal] whitespace-pre">
-                신작 애니메이션을 검색해보세요.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="hidden h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-zinc-200 pr-5 pl-4 text-sm font-semibold md:flex dark:bg-zinc-700 dark:text-zinc-400">
+        <MessageSquareMore size={14} />
+        신작 애니메이션을 검색해보세요.
       </div>
 
       {/* OTT 필터 목록 - 선택된 OTT는 대기 리스트에서 숨김 */}
-      <div className="ml-2 flex items-center justify-center gap-[9px] sm:ml-8">
+      <div className="ml-2 flex items-center justify-center gap-[9px] md:ml-8">
         {ottServices.map((ott) => {
           const isSelected = selectedOttServices.includes(ott.name);
 

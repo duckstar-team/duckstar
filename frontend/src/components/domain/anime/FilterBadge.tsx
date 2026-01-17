@@ -15,7 +15,7 @@ export default function FilterBadge({
 }: FilterBadgeProps) {
   return (
     <div
-      className={`flex items-center justify-center gap-[7px] rounded-[8.814px] bg-[#990033] px-[7.712px] py-[2.203px] ${className}`}
+      className={`bg-brand flex items-center justify-center gap-[7px] rounded-[8.814px] px-[7.712px] py-[2.203px] ${className}`}
     >
       <div className="flex items-center justify-start gap-[5px] px-px py-0">
         <div className="text-[12px] leading-[0] whitespace-nowrap text-white not-italic">

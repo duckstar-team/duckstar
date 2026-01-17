@@ -97,7 +97,7 @@ export default function DownloadBtn() {
   return (
     <button
       onClick={handleClick}
-      className="rounded-full p-2 transition hover:bg-gray-200"
+      className="rounded-full p-2 transition hover:bg-gray-200 dark:hover:bg-zinc-800"
       aria-label="이미지 다운로드"
       title="이미지 다운로드"
     >

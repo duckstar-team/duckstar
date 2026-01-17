@@ -71,7 +71,7 @@ export default function RightPanel({
 
   return (
     <div
-      className={`w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[373px] ${className}`}
+      className={`w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[373px] dark:border-zinc-800 dark:bg-zinc-800 ${className}`}
     >
       <div className="relative p-5">
         {rightPanelLoading ? (
@@ -147,7 +147,7 @@ export default function RightPanel({
             <div className="mt-4 flex justify-end">
               <button
                 onClick={handleMoreClick}
-                className="cursor-pointer text-sm font-normal text-gray-600 transition-colors duration-200 hover:text-gray-800 sm:text-base md:text-lg"
+                className="cursor-pointer text-sm font-normal text-zinc-500 transition-colors duration-200 hover:text-zinc-400 sm:text-base md:text-lg"
               >
                 더보기
               </button>
@@ -164,11 +164,11 @@ export default function RightPanel({
                   className="bg-gray-10 h-24 w-full rounded-xl opacity-50"
                 >
                   <div className="flex h-full items-center justify-center space-x-4 p-4">
-                    <div className="h-5 w-5 rounded bg-gray-100"></div>
-                    <div className="h-20 w-14 rounded-lg bg-gray-100"></div>
+                    <div className="h-5 w-5 rounded bg-gray-100 dark:bg-zinc-800"></div>
+                    <div className="h-20 w-14 rounded-lg bg-gray-100 dark:bg-zinc-800"></div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 w-3/4 rounded bg-gray-100"></div>
-                      <div className="h-3 w-1/2 rounded bg-gray-100"></div>
+                      <div className="h-4 w-3/4 rounded bg-gray-100 dark:bg-zinc-800"></div>
+                      <div className="h-3 w-1/2 rounded bg-gray-100 dark:bg-zinc-800"></div>
                     </div>
                   </div>
                 </div>
@@ -185,10 +185,10 @@ export default function RightPanel({
                   <div className="mb-4 text-6xl text-gray-400 opacity-90">
                     🇯🇵
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold text-gray-600">
+                  <h3 className="mb-2 text-lg font-semibold text-gray-600 dark:text-white">
                     해외 순위 데이터 준비 중..
                   </h3>
-                  <p className="text-center text-sm text-gray-500">
+                  <p className="text-center text-sm text-gray-500 dark:text-white">
                     Anilab 순위는 일 22:00 공개
                   </p>
                 </>
@@ -197,10 +197,10 @@ export default function RightPanel({
                   <div className="mb-4 text-6xl text-gray-400 opacity-90">
                     🌍
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold text-gray-600">
+                  <h3 className="mb-2 text-lg font-semibold text-gray-600 dark:text-white">
                     해외 순위 데이터 준비 중..
                   </h3>
-                  <p className="text-center text-sm text-gray-500">
+                  <p className="text-center text-sm text-gray-500 dark:text-white">
                     해당 주차의 해외 순위 데이터가
                     <br />
                     아직 준비되지 않았습니다.

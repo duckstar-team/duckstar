@@ -55,8 +55,8 @@ export default function QuarterWeekLabel({
           <span
             className={`text-sm ${
               isSelected
-                ? 'font-semibold text-[#990033] underline decoration-solid'
-                : 'font-light text-black'
+                ? 'text-brand font-semibold underline decoration-solid'
+                : 'font-light'
             }`}
           >
             {quarter}
@@ -65,8 +65,8 @@ export default function QuarterWeekLabel({
           <span
             className={`text-base ${
               isSelected
-                ? 'font-semibold text-[#990033] underline decoration-solid'
-                : 'font-medium text-black'
+                ? 'text-brand font-semibold underline decoration-solid'
+                : 'font-medium'
             }`}
           >
             {week}
@@ -107,7 +107,7 @@ export default function QuarterWeekLabel({
           <span
             className={`text-sm ${
               isSelected
-                ? 'font-semibold text-[#990033] underline decoration-solid'
+                ? 'text-brand font-semibold underline decoration-solid'
                 : 'font-light'
             }`}
             style={{ color: isSelected ? '#990033' : '#FFB310' }}
@@ -117,7 +117,7 @@ export default function QuarterWeekLabel({
           </span>
           <span
             className={`text-base font-semibold ${
-              isSelected ? 'text-[#990033] underline decoration-solid' : ''
+              isSelected ? 'text-brand underline decoration-solid' : ''
             }`}
             style={{ color: isSelected ? '#990033' : '#FFB310' }}
           >
