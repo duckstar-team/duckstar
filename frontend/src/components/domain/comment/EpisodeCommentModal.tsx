@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import EpisodeSection from '../anime/EpisodeSection';
 import CommentPostForm from './CommentPostForm';
 import { getThisWeekRecord, cn } from '@/lib';
@@ -203,7 +203,7 @@ export default function EpisodeCommentModal({
         {/* 모달 컨테이너 - 사이드바와 헤더를 제외한 메인 프레임 중앙 정렬 */}
         <div
           className={cn(
-            'relative mx-4 max-h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-2xl',
+            'relative mx-4 max-h-[calc(100vh-120px)] w-full overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-zinc-900',
             isSmallScreen ? 'max-w-xs' : 'max-w-2xl'
           )}
           onClick={(e) => e.stopPropagation()}
@@ -212,18 +212,16 @@ export default function EpisodeCommentModal({
           }}
         >
           {/* 헤더 */}
-          <div className="flex items-center justify-between border-b border-gray-200 p-6">
+          <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-zinc-800">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                에피소드 댓글 작성
-              </h2>
+              <h2 className="text-xl font-bold">에피소드 댓글 작성</h2>
               <p className="mt-1 text-sm text-gray-500">
                 지난 에피소드에 댓글을 작성할 수 있습니다.
               </p>
             </div>
             <button
               onClick={onClose}
-              className="rounded-full p-2 transition-colors hover:bg-gray-100"
+              className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-zinc-800"
             >
               <X className="h-5 w-5 text-gray-500" />
             </button>
@@ -233,12 +231,10 @@ export default function EpisodeCommentModal({
           <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-6">
             {/* 에피소드 섹션 */}
             <div className="mb-6">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                에피소드 선택
-              </h3>
+              <h3 className="mb-4 text-lg font-semibold">에피소드 선택</h3>
               {isSmallScreen ? (
                 /* 768px 미만: 드롭다운 메뉴 */
-                <div className="space-y-3">
+                <div className="relative space-y-3">
                   <select
                     value={selectedEpisodeIds[0] || ''}
                     onChange={(e) => {
@@ -249,7 +245,7 @@ export default function EpisodeCommentModal({
                         setSelectedEpisodeIds([]);
                       }
                     }}
-                    className="w-full rounded-lg border border-gray-300 p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="webkit-appearance-none w-full appearance-none rounded-lg border border-zinc-300 p-3 focus:border-zinc-600 focus:ring-2 focus:ring-zinc-700 focus:outline-zinc-500 dark:border-zinc-800"
                   >
                     <option value="">에피소드를 선택하세요</option>
                     {finalEpisodes.map((episode: EpisodeDto) => (
@@ -259,6 +255,9 @@ export default function EpisodeCommentModal({
                       </option>
                     ))}
                   </select>
+                  <div className="absolute top-1/4 right-3">
+                    <ChevronDown size={20} className="text-zinc-500" />
+                  </div>
                   {selectedEpisodeIds.length > 0 && (
                     <div className="text-sm text-gray-600">
                       선택된 에피소드: {selectedEpisodeIds.length}개
@@ -283,9 +282,7 @@ export default function EpisodeCommentModal({
             {/* 댓글 작성 섹션 */}
             <div>
               <div className="mb-4 flex items-center gap-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  댓글 작성
-                </h3>
+                <h3 className="text-lg font-semibold">댓글 작성</h3>
                 {selectedEpisodeIds.length > 0 && (
                   <div className="text-2xl font-bold text-[#FFB310]">
                     {
@@ -318,25 +315,23 @@ export default function EpisodeCommentModal({
                 </div>
               )}
 
-              <div className="flex justify-center rounded-lg bg-gray-50 p-4">
-                <div className="w-full max-w-[534px]">
-                  <CommentPostForm
-                    onSubmit={handleCommentSubmit}
-                    onImageUpload={(file) => {
-                      // 이미지 업로드 기능 활성화
-                    }}
-                    placeholder="선택한 에피소드에 대한 댓글을 작성해주세요."
-                  />
-                </div>
+              <div className="mx-auto w-full max-w-[534px]">
+                <CommentPostForm
+                  onSubmit={handleCommentSubmit}
+                  onImageUpload={(file) => {
+                    // 이미지 업로드 기능 활성화
+                  }}
+                  placeholder="선택한 에피소드에 대한 댓글을 작성해주세요."
+                />
               </div>
             </div>
           </div>
 
           {/* 푸터 */}
-          <div className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 p-6">
+          <div className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-800"
+              className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-800 dark:text-white dark:hover:text-white/50"
             >
               취소
             </button>

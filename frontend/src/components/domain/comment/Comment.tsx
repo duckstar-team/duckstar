@@ -179,7 +179,7 @@ const Comment: React.FC<CommentProps> = ({
           <div className="relative flex w-full flex-wrap items-center justify-start gap-2">
             <div className="flex flex-wrap items-center justify-start gap-[5px]">
               {/* 작성자명 */}
-              <div className="justify-start text-base leading-snug font-semibold whitespace-nowrap text-black">
+              <div className="justify-start text-base leading-snug font-semibold whitespace-nowrap">
                 {author}
               </div>
 
@@ -239,7 +239,7 @@ const Comment: React.FC<CommentProps> = ({
           {/* 댓글 내용 */}
           <div className="flex flex-col gap-2 self-stretch">
             {content && (
-              <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap text-black">
+              <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap">
                 {content}
               </div>
             )}
@@ -265,20 +265,16 @@ const Comment: React.FC<CommentProps> = ({
             <div className="relative flex shrink-0 content-stretch items-center justify-start gap-2">
               <button
                 onClick={() => onLike?.(commentId)}
-                className={`relative size-5 shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70 ${isLiked ? 'opacity-100' : 'opacity-60'}`}
+                className={`relative size-4 shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70 ${isLiked ? 'opacity-100' : 'opacity-60'}`}
                 aria-label={isLiked ? '좋아요 취소' : '좋아요'}
               >
-                <div className="absolute inset-[9.07%_3.55%_8.86%_3.57%]">
-                  <div className="absolute inset-[-4.35%_-3.85%_-4.35%_-3.84%]">
-                    <img
-                      alt="좋아요 아이콘"
-                      className="block size-full max-w-none"
-                      src={isLiked ? imgCommentLiked : imgCommentUnliked}
-                    />
-                  </div>
-                </div>
+                <img
+                  alt="좋아요 아이콘"
+                  className="block size-full max-w-none"
+                  src={isLiked ? imgCommentLiked : imgCommentUnliked}
+                />
               </button>
-              <div className="justify-start text-base leading-snug font-semibold text-[#868e96]">
+              <div className="justify-start text-sm leading-snug font-medium text-gray-500 dark:text-white">
                 {likeCount}
               </div>
             </div>

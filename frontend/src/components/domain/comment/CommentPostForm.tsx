@@ -202,7 +202,7 @@ export default function CommentPostForm({
 
   return (
     <form
-      className="relative w-full rounded-[8px] bg-white"
+      className="relative w-full rounded-[8px] bg-white dark:bg-zinc-900"
       onSubmit={(e) => {
         e.preventDefault();
         handleSubmit();
@@ -236,7 +236,7 @@ export default function CommentPostForm({
             }
             maxLength={maxLength}
             disabled={disabled || phase === 'summary'}
-            className="h-full w-full cursor-auto resize-none border-none bg-transparent px-1 text-base leading-normal font-normal text-black outline-none placeholder:text-[#c7c7cc] disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-full w-full cursor-auto resize-none border-none bg-transparent px-1 text-base leading-normal font-normal outline-none placeholder:text-zinc-400 disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 
@@ -315,7 +315,7 @@ export default function CommentPostForm({
             </div>
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 border-[1px_0px_0px] border-solid border-[#adb5bd]"
+              className="pointer-events-none absolute inset-0 border-[1px_0px_0px] border-solid border-[#adb5bd] dark:border-zinc-800"
             />
           </div>
 
@@ -358,7 +358,7 @@ export default function CommentPostForm({
       </div>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[8px] border border-solid border-[#adb5bd]"
+        className="pointer-events-none absolute inset-0 rounded-[8px] border border-[#adb5bd] dark:border-zinc-800"
       />
     </form>
   );

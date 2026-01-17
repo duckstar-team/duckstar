@@ -30,7 +30,7 @@ export default function Sidebar() {
   return (
     <div className="flex h-screen">
       <div
-        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5"
+        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5 dark:border-zinc-800 dark:bg-zinc-900"
         onMouseEnter={
           isThinNavPage ? () => setIsThinNavHovered(true) : undefined
         }
@@ -54,7 +54,7 @@ export default function Sidebar() {
                 <motion.button
                   type="button"
                   className={cn(
-                    'flex h-10 items-center overflow-hidden rounded-lg hover:bg-[#ffd4e2]',
+                    'flex h-10 items-center overflow-hidden rounded-lg hover:bg-[#ffd4e2] dark:hover:bg-zinc-800',
                     isActive && 'bg-gradient-to-r from-[#cb285e] to-[#9c1f49]'
                   )}
                   animate={{
@@ -77,7 +77,7 @@ export default function Sidebar() {
                       'overflow-hidden whitespace-nowrap max-md:text-sm',
                       isActive
                         ? 'font-bold text-white'
-                        : 'font-medium text-gray-500'
+                        : 'font-medium text-gray-500 dark:text-white'
                     )}
                     animate={{
                       opacity: isThinNav ? 0 : 1,
@@ -101,17 +101,26 @@ export default function Sidebar() {
           {!isThinNavPage && (
             <footer className="ml-1 flex flex-col text-sm text-gray-500">
               {/* 상단 링크 */}
-              <Link href="/about" className="hover:text-gray-800">
+              <Link
+                href="/about"
+                className="hover:text-gray-800 dark:hover:text-zinc-200"
+              >
                 덕스타 소개
               </Link>
 
               {/* 하단 링크들 */}
               <div className="flex items-center gap-[5px]">
-                <Link href="/terms" className="hover:text-gray-800">
+                <Link
+                  href="/terms"
+                  className="hover:text-gray-800 dark:hover:text-zinc-200"
+                >
                   이용약관
                 </Link>
                 <span>·</span>
-                <Link href="/privacy-policy" className="hover:text-gray-800">
+                <Link
+                  href="/privacy-policy"
+                  className="hover:text-gray-800 dark:hover:text-zinc-200"
+                >
                   개인정보처리방침
                 </Link>
               </div>

@@ -52,7 +52,7 @@ export default function Pagination({
           'flex h-8 w-8 items-center justify-center rounded-full',
           !paginationData.hasPrev
             ? 'cursor-not-allowed! opacity-20'
-            : 'text-gray-500 hover:bg-gray-200/50'
+            : 'text-gray-500 hover:bg-gray-200/50 dark:hover:bg-zinc-800'
         )}
         onClick={handlePrev}
         disabled={!paginationData.hasPrev}
@@ -67,8 +67,8 @@ export default function Pagination({
           className={cn(
             'h-8 w-8 rounded-full',
             page === currentPage
-              ? 'bg-gray-200 text-black'
-              : 'hover:bg-gray-200/50'
+              ? 'bg-gray-200 text-black dark:bg-zinc-700 dark:text-zinc-200'
+              : 'hover:bg-gray-200/50 dark:hover:bg-zinc-800'
           )}
         >
           {page}
@@ -80,7 +80,7 @@ export default function Pagination({
           'flex h-8 w-8 items-center justify-center rounded-full',
           !paginationData.hasNext
             ? 'cursor-not-allowed! opacity-20'
-            : 'text-gray-500 hover:bg-gray-200/50'
+            : 'text-gray-500 hover:bg-gray-200/50 dark:hover:bg-zinc-800'
         )}
         onClick={handleNext}
         disabled={!paginationData.hasNext}

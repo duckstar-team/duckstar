@@ -21,7 +21,7 @@ export default function RankCard({ anime }: RankCardProps) {
       {/* 메인 카드 */}
       <div
         className={cn(
-          'xs:pl-3 xs:gap-[16px] flex w-full cursor-pointer items-center gap-[12px] border border-[#D1D1D6] bg-white pl-2 transition-all duration-200 hover:bg-gray-50 sm:gap-[26px] sm:pl-5',
+          'xs:pl-3 xs:gap-[16px] flex w-full cursor-pointer items-center gap-[12px] border border-[#D1D1D6] bg-white pl-2 transition-all duration-200 hover:bg-gray-50 sm:gap-[26px] sm:pl-5 dark:border-none dark:bg-zinc-800 dark:hover:bg-zinc-800/50',
           !isWinner && 'h-[140px]',
           isExpanded ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'
         )}
@@ -35,7 +35,7 @@ export default function RankCard({ anime }: RankCardProps) {
           <div className="hidden @md:block">
             <MedalGrid medals={anime.medalPreviews} hideSeparators={false} />
           </div>
-          <div className="block h-[52px] w-0 border-l border-gray-300 @md:hidden"></div>
+          <div className="block h-[52px] w-0 border-l border-gray-300 @md:hidden dark:border-zinc-700"></div>
           <div className="inline-flex h-52 w-12 flex-col items-center justify-center">
             <ChevronDown
               size={18}

@@ -304,12 +304,12 @@ export default function SurveyResultComment({
       {/* 댓글 토글 버튼 */}
       <button
         onClick={() => setIsCommentOpen((prev) => !prev)}
-        className="flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-lg font-semibold text-gray-800"
+        className="flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-lg font-semibold text-gray-800 dark:bg-zinc-700 dark:text-zinc-200"
       >
         댓글 {commentTotalCount}개
         <ChevronDown
           className={cn(
-            'text-gray-500 transition',
+            'text-gray-500 transition dark:text-zinc-400',
             isCommentOpen && 'rotate-180'
           )}
         />

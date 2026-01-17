@@ -724,7 +724,7 @@ export default function LeftInfoPanel({
       >
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute z-50 rounded-[13px] border-2 border-solid border-[#ced4da] ${isMobile ? 'inset-0' : ''}`}
+          className={`pointer-events-none absolute z-50 rounded-[13px] border-2 border-solid border-[#ced4da] dark:border-zinc-800 ${isMobile ? 'inset-0' : ''}`}
           style={
             !isMobile
               ? { top: '-1px', left: '-1px', right: '-1px', bottom: '-1px' }
@@ -756,7 +756,7 @@ export default function LeftInfoPanel({
 
         {/* 메인 이미지 섹션 */}
         <div
-          className={`${isSmallScreen ? 'relative' : 'absolute'} top-0 left-0 w-full cursor-pointer overflow-clip rounded-tl-[12px] rounded-tr-[12px] bg-white transition-opacity duration-200 hover:opacity-95`}
+          className={`${isSmallScreen ? 'relative' : 'absolute'} top-0 left-0 w-full cursor-pointer overflow-clip rounded-tl-[12px] rounded-tr-[12px] transition-opacity duration-200 hover:opacity-95`}
           style={{ height: isSmallScreen ? 'auto' : `${mainImageHeight}px` }}
           onClick={handleImageClick}
           title="이미지를 클릭하여 크게 보기"
@@ -906,7 +906,7 @@ export default function LeftInfoPanel({
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === OttType.Lafel && (
+                    {ott.ottType === OttType.Laftel && (
                       <img
                         src="/icons/laftel-logo.svg"
                         alt="LAFTEL"
@@ -969,7 +969,7 @@ export default function LeftInfoPanel({
 
         {/* 하단 정보 패널 */}
         <div
-          className={`${isSmallScreen ? 'relative' : 'absolute'} left-0 flex w-full flex-col content-stretch items-center justify-start gap-[9.653px] overflow-clip rounded-br-[12px] rounded-bl-[12px] bg-white pb-[10px] ${isMobile ? 'px-1' : 'px-0'}`}
+          className={`${isSmallScreen ? 'relative' : 'absolute'} left-0 flex w-full flex-col content-stretch items-center justify-start gap-[9.653px] overflow-clip rounded-br-[12px] rounded-bl-[12px] bg-white pb-[10px] dark:bg-zinc-900 ${isMobile ? 'px-1' : 'px-0'}`}
           style={{
             top: isSmallScreen ? 'auto' : `${lowerPanelTop}px`,
             height: isSmallScreen ? 'auto' : `${lowerPanelHeight}px`,
@@ -987,7 +987,7 @@ export default function LeftInfoPanel({
           >
             {/* 선택된 탭의 네비게이션 바 */}
             <div
-              className="pointer-events-none absolute bottom-0 h-[1.856px] bg-[#990033]"
+              className="bg-brand pointer-events-none absolute bottom-0 h-[1.856px]"
               style={{
                 width: selectedBarStyle.width,
                 left: selectedBarStyle.left,
@@ -1003,7 +1003,7 @@ export default function LeftInfoPanel({
                 hoveredTab &&
                   tabOptions.find((opt) => opt.key === hoveredTab)?.isBeta
                   ? 'bg-gray-400'
-                  : 'bg-[#990033]'
+                  : 'bg-brand'
               )}
               style={{
                 width: hoveredBarStyle.width,
@@ -1043,7 +1043,7 @@ export default function LeftInfoPanel({
                       isBeta
                         ? 'font-normal text-[#adb5bd]'
                         : isSelected || isHovered
-                          ? 'font-semibold text-[#990033]'
+                          ? 'text-brand font-semibold'
                           : 'font-normal text-[#adb5bd]'
                     )}
                   >
@@ -1076,7 +1076,6 @@ export default function LeftInfoPanel({
                   ? 'auto'
                   : `${characterScrollContainerHeight}px`,
                 scrollbarWidth: 'thin',
-                scrollbarColor: '#CBD5E0 #F7FAFC',
               }}
             >
               <CharacterList
@@ -1097,7 +1096,6 @@ export default function LeftInfoPanel({
                     ? 'auto'
                     : `${characterScrollContainerHeight}px`,
                   scrollbarWidth: 'thin',
-                  scrollbarColor: '#CBD5E0 #F7FAFC',
                 }}
               >
                 <RightCommentPanel
@@ -1112,7 +1110,7 @@ export default function LeftInfoPanel({
           {/* 정보 내용 - 애니 정보와 분기 성적 탭용 */}
           {currentTab !== 'characters' && currentTab !== 'comments' && (
             <div
-              className={`relative w-full shrink-0 rounded-[12px] bg-[#f8f9fa] ${isMobile ? 'pr-2 pl-2' : 'pl-[25px]'}`}
+              className={`relative w-full shrink-0 rounded-[12px] bg-[#f8f9fa] dark:bg-zinc-900 ${isMobile ? 'pr-2 pl-2' : 'pl-[25px]'}`}
               style={{
                 height: isSmallScreen ? 'auto' : `${infoContentHeight}px`,
                 paddingTop: '10px',
@@ -1122,7 +1120,7 @@ export default function LeftInfoPanel({
             >
               {/* 스크롤 컨테이너 */}
               <div
-                className="custom-scrollbar overflow-y-auto"
+                className="overflow-y-auto"
                 style={{
                   width: isMobile ? '100%' : 'calc(100% + 12.5px)',
                   marginRight: isMobile ? '0' : '10px',
@@ -1158,7 +1156,7 @@ export default function LeftInfoPanel({
                           </p>
                         </div>
                         <div
-                          className={`relative w-full shrink-0 font-medium text-black ${isMobile ? 'text-center' : 'text-left'}`}
+                          className={`relative w-full shrink-0 font-medium ${isMobile ? 'text-center' : 'text-left'}`}
                           style={{
                             height: `${Math.max(44 * heightRatio, 30)}px`,
                           }}
@@ -1185,7 +1183,7 @@ export default function LeftInfoPanel({
                           </p>
                         </div>
                         <div
-                          className={`relative w-full shrink-0 font-medium text-black ${isMobile ? 'text-center' : 'text-left'}`}
+                          className={`relative w-full shrink-0 font-medium ${isMobile ? 'text-center' : 'text-left'}`}
                           style={{
                             height: `${Math.max(44 * heightRatio, 30)}px`,
                           }}
@@ -1209,7 +1207,7 @@ export default function LeftInfoPanel({
                           </p>
                         </div>
                         <div
-                          className={`relative w-full shrink-0 font-medium text-black ${isMobile ? 'text-center' : 'text-left'}`}
+                          className={`relative w-full shrink-0 font-medium ${isMobile ? 'text-center' : 'text-left'}`}
                         >
                           <p
                             className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}
@@ -1238,7 +1236,7 @@ export default function LeftInfoPanel({
                           </p>
                         </div>
                         <div
-                          className={`relative w-full shrink-0 font-medium text-black ${isMobile ? 'text-center' : 'text-left'}`}
+                          className={`relative w-full shrink-0 font-medium ${isMobile ? 'text-center' : 'text-left'}`}
                           style={{
                             height: `${Math.max(44 * heightRatio, 30)}px`,
                           }}
@@ -1265,7 +1263,7 @@ export default function LeftInfoPanel({
                           </p>
                         </div>
                         <div
-                          className={`relative w-full shrink-0 font-medium text-black ${isMobile ? 'text-center' : 'text-left'}`}
+                          className={`relative w-full shrink-0 font-medium ${isMobile ? 'text-center' : 'text-left'}`}
                           style={{
                             height: `${Math.max(44 * heightRatio, 30)}px`,
                           }}
@@ -1289,7 +1287,7 @@ export default function LeftInfoPanel({
                           </p>
                         </div>
                         <div
-                          className={`relative w-full shrink-0 font-medium text-black ${isMobile ? 'text-center' : 'text-left'}`}
+                          className={`relative w-full shrink-0 font-medium ${isMobile ? 'text-center' : 'text-left'}`}
                           style={{
                             height: `${Math.max(44 * heightRatio, 30)}px`,
                           }}
@@ -1313,7 +1311,7 @@ export default function LeftInfoPanel({
                           </p>
                         </div>
                         <div
-                          className={`relative shrink-0 font-medium text-black ${isMobile ? 'flex w-full justify-center' : 'w-[225.727px]'}`}
+                          className={`relative shrink-0 font-medium ${isMobile ? 'flex w-full justify-center' : 'w-[225.727px]'}`}
                         >
                           <div
                             className={`flex flex-wrap ${isMobile ? 'gap-2' : 'gap-[6px]'} items-start ${isMobile ? 'justify-center' : 'justify-start'}`}
@@ -1449,7 +1447,7 @@ export default function LeftInfoPanel({
                         className={`col-span-2 mt-4 pt-3 pb-5 ${isMobile ? 'px-2' : 'pr-[50px] pl-[15px]'}`}
                       >
                         {/* 구분선 */}
-                        <div className="mb-4 border-b border-gray-200"></div>
+                        <div className="mb-4 border-b border-gray-200 dark:border-zinc-800"></div>
 
                         <div className="mb-2 pb-1 text-[18.25px] font-normal text-[#adb5bd]">
                           <p className="leading-[16.336px]">줄거리</p>
@@ -1457,7 +1455,7 @@ export default function LeftInfoPanel({
                         <div
                           ref={synopsisRef}
                           className={cn(
-                            'text-[16px] leading-[1.6] font-medium text-black transition-all duration-300',
+                            'text-[16px] leading-[1.6] font-medium transition-all duration-300',
                             !isSynopsisExpanded &&
                               showExpandButton &&
                               'line-clamp-2',
@@ -1506,7 +1504,7 @@ export default function LeftInfoPanel({
                                   }, 200); // 애니메이션 완료 후 스크롤
                                 }
                               }}
-                              className="flex cursor-pointer items-center gap-1 text-[14px] font-medium text-[#990033] transition-all duration-200 hover:underline"
+                              className="text-brand flex cursor-pointer items-center gap-1 text-[14px] font-medium transition-all duration-200 hover:underline"
                             >
                               <span>
                                 {isSynopsisExpanded ? '접기' : '펼치기'}

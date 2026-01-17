@@ -52,12 +52,12 @@ export default function CharacterCard({
     >
       {/* Profile 프레임 */}
       <div
-        className={`${isMobile ? 'h-[153px] w-[163px]' : 'h-[170px] w-[181px]'} relative flex items-center justify-center rounded-tl-[9.76px] rounded-tr-[9.76px] bg-[#F1F3F5]`}
+        className={`${isMobile ? 'h-[153px] w-[163px]' : 'h-[170px] w-[181px]'} relative flex items-center justify-center rounded-tl-[9.76px] rounded-tr-[9.76px] bg-[#F1F3F5] dark:bg-zinc-800`}
       >
         {/* 로딩 스켈레톤 */}
         {imageLoading && character.imageUrl && !imageError && (
           <div
-            className={`${isMobile ? 'h-[110px] w-[110px]' : 'h-[122px] w-[122px]'} animate-pulse rounded-[9.76px] bg-gray-200`}
+            className={`${isMobile ? 'h-[110px] w-[110px]' : 'h-[122px] w-[122px]'} animate-pulse rounded-[9.76px]`}
           />
         )}
 

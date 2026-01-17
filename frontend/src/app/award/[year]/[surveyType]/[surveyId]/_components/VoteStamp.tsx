@@ -22,7 +22,7 @@ const TEXT_SIZES = {
 
 const COLORS = {
   normal: {
-    active: 'text-[#990033]',
+    active: 'text-brand',
     inactive: 'text-neutral-600',
   },
   bonus: 'text-[#ffb310]',

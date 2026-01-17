@@ -131,7 +131,7 @@ export default function HomeBanner({ homeBannerDtos }: HomeBannerProps) {
   return (
     <div
       ref={bannerRef}
-      className="relative h-[215px] w-full overflow-hidden rounded-xl outline outline-offset-[-1px] outline-[#D1D1D6]"
+      className="dark:outlin-zinc-800 relative h-[215px] w-full overflow-hidden rounded-xl outline outline-offset-[-1px] outline-[#D1D1D6] dark:bg-zinc-800 dark:outline-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

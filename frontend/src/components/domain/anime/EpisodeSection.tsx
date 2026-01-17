@@ -7,12 +7,13 @@ import React, {
 } from 'react';
 import EpisodeItem from './EpisodeItem';
 import QuarterWeekLabel from './QuarterWeekLabel';
-import { getThisWeekRecord } from '@/lib';
+import { cn, getThisWeekRecord } from '@/lib';
 import {
   updateAnimeTotalEpisodes,
   setAnimeTotalEpisodesUnknown,
 } from '@/api/search';
 import { useAuth } from '@/context/AuthContext';
+import { ChevronDown } from 'lucide-react';
 
 // 타입 정의
 interface Episode {
@@ -360,7 +361,7 @@ export default function EpisodeSection({
         className={`${isSmallScreen ? 'w-full max-w-[100%]' : 'w-full'} inline-flex h-5 items-center justify-start gap-3.5 px-6`}
       >
         <div
-          className={`justify-start text-center leading-snug font-semibold text-black ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
+          className={`justify-start text-center leading-snug font-semibold ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
         >
           에피소드 공개
         </div>
@@ -368,7 +369,7 @@ export default function EpisodeSection({
           {isEditing ? (
             // 편집 모드
             <div className="flex items-center gap-2">
-              <span className="text-base leading-snug font-semibold text-black">
+              <span className="text-base leading-snug font-semibold">
                 총 화수:
               </span>
               <input
@@ -380,9 +381,7 @@ export default function EpisodeSection({
                 className="w-16 rounded border border-gray-300 px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 disabled={isUpdating}
               />
-              <span className="text-base leading-snug font-semibold text-black">
-                화
-              </span>
+              <span className="text-base leading-snug font-semibold">화</span>
               <div className="flex gap-1">
                 <button
                   onClick={handleEditSave}
@@ -405,13 +404,13 @@ export default function EpisodeSection({
             <>
               {totalEpisodes && totalEpisodes > 0 ? (
                 <>
-                  <span className="text-base leading-snug font-semibold text-black">
+                  <span className="text-base leading-snug font-semibold">
                     총{' '}
                   </span>
                   <span className="text-base leading-snug font-semibold text-rose-800">
                     {totalEpisodes}
                   </span>
-                  <span className="text-base leading-snug font-semibold text-black">
+                  <span className="text-base leading-snug font-semibold">
                     {' '}
                     화
                   </span>
@@ -461,30 +460,23 @@ export default function EpisodeSection({
           <div className="relative">
             <button
               onClick={handleDropdownToggle}
-              className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left hover:bg-gray-50"
+              className="flex w-full items-center justify-between rounded-lg border border-gray-300 px-4 py-3 text-left transition hover:bg-gray-100 dark:border-zinc-700 dark:hover:bg-zinc-800/20"
             >
-              <span className="text-base font-medium text-black">
+              <span className="text-base font-medium">
                 {selectedEpisodeIds.length > 0
                   ? `선택된 에피소드: ${selectedEpisodeIds.length}개`
                   : '에피소드 선택'}
               </span>
-              <svg
-                className={`h-5 w-5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <ChevronDown
+                className={cn(
+                  'size-5 transition-transform dark:text-zinc-400',
+                  dropdownOpen && 'rotate-180'
+                )}
+              />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg">
+              <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
                 {episodes.map((episode) => {
                   const isSelected = selectedEpisodeIds.includes(episode.id);
                   const status = getEpisodeStatus(episode.scheduledAt);
@@ -497,10 +489,10 @@ export default function EpisodeSection({
                       key={episode.id}
                       onClick={() => handleEpisodeSelect(episode.id)}
                       disabled={isDisabled}
-                      className={`w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-gray-50 ${
+                      className={`w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-zinc-700 ${
                         isSelected
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700'
+                          ? 'bg-blue-50 text-blue-700 dark:bg-zinc-800 dark:text-white'
+                          : 'text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:bg-zinc-800/20'
                       } ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between">
