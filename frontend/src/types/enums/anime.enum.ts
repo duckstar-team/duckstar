@@ -1,14 +1,12 @@
 export enum DayOfWeek {
-  Upcoming = 'UPCOMING',
-  Sun = 'SUN',
   Mon = 'MON',
   Tue = 'TUE',
   Wed = 'WED',
   Thu = 'THU',
   Fri = 'FRI',
   Sat = 'SAT',
+  Sun = 'SUN',
   Special = 'SPECIAL',
-  None = 'NONE',
 }
 
 export enum SeasonType {

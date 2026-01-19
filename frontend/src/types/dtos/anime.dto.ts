@@ -42,9 +42,6 @@ export interface AnimeInfoDto extends Anime {
   ottDtos: OttDto[];
 }
 
-// DayOfWeekShort enum (백엔드와 일치)
-export type DayOfWeekShort = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN' | 'SPECIAL' | 'NONE';
-
 // Anime Preview DTO (search) - 백엔드 SearchResponseDto.AnimePreviewDto와 일치
 export interface AnimePreviewDto {
   animeId: number;
@@ -56,14 +53,14 @@ export interface AnimePreviewDto {
   genre: string;
   medium: Medium;
   ottDtos: OttDto[];
-  dayOfWeek: DayOfWeekShort;
+  dayOfWeek: DayOfWeek;
   scheduledAt: string; // LocalDateTime
   airTime: string | null; // LocalTime (분기 시간표에서만 사용)
 }
 
 // Schedule DTO - 백엔드 SearchResponseDto.ScheduleDto와 일치
 export interface ScheduleDto {
-  dayOfWeekShort: DayOfWeekShort;
+  dayOfWeekShort: DayOfWeek;
   animePreviews: AnimePreviewDto[];
 }
 
