@@ -729,7 +729,7 @@ export default function BigCandidate({
     >
       {/* Thumbnail Image */}
       <div
-        className="relative h-[340px] w-full cursor-pointer overflow-hidden bg-gray-300"
+        className="relative h-[340px] w-full cursor-pointer overflow-hidden"
         onClick={() => router.push(`/animes/${animeId}`)}
       >
         {localVoterCount > 0 && (

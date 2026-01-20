@@ -228,7 +228,7 @@ export default function ReplyPostForm({
 
   return (
     <form
-      className={`relative rounded-[8px] bg-white ${containerWidth}`}
+      className={`relative rounded-[8px]${containerWidth}`}
       onSubmit={(e) => {
         e.preventDefault();
         handleSubmit();
@@ -315,7 +315,7 @@ export default function ReplyPostForm({
             </div>
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 border-[1px_0px_0px] border-solid border-[#adb5bd]"
+              className="pointer-events-none absolute inset-0 border-[1px_0px_0px] border-solid border-brand-zinc-300"
             />
           </div>
 
@@ -323,7 +323,7 @@ export default function ReplyPostForm({
           <button
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
-            className={`w-20 ${buttonHeight} flex cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-br-[10px] border-t border-l border-[#adb5bd] bg-[#FED783]/70 px-8 transition-colors duration-200 hover:bg-[#FED783]`}
+            className={`w-20 ${buttonHeight} flex cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-br-[10px] bg-[#FED783]/70 px-8 transition-colors duration-200 hover:bg-[#FED783]`}
           >
             {isSubmitting ? (
               <>
@@ -342,7 +342,7 @@ export default function ReplyPostForm({
       </div>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[8px] border border-solid border-[#adb5bd]"
+        className="pointer-events-none absolute inset-0 rounded-[8px] border border-solid border-brand-zinc-300"
       />
     </form>
   );

@@ -16,7 +16,7 @@ export default function LoginButton({
   showProfileImage = true,
   className = '',
 }: LoginButtonProps) {
-  const { isAuthenticated, isLoading, user, logout, withdraw } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const { openLoginModal } = useModal();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,22 +62,14 @@ export default function LoginButton({
     };
   }, []);
 
-  // 로딩 중일 때
-  if (isLoading) {
-    return (
-      <div className={`flex items-center gap-2 ${className}`}>
-        <div className="h-6 w-6 animate-pulse rounded-full bg-gray-200"></div>
-        <div className="h-4 w-16 animate-pulse rounded bg-gray-200"></div>
-      </div>
-    );
-  }
+
 
   if (isAuthenticated && user) {
     return (
       <div className={`relative ${className}`} ref={dropdownRef}>
         <button
           onClick={toggleDropdown}
-          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-gray-50"
+          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
         >
           {showProfileImage && user.profileImageUrl && (
             <div className="h-6 w-6 flex-shrink-0 overflow-hidden rounded-full">
@@ -89,7 +81,7 @@ export default function LoginButton({
             </div>
           )}
           <span
-            className={`max-w-[80px] truncate font-[Pretendard] font-semibold text-gray-700 sm:max-w-[120px] ${
+            className={`max-w-[80px] truncate font-[Pretendard] font-semibold text-gray-700 dark:text-zinc-300 sm:max-w-[120px] ${
               variant === 'compact' ? 'text-sm' : 'text-sm sm:text-base'
             }`}
           >
@@ -114,13 +106,13 @@ export default function LoginButton({
 
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
-          <div className="absolute top-full right-0 z-50 mt-2 min-w-fit rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+          <div className="absolute top-full right-0 z-50 mt-2 min-w-fit rounded-lg border border-gray-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 py-1 shadow-lg">
             {/* 관리자 메뉴 - ADMIN 권한이 있는 경우에만 표시 */}
             {user.role === 'ADMIN' && (
               <>
                 <button
                   onClick={handleAdminMenuClick}
-                  className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50"
+                  className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
                   관리자 메뉴
                 </button>
@@ -129,13 +121,13 @@ export default function LoginButton({
             )}
             <button
               onClick={handleProfileEditClick}
-              className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50"
+              className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
               프로필 수정
             </button>
             <button
               onClick={handleLogoutClick}
-              className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50"
+              className="w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
               로그아웃
             </button>

@@ -51,7 +51,7 @@ const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
           filter: candidate.state === 'CLOSED' ? 'grayscale(100%)' : 'none',
         }}
       />
-      <p className="line-clamp-2 text-sm leading-tight font-medium">
+      <p className="line-clamp-2 text-sm text-black dark:text-white leading-tight font-medium">
         {candidate.titleKor}
       </p>
     </div>
