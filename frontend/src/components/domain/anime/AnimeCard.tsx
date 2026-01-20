@@ -140,10 +140,24 @@ export default function AnimeCard({
         // scheduledAt이 현재 시각보다 미래인 경우에만 디데이 표시
         if (!isNaN(scheduledDate.getTime()) && scheduledDate > now) {
           // scheduledAt의 날짜와 현재 날짜를 비교하여 D-Day 계산
+          // 00:00 ~ 05:00 시간대는 전날로 간주
+          let scheduledYear = scheduledDate.getFullYear();
+          let scheduledMonth = scheduledDate.getMonth();
+          let scheduledDay = scheduledDate.getDate();
+          const scheduledHours = scheduledDate.getHours();
+
+          // 00:00 ~ 05:00인 경우 하루 빼기
+          if (scheduledHours < 5) {
+            const prevDay = new Date(scheduledYear, scheduledMonth, scheduledDay - 1);
+            scheduledYear = prevDay.getFullYear();
+            scheduledMonth = prevDay.getMonth();
+            scheduledDay = prevDay.getDate();
+          }
+
           const scheduledDateOnly = new Date(
-            scheduledDate.getFullYear(),
-            scheduledDate.getMonth(),
-            scheduledDate.getDate()
+            scheduledYear,
+            scheduledMonth,
+            scheduledDay
           );
           const nowDateOnly = new Date(
             now.getFullYear(),
