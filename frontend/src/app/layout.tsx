@@ -36,11 +36,16 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   title: '덕스타 - 애니메이션 투표 플랫폼',
   description: '애니메이션 투표 및 차트 서비스',
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
-  },
+  icons: [
+    {
+      rel: 'icon',
+      url: '/icons/favicon.svg',
+    },
+    {
+      rel: 'apple-touch-icon',
+      url: '/icons/favicon.svg',
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -56,7 +61,6 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"
         />
-        <link rel="icon" href="/icons/favicon.svg" />
       </head>
       <body className={`${pretendard.variable} antialiased`}>
         {/* Google Analytics 4 - 개발 환경에서는 로드하지 않음 */}
