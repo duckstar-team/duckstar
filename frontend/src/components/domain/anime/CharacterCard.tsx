@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { CharacterImageSkeleton } from '@/components/skeletons';
 import { cn } from '@/lib';
 import { Character } from '@/types/dtos';
 
@@ -56,9 +57,7 @@ export default function CharacterCard({
       >
         {/* 로딩 스켈레톤 */}
         {imageLoading && character.imageUrl && !imageError && (
-          <div
-            className={`${isMobile ? 'h-[110px] w-[110px]' : 'h-[122px] w-[122px]'} animate-pulse rounded-[9.76px]`}
-          />
+          <CharacterImageSkeleton isMobile={isMobile} />
         )}
 
         {/* 실제 이미지 */}

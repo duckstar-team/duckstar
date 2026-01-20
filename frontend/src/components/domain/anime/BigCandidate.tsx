@@ -798,8 +798,7 @@ export default function BigCandidate({
                       <span className="text-[14px] font-medium text-[#868E96]">
                         {medium === 'MOVIE'
                           ? getDayInKorean(dayOfWeek) // 극장판은 요일만 표시
-                          : medium === 'TVA' &&
-                              (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL')
+                          : medium === 'TVA' && dayOfWeek === 'SPECIAL'
                             ? getDayInKorean(dayOfWeek)
                             : getDayInKorean(dayOfWeek)}
                       </span>

@@ -637,7 +637,7 @@ export default function VotePageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <div className="mx-auto w-full max-w-[600px] px-2 py-3 sm:px-4 sm:py-6">
           <div className="text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
@@ -963,9 +963,9 @@ export default function VotePageContent() {
               {/* 검색 결과가 없는 경우 (이번주차만) */}
               {currentWeekSearchQuery.trim() &&
                 filteredcurrentWeekLiveCandidates.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                       </p>
                     </div>
@@ -1004,9 +1004,9 @@ export default function VotePageContent() {
               {/* 검색 결과가 없는 경우 (fallback 데이터) */}
               {currentWeekSearchQuery.trim() &&
                 filteredFallbackAnimes.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                       </p>
                     </div>
@@ -1015,9 +1015,9 @@ export default function VotePageContent() {
               {/* Fallback 데이터도 비어있는 경우 */}
               {fallbackAnimes.length === 0 &&
                 !currentWeekSearchQuery.trim() && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         곧 시작하는 애니메이션이 없습니다.
                       </p>
                     </div>

@@ -163,9 +163,9 @@ export default function VoteCandidateList({
         </span>
       </div>
       {filteredCandidates.length === 0 && searchQuery.trim() ? (
-        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
           <div className="text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-zinc-300">
               '{searchQuery}'에 대한 검색 결과가 없습니다.
             </p>
           </div>
