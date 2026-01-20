@@ -99,8 +99,6 @@ export function getThisWeekRecord(time: Date): YQWRecord {
   const ai = resolveAnchor(time);
   const week = weekOfQuarter(time, ai.anchorStart);
 
-  // ✅ 분기 연도를 앵커 연도로 정의
-  const quarterYear = ai.anchorStart.getFullYear();
-
-  return { yearValue: quarterYear, quarterValue: ai.quarter, weekValue: week };
+  // 백엔드와 동일하게 resolveAnchor에서 반환한 year 사용
+  return { yearValue: ai.year, quarterValue: ai.quarter, weekValue: week };
 }

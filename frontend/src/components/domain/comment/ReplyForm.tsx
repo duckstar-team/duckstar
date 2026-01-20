@@ -25,7 +25,7 @@ const ReplyForm = React.memo(
 
     return (
       <div className="flex h-auto w-full flex-col items-end justify-center gap-2.5">
-        <div className="flex h-auto w-full flex-col items-end justify-center gap-[10px] overflow-hidden bg-[#F8F9FA] px-[11px] pt-[10px] pb-[14px]">
+        <div className="flex h-auto w-full flex-col items-end justify-center gap-[10px] overflow-hidden px-[11px] pt-[10px] pb-[14px]">
           <ReplyPostForm
             onSubmit={handleSubmit}
             onImageUpload={(file) => {

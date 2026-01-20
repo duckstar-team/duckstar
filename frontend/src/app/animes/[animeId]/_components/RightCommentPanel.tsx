@@ -36,6 +36,7 @@ import {
   unlikeReply,
 } from '@/api/comment';
 import { ChevronRight } from 'lucide-react';
+import { EpisodeSectionSkeleton } from '@/components/skeletons';
 
 interface RightCommentPanelProps {
   animeId?: number;
@@ -990,7 +991,7 @@ export default function RightCommentPanel({
     >
       {/* 에피소드 섹션 스켈레톤 */}
       <div className="flex justify-center pt-7 pb-1" style={{ width: '100%' }}>
-        <div className="h-[200px] w-full max-w-[534px] animate-pulse rounded-lg bg-gray-100"></div>
+        <EpisodeSectionSkeleton />
       </div>
 
       {/* 댓글 섹션 스켈레톤 */}

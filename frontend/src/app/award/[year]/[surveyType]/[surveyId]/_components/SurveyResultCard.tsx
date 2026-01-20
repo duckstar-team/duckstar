@@ -234,7 +234,7 @@ export default function SurveyResultCard({
       <div className="flex gap-6 @max-sm:flex-col">
         {/* 포스터 이미지 */}
         <div className="flex flex-col items-center justify-start gap-2 @max-sm:w-full">
-          <div className="relative h-72 w-48 overflow-hidden rounded-lg bg-gray-100">
+          <div className="relative h-72 w-48 overflow-hidden rounded-lg">
             <img
               src={animeCandidateDto.mainThumbnailUrl || '/og-logo.jpg'}
               alt={animeCandidateDto.titleKor}

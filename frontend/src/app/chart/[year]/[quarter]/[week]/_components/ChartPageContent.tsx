@@ -173,7 +173,7 @@ export default function ChartPageContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center bg-gray-50 py-20">
+      <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
         <span className="ml-3 text-gray-600">차트 데이터 로딩 중...</span>
       </div>
@@ -182,7 +182,7 @@ export default function ChartPageContent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center bg-gray-50 py-20">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="mb-2 text-4xl text-red-500">⚠️</div>
           <h3 className="mb-2 text-lg font-semibold text-red-600">

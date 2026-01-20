@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import SurveyResultCard from './SurveyResultCard';
 import Pagination from '@/components/common/Pagination';
 import { getSurveyResult } from '@/api/chart';
-import SurveyResultSkeleton from '@/components/skeletons/SurveyResultSkeleton';
+import { SurveyResultSkeleton } from '@/components/skeletons';
 
 export default function SurveyResultChart({ surveyId }: { surveyId: number }) {
   const [page, setPage] = useState(0);

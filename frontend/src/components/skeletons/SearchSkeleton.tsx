@@ -20,12 +20,12 @@ export default function SearchLoadingSkeleton({
         {/* 검색 필터 영역 스켈레톤 */}
         <div className="mb-8">
           <div className="mb-4 flex items-center justify-center gap-4">
-            <div className="h-8 w-32 animate-pulse rounded bg-gray-200" />
-            <div className="h-8 w-24 animate-pulse rounded bg-gray-200" />
-            <div className="h-8 w-28 animate-pulse rounded bg-gray-200" />
+            <div className="h-8 w-32 animate-pulse rounded bg-brand-zinc-200" />
+            <div className="h-8 w-24 animate-pulse rounded bg-brand-zinc-200" />
+            <div className="h-8 w-28 animate-pulse rounded bg-brand-zinc-200" />
           </div>
           <div className="mx-auto w-full max-w-2xl">
-            <div className="h-16 animate-pulse rounded-lg bg-gray-200" />
+            <div className="h-16 animate-pulse rounded-lg bg-brand-zinc-200" />
           </div>
         </div>
 
@@ -35,7 +35,7 @@ export default function SearchLoadingSkeleton({
             {Array.from({ length: 9 }).map((_, index) => (
               <div
                 key={index}
-                className="h-10 w-16 animate-pulse rounded-lg bg-gray-200"
+                className="h-10 w-16 animate-pulse rounded-lg bg-brand-zinc-200"
               />
             ))}
           </div>
@@ -46,24 +46,24 @@ export default function SearchLoadingSkeleton({
           {Array.from({ length: cardCount }).map((_, index) => (
             <div
               key={index}
-              className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+              className="overflow-hidden rounded-xl border border-brand-zinc-200 bg-white dark:border-none dark:bg-zinc-800 shadow-sm"
             >
               {/* 이미지 영역 */}
-              <div className="h-48 w-full animate-pulse bg-gray-200" />
+              <div className="h-48 w-full animate-pulse bg-brand-zinc-200" />
 
               {/* 텍스트 영역 */}
               <div className="p-4">
-                <div className="mb-2 h-5 animate-pulse rounded bg-gray-200" />
-                <div className="mb-2 h-4 w-3/4 animate-pulse rounded bg-gray-200" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+                <div className="mb-2 h-5 animate-pulse rounded bg-brand-zinc-200" />
+                <div className="mb-2 h-4 w-3/4 animate-pulse rounded bg-brand-zinc-200" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-brand-zinc-200" />
               </div>
 
               {/* OTT 태그 영역 */}
               <div className="px-4 pb-4">
                 <div className="flex gap-2">
-                  <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
-                  <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
-                  <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
+                  <div className="h-8 w-8 animate-pulse rounded-full bg-brand-zinc-200" />
+                  <div className="h-8 w-8 animate-pulse rounded-full bg-brand-zinc-200" />
+                  <div className="h-8 w-8 animate-pulse rounded-full bg-brand-zinc-200" />
                 </div>
               </div>
             </div>

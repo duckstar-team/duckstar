@@ -9,6 +9,7 @@ import { CandidateListDto } from '@/types/dtos';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useModal } from '@/components/layout/AppContainer';
 import { searchMatch } from '@/lib';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 interface VoteCandidateListProps {
   title?: string;
@@ -19,9 +20,7 @@ interface VoteCandidateListProps {
 }
 
 const getItemsPerPage = (width: number) => {
-  if (width < 480) return 2;
   if (width < 640) return 4;
-  if (width < 768) return 3;
   if (width < 1024) return 5;
   if (width < 1280) return 6;
   return 7;
@@ -52,7 +51,7 @@ const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
           filter: candidate.state === 'CLOSED' ? 'grayscale(100%)' : 'none',
         }}
       />
-      <p className="line-clamp-2 text-sm leading-tight font-medium">
+      <p className="line-clamp-2 text-sm text-black dark:text-white leading-tight font-medium">
         {candidate.titleKor}
       </p>
     </div>
@@ -69,9 +68,10 @@ export default function VoteCandidateList({
 }: VoteCandidateListProps) {
   const { openVoteModal, closeVoteModal, isVoteModalOpen } = useModal();
   const queryClient = useQueryClient();
+  const sidebarWidth = useSidebarWidth();
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     if (typeof window === 'undefined') return 5;
-    return getItemsPerPage(window.innerWidth);
+    return getItemsPerPage(window.innerWidth - sidebarWidth);
   });
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedCandidate, setSelectedCandidate] =
@@ -114,13 +114,13 @@ export default function VoteCandidateList({
   useEffect(() => {
     const handleResize = () => {
       if (typeof window === 'undefined') return;
-      setItemsPerPage(getItemsPerPage(window.innerWidth));
+      setItemsPerPage(getItemsPerPage(window.innerWidth - sidebarWidth));
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [sidebarWidth]);
 
   // 후보를 페이지 단위로 나누기
   const pages = useMemo(() => {
@@ -163,23 +163,23 @@ export default function VoteCandidateList({
         </span>
       </div>
       {filteredCandidates.length === 0 && searchQuery.trim() ? (
-        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
           <div className="text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-zinc-300">
               '{searchQuery}'에 대한 검색 결과가 없습니다.
             </p>
           </div>
         </div>
       ) : (
-        <div className="relative rounded-3xl px-4 pb-8 text-white sm:px-8">
+        <div className="relative mx-4 rounded-3xl pb-8 text-white">
           <button
             type="button"
             aria-label="이전 페이지"
             onClick={handlePrev}
             disabled={totalPages <= 1}
-            className="absolute top-1/3 -left-4 z-1 rounded-full border border-white/20 p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30 dark:hover:bg-zinc-900/80"
+            className="absolute top-1/3 -left-6 z-1 rounded-full border border-white/20 p-1 shadow-lg transition hover:bg-white/20 disabled:opacity-30 xl:-left-12 dark:bg-black/40 dark:hover:bg-black/50"
           >
-            <ChevronLeft className="h-8 w-8 stroke-1 text-gray-500" />
+            <ChevronLeft className="w-full stroke-1 text-zinc-500 sm:size-7 dark:text-zinc-200" />
           </button>
 
           <button
@@ -187,23 +187,20 @@ export default function VoteCandidateList({
             aria-label="다음 페이지"
             onClick={handleNext}
             disabled={totalPages <= 1}
-            className="absolute top-1/3 -right-4 z-1 rounded-full border border-white/20 p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30 dark:hover:bg-zinc-900/80"
+            className="absolute top-1/3 -right-6 z-1 rounded-full border border-white/20 p-1 shadow-lg transition hover:bg-white/20 disabled:opacity-30 xl:-right-12 dark:bg-black/40 dark:hover:bg-black/50"
           >
-            <ChevronRight className="h-8 w-8 stroke-1 text-gray-500" />
+            <ChevronRight className="w-full stroke-1 text-zinc-500 sm:size-7 dark:text-zinc-200" />
           </button>
 
-          <div className="overflow-hidden pt-8">
+          <div className="overflow-y-scroll pt-8">
             <div
               className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)]"
               style={{ transform: `translateX(-${currentPage * 100}%)` }}
             >
               {pages.map((page, pageIndex) => (
-                <div
-                  key={`page-${pageIndex}`}
-                  className="w-full flex-shrink-0 px-4 sm:px-6"
-                >
+                <div key={`page-${pageIndex}`} className="w-full flex-shrink-0">
                   <div
-                    className="grid w-full gap-4"
+                    className="grid w-full gap-2 @sm:gap-4"
                     style={{
                       gridTemplateColumns: `repeat(${itemsPerPage}, minmax(0, 1fr))`,
                     }}

@@ -220,13 +220,13 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 p-2 sm:p-4 lg:pl-0">
-      <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl sm:p-8 lg:max-w-lg">
+    <div className="flex min-h-screen items-center justify-center p-2 sm:p-4 lg:pl-0">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-800 p-4 shadow-xl sm:p-8 lg:max-w-lg">
         <div className="mb-6 text-center sm:mb-8">
-          <h1 className="mb-2 text-xl font-bold text-gray-900 sm:text-2xl">
+          <h1 className="mb-2 text-xl font-bold sm:text-2xl">
             프로필 설정
           </h1>
-          <p className="text-sm text-gray-600 sm:text-base">
+          <p className="text-sm text-gray-600 dark:text-zinc-400 sm:text-base">
             프로필 사진과 닉네임을 설정해주세요
           </p>
         </div>
@@ -235,7 +235,7 @@ export default function ProfileSetupPage() {
           {/* 프로필 사진 업로드 */}
           <div className="text-center">
             <div className="relative inline-block">
-              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white bg-gray-100 shadow-lg sm:h-24 sm:w-24 lg:h-28 lg:w-28">
+              <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-brand-zinc-200 shadow-lg sm:h-24 sm:w-24 lg:h-28 lg:w-28">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
@@ -311,7 +311,7 @@ export default function ProfileSetupPage() {
           <div>
             <label
               htmlFor="nickname"
-              className="mb-2 block text-xs font-medium text-gray-700 sm:text-sm"
+              className="mb-2 block text-xs font-medium text-gray-700 dark:text-zinc-300 sm:text-sm"
             >
               닉네임
             </label>
@@ -321,11 +321,11 @@ export default function ProfileSetupPage() {
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               placeholder="닉네임을 입력해주세요 (2자 이상)"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 transition-colors focus:border-transparent focus:ring-2 focus:ring-blue-500 sm:px-4 sm:py-3 sm:text-base lg:px-6 lg:py-4 lg:text-lg dark:text-gray-500"
+              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2.5 text-sm text-gray-900 dark:text-zinc-300 transition-colors focus:border-transparent focus:ring-2 focus:ring-blue-500 sm:px-4 sm:py-3 sm:text-base lg:px-6 lg:py-4 lg:text-lg"
               maxLength={20}
               minLength={2}
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
               {nickname.length}/20자 (최소 2자 이상)
             </p>
           </div>
@@ -362,7 +362,7 @@ export default function ProfileSetupPage() {
               type="button"
               onClick={handleSkip}
               disabled={isLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50 sm:py-3 sm:text-base lg:py-4 lg:text-lg"
+              className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium text-gray-600 transition-colors hover:text-zinc-400 disabled:opacity-50 sm:py-3 sm:text-base lg:py-4 lg:text-lg"
             >
               {isLoading ? (
                 <>

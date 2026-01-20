@@ -637,7 +637,7 @@ export default function VotePageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <div className="mx-auto w-full max-w-[600px] px-2 py-3 sm:px-4 sm:py-6">
           <div className="text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
@@ -963,9 +963,9 @@ export default function VotePageContent() {
               {/* 검색 결과가 없는 경우 (이번주차만) */}
               {currentWeekSearchQuery.trim() &&
                 filteredcurrentWeekLiveCandidates.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                       </p>
                     </div>
@@ -1004,9 +1004,9 @@ export default function VotePageContent() {
               {/* 검색 결과가 없는 경우 (fallback 데이터) */}
               {currentWeekSearchQuery.trim() &&
                 filteredFallbackAnimes.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                       </p>
                     </div>
@@ -1015,9 +1015,9 @@ export default function VotePageContent() {
               {/* Fallback 데이터도 비어있는 경우 */}
               {fallbackAnimes.length === 0 &&
                 !currentWeekSearchQuery.trim() && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         곧 시작하는 애니메이션이 없습니다.
                       </p>
                     </div>
@@ -1068,10 +1068,10 @@ export default function VotePageContent() {
           {/* 지난주차 검색창 섹션 */}
           <div
             ref={lastWeekSearchBarRef}
-            className={`p-4 shadow-sm ${
+            className={`p-4 shadow-sm dark:shadow-none ${
               isLastWeekSearchBarSticky
-                ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px]'
-                : 'mt-4 mb-7 bg-white md:mb-8'
+                ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px] dark:bg-zinc-900/80'
+                : 'mt-4 mb-7 bg-white md:mb-8 dark:bg-zinc-900'
             }`}
             style={{
               left: `${sidebarWidth}px`,
@@ -1097,13 +1097,13 @@ export default function VotePageContent() {
               {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
               {lastWeekLiveCandidates.length > 0 &&
                 filteredlastWeekLiveCandidates.length > 0 && (
-                  <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+                  <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1 dark:border-none dark:bg-zinc-800">
                     <button
                       onClick={() => handleLastViewModeChange('large')}
                       className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
                         lastViewMode === 'large'
-                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                          : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                       }`}
                     >
                       크게 보기
@@ -1112,8 +1112,8 @@ export default function VotePageContent() {
                       onClick={() => handleLastViewModeChange('small')}
                       className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
                         lastViewMode === 'small'
-                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                          : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                       }`}
                     >
                       작게 보기
