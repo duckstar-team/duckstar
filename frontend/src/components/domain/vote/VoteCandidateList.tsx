@@ -51,7 +51,7 @@ const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
           filter: candidate.state === 'CLOSED' ? 'grayscale(100%)' : 'none',
         }}
       />
-      <p className="line-clamp-2 text-sm text-black dark:text-white leading-tight font-medium">
+      <p className="line-clamp-2 text-sm leading-tight font-medium text-black dark:text-white">
         {candidate.titleKor}
       </p>
     </div>
@@ -134,6 +134,7 @@ export default function VoteCandidateList({
 
   const totalPages = pages.length;
 
+  // itemsPerPage 변경 시 currentPage 조정
   useEffect(() => {
     if (totalPages === 0) {
       setCurrentPage(0);
@@ -174,25 +175,23 @@ export default function VoteCandidateList({
         <div className="relative mx-4 rounded-3xl pb-8 text-white">
           <button
             type="button"
-            aria-label="이전 페이지"
+            aria-label="이전"
             onClick={handlePrev}
-            disabled={totalPages <= 1}
-            className="absolute top-1/3 -left-6 z-1 rounded-full border border-white/20 p-1 shadow-lg transition hover:bg-white/20 disabled:opacity-30 xl:-left-12 dark:bg-black/40 dark:hover:bg-black/50"
+            className="absolute top-[35%] -left-6 z-10 transition hover:opacity-70 sm:-left-8"
           >
-            <ChevronLeft className="w-full stroke-1 text-zinc-500 sm:size-7 dark:text-zinc-200" />
+            <ChevronLeft className="size-8 w-full stroke-[1.5px] text-zinc-500 dark:text-zinc-200" />
           </button>
 
           <button
             type="button"
-            aria-label="다음 페이지"
+            aria-label="다음"
             onClick={handleNext}
-            disabled={totalPages <= 1}
-            className="absolute top-1/3 -right-6 z-1 rounded-full border border-white/20 p-1 shadow-lg transition hover:bg-white/20 disabled:opacity-30 xl:-right-12 dark:bg-black/40 dark:hover:bg-black/50"
+            className="absolute top-[35%] -right-6 z-10 transition hover:opacity-70 sm:-right-8"
           >
-            <ChevronRight className="w-full stroke-1 text-zinc-500 sm:size-7 dark:text-zinc-200" />
+            <ChevronRight className="size-8 w-full stroke-[1.5px] text-zinc-500 dark:text-zinc-200" />
           </button>
 
-          <div className="overflow-y-scroll pt-8">
+          <div className="scrollbar-custom w-full overflow-x-scroll overflow-y-hidden pt-8">
             <div
               className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)]"
               style={{ transform: `translateX(-${currentPage * 100}%)` }}
@@ -200,7 +199,7 @@ export default function VoteCandidateList({
               {pages.map((page, pageIndex) => (
                 <div key={`page-${pageIndex}`} className="w-full flex-shrink-0">
                   <div
-                    className="grid w-full gap-2 @sm:gap-4"
+                    className="grid w-full items-stretch"
                     style={{
                       gridTemplateColumns: `repeat(${itemsPerPage}, minmax(0, 1fr))`,
                     }}
@@ -208,7 +207,7 @@ export default function VoteCandidateList({
                     {page.map((candidate) => (
                       <div
                         key={candidate.episodeId}
-                        className={`flex flex-col gap-2 ${candidate.state === 'CLOSED' ? 'cursor-auto' : 'cursor-pointer'}`}
+                        className={`mx-1 @sm:mx-2 ${candidate.state === 'CLOSED' ? 'cursor-auto' : 'cursor-pointer'}`}
                         onClick={() => {
                           if (candidate.state === 'CLOSED') {
                             return;
@@ -225,24 +224,6 @@ export default function VoteCandidateList({
               ))}
             </div>
           </div>
-
-          {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-2">
-              {pages.map((_, index) => (
-                <button
-                  key={`indicator-${index}`}
-                  type="button"
-                  onClick={() => setCurrentPage(index)}
-                  className={`h-2.5 w-2.5 rounded-full transition ${
-                    index === currentPage
-                      ? 'bg-amber-400'
-                      : 'bg-gray-800/30 dark:bg-zinc-400/30'
-                  }`}
-                  aria-label={`${index + 1}번째 페이지로 이동`}
-                />
-              ))}
-            </div>
-          )}
 
           {/* 모달을 컴포넌트 최상위 레벨에서 한 번만 렌더링 */}
           {isVoteModalOpen && selectedCandidate && (
