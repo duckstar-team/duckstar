@@ -62,8 +62,6 @@ export default function LoginButton({
     };
   }, []);
 
-
-
   if (isAuthenticated && user) {
     return (
       <div className={`relative ${className}`} ref={dropdownRef}>
@@ -81,7 +79,7 @@ export default function LoginButton({
             </div>
           )}
           <span
-            className={`max-w-[80px] truncate font-[Pretendard] font-semibold text-gray-700 dark:text-zinc-300 sm:max-w-[120px] ${
+            className={`max-w-[80px] truncate font-[Pretendard] font-semibold text-gray-700 sm:max-w-[120px] dark:text-zinc-300 ${
               variant === 'compact' ? 'text-sm' : 'text-sm sm:text-base'
             }`}
           >
@@ -106,7 +104,7 @@ export default function LoginButton({
 
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
-          <div className="absolute top-full right-0 z-50 mt-2 min-w-fit rounded-lg border border-gray-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 py-1 shadow-lg">
+          <div className="absolute top-full right-0 z-50 mt-2 min-w-fit rounded-lg border border-gray-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
             {/* 관리자 메뉴 - ADMIN 권한이 있는 경우에만 표시 */}
             {user.role === 'ADMIN' && (
               <>
@@ -116,7 +114,7 @@ export default function LoginButton({
                 >
                   관리자 메뉴
                 </button>
-                <div className="my-1 border-t border-gray-200"></div>
+                <div className="border-brand-zinc-200 border-t"></div>
               </>
             )}
             <button
