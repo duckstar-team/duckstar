@@ -1085,10 +1085,10 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         ApiResponseVoid: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: Record<string, never>;
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: Record<string, never>;
         };
         AnimeVoteRequest: {
             /** Format: int64 */
@@ -1113,17 +1113,17 @@ export interface components {
             candidateId?: number;
         };
         ApiResponseSurveyCommentDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["SurveyCommentDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["SurveyCommentDto"];
         };
         SurveyCommentDto: {
             /** Format: date-time */
-            commentCreatedAt?: string;
+            commentCreatedAt: string;
             /** Format: int64 */
-            commentId?: number;
-            body?: string;
+            commentId: number;
+            body: string;
         };
         AnimeRevoteRequest: {
             /** Format: int64 */
@@ -1145,44 +1145,44 @@ export interface components {
             episodeStarId?: number;
         };
         ApiResponseVoteResultDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["VoteResultDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["VoteResultDto"];
         };
         StarInfoDto: {
-            isBlocked?: boolean;
+            isBlocked: boolean;
             /** Format: int64 */
-            episodeStarId?: number;
+            episodeStarId: number;
             /** Format: int32 */
-            userStarScore?: number;
+            userStarScore: number;
             /** Format: double */
-            starAverage?: number;
+            starAverage: number;
             /** Format: int32 */
-            star_0_5?: number;
+            star_0_5: number;
             /** Format: int32 */
-            star_1_0?: number;
+            star_1_0: number;
             /** Format: int32 */
-            star_1_5?: number;
+            star_1_5: number;
             /** Format: int32 */
-            star_2_0?: number;
+            star_2_0: number;
             /** Format: int32 */
-            star_2_5?: number;
+            star_2_5: number;
             /** Format: int32 */
-            star_3_0?: number;
+            star_3_0: number;
             /** Format: int32 */
-            star_3_5?: number;
+            star_3_5: number;
             /** Format: int32 */
-            star_4_0?: number;
+            star_4_0: number;
             /** Format: int32 */
-            star_4_5?: number;
+            star_4_5: number;
             /** Format: int32 */
-            star_5_0?: number;
+            star_5_0: number;
         };
         VoteResultDto: {
             /** Format: int32 */
-            voterCount?: number;
-            info?: components["schemas"]["StarInfoDto"];
+            voterCount: number;
+            info: components["schemas"]["StarInfoDto"];
         };
         LateStarRequestDto: {
             /** Format: int64 */
@@ -1194,59 +1194,59 @@ export interface components {
             episodeStarId?: number;
         };
         ApiResponseVoteFormResultDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["VoteFormResultDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["VoteFormResultDto"];
         };
         VoteFormResultDto: {
-            isLateParticipating?: boolean;
+            isLateParticipating: boolean;
             /** Format: int32 */
-            voterCount?: number;
-            info?: components["schemas"]["StarInfoDto"];
+            voterCount: number;
+            info: components["schemas"]["StarInfoDto"];
             /** Format: date-time */
-            voteUpdatedAt?: string;
+            voteUpdatedAt: string;
             /** Format: int64 */
-            commentId?: number;
-            body?: string;
+            commentId: number;
+            body: string;
         };
         LikeRequestDto: {
             /** Format: int64 */
-            likeId?: number;
+            likeId: number;
         };
         ApiResponseLikeResultDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["LikeResultDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["LikeResultDto"];
         };
         LikeResultDto: {
             /** Format: int64 */
-            likeId?: number;
+            likeId: number;
             /** Format: int32 */
-            likeCount?: number;
+            likeCount: number;
             /** Format: date-time */
-            likedAt?: string;
+            likedAt: string;
         };
         NewQuarterRequestDto: {
             /** Format: binary */
-            animeCsv?: string;
+            animeCsv: string;
             /** Format: binary */
-            charactersCsv?: string;
+            charactersCsv: string;
             /** Format: binary */
-            animeCharactersCsv?: string;
+            animeCharactersCsv: string;
             /** Format: binary */
-            episodesCsv?: string;
+            episodesCsv: string;
         };
         AbroadRequestDto: {
             /** Format: binary */
-            animeCornerCsv?: string;
+            animeCornerCsv: string;
             /** Format: binary */
-            anilabCsv?: string;
+            anilabCsv: string;
         };
         CandidatesCsvRequest: {
             /** Format: binary */
-            candidatesCsv?: string;
+            candidatesCsv: string;
         };
         CommentRequestDto: {
             /** Format: int64 */
@@ -1257,81 +1257,81 @@ export interface components {
         };
         ReplyRequestDto: {
             /** Format: int64 */
-            listenerId?: number;
-            commentRequestDto?: components["schemas"]["CommentRequestDto"];
+            listenerId: number;
+            commentRequestDto: components["schemas"]["CommentRequestDto"];
         };
         ApiResponseReplyDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["ReplyDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["ReplyDto"];
         };
         ReplyDto: {
             /** @enum {string} */
-            status?: ReplyDtoStatus;
+            status: ReplyDtoStatus;
             /** Format: int64 */
-            replyId?: number;
-            canDeleteThis?: boolean;
-            isLiked?: boolean;
+            replyId: number;
+            canDeleteThis: boolean;
+            isLiked: boolean;
             /** Format: int64 */
-            replyLikeId?: number;
+            replyLikeId: number;
             /** Format: int32 */
-            likeCount?: number;
+            likeCount: number;
             /** Format: int64 */
-            authorId?: number;
-            nickname?: string;
-            profileImageUrl?: string;
+            authorId: number;
+            nickname: string;
+            profileImageUrl: string;
             /** Format: int32 */
-            voteCount?: number;
+            voteCount: number;
             /** Format: date-time */
-            createdAt?: string;
-            listenerNickname?: string;
-            attachedImageUrl?: string;
-            body?: string;
+            createdAt: string;
+            listenerNickname: string;
+            attachedImageUrl: string;
+            body: string;
         };
         ApiResponseLong: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
+            isSuccess: boolean;
+            code: string;
+            message: string;
             /** Format: int64 */
-            result?: number;
+            result: number;
         };
         ApiResponseCommentDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["CommentDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["CommentDto"];
         };
         CommentDto: {
             /** @enum {string} */
-            status?: ReplyDtoStatus;
+            status: ReplyDtoStatus;
             /** Format: int64 */
-            commentId?: number;
-            canDeleteThis?: boolean;
-            isLiked?: boolean;
+            commentId: number;
+            canDeleteThis: boolean;
+            isLiked: boolean;
             /** Format: int64 */
-            commentLikeId?: number;
+            commentLikeId: number;
             /** Format: int32 */
-            likeCount?: number;
+            likeCount: number;
             /** Format: int64 */
-            authorId?: number;
-            nickname?: string;
-            profileImageUrl?: string;
+            authorId: number;
+            nickname: string;
+            profileImageUrl: string;
             /** Format: int32 */
-            voteCount?: number;
+            voteCount: number;
             /** Format: int32 */
-            episodeNumber?: number;
+            episodeNumber: number;
             /** Format: date-time */
-            createdAt?: string;
-            attachedImageUrl?: string;
-            body?: string;
+            createdAt: string;
+            attachedImageUrl: string;
+            body: string;
             /** Format: int32 */
-            replyCount?: number;
+            replyCount: number;
             /** Format: int32 */
-            starScore?: number;
-            isLateParticipating?: boolean;
+            starScore: number;
+            isLateParticipating: boolean;
             /** Format: int64 */
-            surveyCandidateId?: number;
+            surveyCandidateId: number;
         };
         CreateRequestDto: {
             /** Format: int32 */
@@ -1341,58 +1341,58 @@ export interface components {
             isBreak: boolean;
         };
         ApiResponseEpisodeManageResultDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["EpisodeManageResultDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["EpisodeManageResultDto"];
         };
         EpisodeDto: {
-            weekDto?: components["schemas"]["WeekDto"];
+            weekDto: components["schemas"]["WeekDto"];
             /** Format: int64 */
-            episodeId?: number;
+            episodeId: number;
             /** Format: int32 */
-            episodeNumber?: number;
-            isBreak?: boolean;
-            isRescheduled?: boolean;
+            episodeNumber: number;
+            isBreak: boolean;
+            isRescheduled: boolean;
             /** Format: date-time */
-            scheduledAt?: string;
+            scheduledAt: string;
             /** Format: date-time */
-            nextEpScheduledAt?: string;
+            nextEpScheduledAt: string;
         };
         EpisodeManageResultDto: {
-            episodeResultDto?: components["schemas"]["EpisodeResultDto"];
-            managerProfileDto?: components["schemas"]["ManagerProfileDto"];
+            episodeResultDto: components["schemas"]["EpisodeResultDto"];
+            managerProfileDto: components["schemas"]["ManagerProfileDto"];
         };
         EpisodeResultDto: {
-            addedEpisodes?: components["schemas"]["EpisodeDto"][];
-            deletedEpisodes?: components["schemas"]["EpisodeDto"][];
+            addedEpisodes: components["schemas"]["EpisodeDto"][];
+            deletedEpisodes: components["schemas"]["EpisodeDto"][];
         };
         ManagerProfileDto: {
             /** Format: int64 */
-            memberId?: number;
-            profileImageUrl?: string;
-            managerNickname?: string;
+            memberId: number;
+            profileImageUrl: string;
+            managerNickname: string;
             /** @enum {string} */
-            taskType?: ManagerProfileDtoTaskType;
+            taskType: ManagerProfileDtoTaskType;
             /** Format: date-time */
-            managedAt?: string;
+            managedAt: string;
         };
         WeekDto: {
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
             /** Format: int32 */
-            week?: number;
+            week: number;
             /** Format: date */
-            startDate?: string;
+            startDate: string;
             /** Format: date */
-            endDate?: string;
+            endDate: string;
         };
         OttDto: {
             /** @enum {string} */
-            ottType?: OttDtoOttType;
-            watchUrl?: string;
+            ottType: OttDtoOttType;
+            watchUrl: string;
         };
         PostRequestDto: {
             titleKor: string;
@@ -1421,686 +1421,686 @@ export interface components {
         };
         ImageRequestDto: {
             /** Format: binary */
-            mainImage?: string;
+            mainImage: string;
         };
         TotalEpisodesRequestDto: {
             /** Format: int32 */
             totalEpisodes: number;
         };
         ApiResponseDeleteResultDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["DeleteResultDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["DeleteResultDto"];
         };
         DeleteResultDto: {
             /** @enum {string} */
-            status?: ReplyDtoStatus;
+            status: ReplyDtoStatus;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            deletedAt?: string;
+            deletedAt: string;
         };
         ApiResponseDiscardLikeResultDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["DiscardLikeResultDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["DiscardLikeResultDto"];
         };
         DiscardLikeResultDto: {
             /** Format: int32 */
-            likeCount?: number;
+            likeCount: number;
             /** Format: date-time */
-            discardedAt?: string;
+            discardedAt: string;
         };
         ProfileRequestDto: {
-            isSkip?: boolean;
-            nickname?: string;
+            isSkip: boolean;
+            nickname: string;
             /** Format: binary */
-            image?: string;
+            image: string;
         };
         ApiResponseUpdateReceiptDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["UpdateReceiptDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["UpdateReceiptDto"];
         };
         MePreviewDto: {
             /** Format: int64 */
-            id?: number;
+            id: number;
             /** @enum {string} */
-            provider?: MePreviewDtoProvider;
-            nickname?: string;
-            profileImageUrl?: string;
+            provider: MePreviewDtoProvider;
+            nickname: string;
+            profileImageUrl: string;
             /** @enum {string} */
-            role?: MePreviewDtoRole;
-            isProfileInitialized?: boolean;
+            role: MePreviewDtoRole;
+            isProfileInitialized: boolean;
         };
         UpdateReceiptDto: {
-            isChanged?: boolean;
-            mePreviewDto?: components["schemas"]["MePreviewDto"];
+            isChanged: boolean;
+            mePreviewDto: components["schemas"]["MePreviewDto"];
         };
         ModifyRequestDto: {
             /** Format: int32 */
-            episodeNumber?: number;
+            episodeNumber: number;
             /** Format: date-time */
-            rescheduledAt?: string;
+            rescheduledAt: string;
         };
         ApiResponseListSurveyDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["SurveyDto"][];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["SurveyDto"][];
         };
         SurveyDto: {
-            thumbnailUrl?: string;
+            thumbnailUrl: string;
             /** Format: int64 */
-            surveyId?: number;
-            hasVoted?: boolean;
+            surveyId: number;
+            hasVoted: boolean;
             /** @enum {string} */
-            status?: SurveyDtoStatus;
+            status: SurveyDtoStatus;
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** @enum {string} */
-            type?: SurveyDtoType;
+            type: SurveyDtoType;
             /** Format: date-time */
-            startDateTime?: string;
+            startDateTime: string;
             /** Format: date-time */
-            endDateTime?: string;
+            endDateTime: string;
         };
         ApiResponseSurveyDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["SurveyDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["SurveyDto"];
         };
         AnimeBallotDto: {
             /** @enum {string} */
-            ballotType?: BallotRequestDtoBallotType;
+            ballotType: BallotRequestDtoBallotType;
             /** Format: int64 */
-            animeCandidateId?: number;
+            animeCandidateId: number;
             /** Format: int64 */
-            animeId?: number;
-            mainThumbnailUrl?: string;
-            titleKor?: string;
+            animeId: number;
+            mainThumbnailUrl: string;
+            titleKor: string;
             /** Format: int32 */
-            totalEpisodes?: number;
+            totalEpisodes: number;
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
             /** @enum {string} */
-            medium?: PostRequestDtoMedium;
-            surveyCommentDto?: components["schemas"]["SurveyCommentDto"];
+            medium: PostRequestDtoMedium;
+            surveyCommentDto: components["schemas"]["SurveyCommentDto"];
         };
         AnimeVoteHistoryDto: {
             /** Format: int64 */
-            memberId?: number;
-            nickName?: string;
+            memberId: number;
+            nickName: string;
             /** Format: int64 */
-            submissionId?: number;
+            submissionId: number;
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** @enum {string} */
-            type?: SurveyDtoType;
+            type: SurveyDtoType;
             /** Format: int32 */
-            normalCount?: number;
+            normalCount: number;
             /** Format: int32 */
-            bonusCount?: number;
+            bonusCount: number;
             /** Format: date-time */
-            submittedAt?: string;
-            animeBallotDtos?: components["schemas"]["AnimeBallotDto"][];
+            submittedAt: string;
+            animeBallotDtos: components["schemas"]["AnimeBallotDto"][];
         };
         ApiResponseAnimeVoteHistoryDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AnimeVoteHistoryDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AnimeVoteHistoryDto"];
         };
         AnimeCandidateDto: {
             /** Format: int64 */
-            animeCandidateId?: number;
-            mainThumbnailUrl?: string;
-            titleKor?: string;
+            animeCandidateId: number;
+            mainThumbnailUrl: string;
+            titleKor: string;
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
             /** @enum {string} */
-            medium?: PostRequestDtoMedium;
+            medium: PostRequestDtoMedium;
         };
         AnimeCandidateListDto: {
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** @enum {string} */
-            type?: SurveyDtoType;
-            animeCandidates?: components["schemas"]["AnimeCandidateDto"][];
+            type: SurveyDtoType;
+            animeCandidates: components["schemas"]["AnimeCandidateDto"][];
             /** Format: int32 */
-            candidatesCount?: number;
+            candidatesCount: number;
             /** @enum {string} */
-            memberGender?: AnimeVoteRequestGender;
+            memberGender: AnimeVoteRequestGender;
             /** @enum {string} */
-            memberAgeGroup?: AnimeVoteRequestAgeGroup;
+            memberAgeGroup: AnimeVoteRequestAgeGroup;
         };
         ApiResponseAnimeCandidateListDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AnimeCandidateListDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AnimeCandidateListDto"];
         };
         ApiResponseLiveCandidateListDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["LiveCandidateListDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["LiveCandidateListDto"];
         };
         LiveCandidateDto: {
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
             /** Format: int32 */
-            week?: number;
+            week: number;
             /** Format: int64 */
-            episodeId?: number;
+            episodeId: number;
             /** Format: int64 */
-            animeId?: number;
-            mainThumbnailUrl?: string;
-            titleKor?: string;
+            animeId: number;
+            mainThumbnailUrl: string;
+            titleKor: string;
             /** @enum {string} */
-            dayOfWeek?: PostRequestDtoDayOfWeek;
+            dayOfWeek: PostRequestDtoDayOfWeek;
             /** Format: date-time */
-            scheduledAt?: string;
-            genre?: string;
+            scheduledAt: string;
+            genre: string;
             /** @enum {string} */
-            medium?: PostRequestDtoMedium;
-            result?: components["schemas"]["VoteResultDto"];
+            medium: PostRequestDtoMedium;
+            result: components["schemas"]["VoteResultDto"];
         };
         LiveCandidateListDto: {
-            weekDto?: components["schemas"]["WeekDto"];
-            currentWeekLiveCandidates?: components["schemas"]["LiveCandidateDto"][];
-            lastWeekLiveCandidates?: components["schemas"]["LiveCandidateDto"][];
+            weekDto: components["schemas"]["WeekDto"];
+            currentWeekLiveCandidates: components["schemas"]["LiveCandidateDto"][];
+            lastWeekLiveCandidates: components["schemas"]["LiveCandidateDto"][];
         };
         ApiResponseListWeekCandidateDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["WeekCandidateDto"][];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["WeekCandidateDto"][];
         };
         WeekCandidateDto: {
             /** Format: int64 */
-            episodeId?: number;
+            episodeId: number;
             /** @enum {string} */
-            state?: WeekCandidateDtoState;
-            hasVoted?: boolean;
-            mainThumbnailUrl?: string;
-            titleKor?: string;
+            state: WeekCandidateDtoState;
+            hasVoted: boolean;
+            mainThumbnailUrl: string;
+            titleKor: string;
         };
         ApiResponseCandidateFormDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["CandidateFormDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["CandidateFormDto"];
         };
         CandidateFormDto: {
             /** Format: int64 */
-            episodeId?: number;
+            episodeId: number;
             /** Format: int32 */
-            voterCount?: number;
+            voterCount: number;
             /** Format: int64 */
-            animeId?: number;
-            mainThumbnailUrl?: string;
-            result?: components["schemas"]["VoteFormResultDto"];
+            animeId: number;
+            mainThumbnailUrl: string;
+            result: components["schemas"]["VoteFormResultDto"];
         };
         AnimePreviewDto: {
             /** Format: int64 */
-            animeId?: number;
-            titleKor?: string;
-            mainThumbnailUrl?: string;
+            animeId: number;
+            titleKor: string;
+            mainThumbnailUrl: string;
             /** @enum {string} */
-            status?: AnimePreviewDtoStatus;
-            isBreak?: boolean;
-            isRescheduled?: boolean;
-            genre?: string;
+            status: AnimePreviewDtoStatus;
+            isBreak: boolean;
+            isRescheduled: boolean;
+            genre: string;
             /** @enum {string} */
-            medium?: PostRequestDtoMedium;
-            ottDtos?: components["schemas"]["OttDto"][];
+            medium: PostRequestDtoMedium;
+            ottDtos: components["schemas"]["OttDto"][];
             /** @enum {string} */
-            dayOfWeek?: PostRequestDtoDayOfWeek;
+            dayOfWeek: PostRequestDtoDayOfWeek;
             /** Format: date-time */
-            scheduledAt?: string;
-            airTime?: components["schemas"]["LocalTime"];
+            scheduledAt: string;
+            airTime: components["schemas"]["LocalTime"];
         };
         AnimePreviewListDto: {
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
-            scheduleDtos?: components["schemas"]["ScheduleDto"][];
+            quarter: number;
+            scheduleDtos: components["schemas"]["ScheduleDto"][];
         };
         ApiResponseAnimePreviewListDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AnimePreviewListDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AnimePreviewListDto"];
         };
         LocalTime: {
             /** Format: int32 */
-            hour?: number;
+            hour: number;
             /** Format: int32 */
-            minute?: number;
+            minute: number;
             /** Format: int32 */
-            second?: number;
+            second: number;
             /** Format: int32 */
-            nano?: number;
+            nano: number;
         };
         ScheduleDto: {
             /** @enum {string} */
-            dayOfWeekShort?: PostRequestDtoDayOfWeek;
-            animePreviews?: components["schemas"]["AnimePreviewDto"][];
+            dayOfWeekShort: PostRequestDtoDayOfWeek;
+            animePreviews: components["schemas"]["AnimePreviewDto"][];
         };
         ApiResponseListQuarterResponseDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["QuarterResponseDto"][];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["QuarterResponseDto"][];
         };
         QuarterResponseDto: {
             /** Format: int32 */
-            year?: number;
-            quarters?: number[];
+            year: number;
+            quarters: number[];
         };
         ApiResponseSearchResponseDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["SearchResponseDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["SearchResponseDto"];
         };
         SearchResponseDto: {
             /** Format: int32 */
-            size?: number;
-            animePreviews?: components["schemas"]["AnimePreviewDto"][];
+            size: number;
+            animePreviews: components["schemas"]["AnimePreviewDto"][];
         };
         ApiResponseMePreviewDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["MePreviewDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["MePreviewDto"];
         };
         ApiResponseHomeDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["HomeDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["HomeDto"];
         };
         DuckstarRankPreviewDto: {
             /** Format: double */
-            averageRating?: number;
+            averageRating: number;
             /** Format: int32 */
-            voterCount?: number;
-            rankPreviewDto?: components["schemas"]["RankPreviewDto"];
+            voterCount: number;
+            rankPreviewDto: components["schemas"]["RankPreviewDto"];
         };
         HomeBannerDto: {
             /** @enum {string} */
-            bannerType?: HomeBannerDtoBannerType;
+            bannerType: HomeBannerDtoBannerType;
             /** @enum {string} */
-            contentType?: HomeBannerDtoContentType;
+            contentType: HomeBannerDtoContentType;
             /** Format: int64 */
-            animeId?: number;
+            animeId: number;
             /** Format: int64 */
-            characterId?: number;
-            mainTitle?: string;
-            subTitle?: string;
-            animeImageUrl?: string;
-            characterImageUrl?: string;
+            characterId: number;
+            mainTitle: string;
+            subTitle: string;
+            animeImageUrl: string;
+            characterImageUrl: string;
         };
         HomeDto: {
-            weeklyTopDto?: components["schemas"]["WeeklyTopDto"];
-            homeBannerDtos?: components["schemas"]["HomeBannerDto"][];
-            currentWeekDto?: components["schemas"]["WeekDto"];
-            pastWeekDtos?: components["schemas"]["WeekDto"][];
+            weeklyTopDto: components["schemas"]["WeeklyTopDto"];
+            homeBannerDtos: components["schemas"]["HomeBannerDto"][];
+            currentWeekDto: components["schemas"]["WeekDto"];
+            pastWeekDtos: components["schemas"]["WeekDto"][];
         };
         RankPreviewDto: {
             /** @enum {string} */
-            type?: HomeBannerDtoContentType;
+            type: HomeBannerDtoContentType;
             /** Format: int64 */
-            contentId?: number;
+            contentId: number;
             /** Format: int32 */
-            rank?: number;
+            rank: number;
             /** Format: int32 */
-            rankDiff?: number;
+            rankDiff: number;
             /** Format: int32 */
-            consecutiveWeeksAtSameRank?: number;
-            mainThumbnailUrl?: string;
-            title?: string;
-            subTitle?: string;
+            consecutiveWeeksAtSameRank: number;
+            mainThumbnailUrl: string;
+            title: string;
+            subTitle: string;
         };
         WeeklyTopDto: {
-            isPrepared?: boolean;
-            duckstarRankPreviews?: components["schemas"]["DuckstarRankPreviewDto"][];
-            animeCornerRankPreviews?: components["schemas"]["RankPreviewDto"][];
-            anilabRankPreviews?: components["schemas"]["RankPreviewDto"][];
+            isPrepared: boolean;
+            duckstarRankPreviews: components["schemas"]["DuckstarRankPreviewDto"][];
+            animeCornerRankPreviews: components["schemas"]["RankPreviewDto"][];
+            anilabRankPreviews: components["schemas"]["RankPreviewDto"][];
         };
         ApiResponseWeeklyTopDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["WeeklyTopDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["WeeklyTopDto"];
         };
         ApiResponseReplySliceDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["ReplySliceDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["ReplySliceDto"];
         };
         PageInfo: {
-            hasNext?: boolean;
+            hasNext: boolean;
             /** Format: int32 */
-            page?: number;
+            page: number;
             /** Format: int32 */
-            size?: number;
+            size: number;
         };
         ReplySliceDto: {
             /** Format: int32 */
-            totalCount?: number;
-            replyDtos?: components["schemas"]["ReplyDto"][];
-            pageInfo?: components["schemas"]["PageInfo"];
+            totalCount: number;
+            replyDtos: components["schemas"]["ReplyDto"][];
+            pageInfo: components["schemas"]["PageInfo"];
         };
         AnimeRankDto: {
-            rankPreviewDto?: components["schemas"]["RankPreviewDto"];
-            medalPreviews?: components["schemas"]["MedalPreviewDto"][];
-            animeStatDto?: components["schemas"]["AnimeStatDto"];
-            voteResultDto?: components["schemas"]["VoteResultDto"];
+            rankPreviewDto: components["schemas"]["RankPreviewDto"];
+            medalPreviews: components["schemas"]["MedalPreviewDto"][];
+            animeStatDto: components["schemas"]["AnimeStatDto"];
+            voteResultDto: components["schemas"]["VoteResultDto"];
         };
         AnimeRankSliceDto: {
             /** Format: int32 */
-            voterCount?: number;
+            voterCount: number;
             /** Format: int32 */
-            voteTotalCount?: number;
-            animeRankDtos?: components["schemas"]["AnimeRankDto"][];
-            animeTrendRankPreviews?: components["schemas"]["RankPreviewDto"][];
-            aniLabRankPreviews?: components["schemas"]["RankPreviewDto"][];
-            pageInfo?: components["schemas"]["PageInfo"];
+            voteTotalCount: number;
+            animeRankDtos: components["schemas"]["AnimeRankDto"][];
+            animeTrendRankPreviews: components["schemas"]["RankPreviewDto"][];
+            aniLabRankPreviews: components["schemas"]["RankPreviewDto"][];
+            pageInfo: components["schemas"]["PageInfo"];
         };
         AnimeStatDto: {
             /** Format: int32 */
-            debutRank?: number;
+            debutRank: number;
             /** Format: date */
-            debutDate?: string;
+            debutDate: string;
             /** Format: int32 */
-            peakRank?: number;
+            peakRank: number;
             /** Format: date */
-            peakDate?: string;
+            peakDate: string;
             /** Format: int32 */
-            weeksOnTop10?: number;
+            weeksOnTop10: number;
         };
         ApiResponseAnimeRankSliceDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AnimeRankSliceDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AnimeRankSliceDto"];
         };
         MedalPreviewDto: {
             /** @enum {string} */
-            type?: MedalPreviewDtoType;
+            type: MedalPreviewDtoType;
             /** Format: int32 */
-            rank?: number;
+            rank: number;
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
             /** Format: int32 */
-            week?: number;
+            week: number;
         };
         ApiResponseListWeekDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["WeekDto"][];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["WeekDto"][];
         };
         ApiResponseSurveyRankPage: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["SurveyRankPage"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["SurveyRankPage"];
         };
         SurveyRankDto: {
             /** Format: int32 */
-            rank?: number;
+            rank: number;
             /** Format: int64 */
-            animeId?: number;
-            animeCandidateDto?: components["schemas"]["AnimeCandidateDto"];
-            voteRatioDto?: components["schemas"]["VoteRatioDto"];
+            animeId: number;
+            animeCandidateDto: components["schemas"]["AnimeCandidateDto"];
+            voteRatioDto: components["schemas"]["VoteRatioDto"];
             /** Format: int64 */
-            commentTotalCount?: number;
-            commentDtos?: components["schemas"]["CommentDto"][];
+            commentTotalCount: number;
+            commentDtos: components["schemas"]["CommentDto"][];
         };
         SurveyRankPage: {
             /** Format: int32 */
-            voteTotalCount?: number;
-            surveyRankDtos?: components["schemas"]["SurveyRankDto"][];
+            voteTotalCount: number;
+            surveyRankDtos: components["schemas"]["SurveyRankDto"][];
             /** Format: int32 */
-            page?: number;
+            page: number;
             /** Format: int32 */
-            size?: number;
+            size: number;
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
-            isFirst?: boolean;
-            isLast?: boolean;
+            totalElements: number;
+            isFirst: boolean;
+            isLast: boolean;
         };
         VoteRatioDto: {
             /** Format: double */
-            votePercent?: number;
+            votePercent: number;
             /** Format: double */
-            normalPercent?: number;
+            normalPercent: number;
             /** Format: double */
-            bonusPercent?: number;
+            bonusPercent: number;
             /** Format: double */
-            malePercent?: number;
+            malePercent: number;
             /** Format: double */
-            femalePercent?: number;
+            femalePercent: number;
             /** Format: double */
-            under14Percent?: number;
+            under14Percent: number;
             /** Format: double */
-            to19Percent?: number;
+            to19Percent: number;
             /** Format: double */
-            to24Percent?: number;
+            to24Percent: number;
             /** Format: double */
-            to29Percent?: number;
+            to29Percent: number;
             /** Format: double */
-            to34Percent?: number;
+            to34Percent: number;
             /** Format: double */
-            over35Percent?: number;
+            over35Percent: number;
         };
         AnimeHomeDto: {
-            animeInfoDto?: components["schemas"]["AnimeInfoDto"];
-            animeStatDto?: components["schemas"]["AnimeStatDto"];
-            episodeResponseDtos?: components["schemas"]["EpisodeDto"][];
-            rackUnitDtos?: components["schemas"]["RackUnitDto"][];
-            castPreviews?: components["schemas"]["CastPreviewDto"][];
+            animeInfoDto: components["schemas"]["AnimeInfoDto"];
+            animeStatDto: components["schemas"]["AnimeStatDto"];
+            episodeResponseDtos: components["schemas"]["EpisodeDto"][];
+            rackUnitDtos: components["schemas"]["RackUnitDto"][];
+            castPreviews: components["schemas"]["CastPreviewDto"][];
         };
         AnimeInfoDto: {
             /** @enum {string} */
-            medium?: PostRequestDtoMedium;
+            medium: PostRequestDtoMedium;
             /** @enum {string} */
-            status?: AnimePreviewDtoStatus;
+            status: AnimePreviewDtoStatus;
             /** Format: int32 */
-            totalEpisodes?: number;
+            totalEpisodes: number;
             /** Format: date-time */
-            premiereDateTime?: string;
-            titleKor?: string;
-            titleOrigin?: string;
+            premiereDateTime: string;
+            titleKor: string;
+            titleOrigin: string;
             /** @enum {string} */
-            dayOfWeek?: PostRequestDtoDayOfWeek;
-            airTime?: components["schemas"]["LocalTime"];
-            synopsis?: string;
-            corp?: string;
-            director?: string;
-            genre?: string;
-            author?: string;
+            dayOfWeek: PostRequestDtoDayOfWeek;
+            airTime: components["schemas"]["LocalTime"];
+            synopsis: string;
+            corp: string;
+            director: string;
+            genre: string;
+            author: string;
             /** Format: int32 */
-            minAge?: number;
-            officialSite?: {
+            minAge: number;
+            officialSite: {
                 [key: string]: string;
             };
-            mainImageUrl?: string;
-            mainThumbnailUrl?: string;
-            quarterDtos?: components["schemas"]["QuarterDto"][];
-            ottDtos?: components["schemas"]["OttDto"][];
+            mainImageUrl: string;
+            mainThumbnailUrl: string;
+            quarterDtos: components["schemas"]["QuarterDto"][];
+            ottDtos: components["schemas"]["OttDto"][];
         };
         ApiResponseAnimeHomeDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AnimeHomeDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AnimeHomeDto"];
         };
         CastPreviewDto: {
-            mainThumbnailUrl?: string;
-            nameKor?: string;
-            cv?: string;
+            mainThumbnailUrl: string;
+            nameKor: string;
+            cv: string;
         };
         QuarterDto: {
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
         };
         RackUnitDto: {
             /** Format: date */
-            startDate?: string;
+            startDate: string;
             /** Format: date */
-            endDate?: string;
-            medalPreviewDto?: components["schemas"]["MedalPreviewDto"];
+            endDate: string;
+            medalPreviewDto: components["schemas"]["MedalPreviewDto"];
         };
         ApiResponseListEpisodeDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["EpisodeDto"][];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["EpisodeDto"][];
         };
         AnimeCommentSliceDto: {
             /** Format: int32 */
-            totalCount?: number;
-            commentDtos?: components["schemas"]["CommentDto"][];
-            pageInfo?: components["schemas"]["PageInfo"];
+            totalCount: number;
+            commentDtos: components["schemas"]["CommentDto"][];
+            pageInfo: components["schemas"]["PageInfo"];
         };
         ApiResponseAnimeCommentSliceDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AnimeCommentSliceDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AnimeCommentSliceDto"];
         };
         ApiResponseListLong: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: number[];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: number[];
         };
         AdminScheduleInfoDto: {
-            weekDto?: components["schemas"]["WeekDto"];
+            weekDto: components["schemas"]["WeekDto"];
             /** Format: int32 */
-            animeTotalCount?: number;
-            scheduleInfoDtos?: components["schemas"]["ScheduleInfoDto"][];
+            animeTotalCount: number;
+            scheduleInfoDtos: components["schemas"]["ScheduleInfoDto"][];
         };
         ApiResponseAdminScheduleInfoDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AdminScheduleInfoDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AdminScheduleInfoDto"];
         };
         ScheduleInfoDto: {
-            titleKor?: string;
-            mainThumbnailUrl?: string;
-            episodeDto?: components["schemas"]["EpisodeDto"];
-            managerProfileDto?: components["schemas"]["ManagerProfileDto"];
+            titleKor: string;
+            mainThumbnailUrl: string;
+            episodeDto: components["schemas"]["EpisodeDto"];
+            managerProfileDto: components["schemas"]["ManagerProfileDto"];
         };
         ApiResponseSubmissionCountSliceDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["SubmissionCountSliceDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["SubmissionCountSliceDto"];
         };
         SubmissionCountDto: {
             /** Format: int64 */
-            weekId?: number;
+            weekId: number;
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
             /** Format: int32 */
-            week?: number;
-            ipHash?: string;
+            week: number;
+            ipHash: string;
             /** Format: int64 */
-            count?: number;
-            isBlocked?: boolean;
-            isAllWithdrawn?: boolean;
+            count: number;
+            isBlocked: boolean;
+            isAllWithdrawn: boolean;
             /** Format: date-time */
-            firstCreatedAt?: string;
+            firstCreatedAt: string;
             /** Format: date-time */
-            lastCreatedAt?: string;
+            lastCreatedAt: string;
         };
         SubmissionCountSliceDto: {
-            submissionCountDtos?: components["schemas"]["SubmissionCountDto"][];
-            pageInfo?: components["schemas"]["PageInfo"];
+            submissionCountDtos: components["schemas"]["SubmissionCountDto"][];
+            pageInfo: components["schemas"]["PageInfo"];
         };
         ApiResponseIpManagementLogSliceDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["IpManagementLogSliceDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["IpManagementLogSliceDto"];
         };
         IpManagementLogDto: {
             /** Format: int64 */
-            logId?: number;
+            logId: number;
             /** Format: int64 */
-            weekId?: number;
+            weekId: number;
             /** Format: int32 */
-            year?: number;
+            year: number;
             /** Format: int32 */
-            quarter?: number;
+            quarter: number;
             /** Format: int32 */
-            week?: number;
-            ipHash?: string;
-            reason?: string;
-            isUndoable?: boolean;
-            memberProfileDto?: components["schemas"]["ManagerProfileDto"];
+            week: number;
+            ipHash: string;
+            reason: string;
+            isUndoable: boolean;
+            memberProfileDto: components["schemas"]["ManagerProfileDto"];
         };
         IpManagementLogSliceDto: {
-            ipManagementLogDtos?: components["schemas"]["IpManagementLogDto"][];
-            pageInfo?: components["schemas"]["PageInfo"];
+            ipManagementLogDtos: components["schemas"]["IpManagementLogDto"][];
+            pageInfo: components["schemas"]["PageInfo"];
         };
         ApiResponseListEpisodeStarDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["EpisodeStarDto"][];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["EpisodeStarDto"][];
         };
         EpisodeStarDto: {
-            titleKor?: string;
+            titleKor: string;
             /** Format: int32 */
-            starScore?: number;
-            isBlocked?: boolean;
+            starScore: number;
+            isBlocked: boolean;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
         };
         AdminEpisodeListDto: {
             /** Format: int32 */
-            episodeTotalCount?: number;
-            episodeInfoDtos?: components["schemas"]["EpisodeInfoDto"][];
+            episodeTotalCount: number;
+            episodeInfoDtos: components["schemas"]["EpisodeInfoDto"][];
         };
         ApiResponseAdminEpisodeListDto: {
-            isSuccess?: boolean;
-            code?: string;
-            message?: string;
-            result?: components["schemas"]["AdminEpisodeListDto"];
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AdminEpisodeListDto"];
         };
         EpisodeInfoDto: {
-            episodeDto?: components["schemas"]["EpisodeDto"];
-            managerProfileDto?: components["schemas"]["ManagerProfileDto"];
+            episodeDto: components["schemas"]["EpisodeDto"];
+            managerProfileDto: components["schemas"]["ManagerProfileDto"];
         };
     };
     responses: never;

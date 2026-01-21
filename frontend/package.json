@@ -9,7 +9,7 @@
     "lint": "eslint",
     "analyze": "node scripts/analyze-bundle.js",
     "build:analyze": "ANALYZE=true next build",
-    "openapi:sync": "curl http://localhost:8080/v3/api-docs | openapi-typescript -o src/types/generated/api.ts --enum --dedupe-enums"
+    "openapi:sync": "curl http://localhost:8080/v3/api-docs | openapi-typescript -o src/types/generated/api.ts --enum --dedupe-enums --properties-required-by-default"
   },
   "dependencies": {
     "@tailwindcss/line-clamp": "^0.4.4",
