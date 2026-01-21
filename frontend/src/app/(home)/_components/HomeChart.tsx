@@ -3,13 +3,11 @@
 import { useRouter } from 'next/navigation';
 import HomeRankInfo from './HomeRankInfo';
 import HomeRankInfoMobile from './HomeRankInfoMobile';
-import { DuckstarRankPreviewDto, WeekDto } from '@/types/dtos';
-import { MedalType } from '@/types/enums';
+import { MedalType, Schemas, WeekDto } from '@/types';
 
 interface HomeChartProps {
-  duckstarRankPreviews: DuckstarRankPreviewDto[];
-  selectedWeek?: WeekDto | null;
-  className?: string;
+  duckstarRankPreviews: Schemas['DuckstarRankPreviewDto'][];
+  selectedWeek: WeekDto | null;
 }
 
 // RankDiff 타입 변환 헬퍼 함수
@@ -33,8 +31,6 @@ function getRankDiffType(
     return rankDiff <= -5 ? 'down-greater-equal-than-5' : 'down-less-than-5';
   }
 
-  // 그 외의 경우 Zero, NEW, consecutive 판단
-
   // consecutiveWeeks가 2 이상일 때 same-rank
   if (consecutiveWeeks >= 2) {
     return 'same-rank';
@@ -50,17 +46,16 @@ function getRankDiffType(
 }
 
 // Medal 타입 변환 헬퍼 함수
-function getMedalType(rank: number): MedalType {
-  if (rank === 1) return MedalType.Gold;
-  if (rank === 2) return MedalType.Silver;
-  if (rank === 3) return MedalType.Bronze;
-  return MedalType.None;
+function getMedalType(rank?: number): MedalType {
+  if (rank === 1) return MedalType.GOLD;
+  if (rank === 2) return MedalType.SILVER;
+  if (rank === 3) return MedalType.BRONZE;
+  return MedalType.NONE;
 }
 
 export default function HomeChart({
   duckstarRankPreviews,
   selectedWeek,
-  className = '',
 }: HomeChartProps) {
   const router = useRouter();
 
@@ -92,9 +87,7 @@ export default function HomeChart({
           }
         }
       `}</style>
-      <div
-        className={`w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[750px] dark:border-none dark:bg-zinc-800 ${className}`}
-      >
+      <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[750px] dark:border-none dark:bg-zinc-800">
         {/* 차트 컨텐츠 */}
         <div className="relative p-5">
           {duckstarRankPreviews.length === 0 ? (
@@ -114,13 +107,13 @@ export default function HomeChart({
             <>
               <div className="w-full space-y-4">
                 {duckstarRankPreviews.map((duckstarRankPreview, index) => {
-                  // API 응답 구조: DuckstarRankPreviewDto는 votePercent, averageRating, voterCount와 rankPreviewDto를 포함
-                  const {
-                    votePercent,
-                    averageRating,
-                    voterCount,
-                    rankPreviewDto,
-                  } = duckstarRankPreview;
+                  const { averageRating, voterCount, rankPreviewDto } =
+                    duckstarRankPreview;
+
+                  if (!rankPreviewDto) {
+                    return null;
+                  }
+
                   const {
                     rank,
                     rankDiff,
@@ -132,10 +125,8 @@ export default function HomeChart({
                     contentId,
                   } = rankPreviewDto;
 
-                  // null/undefined 체크
                   const safeRankDiff = rankDiff ?? 0;
                   const safeConsecutiveWeeks = consecutiveWeeksAtSameRank ?? 0;
-                  const safeVotePercent = votePercent ?? 0;
                   const safeAverageRating = averageRating ?? 0;
                   const safeVoterCount = voterCount ?? 0;
 
@@ -162,7 +153,6 @@ export default function HomeChart({
                           title={title}
                           studio={subTitle}
                           image={mainThumbnailUrl}
-                          percentage={safeVotePercent.toFixed(2)}
                           averageRating={safeAverageRating}
                           voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
                           medal={getMedalType(rank)}
@@ -192,10 +182,8 @@ export default function HomeChart({
                           title={title}
                           studio={subTitle}
                           image={mainThumbnailUrl}
-                          percentage={safeVotePercent.toFixed(2)}
                           averageRating={safeAverageRating}
-                          voterCount={safeVoterCount} // 백엔드에서 받은 참여자 수
-                          medal={getMedalType(rank)}
+                          voterCount={safeVoterCount}
                           type={type}
                           contentId={contentId}
                         />

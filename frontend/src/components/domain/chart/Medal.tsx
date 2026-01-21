@@ -1,4 +1,4 @@
-import { MedalType } from '@/types/enums';
+import { MedalType } from '@/types';
 
 interface MedalProps {
   property1?: MedalType;
@@ -6,10 +6,10 @@ interface MedalProps {
 }
 
 export default function Medal({
-  property1 = MedalType.Gold,
+  property1 = MedalType.GOLD,
   className = '',
 }: MedalProps) {
-  if (property1 === MedalType.Silver) {
+  if (property1 === MedalType.SILVER) {
     return (
       <div
         className={`xs:gap-[10px] relative flex size-full content-stretch items-center justify-center gap-[6px] sm:gap-[10px] ${className}`}
@@ -24,7 +24,7 @@ export default function Medal({
       </div>
     );
   }
-  if (property1 === MedalType.Bronze) {
+  if (property1 === MedalType.BRONZE) {
     return (
       <div
         className={`xs:gap-[10px] relative flex size-full content-stretch items-center justify-center gap-[6px] sm:gap-[10px] ${className}`}
@@ -41,7 +41,7 @@ export default function Medal({
       </div>
     );
   }
-  if (property1 === MedalType.None) {
+  if (property1 === MedalType.NONE) {
     return <div className={`size-full ${className}`} />;
   }
   return (

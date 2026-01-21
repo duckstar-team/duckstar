@@ -6,11 +6,11 @@ import RankDiff from '@/components/domain/chart/RankDiff';
 import Medal from '@/components/domain/chart/Medal';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import StarRatingDisplay from '@/components/domain/star/StarRatingDisplay';
-import { ContentType, MedalType } from '@/types/enums';
+import { ContentType, MedalType } from '@/types';
 
 interface HomeRankInfoProps {
-  rank?: number;
-  rankDiff?:
+  rank: number;
+  rankDiff:
     | 'up-greater-equal-than-5'
     | 'up-less-than-5'
     | 'down-less-than-5'
@@ -18,33 +18,29 @@ interface HomeRankInfoProps {
     | 'same-rank'
     | 'new'
     | 'Zero';
-  rankDiffValue?: string | number;
-  title?: string;
-  studio?: string;
-  image?: string;
-  percentage?: string;
-  averageRating?: number; // 백엔드에서 받은 평균 별점
-  voterCount?: number; // 백엔드에서 받은 참여자 수
-  medal?: MedalType;
-  type?: ContentType;
-  contentId?: number;
-  className?: string;
+  rankDiffValue: string | number;
+  title: string;
+  studio: string;
+  image: string;
+  averageRating: number;
+  voterCount: number;
+  medal: MedalType;
+  type: ContentType;
+  contentId: number;
 }
 
 export default function HomeRankInfo({
-  rank = 1,
+  rank,
   rankDiff = 'up-greater-equal-than-5',
-  rankDiffValue = '5',
-  title = '내가 연인이 될 수 있을 리 없잖아, 무리무리! (※무리가 아니었다?!)',
-  studio = 'Studio Mother',
-  image = '',
-  percentage = '15.18',
-  averageRating = 4.5, // 기본값
-  voterCount = 0, // 기본값
-  medal = MedalType.Gold,
-  type = ContentType.Anime,
-  contentId = 1,
-  className = '',
+  rankDiffValue,
+  title,
+  studio,
+  image,
+  averageRating,
+  voterCount,
+  medal,
+  type,
+  contentId,
 }: HomeRankInfoProps) {
   const router = useRouter();
   const [showTooltip, setShowTooltip] = useState(false);
@@ -80,8 +76,6 @@ export default function HomeRankInfo({
     return isTopThree ? 'top-[14px]' : 'top-[30px]';
   };
 
-  // 홈페이지에서는 간단한 라우터 사용 (스크롤 복원 훅 사용 안 함)
-
   const handleClick = () => {
     if (!contentId) return; // contentId가 null이면 클릭 무시
 
@@ -98,16 +92,14 @@ export default function HomeRankInfo({
     }
 
     // Next.js 클라이언트 사이드 라우팅 사용 (간단한 라우터)
-    if (type === ContentType.Anime) {
+    if (type === ContentType.ANIME) {
       router.push(`/animes/${contentId}`);
     } else {
       router.push(`/characters/${contentId}`);
     }
   };
   return (
-    <div
-      className={`inline-flex h-24 w-full items-center justify-start gap-5 overflow-hidden rounded-xl px-4 outline outline-gray-200 dark:bg-zinc-900 dark:outline-none ${className}`}
-    >
+    <div className="inline-flex h-24 w-full items-center justify-start gap-5 overflow-hidden rounded-xl px-4 outline outline-gray-200 dark:bg-zinc-900 dark:outline-none">
       {/* 왼쪽 영역 - 클릭 가능 */}
       <div
         className={`flex flex-1 items-center justify-start gap-5 pl-0.5 dark:hover:bg-zinc-800/40 ${contentId ? '-m-2 cursor-pointer rounded-lg p-2 transition-colors duration-200 hover:bg-gray-50' : 'cursor-default'}`}

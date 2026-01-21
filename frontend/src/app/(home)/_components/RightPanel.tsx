@@ -2,15 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { AbroadRankListSkeleton } from '@/components/skeletons';
-import AbroadRankInfo from './AbroadRankInfo';
-import { RankPreviewDto, WeekDto } from '@/types/dtos';
+import AbroadRankInfo from '../../../components/domain/chart/AbroadRankInfo';
+import { Schemas, WeekDto } from '@/types';
 
 interface RightPanelProps {
-  rightPanelData: RankPreviewDto[];
+  rightPanelData: Schemas['RankPreviewDto'][];
   selectedRightTab: 'anilab' | 'anime-corner';
-  rightPanelLoading: boolean;
-  selectedWeek?: WeekDto | null;
-  className?: string;
+  selectedWeek: WeekDto | null;
 }
 
 // RankDiff 타입 변환 헬퍼 함수
@@ -53,9 +51,7 @@ function getRankDiffType(
 export default function RightPanel({
   rightPanelData,
   selectedRightTab,
-  rightPanelLoading,
   selectedWeek,
-  className = '',
 }: RightPanelProps) {
   const router = useRouter();
 
@@ -71,15 +67,9 @@ export default function RightPanel({
   };
 
   return (
-    <div
-      className={`w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[373px] dark:border-zinc-800 dark:bg-zinc-800 ${className}`}
-    >
+    <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white xl:w-[373px] dark:border-zinc-800 dark:bg-zinc-800">
       <div className="relative p-5">
-        {rightPanelLoading ? (
-          <div className="flex h-32 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-rose-800"></div>
-          </div>
-        ) : rightPanelData.length > 0 ? (
+        {rightPanelData.length > 0 ? (
           <>
             {/* 정보 아이콘 - 절대 위치로 모서리에 배치 */}
             <div className="absolute top-2 right-2 z-10">
