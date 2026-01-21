@@ -13,16 +13,18 @@ import {
   addVotedEpisodeWithTTL,
   removeVotedEpisode,
   queryConfig,
+  cn,
 } from '@/lib';
 import { useModal } from '@/components/layout/AppContainer';
 import { useAuth } from '@/context/AuthContext';
-import { getUpcomingAnimes } from '@/api/search';
+import { getCurrentSchedule } from '@/api/search';
 import VoteBanner from './VoteBanner';
 import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SearchBar from '@/components/domain/search/SearchBar';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
+import { sortUpcomingAnimes } from '@/lib/utils/schedule';
 import { Stamp } from 'lucide-react';
 
 export default function VotePageContent() {
@@ -99,7 +101,7 @@ export default function VotePageContent() {
   // 창 너비에 따른 동적 컨테이너 너비 계산 (그리드 최적화)
   const getOptimalContainerWidth = () => {
     // 창 너비에 따라 점진적으로 줄어드는 너비 (큰 화면부터)
-    return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[900px] md:max-w-[700px] sm:max-w-[500px]';
+    return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[900px] md:max-w-[700px]';
   };
   const queryClient = useQueryClient();
   const [fallbackAnimes, setFallbackAnimes] = useState<AnimePreviewDto[]>([]); // fallback 애니메이션 데이터
@@ -344,15 +346,13 @@ export default function VotePageContent() {
 
     return (
       <div
-        className={
+        className={cn(
           viewMode === 'large'
-            ? `${
-                filteredCandidates.length <= 3
-                  ? 'flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-[40px]'
-                  : 'grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-1 sm:gap-6 md:grid-cols-2 lg:grid-cols-2 lg:gap-[40px] xl:grid-cols-3 2xl:grid-cols-4'
-              }`
+            ? filteredCandidates.length <= 3
+              ? 'flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-[40px]'
+              : 'grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 sm:gap-6 md:grid-cols-2 lg:gap-[40px] xl:grid-cols-3 2xl:grid-cols-4'
             : 'flex flex-col gap-4 lg:grid lg:min-w-[500px] lg:grid-cols-2 lg:gap-4'
-        }
+        )}
       >
         {filteredCandidates.map((candidate) =>
           viewMode === 'large' ? (
@@ -450,18 +450,32 @@ export default function VotePageContent() {
       );
       setIsUsingFallback(true);
 
-      const upcomingData = await getUpcomingAnimes();
-      const noneSchedule = upcomingData.scheduleDtos.find(
-        (dto) => dto.dayOfWeekShort === 'NONE'
+      const scheduleData = await getCurrentSchedule();
+
+      // 모든 scheduleDtos에서 애니메이션을 가져옴
+      const allAnimes = scheduleData.scheduleDtos.flatMap(
+        (dto) => dto.animePreviews
       );
-      const upcomingAnimes = noneSchedule?.animePreviews || [];
+
+      // 12시간 이내 방영 예정인 애니메이션만 필터링
+      const now = new Date();
+      const filteredAnimes = allAnimes.filter((anime) => {
+        if (
+          (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
+          !anime.scheduledAt
+        )
+          return false;
+
+        const scheduled = new Date(anime.scheduledAt);
+        if (isNaN(scheduled.getTime())) return false;
+
+        // 12시간 이내 방영 예정인 애니메이션만 필터링
+        const timeDiff = scheduled.getTime() - now.getTime();
+        return timeDiff >= 0 && timeDiff <= 12 * 60 * 60 * 1000; // 12시간 = 12 * 60 * 60 * 1000ms
+      });
 
       // 남은 시간 순으로 정렬 (가장 가까운 시간부터)
-      const sortedAnimes = upcomingAnimes.sort((a, b) => {
-        const timeA = new Date(a.scheduledAt).getTime();
-        const timeB = new Date(b.scheduledAt).getTime();
-        return timeA - timeB; // 오름차순 정렬 (가장 가까운 시간이 먼저)
-      });
+      const sortedAnimes = sortUpcomingAnimes(filteredAnimes);
 
       // AnimePreviewDto 형태로 저장 (검색화면과 동일한 형태)
       setFallbackAnimes(sortedAnimes);
@@ -890,7 +904,7 @@ export default function VotePageContent() {
         className={`p-4 shadow-sm dark:shadow-none ${
           isCurrentWeekSearchBarSticky && !isLastWeekSearchBarSticky
             ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px] dark:bg-zinc-900/80'
-            : 'mb-7 bg-white md:mb-8 dark:bg-zinc-900'
+            : 'mb-7 bg-white md:mb-8 dark:bg-zinc-800'
         }`}
         style={{
           left: `${sidebarWidth}px`,
@@ -914,12 +928,12 @@ export default function VotePageContent() {
           {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
           {currentWeekLiveCandidates.length > 0 &&
             filteredcurrentWeekLiveCandidates.length > 0 && (
-              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-none dark:bg-zinc-800">
+              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-none dark:bg-zinc-700">
                 <button
                   onClick={() => handleCurrentViewModeChange('large')}
                   className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors duration-200 sm:text-sm ${
                     currentViewMode === 'large'
-                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
                       : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                   }`}
                 >
@@ -929,7 +943,7 @@ export default function VotePageContent() {
                   onClick={() => handleCurrentViewModeChange('small')}
                   className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors duration-200 sm:text-sm ${
                     currentViewMode === 'small'
-                      ? 'border border-gray-200 bg-white text-gray-900 dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                      ? 'border border-gray-200 bg-white text-gray-900 dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
                       : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                   }`}
                 >
@@ -1071,7 +1085,7 @@ export default function VotePageContent() {
             className={`p-4 shadow-sm dark:shadow-none ${
               isLastWeekSearchBarSticky
                 ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px] dark:bg-zinc-900/80'
-                : 'mt-4 mb-7 bg-white md:mb-8 dark:bg-zinc-900'
+                : 'mt-4 mb-7 bg-white md:mb-8 dark:bg-zinc-800'
             }`}
             style={{
               left: `${sidebarWidth}px`,
@@ -1097,12 +1111,12 @@ export default function VotePageContent() {
               {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
               {lastWeekLiveCandidates.length > 0 &&
                 filteredlastWeekLiveCandidates.length > 0 && (
-                  <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1 dark:border-none dark:bg-zinc-800">
+                  <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1 dark:border-none dark:bg-zinc-700">
                     <button
                       onClick={() => handleLastViewModeChange('large')}
                       className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
                         lastViewMode === 'large'
-                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
                           : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                       }`}
                     >
@@ -1112,7 +1126,7 @@ export default function VotePageContent() {
                       onClick={() => handleLastViewModeChange('small')}
                       className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
                         lastViewMode === 'small'
-                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-900 dark:text-zinc-300'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
                           : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                       }`}
                     >

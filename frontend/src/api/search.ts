@@ -79,69 +79,6 @@ export async function getCurrentSchedule() {
 }
 
 /**
- * "곧 시작" 그룹의 애니메이션 데이터를 조회합니다.
- * 12시간 이내 방영 예정인 애니메이션들을 반환합니다.
- * @returns 곧 시작 그룹 애니메이션 목록
- */
-export async function getUpcomingAnimes(): Promise<AnimePreviewListDto> {
-  try {
-    // '이번 주' 메뉴에서 곧 시작 그룹 데이터를 가져옴
-    const response = await fetch(`${BASE_URL}/api/v1/search?hour=0&minute=0`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const apiResponse: ApiResponse<AnimePreviewListDto> = await response.json();
-
-    if (!apiResponse.isSuccess) {
-      throw new Error(apiResponse.message);
-    }
-
-    // 백엔드 응답 구조에 맞게 NONE 그룹에서 애니메이션 가져오기
-    const noneSchedule = apiResponse.result.scheduleDtos.find(
-      (dto) => dto.dayOfWeekShort === 'NONE'
-    );
-    const upcomingAnimes = noneSchedule?.animePreviews || [];
-
-    // 12시간 이내 방영 예정인 애니메이션만 필터링 (백엔드에서 이미 처리되었을 수 있음)
-    const now = new Date();
-    const filteredAnimes = upcomingAnimes.filter((anime) => {
-      if (
-        (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
-        !anime.scheduledAt
-      )
-        return false;
-
-      const scheduled = new Date(anime.scheduledAt);
-      if (isNaN(scheduled.getTime())) return false;
-
-      // 12시간 이내 방영 예정인 애니메이션만 필터링
-      const timeDiff = scheduled.getTime() - now.getTime();
-      return timeDiff >= 0 && timeDiff <= 12 * 60 * 60 * 1000; // 12시간 = 12 * 60 * 60 * 1000ms
-    });
-
-    return {
-      ...apiResponse.result,
-      scheduleDtos: [
-        {
-          dayOfWeekShort: 'NONE',
-          animePreviews: filteredAnimes,
-        },
-      ],
-    };
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
  * 특정 연도와 분기의 편성표를 조회합니다.
  * @param year 연도
  * @param quarter 분기 (1~4)
