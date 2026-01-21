@@ -36,7 +36,6 @@ import {
   unlikeReply,
 } from '@/api/comment';
 import { ChevronRight } from 'lucide-react';
-import { EpisodeSectionSkeleton } from '@/components/skeletons';
 
 interface RightCommentPanelProps {
   animeId?: number;
@@ -983,29 +982,6 @@ export default function RightCommentPanel({
     [rawAnimeData?.episodeResponseDtos]
   );
 
-  // 로딩 상태 렌더링
-  const renderLoadingState = () => (
-    <div
-      className="w-full border-r border-l border-gray-300 bg-white"
-      style={{ minHeight: 'calc(100vh - 60px)' }}
-    >
-      {/* 에피소드 섹션 스켈레톤 */}
-      <div className="flex justify-center pt-7 pb-1" style={{ width: '100%' }}>
-        <EpisodeSectionSkeleton />
-      </div>
-
-      {/* 댓글 섹션 스켈레톤 */}
-      <div className="flex w-full flex-col bg-white">
-        <div className="flex w-full flex-col items-start justify-start pb-7">
-          <div className="flex w-full items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
-            <span className="ml-2 text-gray-500">로딩 중...</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   // 에러 상태 렌더링
   const renderErrorState = () => (
     <div
@@ -1038,9 +1014,7 @@ export default function RightCommentPanel({
 
   return (
     <>
-      {commentsLoading ? (
-        renderLoadingState()
-      ) : error ? (
+      {error ? (
         renderErrorState()
       ) : (
         <div
@@ -1079,19 +1053,15 @@ export default function RightCommentPanel({
               )}
               <div
                 ref={commentHeaderRef}
-                className="z-30 pb-3"
+                className="z-30 bg-gray-50 pb-3 dark:bg-zinc-900"
                 style={{
                   position: isCommentHeaderSticky ? 'fixed' : 'static',
                   top: isCommentHeaderSticky ? '60px' : 'auto',
                   left: isCommentHeaderSticky ? 'auto' : 'auto',
-                  width: isCommentHeaderSticky
-                    ? window.innerWidth >= 1024
-                      ? '584px'
-                      : '100%'
-                    : '100%',
+                  width: '100%',
                   maxWidth: isCommentHeaderSticky
                     ? window.innerWidth >= 1024
-                      ? '584px'
+                      ? '608px'
                       : '100%'
                     : '100%',
                 }}
@@ -1196,19 +1166,15 @@ export default function RightCommentPanel({
                     ? `${60 + commentHeaderHeight}px`
                     : 'auto',
                   left: isSortingMenuSticky ? 'auto' : 'auto',
-                  width: isSortingMenuSticky
-                    ? window.innerWidth >= 1024
-                      ? '584px'
-                      : '100%'
-                    : '100%',
+                  width: '100%',
                   maxWidth: isSortingMenuSticky
                     ? window.innerWidth >= 1024
-                      ? '584px'
+                      ? '608px'
                       : '100%'
                     : '100%',
                 }}
               >
-                <div className="pt-3">
+                <div className="bg-gray-50 pt-3 dark:bg-zinc-900">
                   <SortingMenu
                     currentSort={currentSort}
                     onSortChange={handleSortChange}

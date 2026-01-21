@@ -879,9 +879,8 @@ export default function LeftInfoPanel({
             >
               <p className="leading-[normal]">
                 {`${year}년 ${getSeasonInKorean(quarter)}`} ·{' '}
-                {medium === 'MOVIE' ? '극장판' : medium}
-                {dayOfWeek !== 'NONE' &&
-                  ` · ${getDayInKorean(dayOfWeek)} ${formatAirTime(airTime || '')}`}
+                {medium === 'MOVIE' ? '극장판' : medium} ·{' '}
+                {getDayInKorean(dayOfWeek)} {formatAirTime(airTime || '')}
               </p>
             </div>
 

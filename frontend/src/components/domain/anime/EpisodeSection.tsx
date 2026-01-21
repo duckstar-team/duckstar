@@ -435,14 +435,14 @@ export default function EpisodeSection({
                 <div className="ml-2 flex gap-1">
                   <button
                     onClick={handleEditToggle}
-                    className="cursor-pointer rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-200"
+                    className="bg-brand-zinc-200 hover:bg-brand-zinc-300 cursor-pointer rounded px-2 py-1 text-xs text-gray-600 transition-colors dark:text-white"
                   >
                     편집
                   </button>
                   <button
                     onClick={handleSetUnknown}
                     disabled={isUpdating}
-                    className="cursor-pointer rounded bg-orange-100 px-2 py-1 text-xs text-orange-600 transition-colors hover:bg-orange-200 disabled:opacity-50"
+                    className="cursor-pointer rounded bg-orange-100 px-2 py-1 text-xs text-orange-600 transition-colors hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-400/50 dark:text-white dark:hover:bg-orange-400/70"
                   >
                     {isUpdating ? '처리중...' : '모름'}
                   </button>
