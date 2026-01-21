@@ -2,14 +2,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import '@/styles/customScrollbar.css';
-import { cn, getSeasonInKorean } from '@/lib';
+import { cn } from '@/lib';
 import CharacterList from '@/components/domain/anime/CharacterList';
-import { Character, AnimeInfoDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import ImageModal from '@/components/domain/anime/ImageModal';
-import { useImageCache } from '@/hooks/useImageCache';
 import RightCommentPanel from './RightCommentPanel';
-import { OttType } from '@/types/enums';
 import { format } from 'date-fns';
+import { OttDtoOttType } from '@/types/generated/api';
 
 export type TabOption = 'info' | 'characters' | 'performance' | 'comments';
 
@@ -34,8 +33,8 @@ interface LeftInfoPanelProps {
   isMobile?: boolean;
   animeId?: number; // 댓글 패널용 애니 ID
   rawAnimeData?: any; // 댓글 패널용 원본 데이터
-  anime: AnimeInfoDto;
-  characters?: Character[];
+  anime: Schemas['AnimeInfoDto'];
+  characters?: Schemas['CastPreviewDto'][];
 }
 
 export default function LeftInfoPanel({
@@ -54,9 +53,6 @@ export default function LeftInfoPanel({
   animeId,
   rawAnimeData,
 }: LeftInfoPanelProps) {
-  // 이미지 캐시 훅 사용
-  const { isImageLoaded, isImageError } = useImageCache();
-
   // 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<TabOption>('info');
   const [hoveredTab, setHoveredTab] = useState<TabOption | null>(null);
@@ -127,10 +123,7 @@ export default function LeftInfoPanel({
   const heightRatio = Math.max(panelHeight / baseHeight, 0.7); // 최소 70% 비율
 
   // 각 섹션별 높이 계산
-  const mainImageBaseHeight = 385; // 메인 이미지 기본 높이
   const titleOverlayBaseHeight = 192; // 제목 오버레이 기본 높이
-  const titleOverlayBaseTop = 157; // 제목 오버레이 기본 top 위치
-  const lowerPanelBaseTop = 337; // 하단 패널 기본 top 위치
 
   // 메인 이미지 섹션 높이 (전체 높이의 55% 정도, 최소 250px, 최대 400px)
   const mainImageHeight = Math.min(Math.max(panelHeight * 0.55, 250), 400);
@@ -317,13 +310,16 @@ export default function LeftInfoPanel({
     author,
     director,
     synopsis,
-    officalSite: officialSite, // TODO: 응답 오타 수정 후 수정
+    officialSite,
     ottDtos,
     premiereDateTime,
     minAge,
   } = anime;
 
-  const { year = 2025, seasonType: quarter } = anime.seasonDtos[0];
+  const { year, quarter } = anime.quarterDtos?.[0] || {
+    year: 2026,
+    quarter: 1,
+  };
 
   // 이미지 로딩 상태 관리 (간소화)
   const [currentPosterImage, setCurrentPosterImage] = useState(
@@ -332,7 +328,6 @@ export default function LeftInfoPanel({
   const [currentBackgroundImage, setCurrentBackgroundImage] = useState(
     mainImageUrl || '/banners/duckstar-logo.svg'
   );
-  const [backgroundPosition, setBackgroundPosition] = useState('center center');
   const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
   const [isCachedImage, setIsCachedImage] = useState(false); // 캐시된 이미지 여부
   const [skipTransition, setSkipTransition] = useState(false); // 전환 효과 건너뛰기
@@ -363,34 +358,6 @@ export default function LeftInfoPanel({
       };
 
       // CORS 설정 없이 로드 시도
-      img.src = imageUrl;
-    });
-  };
-
-  // 이미지 위치 계산 함수 - 모든 이미지의 중앙점을 맞춤
-  const calculateImagePosition = (imageUrl: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const containerWidth = 586; // 배경 컨테이너 너비
-        const containerHeight = 828; // 배경 컨테이너 높이
-        const containerAspectRatio = containerWidth / containerHeight;
-        const imageAspectRatio = img.width / img.height;
-
-        // 모든 이미지의 중앙점을 컨테이너 중앙에 맞춤
-        let position = 'center center';
-
-        if (imageAspectRatio > containerAspectRatio) {
-          // 이미지가 더 넓음 - 높이에 맞춤, 좌우 중앙
-          position = 'center center';
-        } else {
-          // 이미지가 더 높음 - 너비에 맞춤, 상하 중앙
-          position = 'center center';
-        }
-
-        resolve(position);
-      };
-      img.onerror = () => resolve('center center');
       img.src = imageUrl;
     });
   };
@@ -436,10 +403,6 @@ export default function LeftInfoPanel({
             setSkipTransition(true);
             setIsCachedImage(true);
 
-            // 즉시 상태 업데이트 (전환 효과 없이)
-            const position = await calculateImagePosition(mainImageUrl);
-            setBackgroundPosition(position);
-
             // 배경 이미지를 즉시 변경 (전환 없이)
             setCurrentBackgroundImage(mainImageUrl);
             setIsMainImageLoaded(true);
@@ -460,9 +423,6 @@ export default function LeftInfoPanel({
             // 성공 콜백
             img.onload = async () => {
               try {
-                // 메인 이미지의 중앙점을 계산하여 설정
-                const position = await calculateImagePosition(mainImageUrl);
-                setBackgroundPosition(position);
                 setCurrentBackgroundImage(mainImageUrl);
                 setIsMainImageLoaded(true);
               } catch (error) {
@@ -491,13 +451,6 @@ export default function LeftInfoPanel({
     }
   }, [mainImageUrl, mainThumbnailUrl]);
 
-  // 썸네일 이미지 위치 계산 (초기 로드 시)
-  useEffect(() => {
-    if (mainThumbnailUrl) {
-      calculateImagePosition(mainThumbnailUrl).then(setBackgroundPosition);
-    }
-  }, [mainThumbnailUrl]);
-
   // mainThumbnailUrl이 로드되면 포스터 이미지 상태 업데이트
   useEffect(() => {
     if (mainThumbnailUrl) {
@@ -515,7 +468,6 @@ export default function LeftInfoPanel({
     if (synopsis && synopsisRef.current) {
       const element = synopsisRef.current;
       const lineHeight = 24; // 16px * 1.5 line-height
-      const maxHeight = lineHeight * 2; // 2줄
 
       // 임시로 전체 텍스트를 표시하여 높이 측정
       element.style.webkitLineClamp = 'unset';
@@ -559,52 +511,39 @@ export default function LeftInfoPanel({
     return dayMap[day] || day;
   };
 
-  // 분기 한글 변환
-  const getQuarterInKorean = (quarter: number) => {
-    const quarterMap: { [key: number]: string } = {
-      1: '겨울',
-      2: '봄',
-      3: '여름',
-      4: '가을',
-    };
-    return quarterMap[quarter] || '';
-  };
-
   // 방영 시간 포맷팅
-  const formatAirTime = (scheduledAt: string) => {
-    if (!scheduledAt) return '';
-
-    // ISO 문자열이 아닌 경우 (예: "21:25" 또는 "21:25:00") 직접 반환
-    if (scheduledAt.includes(':') && !scheduledAt.includes('T')) {
-      // HH:MM 또는 HH:MM:SS 형식인 경우 (LocalTime은 HH:MM:SS로 올 수 있음)
-      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(scheduledAt)) {
-        const [hoursStr, minutesStr] = scheduledAt.split(':');
-        let hours = parseInt(hoursStr, 10);
-        // 00:00 ~ 04:59인 경우 24시간 더하기
-        if (hours < 5) {
-          hours += 24;
-        }
-        return `${hours.toString().padStart(2, '0')}:${minutesStr}`;
-      }
-      return scheduledAt;
-    }
-
-    try {
-      const date = new Date(scheduledAt);
-      // 유효한 날짜인지 확인
-      if (isNaN(date.getTime())) {
-        return '';
-      }
-      let hours = date.getHours();
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      // 00:00 ~ 04:59인 경우 24시간 더하기
-      if (hours < 5) {
-        hours += 24;
-      }
-      return `${hours.toString().padStart(2, '0')}:${minutes}`;
-    } catch (error) {
+  const formatAirTime = (airTime?: Schemas['LocalTime'] | string | null) => {
+    if (!airTime) {
       return '';
     }
+
+    let hours: number;
+    let minutes: number;
+
+    // 문자열 형태로 오는 경우 (예: "20:00:00" 또는 "20:00")
+    if (typeof airTime === 'string') {
+      const timeMatch = airTime.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+      if (!timeMatch) {
+        return '';
+      }
+      hours = parseInt(timeMatch[1], 10);
+      minutes = parseInt(timeMatch[2], 10);
+    }
+    // 객체 형태로 오는 경우
+    else {
+      if (airTime.hour === undefined || airTime.minute === undefined) {
+        return '';
+      }
+      hours = airTime.hour;
+      minutes = airTime.minute;
+    }
+
+    // 00:00 ~ 04:59인 경우 24시간 더하기
+    if (hours < 5) {
+      hours += 24;
+    }
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
   // OTT 클릭 핸들러
@@ -630,83 +569,15 @@ export default function LeftInfoPanel({
     onImageModalToggle?.(false); // 부모 컴포넌트에 모달 닫힘 알림
   };
 
-  // API 응답에서 캐릭터 데이터를 매핑하는 함수
-  const mapCastPreviewsToCharacters = (
-    castPreviews: unknown[]
-  ): Character[] => {
-    if (!castPreviews || !Array.isArray(castPreviews)) {
-      return [];
-    }
-
-    return castPreviews.map((cast, index) => {
-      const castData = cast as Record<string, unknown>;
-      return {
-        characterId: (castData.characterId as number) || index + 1,
-        nameKor:
-          (castData.nameKor as string) ||
-          (castData.name as string) ||
-          '이름 없음',
-        nameJpn:
-          (castData.nameJpn as string) || (castData.nameOrigin as string),
-        nameEng:
-          (castData.nameEng as string) || (castData.nameEnglish as string),
-        imageUrl:
-          (castData.imageUrl as string) ||
-          (castData.characterImageUrl as string),
-        description:
-          (castData.description as string) ||
-          (castData.characterDescription as string),
-        voiceActor:
-          (castData.voiceActor as string) ||
-          (castData.cvName as string) ||
-          (castData.cv as string),
-        role:
-          (castData.role as 'MAIN' | 'SUPPORTING' | 'MINOR') ||
-          (index < 2 ? 'MAIN' : index < 4 ? 'SUPPORTING' : 'MINOR'),
-        gender:
-          (castData.gender as 'FEMALE' | 'MALE' | 'OTHER') ||
-          (index % 2 === 0 ? 'FEMALE' : 'MALE'),
-        age: castData.age as number,
-        height: castData.height as number,
-        weight: castData.weight as number,
-        birthday: castData.birthday as string,
-        bloodType: castData.bloodType as string,
-        occupation: castData.occupation as string,
-        personality: castData.personality
-          ? Array.isArray(castData.personality)
-            ? (castData.personality as string[])
-            : [castData.personality as string]
-          : [],
-        abilities: castData.abilities
-          ? Array.isArray(castData.abilities)
-            ? (castData.abilities as string[])
-            : [castData.abilities as string]
-          : [],
-        relationships: (
-          (castData.relationships as Array<{
-            characterName: string;
-            relationship: string;
-          }>) || []
-        ).map((rel, relIndex) => ({
-          characterId: relIndex + 1,
-          characterName: rel.characterName,
-          relationship: rel.relationship,
-        })),
-      };
-    });
-  };
-
   // 캐릭터 이미지 프리로딩
-  const preloadCharacterImages = (characters: Character[]) => {
+  const preloadCharacterImages = (characters: Schemas['CastPreviewDto'][]) => {
     characters.forEach((character) => {
-      if (character.imageUrl) {
+      if (character.mainThumbnailUrl) {
         const img = new window.Image();
-        img.src = character.imageUrl;
+        img.src = character.mainThumbnailUrl;
       }
     });
   };
-
-  // mock 데이터 제거 - API 실패 시 빈 배열 처리
 
   // 캐릭터 이미지 프리로딩 실행
   useEffect(() => {
@@ -878,9 +749,9 @@ export default function LeftInfoPanel({
               className={`relative w-full shrink-0 text-[14.6px] leading-[0] font-medium text-white not-italic [text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] ${isMobile ? 'max-w-none' : 'max-w-[400px]'}`}
             >
               <p className="leading-[normal]">
-                {`${year}년 ${getSeasonInKorean(quarter)}`} ·{' '}
+                {`${year}년 ${quarter}분기`} ·{' '}
                 {medium === 'MOVIE' ? '극장판' : medium} ·{' '}
-                {getDayInKorean(dayOfWeek)} {formatAirTime(airTime || '')}
+                {getDayInKorean(dayOfWeek || '')} {formatAirTime(airTime)}
               </p>
             </div>
 
@@ -898,54 +769,40 @@ export default function LeftInfoPanel({
                   title={`${ott.ottType} 클릭하여 시청하기`}
                 >
                   <div className="absolute top-0 left-0 h-9 w-9">
-                    {ott.ottType === 'NETFLIX' && (
+                    {ott.ottType === OttDtoOttType.NETFLIX && (
                       <img
                         src="/icons/netflix-logo.svg"
                         alt="Netflix"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === OttType.Laftel && (
+                    {ott.ottType === OttDtoOttType.LAFTEL && (
                       <img
                         src="/icons/laftel-logo.svg"
                         alt="LAFTEL"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === 'TVING' && (
+                    {ott.ottType === OttDtoOttType.TVING && (
                       <img
                         src="/icons/tving-logo.svg"
                         alt="TVING"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === 'WAVVE' && (
+                    {ott.ottType === OttDtoOttType.WAVVE && (
                       <img
                         src="/icons/wavve-logo.svg"
                         alt="WAVVE"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === 'WATCHA' && (
+                    {ott.ottType === OttDtoOttType.WATCHA && (
                       <img
                         src="/icons/watcha-logo.svg"
                         alt="WATCHA"
                         className="h-full w-full object-contain"
                       />
-                    )}
-                    {/* 기타 OTT 서비스에 대한 fallback */}
-                    {![
-                      'NETFLIX',
-                      'LAFTEL',
-                      'TVING',
-                      'WAVVE',
-                      'WATCHA',
-                    ].includes(ott.ottType) && (
-                      <div className="flex h-full w-full items-center justify-center rounded-full bg-white/90 shadow-sm">
-                        <span className="text-xs font-bold text-gray-800">
-                          {ott.ottType.charAt(0)}
-                        </span>
-                      </div>
                     )}
                   </div>
                 </div>
@@ -1079,7 +936,6 @@ export default function LeftInfoPanel({
             >
               <CharacterList
                 characters={characters || []}
-                className="w-full"
                 isMobile={isMobile}
               />
             </div>
@@ -1098,7 +954,7 @@ export default function LeftInfoPanel({
                 }}
               >
                 <RightCommentPanel
-                  animeId={animeId || anime.animeId}
+                  animeId={animeId}
                   isImageModalOpen={false}
                   animeData={anime}
                   rawAnimeData={rawAnimeData}
@@ -1270,7 +1126,8 @@ export default function LeftInfoPanel({
                           <p
                             className={`${isMobile ? (isMediumScreen ? 'text-lg' : 'text-base') : 'text-[18px]'} leading-[normal] break-words`}
                           >
-                            {format(premiereDateTime, 'yyyy. MM. dd')}
+                            {premiereDateTime &&
+                              format(premiereDateTime, 'yyyy. MM. dd')}
                           </p>
                         </div>
                       </div>
@@ -1548,8 +1405,8 @@ export default function LeftInfoPanel({
       <ImageModal
         isOpen={isImageModalOpen}
         onClose={handleImageModalClose}
-        imageUrl={mainImageUrl || mainThumbnailUrl}
-        title={titleKor}
+        imageUrl={mainImageUrl || mainThumbnailUrl || ''}
+        title={titleKor || '제목 없음'}
       />
     </>
   );

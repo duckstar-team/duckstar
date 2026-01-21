@@ -1,23 +1,18 @@
-'use client';
-
 import React from 'react';
 import CharacterCard from './CharacterCard';
-import { cn } from '@/lib';
-import { Character } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface CharacterListProps {
-  characters: Character[];
-  className?: string;
+  characters: Schemas['CastPreviewDto'][];
   isMobile?: boolean;
 }
 
 export default function CharacterList({
   characters,
-  className,
   isMobile = false,
 }: CharacterListProps) {
   return (
-    <div className={cn('w-full', className)}>
+    <div className="w-full">
       {/* 캐릭터 목록 */}
       {characters.length > 0 ? (
         <div
@@ -28,7 +23,7 @@ export default function CharacterList({
           >
             {characters.map((character, index) => (
               <div
-                key={character.characterId}
+                key={`${character.nameKor}-${index}`}
                 data-property-1={index % 2 === 0 ? 'even' : 'odd'}
                 className={`${isMobile ? 'h-[225px] w-[162px]' : 'h-[250px] w-[180px]'} flex flex-col items-center justify-start justify-self-center`}
               >

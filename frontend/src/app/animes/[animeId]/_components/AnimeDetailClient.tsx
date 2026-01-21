@@ -7,17 +7,16 @@ import RightCommentPanel from './RightCommentPanel';
 import { AnimeDetailSkeleton } from '@/components/skeletons';
 import { getAnimeDetail } from '@/api/search';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
-import { Character } from '@/types/dtos';
 import { useAuth } from '@/context/AuthContext';
 import { updateAnimeImage } from '@/api/admin';
-import { AnimeInfoDto, AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 export default function AnimeDetailClient() {
   const params = useParams();
   const router = useRouter();
   const animeId = params.animeId as string;
-  const [anime, setAnime] = useState<AnimeInfoDto | null>(null);
-  const [characters, setCharacters] = useState<Character[]>([]);
+  const [anime, setAnime] = useState<Schemas['AnimeInfoDto'] | null>(null);
+  const [characters, setCharacters] = useState<Schemas['CastPreviewDto'][]>([]);
   const [loading, setLoading] = useState(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [rawAnimeData, setRawAnimeData] = useState<any>(null); // 백엔드 원본 데이터 저장
@@ -138,8 +137,6 @@ export default function AnimeDetailClient() {
     }
   };
 
-  const [error, setError] = useState<string | null>(null);
-
   // 컴포넌트 마운트 시 스크롤을 맨 위로 강제 이동 (상세화면에서만)
   useEffect(() => {
     // to-anime-detail 플래그가 있으면 상세화면 진입으로 판단
@@ -206,7 +203,6 @@ export default function AnimeDetailClient() {
         isLoadingRef.current = true;
         prevAnimeIdRef.current = animeId;
         setLoading(true);
-        setError(null);
 
         // 실제 API 호출 (병렬 처리로 성능 최적화)
         const data = (await Promise.race([
@@ -221,8 +217,8 @@ export default function AnimeDetailClient() {
 
         // data는 AnimeHomeDto 구조
         const dataTyped = data as {
-          animeInfoDto: AnimeInfoDto;
-          castPreviews?: unknown[];
+          animeInfoDto: Schemas['AnimeInfoDto'];
+          castPreviews?: Schemas['CastPreviewDto'][];
         };
         const animeInfo = dataTyped.animeInfoDto;
         const castPreviews = dataTyped.castPreviews || [];
@@ -231,68 +227,28 @@ export default function AnimeDetailClient() {
 
         // 캐릭터 데이터 변환
         const mapCastPreviewsToCharacters = (
-          castPreviews: unknown[]
-        ): Character[] => {
+          castPreviews: Schemas['CastPreviewDto'][]
+        ) => {
           if (!castPreviews || !Array.isArray(castPreviews)) {
             return [];
           }
 
-          return castPreviews.map((cast, index) => {
-            const castData = cast as Record<string, unknown>;
+          return castPreviews.map((cast) => {
             return {
-              characterId: (castData.characterId as number) || index + 1,
-              nameKor: (castData.nameKor as string) || '이름 없음',
-              nameJpn: castData.nameJpn as string,
-              nameEng: castData.nameEng as string,
-              imageUrl: castData.mainThumbnailUrl as string, // API에서 mainThumbnailUrl 사용
-              description: castData.description as string,
-              voiceActor: (castData.cv as string) || '미정', // API에서 cv 사용
-              role:
-                (castData.role as 'MAIN' | 'SUPPORTING' | 'MINOR') ||
-                (index < 2 ? 'MAIN' : index < 4 ? 'SUPPORTING' : 'MINOR'),
-              gender:
-                (castData.gender as 'FEMALE' | 'MALE' | 'OTHER' | undefined) ||
-                (index % 2 === 0 ? 'FEMALE' : 'MALE'),
-              age: castData.age as number,
-              height: castData.height as number,
-              weight: castData.weight as number,
-              birthday: castData.birthday as string,
-              bloodType: castData.bloodType as string,
-              occupation: castData.occupation as string,
-              personality: castData.personality
-                ? Array.isArray(castData.personality)
-                  ? (castData.personality as string[])
-                  : [castData.personality as string]
-                : [],
-              abilities: castData.abilities
-                ? Array.isArray(castData.abilities)
-                  ? (castData.abilities as string[])
-                  : [castData.abilities as string]
-                : [],
-              relationships: (
-                (castData.relationships as Array<{
-                  characterName: string;
-                  relationship: string;
-                }>) || []
-              ).map((rel, relIndex) => ({
-                characterId: relIndex + 1,
-                characterName: rel.characterName,
-                relationship: rel.relationship,
-              })),
+              mainThumbnailUrl: cast.mainThumbnailUrl,
+              nameKor: cast.nameKor || '이름 없음',
+              cv: cast.cv,
             };
           });
         };
 
-        const characterData = mapCastPreviewsToCharacters(castPreviews);
-        setCharacters(characterData);
+        setCharacters(castPreviews);
 
         // 애니메이션 상세 이미지 프리로딩 (비동기로 처리하여 로딩 속도 향상)
         setTimeout(() => {
-          preloadAnimeDetails(animeInfo as unknown as AnimePreviewDto);
+          preloadAnimeDetails(animeInfo as Schemas['AnimePreviewDto']);
         }, 0);
       } catch (error) {
-        setError('애니메이션 정보를 불러오는데 실패했습니다.');
-        // 에러 시 mock 데이터 제거
         setAnime(null);
       } finally {
         setLoading(false);
@@ -303,12 +259,7 @@ export default function AnimeDetailClient() {
     if (animeId) {
       fetchAnimeData();
     }
-
-    // cleanup 함수: 컴포넌트 언마운트 시 스크롤 복원
-    // return () => {
-    //   document.body.style.overflow = 'auto';
-    // };
-  }, [animeId]); // animeId가 변경될 때만 실행
+  }, [animeId]);
 
   // LeftInfoPanel 위치 계산
   useEffect(() => {
