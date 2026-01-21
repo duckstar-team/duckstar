@@ -55,7 +55,7 @@ export default function CommentHeader({
   );
 
   return (
-    <div className="inline-flex w-full max-w-[570px] flex-col items-start justify-end gap-3.5 pl-6">
+    <div className="inline-flex w-full flex-col items-start justify-end gap-3.5 pl-6">
       {/* 필터가 없을 때는 기본 헤더만 표시 */}
       {variant === 'default' ? (
         <div className="inline-flex h-12 w-full max-w-[570px] items-end justify-start gap-3.5 pt-5 pr-6">
