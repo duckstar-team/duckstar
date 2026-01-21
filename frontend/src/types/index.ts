@@ -8,6 +8,7 @@ export type Schemas = components['schemas'];
  * 자주 사용되는 schema 타입을 직접 export
  */
 export type WeekDto = Schemas['WeekDto'];
+export type PageInfo = Schemas['PageInfo'];
 
 /**
  * 백엔드 enum 이름과 동일하게 별칭으로 재정의하여 export

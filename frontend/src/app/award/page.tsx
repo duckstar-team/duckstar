@@ -2,10 +2,8 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { SurveyDto } from '@/types/dtos';
-import { SurveyStatus } from '@/types/enums';
+import { Schemas, SurveyStatus } from '@/types';
 import VoteBanner from '@/components/domain/vote/VoteBanner';
-import { ApiResponse } from '@/api/http';
 import Link from 'next/link';
 import {
   queryConfig,
@@ -30,12 +28,14 @@ export default function AwardPage() {
   useSurveySession();
 
   // surveys 목록 조회
-  const { data, isLoading, error } = useQuery<ApiResponse<SurveyDto[]>>({
+  const { data, isLoading, error } = useQuery<
+    Schemas['ApiResponseListSurveyDto']
+  >({
     queryKey: ['surveys'],
     queryFn: async () => {
       const response = await fetch('/api/v1/vote/surveys');
       if (!response.ok) throw new Error('어워드 목록 조회 실패');
-      return response.json() as Promise<ApiResponse<SurveyDto[]>>;
+      return response.json();
     },
     ...queryConfig.vote,
   });
@@ -78,8 +78,8 @@ export default function AwardPage() {
             </h1>
             <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
               {surveys.map((survey, i) => {
-                const isNotYet = survey.status === SurveyStatus.NotYet;
-                const isClosed = survey.status === SurveyStatus.Closed;
+                const isNotYet = survey.status === SurveyStatus.NOT_YET;
+                const isClosed = survey.status === SurveyStatus.CLOSED;
 
                 return (
                   <Link
@@ -120,7 +120,7 @@ export default function AwardPage() {
                     <div className="flex w-full flex-col justify-between gap-4 p-3 @md:p-4">
                       <div className="flex flex-col gap-2">
                         <div className="max-xs:flex-col flex gap-2 sm:items-center @md:gap-3">
-                          {survey.status !== SurveyStatus.ResultOpen && (
+                          {survey.status !== SurveyStatus.RESULT_OPEN && (
                             <span
                               className={cn(
                                 'flex h-6 w-fit items-center rounded-md px-2 py-1 text-xs font-semibold break-keep @md:text-sm',

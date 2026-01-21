@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { SurveyDto } from '@/types/dtos';
-import { SurveyStatus, SurveyType } from '@/types/enums';
+import { Schemas, SurveyStatus, SurveyType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { queryConfig, hasValidSurveySession, isVoteHistorySaved } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
@@ -29,19 +28,20 @@ export default function SurveyPage() {
   useSurveySession();
 
   // 투표 상태 조회 (hasVoted 확인)
-  const { data: surveyStatusData, isLoading: isSurveyStatusLoading } =
-    useQuery<SurveyDto>({
-      queryKey: ['survey-status', surveyId],
-      queryFn: async () => {
-        if (!surveyId) throw new Error('Survey ID가 없습니다');
-        const response = await fetch(`/api/v1/vote/surveys/${surveyId}`);
-        if (!response.ok) throw new Error('투표 상태 조회 실패');
-        const result = await response.json();
-        return result.result || result;
-      },
-      enabled: !!surveyId,
-      ...queryConfig.vote,
-    });
+  const { data: surveyStatusData, isLoading: isSurveyStatusLoading } = useQuery<
+    Schemas['SurveyDto']
+  >({
+    queryKey: ['survey-status', surveyId],
+    queryFn: async () => {
+      if (!surveyId) throw new Error('Survey ID가 없습니다');
+      const response = await fetch(`/api/v1/vote/surveys/${surveyId}`);
+      if (!response.ok) throw new Error('투표 상태 조회 실패');
+      const result = await response.json();
+      return result.result || result;
+    },
+    enabled: !!surveyId,
+    ...queryConfig.vote,
+  });
 
   // 로딩 상태
   if (isSurveyStatusLoading || !surveyId || !surveyType) {
@@ -53,13 +53,13 @@ export default function SurveyPage() {
   const voteHistorySaved = isVoteHistorySaved(surveyType);
 
   // 종료된 어워드 결과 차트
-  if (surveyStatusData?.status === SurveyStatus.ResultOpen) {
+  if (surveyStatusData?.status === SurveyStatus.RESULT_OPEN) {
     return <SurveyResultChart surveyId={surveyId} />;
   }
 
   if (
-    surveyStatusData?.status === SurveyStatus.NotYet ||
-    surveyStatusData?.status === SurveyStatus.Closed
+    surveyStatusData?.status === SurveyStatus.NOT_YET ||
+    surveyStatusData?.status === SurveyStatus.CLOSED
   ) {
     return <SurveyDisabled survey={surveyStatusData} />;
   }

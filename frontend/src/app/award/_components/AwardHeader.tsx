@@ -6,14 +6,14 @@ import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { SurveyDto, SurveyResultDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { queryConfig, getBannerTitle, getBannerSubtitle } from '@/lib';
 import DownloadBtn from '@/components/common/DownloadBtn';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import ShareDropdown from '@/components/common/ShareDropdown';
 import TopTenList from '@/components/domain/chart/TopTenList';
 import { getSurveyResult } from '@/api/chart';
-import { SurveyStatus } from '@/types/enums';
+import { SurveyStatus } from '@/types';
 
 export default function AwardHeader() {
   const params = useParams();
@@ -23,7 +23,7 @@ export default function AwardHeader() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // survey 정보 조회
-  const { data: surveyData } = useQuery<SurveyDto>({
+  const { data: surveyData } = useQuery<Schemas['SurveyDto']>({
     queryKey: ['survey', surveyId],
     queryFn: async () => {
       if (!surveyId) throw new Error('Survey ID가 없습니다');
@@ -49,7 +49,7 @@ export default function AwardHeader() {
   });
 
   // Top 10 데이터 가져오기
-  const { data: topTenData } = useQuery<SurveyResultDto>({
+  const { data: topTenData } = useQuery<Schemas['SurveyRankPage']>({
     queryKey: ['survey-result-top10', surveyId],
     queryFn: async () => {
       if (!surveyId) throw new Error('Survey ID가 없습니다');
@@ -78,7 +78,7 @@ export default function AwardHeader() {
             <span className="text-gray-500">{getBannerTitle(surveyData)}</span>
           </>
         )}
-        {surveyData?.status === SurveyStatus.ResultOpen && (
+        {surveyData?.status === SurveyStatus.RESULT_OPEN && (
           <div
             ref={dropdownRef}
             className="relative ml-auto flex items-center gap-1"

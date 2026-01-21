@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import CommentPostForm from '@/components/domain/comment/CommentPostForm';
 import EpisodeCommentModal from '@/components/domain/comment/EpisodeCommentModal';
-import { AnimeBallotDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { getAnimeEpisodes } from '@/api/search';
 import { createComment } from '@/api/comment';
 import { showToast } from '@/components/common/Toast';
@@ -15,7 +15,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { createSurveyComment } from '@/api/vote';
 
 interface VoteResultCardProps {
-  ballot: AnimeBallotDto;
+  ballot: Schemas['AnimeBallotDto'];
 }
 
 export default function VoteResultCard({ ballot }: VoteResultCardProps) {
@@ -115,7 +115,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
         await createComment(ballot.animeId, {
           body: content,
           episodeId: episodeIds[0],
-          attachedImage: images?.[0],
+          attachedImage: images?.[0]?.name || undefined,
         });
         setIsEpisodeModalOpen(false);
         showToast.success('에피소드 댓글이 성공적으로 작성되었습니다.');

@@ -1,4 +1,9 @@
-import { SeasonType } from '@/types/enums';
+enum SeasonType {
+  Winter = 'WINTER',
+  Spring = 'SPRING',
+  Summer = 'SUMMER',
+  Autumn = 'AUTUMN',
+}
 
 /**
  * 분기를 기반으로 계절을 결정합니다.

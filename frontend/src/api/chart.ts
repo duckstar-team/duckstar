@@ -27,7 +27,7 @@ export async function getSurveyResult(
     size: size.toString(),
     sort: sort,
   });
-  return apiCall<Schemas['SurveyRankDto']>(
+  return apiCall<Schemas['SurveyRankPage']>(
     `/api/v1/chart/surveys/${surveyId}?${params}`
   );
 }

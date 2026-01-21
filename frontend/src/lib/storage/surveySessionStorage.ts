@@ -3,7 +3,7 @@
  * 로그인하지 않은 사용자의 투표 이력을 endDate까지 유효한 세션키로 관리
  */
 
-import { SurveyType } from '@/types/enums';
+import { SurveyType } from '@/types';
 
 const SESSION_KEY_PREFIX = 'survey_session_';
 
@@ -19,12 +19,12 @@ function getSessionKeyName(surveyType: SurveyType): string {
 /**
  * 세션키 저장 (endDate까지 유효)
  * @param surveyType 어워드 타입
- * @param endDate 어워드 종료일 (Date 객체)
+ * @param endDate 어워드 종료일
  * @param isVoteHistorySaved 투표 내역 저장 여부 (기본값: false)
  */
 export function setSurveySession(
   surveyType: SurveyType,
-  endDate: Date,
+  endDate: Date | string,
   isVoteHistorySaved: boolean = false
 ): void {
   if (typeof window === 'undefined') return;

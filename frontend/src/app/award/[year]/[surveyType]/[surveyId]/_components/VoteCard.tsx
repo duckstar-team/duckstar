@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import VoteToggle from './VoteToggle';
-import { AnimeCandidateDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { MAX_VOTES } from '@/lib';
 
 interface VoteCardProps {
-  anime: AnimeCandidateDto;
+  anime: Schemas['AnimeCandidateDto'];
   checked: boolean;
   onChange?: (isBonusVote?: boolean) => void;
   showError?: boolean;
