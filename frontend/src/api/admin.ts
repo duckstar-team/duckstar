@@ -1,8 +1,4 @@
-import {
-  EpisodeStarDto,
-  IpManagementLogSliceDto,
-  SubmissionCountSliceDto,
-} from '@/types/dtos';
+import { Schemas } from '@/types';
 import { apiCall } from './http';
 
 // 애니메이션 등록 API
@@ -29,7 +25,7 @@ export async function getSubmissionCountGroupByIp(
     sort.forEach((s) => params.append('sort', s));
   }
 
-  return apiCall<SubmissionCountSliceDto>(
+  return apiCall<Schemas['SubmissionCountSliceDto']>(
     `/api/admin/submissions?${params.toString()}`
   );
 }
@@ -44,7 +40,9 @@ export async function getSubmissionsByWeekAndIp(
     ipHash: ipHash,
   });
 
-  return apiCall<EpisodeStarDto[]>(`/api/admin/ip?${params.toString()}`);
+  return apiCall<Schemas['EpisodeStarDto'][]>(
+    `/api/admin/ip?${params.toString()}`
+  );
 }
 
 // ip 밴 토글 API
@@ -112,7 +110,7 @@ export async function getAdminLogsOnIpManagement(
     sort.forEach((s) => params.append('sort', s));
   }
 
-  return apiCall<IpManagementLogSliceDto>(
+  return apiCall<Schemas['IpManagementLogSliceDto']>(
     `/api/admin/submissions/logs?${params.toString()}`
   );
 }

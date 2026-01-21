@@ -1,36 +1,9 @@
-// // API call helper function
-// export async function apiCall<T>(
-//   endpoint: string,
-//   options: RequestInit = {}
-// ): Promise<ApiResponse<T>> {
-//   const url = `${endpoint}`;
-//   const config = {
-//     credentials: 'include' as const,
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     ...options,
-//   };
+import { Schemas } from '@/types';
 
-//   const response = await fetch(url, config);
-
-//   if (!response.ok) {
-//     throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
-//   }
-
-//   return response.json();
-// }
-
-// Base API Response
-export interface ApiResponse<T> {
-  isSuccess: boolean;
-  code: string;
-  message: string;
+// 공통 API 응답 타입을 제네릭으로 확장
+export type ApiResponse<T> = Omit<Schemas['ApiResponseVoid'], 'result'> & {
   result: T;
-}
-
-// Next.js 프록시를 사용하므로 상대 경로 사용
-export const BASE_URL = '';
+};
 
 // Default fetch options
 const getDefaultOptions = (): RequestInit => {
@@ -48,7 +21,7 @@ export async function apiCall<T>(
   options: RequestInit = {},
   errorMessage: string = 'API 호출 실패'
 ): Promise<ApiResponse<T>> {
-  const url = `${BASE_URL}${endpoint}`;
+  const url = endpoint;
   const defaultOptions = getDefaultOptions();
 
   // FormData인 경우 Content-Type 헤더 제거 (브라우저가 자동으로 multipart/form-data 설정)
@@ -126,13 +99,13 @@ export async function apiCall<T>(
       code: 'SUCCESS',
       message: '',
       result: undefined as T,
-    };
+    } as ApiResponse<T>;
   }
 
   // JSON 응답인 경우 파싱
   if (contentType && contentType.includes('application/json')) {
     try {
-      return JSON.parse(text);
+      return JSON.parse(text) as ApiResponse<T>;
     } catch (error) {
       // JSON 파싱 실패 시 기본값 반환
       return {
@@ -140,7 +113,7 @@ export async function apiCall<T>(
         code: 'SUCCESS',
         message: '',
         result: undefined as T,
-      };
+      } as ApiResponse<T>;
     }
   }
 
@@ -150,5 +123,5 @@ export async function apiCall<T>(
     code: 'SUCCESS',
     message: '',
     result: undefined as T,
-  };
+  } as ApiResponse<T>;
 }
