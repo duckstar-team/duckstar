@@ -262,7 +262,7 @@ const Comment: React.FC<CommentProps> = ({
           {/* 푸터 (좋아요, 답글) */}
           <div className="relative flex h-[30px] w-full shrink-0 content-stretch items-center justify-start gap-[25px]">
             {/* 좋아요 */}
-            <div className="relative flex shrink-0 content-stretch items-center justify-start gap-2">
+            <div className="relative flex shrink-0 content-stretch items-center justify-start gap-1">
               <button
                 onClick={() => onLike?.(commentId)}
                 className={`relative size-4 shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70 ${isLiked ? 'opacity-100' : 'opacity-60'}`}

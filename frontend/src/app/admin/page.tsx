@@ -1239,25 +1239,25 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gray-50 py-8">
+    <div className="min-h-screen overflow-x-hidden py-8">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* 헤더 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">관리자 페이지</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold">관리자 페이지</h1>
+          <p className="mt-2 text-gray-600 dark:text-zinc-400">
             애니메이션 데이터와 제출 현황을 관리할 수 있습니다.
           </p>
         </div>
 
         {/* 탭 */}
-        <div className="mb-6 border-b border-gray-200">
+        <div className="border-brand-zinc-200 mb-6 border-b">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('content')}
               className={`border-b-2 px-1 py-4 text-sm font-medium ${
                 activeTab === 'content'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
               }`}
             >
               컨텐츠 관리
@@ -1267,7 +1267,7 @@ export default function AdminPage() {
               className={`border-b-2 px-1 py-4 text-sm font-medium ${
                 activeTab === 'submissions'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
               }`}
             >
               제출 현황 관리
@@ -1277,10 +1277,8 @@ export default function AdminPage() {
 
         {/* 컨텐츠 관리 탭 */}
         {activeTab === 'content' && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-gray-900">
-              새 애니메이션 등록
-            </h2>
+          <div className="border-brand-zinc-200 rounded-lg border p-6 shadow-sm dark:border-none dark:bg-zinc-800">
+            <h2 className="mb-6 text-xl font-semibold">새 애니메이션 등록</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 기존 폼 내용은 그대로 유지 */}
@@ -1288,7 +1286,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="titleKor"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     한국어 제목 *
                   </label>
@@ -1299,7 +1297,7 @@ export default function AdminPage() {
                     value={animeData.titleKor}
                     onChange={handleInputChange}
                     required
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="한국어 제목을 입력하세요"
                   />
                 </div>
@@ -1307,7 +1305,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="titleOrigin"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     원제
                   </label>
@@ -1317,7 +1315,7 @@ export default function AdminPage() {
                     name="titleOrigin"
                     value={animeData.titleOrigin}
                     onChange={handleInputChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="원제를 입력하세요"
                   />
                 </div>
@@ -1325,7 +1323,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="titleEng"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     영어 제목
                   </label>
@@ -1335,7 +1333,7 @@ export default function AdminPage() {
                     name="titleEng"
                     value={animeData.titleEng}
                     onChange={handleInputChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="영어 제목을 입력하세요"
                   />
                 </div>
@@ -1343,7 +1341,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="medium"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     매체 *
                   </label>
@@ -1353,7 +1351,7 @@ export default function AdminPage() {
                     value={animeData.medium}
                     onChange={handleInputChange}
                     required
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="TVA">TV 애니메이션</option>
                     <option value="MOVIE">영화</option>
@@ -1365,7 +1363,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="premiereDateTime"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     첫 방영일시
                   </label>
@@ -1410,9 +1408,9 @@ export default function AdminPage() {
                         return newData;
                       });
                     }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
                     {animeData.medium === 'MOVIE'
                       ? '극장판은 방영 시간과 요일이 자동 설정되지 않습니다'
                       : '입력 시 방영 요일과 방영 시간이 자동으로 설정됩니다'}
@@ -1422,11 +1420,11 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="airTime"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     방영 시간{' '}
                     {animeData.medium === 'MOVIE' && (
-                      <span className="text-gray-500">
+                      <span className="text-gray-500 dark:text-zinc-400">
                         (극장판은 해당 없음)
                       </span>
                     )}
@@ -1438,7 +1436,7 @@ export default function AdminPage() {
                     value={animeData.airTime}
                     onChange={handleInputChange}
                     disabled={animeData.medium === 'MOVIE'}
-                    className={`w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                    className={`border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       animeData.medium === 'MOVIE'
                         ? 'cursor-not-allowed bg-gray-100'
                         : ''
@@ -1454,11 +1452,11 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="dayOfWeek"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     방영 요일{' '}
                     {animeData.medium === 'MOVIE' && (
-                      <span className="text-gray-500">
+                      <span className="text-gray-500 dark:text-zinc-400">
                         (극장판은 해당 없음)
                       </span>
                     )}
@@ -1469,7 +1467,7 @@ export default function AdminPage() {
                     value={animeData.dayOfWeek || ''}
                     onChange={handleInputChange}
                     disabled={animeData.medium === 'MOVIE'}
-                    className={`w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                    className={`border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       animeData.medium === 'MOVIE'
                         ? 'cursor-not-allowed bg-gray-100'
                         : ''
@@ -1493,11 +1491,11 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="totalEpisodes"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     총 화수{' '}
                     {animeData.medium === 'MOVIE' && (
-                      <span className="text-gray-500">
+                      <span className="text-gray-500 dark:text-zinc-400">
                         (극장판은 해당 없음)
                       </span>
                     )}
@@ -1509,7 +1507,7 @@ export default function AdminPage() {
                     value={animeData.totalEpisodes || ''}
                     onChange={handleInputChange}
                     disabled={animeData.medium === 'MOVIE'}
-                    className={`w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                    className={`border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       animeData.medium === 'MOVIE'
                         ? 'cursor-not-allowed bg-gray-100'
                         : ''
@@ -1527,7 +1525,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="corp"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     제작사
                   </label>
@@ -1537,7 +1535,7 @@ export default function AdminPage() {
                     name="corp"
                     value={animeData.corp}
                     onChange={handleInputChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="제작사를 입력하세요"
                   />
                 </div>
@@ -1545,7 +1543,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="director"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     감독
                   </label>
@@ -1555,7 +1553,7 @@ export default function AdminPage() {
                     name="director"
                     value={animeData.director}
                     onChange={handleInputChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="감독을 입력하세요"
                   />
                 </div>
@@ -1563,7 +1561,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="genre"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     장르
                   </label>
@@ -1573,7 +1571,7 @@ export default function AdminPage() {
                     name="genre"
                     value={animeData.genre}
                     onChange={handleInputChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="장르를 입력하세요"
                   />
                 </div>
@@ -1581,7 +1579,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="author"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     원작
                   </label>
@@ -1591,7 +1589,7 @@ export default function AdminPage() {
                     name="author"
                     value={animeData.author}
                     onChange={handleInputChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="원작을 입력하세요"
                   />
                 </div>
@@ -1599,7 +1597,7 @@ export default function AdminPage() {
                 <div>
                   <label
                     htmlFor="minAge"
-                    className="mb-2 block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                   >
                     시청 등급
                   </label>
@@ -1608,7 +1606,7 @@ export default function AdminPage() {
                     name="minAge"
                     value={animeData.minAge || ''}
                     onChange={handleInputChange}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="">시청 등급을 선택하세요</option>
                     <option value="0">전체이용가</option>
@@ -1623,7 +1621,7 @@ export default function AdminPage() {
               <div>
                 <label
                   htmlFor="synopsis"
-                  className="mb-2 block text-sm font-medium text-gray-700"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                 >
                   시놉시스
                 </label>
@@ -1633,7 +1631,7 @@ export default function AdminPage() {
                   value={animeData.synopsis}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="시놉시스를 입력하세요"
                 />
               </div>
@@ -1641,7 +1639,7 @@ export default function AdminPage() {
               <div>
                 <label
                   htmlFor="mainImage"
-                  className="mb-2 block text-sm font-medium text-gray-700"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-zinc-400"
                 >
                   메인 이미지
                 </label>
@@ -1651,7 +1649,7 @@ export default function AdminPage() {
                   name="mainImage"
                   accept="image/*"
                   onChange={handleInputChange}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="border-brand-zinc-300 w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
@@ -1659,7 +1657,7 @@ export default function AdminPage() {
                 <div
                   className={`rounded-md p-4 ${
                     message.includes('성공')
-                      ? 'border border-green-200 bg-green-50 text-green-800'
+                      ? 'border border-green-200 bg-green-50 text-green-800 dark:bg-green-900/50 dark:text-green-400'
                       : 'border border-red-200 bg-red-50 text-red-800'
                   }`}
                 >
@@ -1822,10 +1820,8 @@ export default function AdminPage() {
             </div>
 
             {/* IP별 제출 수 테이블 */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                IP별 제출 수
-              </h2>
+            <div className="border-brand-zinc-200 rounded-lg border p-6 shadow-sm dark:border-none dark:bg-zinc-800">
+              <h2 className="mb-4 text-xl font-semibold">IP별 제출 수</h2>
 
               {isLoadingSubmissions ? (
                 <div className="flex items-center justify-center py-8">
@@ -1843,33 +1839,33 @@ export default function AdminPage() {
                       <div style={{ height: '1px' }}></div>
                     </div>
                     <div ref={leftScrollBottomRef} className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="sticky top-0 z-10 bg-gray-50">
+                      <table className="divide-brand-zinc-200 min-w-full divide-y">
+                        <thead className="sticky top-0 z-10 bg-gray-50 text-gray-500 uppercase dark:bg-zinc-800 dark:text-white">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap">
                               주차
                             </th>
-                            <th className="max-w-xs px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                            <th className="max-w-xs px-4 py-3 text-left text-xs font-medium tracking-wider">
                               IP Hash
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap">
                               제출 수
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap">
                               상태
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap">
                               첫 제출
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap">
                               마지막 제출
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">
+                            <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap">
                               작업
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 bg-white">
+                        <tbody className="divide-brand-zinc-200 divide-y bg-white dark:bg-zinc-800">
                           {submissions.map((submission, index) => {
                             // 주차가 변경되는지 확인
                             const prevSubmission =
@@ -1897,32 +1893,34 @@ export default function AdminPage() {
                                 onClick={() =>
                                   handleSubmissionClick(submission)
                                 }
-                                className={`cursor-pointer hover:bg-gray-50 ${
-                                  submission.isBlocked ? 'bg-red-50' : ''
+                                className={`cursor-pointer ${
+                                  submission.isBlocked
+                                    ? 'bg-red-50 dark:bg-red-900/20'
+                                    : ''
                                 } ${isWeekChanged ? 'border-t-4 border-blue-500' : ''} ${
                                   isNextWeekDifferent ? 'border-b-0' : ''
                                 }`}
                               >
-                                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-900">
+                                <td className="px-4 py-3 text-sm whitespace-nowrap">
                                   {formatDate(
                                     submission.year,
                                     submission.quarter,
                                     submission.week
                                   )}
                                 </td>
-                                <td className="max-w-xs px-4 py-3 font-mono text-sm break-words text-gray-900">
+                                <td className="max-w-xs px-4 py-3 font-mono text-sm break-words">
                                   {submission.ipHash}
                                 </td>
-                                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-900">
+                                <td className="px-4 py-3 text-sm whitespace-nowrap">
                                   {submission.count}
                                 </td>
                                 <td className="px-4 py-3 text-sm whitespace-nowrap">
                                   {submission.isBlocked ? (
-                                    <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800">
+                                    <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800 dark:bg-red-900/40">
                                       차단됨
                                     </span>
                                   ) : (
-                                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900/40">
                                       정상
                                     </span>
                                   )}
@@ -1944,8 +1942,8 @@ export default function AdminPage() {
                                       )}
                                       className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                                         submission.isBlocked
-                                          ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                          : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                          ? 'bg-brand-zinc-100 hover:bg-brand-zinc-200 text-gray-600 dark:text-zinc-400'
+                                          : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-500/40'
                                       } disabled:cursor-not-allowed disabled:opacity-50`}
                                     >
                                       {submission.isBlocked
@@ -1963,7 +1961,7 @@ export default function AdminPage() {
                                         !submission.isBlocked ||
                                         submission.isAllWithdrawn
                                       }
-                                      className="flex cursor-pointer items-center gap-1 rounded-md bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 transition-colors hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                      className="flex cursor-pointer items-center gap-1 rounded-md bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 transition-colors hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-orange-400/20 dark:text-orange-400 dark:hover:bg-orange-500/40"
                                     >
                                       {submission.isAllWithdrawn
                                         ? '✅ 몰수 완료'

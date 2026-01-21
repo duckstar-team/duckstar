@@ -31,6 +31,11 @@ export default function AnimeDetailClient() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
+  const [leftPanelPosition, setLeftPanelPosition] = useState({
+    left: 0,
+    width: 584,
+  });
 
   // 이미지 프리로딩 훅
   const { preloadAnimeDetails } = useImagePreloading();
@@ -300,10 +305,34 @@ export default function AnimeDetailClient() {
     }
 
     // cleanup 함수: 컴포넌트 언마운트 시 스크롤 복원
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+    // return () => {
+    //   document.body.style.overflow = 'auto';
+    // };
   }, [animeId]); // animeId가 변경될 때만 실행
+
+  // LeftInfoPanel 위치 계산
+  useEffect(() => {
+    const updateLeftPanelPosition = () => {
+      if (leftPanelRef.current) {
+        const rect = leftPanelRef.current.getBoundingClientRect();
+        setLeftPanelPosition({
+          left: rect.left,
+          width: rect.width,
+        });
+      }
+    };
+
+    updateLeftPanelPosition();
+    window.addEventListener('resize', updateLeftPanelPosition);
+    window.addEventListener('scroll', updateLeftPanelPosition, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener('resize', updateLeftPanelPosition);
+      window.removeEventListener('scroll', updateLeftPanelPosition);
+    };
+  }, [anime]);
 
   if (loading) {
     return <AnimeDetailSkeleton />;
@@ -320,7 +349,7 @@ export default function AnimeDetailClient() {
 
   return (
     <main
-      className="w-full max-w-full overflow-x-hidden overflow-y-visible"
+      className="w-full max-w-full overflow-hidden"
       style={{ minHeight: 'calc(100vh - 60px)' }}
     >
       {/* 숨겨진 파일 입력 필드 */}
@@ -336,22 +365,54 @@ export default function AnimeDetailClient() {
       <div className="hidden w-full xl:block">
         <div className="w-full px-4">
           <div className="mx-auto flex max-w-7xl justify-center gap-7">
-            {/* 왼쪽 영역: 반응형 너비 */}
-            <div className="max-w-[584px] min-w-0 flex-1 pt-[30px]">
-              <LeftInfoPanel
-                anime={anime!}
-                onBack={handleBack}
-                characters={characters}
-                onImageModalToggle={setIsImageModalOpen}
-                isAdmin={isAdmin}
-                onImageEdit={handleImageEdit}
-                isEditingImage={isEditingImage}
-                imageFile={imageFile}
-                onImageUpdate={handleImageUpdate}
-                onImageEditCancel={handleImageEditCancel}
-                isUploading={isUploading}
-                isMobile={false}
-              />
+            {/* 왼쪽 영역: 반응형 너비 - fixed로 고정 */}
+            <div
+              ref={leftPanelRef}
+              className="max-w-[584px] min-w-0 flex-1 pt-[30px]"
+            >
+              {/* 공간 유지를 위한 플레이스홀더 */}
+              <div className="invisible">
+                <LeftInfoPanel
+                  anime={anime!}
+                  onBack={handleBack}
+                  characters={characters}
+                  onImageModalToggle={setIsImageModalOpen}
+                  isAdmin={isAdmin}
+                  onImageEdit={handleImageEdit}
+                  isEditingImage={isEditingImage}
+                  imageFile={imageFile}
+                  onImageUpdate={handleImageUpdate}
+                  onImageEditCancel={handleImageEditCancel}
+                  isUploading={isUploading}
+                  isMobile={false}
+                />
+              </div>
+              {/* 실제 고정된 패널 */}
+              <div
+                className="fixed z-10"
+                style={{
+                  top: '60px',
+                  left: `${leftPanelPosition.left}px`,
+                  width: `${leftPanelPosition.width}px`,
+                }}
+              >
+                <div className="pt-[30px]">
+                  <LeftInfoPanel
+                    anime={anime!}
+                    onBack={handleBack}
+                    characters={characters}
+                    onImageModalToggle={setIsImageModalOpen}
+                    isAdmin={isAdmin}
+                    onImageEdit={handleImageEdit}
+                    isEditingImage={isEditingImage}
+                    imageFile={imageFile}
+                    onImageUpdate={handleImageUpdate}
+                    onImageEditCancel={handleImageEditCancel}
+                    isUploading={isUploading}
+                    isMobile={false}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* 오른쪽 영역 */}

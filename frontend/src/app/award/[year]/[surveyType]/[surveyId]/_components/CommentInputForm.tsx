@@ -61,7 +61,7 @@ export default function CommentInputForm({
           <input
             type="text"
             placeholder={placeholder}
-            className="min-w-0 flex-1 border-b border-gray-300 p-1 text-sm focus:border-black dark:border-zinc-600"
+            className="min-w-0 flex-1 border-b border-gray-300 p-1 text-sm focus:border-black dark:border-zinc-600 dark:focus:border-white"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onFocus={handleCommentFocus}
@@ -80,7 +80,7 @@ export default function CommentInputForm({
             {showCancelButton && (
               <button
                 onClick={handleCancel}
-                className="rounded-full px-3 py-2 hover:bg-gray-200"
+                className="hover:bg-brand-zinc-200 rounded-full px-3 py-2"
               >
                 취소
               </button>
@@ -88,7 +88,7 @@ export default function CommentInputForm({
             <button
               disabled={!comment.trim()}
               onClick={handleSubmit}
-              className="rounded-full bg-black px-3 py-2 text-white hover:opacity-80 disabled:cursor-not-allowed! disabled:bg-gray-200/80 disabled:text-gray-400"
+              className="rounded-full bg-black px-3 py-2 text-white disabled:cursor-not-allowed! disabled:bg-gray-200/80 disabled:text-gray-400 dark:bg-zinc-700 dark:disabled:bg-zinc-800"
             >
               작성
             </button>

@@ -4,7 +4,6 @@ export { default as AwardListSkeleton } from './AwardListSkeleton';
 export { default as BannerSkeleton } from './BannerSkeleton';
 export { default as CandidateCardSkeleton } from './CandidateCardSkeleton';
 export { default as CharacterImageSkeleton } from './CharacterImageSkeleton';
-export { default as EpisodeSectionSkeleton } from './EpisodeSectionSkeleton';
 export { default as SearchSkeleton } from './SearchSkeleton';
 export { default as SurveyDetailSkeleton } from './SurveyDetailSkeleton';
 export { default as SurveyResultSkeleton } from './SurveyResultSkeleton';
