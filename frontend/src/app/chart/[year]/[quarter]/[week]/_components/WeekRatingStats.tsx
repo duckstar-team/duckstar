@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import StarDistributionChart from '@/components/domain/star/StarDistributionChart';
 import { useChart } from '@/components/layout/AppContainer';
-import { VoteResultDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { createDistributionArray } from '@/lib';
 
 interface WeekRatingStatsProps {
-  voteResult: VoteResultDto;
+  voteResult: Schemas['VoteResultDto'];
 }
 
 export default function WeekRatingStats({ voteResult }: WeekRatingStatsProps) {

@@ -4,10 +4,10 @@ import { useRouter } from 'next/navigation';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import RankDiff from '@/components/domain/chart/RankDiff';
 import { cn } from '@/lib';
-import { RankPreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface AbroadRankCardProps {
-  rankPreview: RankPreviewDto;
+  rankPreview: Schemas['RankPreviewDto'];
   rankDiff:
     | 'up-greater-equal-than-5'
     | 'up-less-than-5'

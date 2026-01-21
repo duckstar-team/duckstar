@@ -1,11 +1,11 @@
 import RankDiff from '@/components/domain/chart/RankDiff';
 import StarRatingDisplay from '@/components/domain/star/StarRatingDisplay';
-import { AnimeRankDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { getRankDiffType } from '@/lib';
 import TooltipBtn from '@/components/common/TooltipBtn';
 
 interface RankContentsProps {
-  anime: AnimeRankDto;
+  anime: Schemas['AnimeRankDto'];
   variant?: 'default' | 'winner';
 }
 

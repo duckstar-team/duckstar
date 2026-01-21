@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import RankContents from './RankContents';
 import RankStat from './RankStat';
-import { AnimeRankDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import MedalGrid from './MedalGrid';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib';
 
 interface RankCardProps {
-  anime: AnimeRankDto;
+  anime: Schemas['AnimeRankDto'];
 }
 
 export default function RankCard({ anime }: RankCardProps) {
