@@ -3,10 +3,9 @@
 import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LiveCandidateDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import StarSubmissionBox from '@/components/domain/star/StarSubmissionBox';
 import { submitStarVote, withdrawStar } from '@/api/vote';
-import { StarInfoDto, LiveVoteResultDto } from '@/types/dtos';
 import { Clock } from 'lucide-react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
@@ -15,14 +14,13 @@ import {
   differenceInMinutes,
   differenceInSeconds,
 } from 'date-fns';
-import { ApiResponse } from '@/api/http';
 
 interface BigCandidateProps {
-  anime: LiveCandidateDto;
+  anime: Schemas['LiveCandidateDto'];
   className?: string;
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   voteInfo?: { year: number; quarter: number; week: number } | null; // 투표 정보
-  starInfo: StarInfoDto | null; // 별점 정보 (사용자 투표 이력 포함)
+  starInfo: Schemas['StarInfoDto'] | null; // 별점 정보 (사용자 투표 이력 포함)
   voterCount: number;
   onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void; // 투표 완료 시 호출되는 콜백
 }
@@ -398,7 +396,7 @@ export default function BigCandidate({
 
   // API 응답을 별점 분포로 변환하는 함수
   const updateStarDistribution = (
-    response: ApiResponse<LiveVoteResultDto>,
+    response: Schemas['ApiResponseVoteResultDto'],
     userStarScore?: number
   ) => {
     if (response.result.info) {
@@ -764,66 +762,12 @@ export default function BigCandidate({
             </div>
           </div>
 
-          {/* Air Time and Countdown */}
+          {/* Air Time */}
           <div className="mt-[9px] flex items-center">
             <div className="flex items-center gap-2">
-              {(() => {
-                const airTimeText = formatAirTime(
-                  scheduledAt,
-                  anime.airTime || ''
-                );
-                const isUpcomingCountdown =
-                  status === 'UPCOMING' && airTimeText.includes('D-');
-
-                if (isUpcomingCountdown) {
-                  // UPCOMING 상태의 "D-" 텍스트에 검정 바탕에 흰 글씨 스타일 적용
-                  // scheduledAt에서 시간 추출
-                  const getTimeFromScheduledAt = (scheduledAt: string) => {
-                    if (!scheduledAt) return '';
-                    const date = new Date(scheduledAt);
-                    let hours = date.getHours();
-                    const minutes = date
-                      .getMinutes()
-                      .toString()
-                      .padStart(2, '0');
-                    // 00:00 ~ 04:59인 경우 24시간 더하기
-                    if (hours < 5) {
-                      hours += 24;
-                    }
-                    return `${hours.toString().padStart(2, '0')}:${minutes}`;
-                  };
-
-                  return (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-medium text-[#868E96]">
-                        {medium === 'MOVIE'
-                          ? getDayInKorean(dayOfWeek) // 극장판은 요일만 표시
-                          : medium === 'TVA' && dayOfWeek === 'SPECIAL'
-                            ? getDayInKorean(dayOfWeek)
-                            : getDayInKorean(dayOfWeek)}
-                      </span>
-                      <span className="rounded bg-black px-2 py-1 text-[13px] font-bold text-white">
-                        {airTimeText}
-                      </span>
-                      <span className="text-[14px] font-medium text-[#868E96]">
-                        {getTimeFromScheduledAt(scheduledAt)}
-                      </span>
-                    </div>
-                  );
-                } else {
-                  // 일반적인 airTime 표시
-                  return (
-                    <span className="text-[14px] font-medium text-[#868E96]">
-                      {formatAirTime(scheduledAt, anime.airTime || '')}
-                    </span>
-                  );
-                }
-              })()}
-              {/* {isRescheduled && (
-                <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-600">
-                  편성 변경
-                </span>
-              )} */}
+              <span className="text-[14px] font-medium text-[#868E96]">
+                {formatAirTime(scheduledAt)}
+              </span>
             </div>
             {/* 투표 남은 시간 배지 */}
             <div className="w-[7px]"></div>

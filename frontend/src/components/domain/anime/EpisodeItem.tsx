@@ -6,12 +6,9 @@ interface EpisodeItemProps {
     | 'filterSelectForPast'
     | 'filterSelectForCurrent';
   episodeNumber?: number;
-  quarter?: string;
-  week?: string;
-  showFilter?: boolean;
-  isLast?: boolean;
-  isHovered?: boolean;
-  onMouseEnter?: () => void;
+  isLast: boolean;
+  isHovered: boolean;
+  onMouseEnter: () => void;
   onMouseMove?: (e: React.MouseEvent) => void;
   onMouseLeave?: () => void;
   onClick?: () => void;
@@ -21,9 +18,6 @@ interface EpisodeItemProps {
 export default function EpisodeItem({
   property1 = 'past',
   episodeNumber = 1,
-  quarter = '3분기',
-  week = '3주차',
-  showFilter = false,
   isLast = false,
   isHovered = false,
   onMouseEnter,

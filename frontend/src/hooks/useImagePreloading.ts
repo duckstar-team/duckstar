@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import type { AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { useSmartImagePreloader } from './useSmartImagePreloader';
 import { imageMemoryManager } from '@/lib';
 
@@ -24,7 +24,7 @@ export function useImagePreloading() {
   // 검색 결과 이미지 프리로딩 (우선순위 기반)
   const preloadSearchResults = useCallback(
     (
-      animes: AnimePreviewDto[],
+      animes: Schemas['AnimePreviewDto'][],
       priority: 'high' | 'medium' | 'low' = 'medium'
     ) => {
       const imageUrls = animes
@@ -56,7 +56,7 @@ export function useImagePreloading() {
 
   // 애니메이션 상세 이미지 프리로딩 (높은 우선순위)
   const preloadAnimeDetails = useCallback(
-    (anime: AnimePreviewDto) => {
+    (anime: Schemas['AnimePreviewDto']) => {
       if (anime.mainThumbnailUrl) {
         addToQueue([anime.mainThumbnailUrl], 'high');
       }

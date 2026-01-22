@@ -285,7 +285,6 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
         onClose={() => setIsEpisodeModalOpen(false)}
         animeId={ballot.animeId}
         animeData={episodeData}
-        rawAnimeData={episodeData}
         onCommentSubmit={handleEpisodeCommentSubmit}
       />
     </>

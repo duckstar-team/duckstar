@@ -1,8 +1,8 @@
 import AnimeCard from '@/components/domain/anime/AnimeCard';
-import type { AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface AnimeGridProps {
-  animes: AnimePreviewDto[];
+  animes: Schemas['AnimePreviewDto'][];
   isCurrentSeason: boolean;
   showDataAttribute?: boolean;
   isUpcomingGroup?: boolean;

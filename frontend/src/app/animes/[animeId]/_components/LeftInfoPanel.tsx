@@ -4,11 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import '@/styles/customScrollbar.css';
 import { cn } from '@/lib';
 import CharacterList from '@/components/domain/anime/CharacterList';
-import { Schemas } from '@/types';
+import { Schemas, OttType } from '@/types';
 import ImageModal from '@/components/domain/anime/ImageModal';
 import RightCommentPanel from './RightCommentPanel';
 import { format } from 'date-fns';
-import { OttDtoOttType } from '@/types/generated/api';
 
 export type TabOption = 'info' | 'characters' | 'performance' | 'comments';
 
@@ -769,35 +768,35 @@ export default function LeftInfoPanel({
                   title={`${ott.ottType} 클릭하여 시청하기`}
                 >
                   <div className="absolute top-0 left-0 h-9 w-9">
-                    {ott.ottType === OttDtoOttType.NETFLIX && (
+                    {ott.ottType === OttType.NETFLIX && (
                       <img
                         src="/icons/netflix-logo.svg"
                         alt="Netflix"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === OttDtoOttType.LAFTEL && (
+                    {ott.ottType === OttType.LAFTEL && (
                       <img
                         src="/icons/laftel-logo.svg"
                         alt="LAFTEL"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === OttDtoOttType.TVING && (
+                    {ott.ottType === OttType.TVING && (
                       <img
                         src="/icons/tving-logo.svg"
                         alt="TVING"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === OttDtoOttType.WAVVE && (
+                    {ott.ottType === OttType.WAVVE && (
                       <img
                         src="/icons/wavve-logo.svg"
                         alt="WAVVE"
                         className="h-full w-full object-contain"
                       />
                     )}
-                    {ott.ottType === OttDtoOttType.WATCHA && (
+                    {ott.ottType === OttType.WATCHA && (
                       <img
                         src="/icons/watcha-logo.svg"
                         alt="WATCHA"

@@ -7,7 +7,7 @@ import {
   getScheduleByYearAndQuarter,
   searchAnimes,
 } from '@/api/search';
-import type { AnimePreviewListDto, AnimeSearchListDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { extractChosung, queryConfig } from '@/lib';
 import { isUpcomingAnime, sortUpcomingAnimes } from '@/lib/utils/schedule';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
@@ -58,7 +58,7 @@ export default function SearchPageContent({
     data: scheduleData,
     error,
     isLoading,
-  } = useQuery<AnimePreviewListDto>({
+  } = useQuery<Schemas['AnimePreviewListDto']>({
     queryKey: isThisWeek
       ? ['schedule', 'this-week']
       : ['schedule', year, quarter],
@@ -74,7 +74,7 @@ export default function SearchPageContent({
     data: searchData,
     error: searchError,
     isLoading: isSearchLoading,
-  } = useQuery<AnimeSearchListDto>({
+  } = useQuery<Schemas['SearchResponseDto']>({
     queryKey: ['search', searchQuery],
     queryFn: () => searchAnimes(searchQuery),
     enabled: searchQuery.trim().length > 0,

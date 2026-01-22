@@ -1,26 +1,24 @@
 interface QuarterWeekLabelProps {
-  variant?: 'past' | 'current' | 'future';
-  quarter?: string;
-  week?: string;
-  episodeNumber?: number;
-  isLast?: boolean;
-  isSelected?: boolean;
-  isHovered?: boolean;
-  onMouseEnter?: () => void;
-  onMouseMove?: (e: React.MouseEvent) => void;
-  onMouseLeave?: () => void;
-  onClick?: () => void;
-  disableCursor?: boolean; // 커서 비활성화 옵션
+  variant: 'past' | 'current' | 'future';
+  quarter?: number;
+  week?: number;
+  episodeNumber: number;
+  isSelected: boolean;
+  isHovered: boolean;
+  onMouseEnter: () => void;
+  onMouseMove: (e: React.MouseEvent) => void;
+  onMouseLeave: () => void;
+  onClick: () => void;
+  disableCursor: boolean; // 커서 비활성화 옵션
 }
 
 export default function QuarterWeekLabel({
-  variant = 'past',
-  quarter = '3분기',
-  week = '7주차',
-  episodeNumber = 1,
-  isLast = false,
-  isSelected = false,
-  isHovered = false,
+  variant,
+  quarter,
+  week,
+  episodeNumber,
+  isSelected,
+  isHovered,
   onMouseEnter,
   onMouseMove,
   onMouseLeave,

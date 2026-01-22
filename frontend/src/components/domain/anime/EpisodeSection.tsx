@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import EpisodeItem from './EpisodeItem';
 import QuarterWeekLabel from './QuarterWeekLabel';
 import { cn, getThisWeekRecord } from '@/lib';
@@ -14,19 +8,10 @@ import {
 } from '@/api/search';
 import { useAuth } from '@/context/AuthContext';
 import { ChevronDown } from 'lucide-react';
-
-// 타입 정의
-interface Episode {
-  id: number;
-  episodeId: number;
-  episodeNumber: number;
-  quarter: string;
-  week: string;
-  scheduledAt: string;
-}
+import { Schemas } from '@/types';
 
 interface EpisodeSectionProps {
-  episodes: Episode[];
+  episodes: Schemas['EpisodeDto'][];
   totalEpisodes: number;
   selectedEpisodeIds: number[];
   onEpisodeClick: (episodeId: number) => void;
@@ -247,12 +232,6 @@ export default function EpisodeSection({
     mouseMoveTimeout: null,
   });
 
-  // 현재 페이지의 에피소드들
-  const currentPageEpisodes = useMemo(() => {
-    const startIndex = currentPage * episodesPerPage;
-    return episodes.slice(startIndex, startIndex + episodesPerPage);
-  }, [episodes, currentPage, episodesPerPage]);
-
   // 페이지 네비게이션 핸들러
   const handlePreviousPage = useCallback(() => {
     if (currentPage > 0) {
@@ -291,7 +270,7 @@ export default function EpisodeSection({
   );
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent, episodeId: number) => {
+    (e: React.MouseEvent) => {
       setTooltipState((prev) => ({
         ...prev,
         isMouseStopped: false,
@@ -478,7 +457,9 @@ export default function EpisodeSection({
             {dropdownOpen && (
               <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
                 {episodes.map((episode) => {
-                  const isSelected = selectedEpisodeIds.includes(episode.id);
+                  const isSelected = selectedEpisodeIds.includes(
+                    episode.episodeId
+                  );
                   const status = getEpisodeStatus(episode.scheduledAt);
                   const isDisabled =
                     disableFutureEpisodes &&
@@ -486,8 +467,8 @@ export default function EpisodeSection({
 
                   return (
                     <button
-                      key={episode.id}
-                      onClick={() => handleEpisodeSelect(episode.id)}
+                      key={episode.episodeId}
+                      onClick={() => handleEpisodeSelect(episode.episodeId)}
                       disabled={isDisabled}
                       className={`w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-zinc-700 ${
                         isSelected
@@ -501,7 +482,7 @@ export default function EpisodeSection({
                             {episode.episodeNumber}화
                           </div>
                           <div className="text-sm text-gray-500">
-                            {episode.quarter} {episode.week} ·{' '}
+                            {episode.weekDto.quarter} {episode.weekDto.week} ·{' '}
                             {formatScheduledAt(episode.scheduledAt)}
                           </div>
                         </div>
@@ -565,28 +546,32 @@ export default function EpisodeSection({
               >
                 <div className="ml-2 inline-flex items-center justify-start overflow-visible pl-2">
                   {episodes.map((episode, index) => {
-                    const isSelected = selectedEpisodeIds.includes(episode.id);
+                    const isSelected = selectedEpisodeIds.includes(
+                      episode.episodeId
+                    );
                     const status = getEpisodeStatus(episode.scheduledAt);
                     const variant = getEpisodeVariant(status, isSelected);
                     const isLast = index === episodes.length - 1;
 
                     return (
                       <div
-                        key={episode.id}
-                        data-episode-id={episode.id}
+                        key={episode.episodeId}
+                        data-episode-id={episode.episodeId}
                         className="overflow-visible transition-opacity duration-200"
                       >
                         <EpisodeItem
                           property1={variant}
                           episodeNumber={episode.episodeNumber}
-                          quarter={episode.quarter}
-                          week={episode.week}
                           isLast={isLast}
-                          isHovered={hoveredEpisodeId === episode.id}
-                          onMouseEnter={() => handleMouseEnter(episode.id)}
-                          onMouseMove={(e) => handleMouseMove(e, episode.id)}
+                          isHovered={hoveredEpisodeId === episode.episodeId}
+                          onMouseEnter={() =>
+                            handleMouseEnter(episode.episodeId)
+                          }
+                          onMouseMove={(e) => handleMouseMove(e)}
                           onMouseLeave={handleMouseLeave}
-                          onClick={() => handleEpisodeClick(episode.id, status)}
+                          onClick={() =>
+                            handleEpisodeClick(episode.episodeId, status)
+                          }
                           disableCursor={
                             disableFutureEpisodes &&
                             (status === 'current' || status === 'future')
@@ -609,28 +594,32 @@ export default function EpisodeSection({
                 }}
               >
                 <div className="ml-2 inline-flex items-start justify-center">
-                  {episodes.map((episode, index) => {
-                    const isSelected = selectedEpisodeIds.includes(episode.id);
+                  {episodes.map((episode) => {
+                    const isSelected = selectedEpisodeIds.includes(
+                      episode.episodeId
+                    );
                     const status = getEpisodeStatus(episode.scheduledAt);
-                    const isLast = index === episodes.length - 1;
 
                     return (
                       <div
-                        key={`label-${episode.id}`}
+                        key={`label-${episode.episodeId}`}
                         className="transition-opacity duration-200"
                       >
                         <QuarterWeekLabel
                           variant={status}
-                          quarter={episode.quarter}
-                          week={episode.week}
+                          quarter={episode.weekDto?.quarter}
+                          week={episode.weekDto?.week}
                           episodeNumber={episode.episodeNumber}
-                          isLast={isLast}
                           isSelected={isSelected}
-                          isHovered={hoveredEpisodeId === episode.id}
-                          onMouseEnter={() => handleMouseEnter(episode.id)}
-                          onMouseMove={(e) => handleMouseMove(e, episode.id)}
+                          isHovered={hoveredEpisodeId === episode.episodeId}
+                          onMouseEnter={() =>
+                            handleMouseEnter(episode.episodeId)
+                          }
+                          onMouseMove={(e) => handleMouseMove(e)}
                           onMouseLeave={handleMouseLeave}
-                          onClick={() => handleEpisodeClick(episode.id, status)}
+                          onClick={() =>
+                            handleEpisodeClick(episode.episodeId, status)
+                          }
                           disableCursor={
                             disableFutureEpisodes &&
                             (status === 'current' || status === 'future')
@@ -674,7 +663,7 @@ export default function EpisodeSection({
           }}
         >
           {formatScheduledAt(
-            episodes.find((e) => e.id === tooltipState.hoveredEpisodeId)
+            episodes.find((e) => e.episodeId === tooltipState.hoveredEpisodeId)
               ?.scheduledAt || ''
           )}
         </div>

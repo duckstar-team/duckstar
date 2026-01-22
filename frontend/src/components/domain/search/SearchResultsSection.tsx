@@ -1,9 +1,9 @@
 import AnimeGrid from './AnimeGrid';
-import type { AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface SearchResultsSectionProps {
   searchQuery: string;
-  animes: AnimePreviewDto[];
+  animes: Schemas['AnimePreviewDto'][];
   isCurrentSeason: boolean;
 }
 

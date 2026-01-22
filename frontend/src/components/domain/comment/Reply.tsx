@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReplyDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import VoteCount from '@/components/domain/vote/VoteCount';
 
 // 시간 포맷팅 유틸리티 함수
@@ -26,13 +26,18 @@ const imgCommentUnliked = '/icons/comment-unliked.svg';
 const imgCommentLiked = '/icons/comment-liked.svg';
 
 interface ReplyProps {
-  reply: ReplyDto;
+  reply: Schemas['ReplyDto'];
   onLike?: (replyId: number) => void;
   onReply?: (replyId: number) => void;
   onDelete?: (replyId: number) => void;
 }
 
-const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
+export default function Reply({
+  reply,
+  onLike,
+  onReply,
+  onDelete,
+}: ReplyProps) {
   const {
     replyId,
     nickname: author,
@@ -189,6 +194,4 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
       </div>
     </div>
   );
-};
-
-export default Reply;
+}

@@ -9,19 +9,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import { showToast } from '@/components/common/Toast';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
-import { AnimeInfoDto, EpisodeDto } from '@/types/dtos';
-
-interface AnimeHomeDto {
-  animeInfoDto: AnimeInfoDto;
-  episodeResponseDtos: EpisodeDto[];
-}
+import { Schemas } from '@/types';
 
 interface EpisodeCommentModalProps {
   isOpen: boolean;
   onClose: () => void;
   animeId: number;
-  animeData?: AnimeHomeDto;
-  rawAnimeData?: any; // 백엔드 원본 데이터
+  animeData: Schemas['AnimeHomeDto'];
   onCommentSubmit?: (
     episodeIds: number[],
     content: string,
@@ -43,13 +37,11 @@ export default function EpisodeCommentModal({
   onClose,
   animeId,
   animeData,
-  rawAnimeData,
   onCommentSubmit,
 }: EpisodeCommentModalProps) {
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useModal();
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
-  const [commentContent, setCommentContent] = useState('');
   const [episodeCurrentPage, setEpisodeCurrentPage] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   // 화면 크기 감지 (1024px 미만에서 드롭다운 사용)
@@ -77,31 +69,13 @@ export default function EpisodeCommentModal({
     };
   };
 
-  // 에피소드 데이터 처리 (rawAnimeData 사용)
-  const processedEpisodes =
-    rawAnimeData?.episodeResponseDtos?.map((episodeDto: any) => {
-      const scheduledAt = new Date(episodeDto.scheduledAt);
-      const { quarter, week } = getQuarterAndWeek(scheduledAt);
-
-      return {
-        id: episodeDto.episodeId,
-        episodeId: episodeDto.episodeId,
-        episodeNumber: episodeDto.episodeNumber,
-        scheduledAt: episodeDto.scheduledAt,
-        quarter,
-        week,
-        isBreak: episodeDto.isBreak,
-        isRescheduled: episodeDto.isRescheduled,
-      };
-    }) || [];
-
   // 실제 에피소드 데이터 사용
-  const finalEpisodes = processedEpisodes;
+  const finalEpisodes = animeData?.episodeResponseDtos;
 
   // 에피소드 클릭 핸들러 (한 개만 선택 가능, 현재 방영 중인 에피소드 제외)
   const handleEpisodeClick = (episodeId: number) => {
     // 현재 방영 중인 에피소드인지 확인
-    const episode = processedEpisodes.find(
+    const episode = animeData?.episodeResponseDtos.find(
       (ep: any) => ep.episodeId === episodeId
     );
     if (!episode) return;
@@ -146,8 +120,7 @@ export default function EpisodeCommentModal({
     }
 
     try {
-      await onCommentSubmit?.(selectedEpisodeIds, content, images);
-      setCommentContent('');
+      onCommentSubmit?.(selectedEpisodeIds, content, images);
       setSelectedEpisodeIds([]);
       setErrorMessage('');
       // 성공 메시지 표시
@@ -248,7 +221,7 @@ export default function EpisodeCommentModal({
                     className="webkit-appearance-none w-full appearance-none rounded-lg border border-zinc-300 p-3 focus:border-zinc-600 focus:ring-2 focus:ring-zinc-700 focus:outline-zinc-500 dark:border-zinc-800"
                   >
                     <option value="">에피소드를 선택하세요</option>
-                    {finalEpisodes.map((episode: EpisodeDto) => (
+                    {finalEpisodes.map((episode: Schemas['EpisodeDto']) => (
                       <option key={episode.episodeId} value={episode.episodeId}>
                         {episode.episodeNumber}화 -{' '}
                         {formatScheduledAt(episode.scheduledAt)}
@@ -286,7 +259,7 @@ export default function EpisodeCommentModal({
                 {selectedEpisodeIds.length > 0 && (
                   <div className="text-2xl font-bold text-[#FFB310]">
                     {
-                      processedEpisodes.find(
+                      finalEpisodes.find(
                         (ep: any) => ep.episodeId === selectedEpisodeIds[0]
                       )?.episodeNumber
                     }

@@ -2,12 +2,11 @@
 
 import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
-import { AnimePreviewDto } from '@/types/dtos';
+import { Schemas, OttType } from '@/types';
 import { useNavigation } from '@/hooks/useNavigation';
-import { OttType } from '@/types/enums';
 
 interface AnimeCardProps {
-  anime: AnimePreviewDto;
+  anime: Schemas['AnimePreviewDto'];
   className?: string;
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   isUpcomingGroup?: boolean; // "곧 시작" 그룹인지 여부
@@ -148,7 +147,11 @@ export default function AnimeCard({
 
           // 00:00 ~ 05:00인 경우 하루 빼기
           if (scheduledHours < 5) {
-            const prevDay = new Date(scheduledYear, scheduledMonth, scheduledDay - 1);
+            const prevDay = new Date(
+              scheduledYear,
+              scheduledMonth,
+              scheduledDay - 1
+            );
             scheduledYear = prevDay.getFullYear();
             scheduledMonth = prevDay.getMonth();
             scheduledDay = prevDay.getDate();
@@ -510,35 +513,35 @@ export default function AnimeCard({
                 }
               }}
             >
-              {ott.ottType === OttType.Netflix && (
+              {ott.ottType === OttType.NETFLIX && (
                 <img
                   src="/icons/netflix-logo.svg"
                   alt="Netflix"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Laftel && (
+              {ott.ottType === OttType.LAFTEL && (
                 <img
                   src="/icons/laftel-logo.svg"
                   alt="LAFTEL"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Tving && (
+              {ott.ottType === OttType.TVING && (
                 <img
                   src="/icons/tving-logo.svg"
                   alt="Tving"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Wavve && (
+              {ott.ottType === OttType.WAVVE && (
                 <img
                   src="/icons/wavve-logo.svg"
                   alt="Wavve"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Watcha && (
+              {ott.ottType === OttType.WATCHA && (
                 <img
                   src="/icons/watcha-logo.svg"
                   alt="Watcha"
@@ -652,7 +655,7 @@ export default function AnimeCard({
               {(() => {
                 const airTimeText = formatAirTime(
                   scheduledAt,
-                  anime.airTime || ''
+                  anime.airTime?.toString() || ''
                 );
                 const isUpcomingCountdown =
                   status === 'UPCOMING' && airTimeText.includes('D-');
@@ -697,10 +700,13 @@ export default function AnimeCard({
                   return (
                     <span className="text-[14px] font-medium text-[#868E96]">
                       {medium === 'MOVIE'
-                        ? formatAirTime(scheduledAt, anime.airTime || '') // 극장판은 요일 없이 시간만 표시
+                        ? formatAirTime(
+                            scheduledAt,
+                            anime.airTime?.toString() || ''
+                          ) // 극장판은 요일 없이 시간만 표시
                         : medium === 'TVA' && dayOfWeek === 'SPECIAL'
-                          ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime || '')}`
-                          : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime || '')}`}
+                          ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime?.toString() || '')}`
+                          : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime?.toString() || '')}`}
                     </span>
                   );
                 }
@@ -758,7 +764,7 @@ export default function AnimeCard({
             {(() => {
               const airTimeText = formatAirTime(
                 scheduledAt,
-                anime.airTime || ''
+                anime.airTime?.toString() || ''
               );
               const isUpcomingCountdown =
                 status === 'UPCOMING' && airTimeText.includes('D-');

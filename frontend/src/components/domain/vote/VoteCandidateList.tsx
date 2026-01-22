@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import VoteModal from './VoteModal';
 import { getCandidateList } from '@/api/vote';
-import { CandidateListDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useModal } from '@/components/layout/AppContainer';
 import { searchMatch } from '@/lib';
@@ -32,7 +32,11 @@ const getCheckCircleSize = (width: number) => {
 };
 
 // 후보 카드 컴포넌트
-const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
+const CandidateCard = ({
+  candidate,
+}: {
+  candidate: Schemas['WeekCandidateDto'];
+}) => {
   return (
     <div className="relative flex w-full flex-col items-start gap-2">
       {candidate.hasVoted && (
@@ -74,10 +78,11 @@ export default function VoteCandidateList({
     return getItemsPerPage(window.innerWidth - sidebarWidth);
   });
   const [currentPage, setCurrentPage] = useState(0);
-  const [selectedCandidate, setSelectedCandidate] =
-    useState<CandidateListDto | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<
+    Schemas['WeekCandidateDto'] | null
+  >(null);
 
-  const { data: candidates = [] } = useQuery<CandidateListDto[]>({
+  const { data: candidates = [] } = useQuery<Schemas['WeekCandidateDto'][]>({
     queryKey: ['candidateList', year, quarter, week],
     queryFn: async () => {
       const response = await getCandidateList(year, quarter, week);
@@ -125,7 +130,7 @@ export default function VoteCandidateList({
   // 후보를 페이지 단위로 나누기
   const pages = useMemo(() => {
     if (filteredCandidates.length === 0) return [];
-    const chunked: CandidateListDto[][] = [];
+    const chunked: Schemas['WeekCandidateDto'][][] = [];
     for (let i = 0; i < filteredCandidates.length; i += itemsPerPage) {
       chunked.push(filteredCandidates.slice(i, i + itemsPerPage));
     }

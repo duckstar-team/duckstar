@@ -224,29 +224,15 @@ export default function AnimeDetailClient() {
         const castPreviews = dataTyped.castPreviews || [];
 
         setAnime(animeInfo);
-
-        // 캐릭터 데이터 변환
-        const mapCastPreviewsToCharacters = (
-          castPreviews: Schemas['CastPreviewDto'][]
-        ) => {
-          if (!castPreviews || !Array.isArray(castPreviews)) {
-            return [];
-          }
-
-          return castPreviews.map((cast) => {
-            return {
-              mainThumbnailUrl: cast.mainThumbnailUrl,
-              nameKor: cast.nameKor || '이름 없음',
-              cv: cast.cv,
-            };
-          });
-        };
-
         setCharacters(castPreviews);
 
         // 애니메이션 상세 이미지 프리로딩 (비동기로 처리하여 로딩 속도 향상)
         setTimeout(() => {
-          preloadAnimeDetails(animeInfo as Schemas['AnimePreviewDto']);
+          if (animeInfo.mainThumbnailUrl) {
+            preloadAnimeDetails(
+              animeInfo as unknown as Schemas['AnimePreviewDto']
+            );
+          }
         }, 0);
       } catch (error) {
         setAnime(null);

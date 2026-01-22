@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect, ReactElement } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { WeekDto, SurveyDto } from '@/types/dtos';
+import { WeekDto, Schemas } from '@/types';
 import { ApiResponse } from '@/api/http';
 import { getSurveyTypeLabel, cn } from '@/lib';
 import { useChart } from './AppContainer';
@@ -23,7 +23,7 @@ export default function ThinNavDetail({ mode }: ThinNavDetailProps) {
   );
 
   // surveys API 호출 (award 모드일 때만)
-  const { data: surveysData } = useQuery<ApiResponse<SurveyDto[]>>({
+  const { data: surveysData } = useQuery<ApiResponse<Schemas['SurveyDto'][]>>({
     queryKey: ['surveys'],
     queryFn: async () => {
       const response = await fetch('/api/v1/vote/surveys');
@@ -70,7 +70,7 @@ export default function ThinNavDetail({ mode }: ThinNavDetailProps) {
         acc[survey.year].push(survey);
         return acc;
       },
-      {} as Record<number, SurveyDto[]>
+      {} as Record<number, Schemas['SurveyDto'][]>
     );
 
     // 연도 오름차순 정렬 후 각 년도별로 처리 (예: 2025 아래에 2026)
