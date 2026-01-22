@@ -1,5 +1,20 @@
-import type { AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { extractChosung } from '@/lib';
+
+type AnimePreviewDto = Schemas['AnimePreviewDto'];
+
+interface ProcessedData {
+  schedule: {
+    MON?: AnimePreviewDto[];
+    TUE?: AnimePreviewDto[];
+    WED?: AnimePreviewDto[];
+    THU?: AnimePreviewDto[];
+    FRI?: AnimePreviewDto[];
+    SAT?: AnimePreviewDto[];
+    SUN?: AnimePreviewDto[];
+    SPECIAL?: AnimePreviewDto[];
+  };
+}
 
 /**
  * 이번 주 스케줄 시간 계산
@@ -52,7 +67,7 @@ export function getNextWeekScheduledTime(
 /**
  * "곧 시작" 애니메이션 필터링 (12시간 이내)
  */
-export function isUpcomingAnime(anime: AnimePreviewDto): boolean {
+export function isUpcomingAnime(anime: Schemas['AnimePreviewDto']): boolean {
   // NOW_SHOWING 또는 UPCOMING 상태여야 함
   if (
     (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
@@ -108,7 +123,7 @@ export function isUpcomingAnime(anime: AnimePreviewDto): boolean {
 /**
  * 실제 스케줄 시간 계산 (정렬용)
  */
-export function getActualScheduledTime(anime: AnimePreviewDto): Date | null {
+export function getActualScheduledTime(anime: Schemas['AnimePreviewDto']): Date | null {
   if (!anime.scheduledAt) return null;
 
   const now = new Date();
@@ -135,9 +150,9 @@ export function getActualScheduledTime(anime: AnimePreviewDto): Date | null {
  * 방영 중 애니메이션 필터링
  */
 export function filterAiringAnimes(
-  animes: AnimePreviewDto[],
+  animes: Schemas['AnimePreviewDto'][],
   showOnlyAiring: boolean
-): AnimePreviewDto[] {
+): Schemas['AnimePreviewDto'][] {
   if (showOnlyAiring) {
     return animes.filter((anime) => anime.status === 'NOW_SHOWING');
   }
@@ -148,9 +163,9 @@ export function filterAiringAnimes(
  * OTT 서비스 필터링
  */
 export function filterOttAnimes(
-  animes: AnimePreviewDto[],
+  animes: Schemas['AnimePreviewDto'][],
   selectedOttServices: string[]
-): AnimePreviewDto[] {
+): Schemas['AnimePreviewDto'][] {
   if (selectedOttServices.length === 0) {
     return animes;
   }
@@ -170,9 +185,9 @@ export function filterOttAnimes(
  * 검색어 필터링
  */
 export function filterSearchAnimes(
-  animes: AnimePreviewDto[],
+  animes: Schemas['AnimePreviewDto'][],
   searchQuery: string
-): AnimePreviewDto[] {
+): Schemas['AnimePreviewDto'][] {
   if (!searchQuery.trim()) {
     return animes;
   }
@@ -196,8 +211,8 @@ export function filterSearchAnimes(
  * 요일별 애니메이션 정렬 (이번 주)
  */
 export function sortDayAnimesThisWeek(
-  animes: AnimePreviewDto[]
-): AnimePreviewDto[] {
+  animes: Schemas['AnimePreviewDto'][]
+): Schemas['AnimePreviewDto'][] {
   return animes.sort((a, b) => {
     const aStatus = a.status === 'NOW_SHOWING' ? 0 : 1;
     const bStatus = b.status === 'NOW_SHOWING' ? 0 : 1;
@@ -207,15 +222,15 @@ export function sortDayAnimesThisWeek(
     }
 
     if (aStatus === 0 && bStatus === 0) {
-      const aTime = a.airTime || '00:00';
-      const bTime = b.airTime || '00:00';
-      return aTime.localeCompare(bTime);
+      const aTime = a.airTime?.hour ?? 0;
+      const bTime = b.airTime?.hour ?? 0;
+      return aTime - bTime;
     }
 
     if (aStatus === 1 && bStatus === 1) {
-      const aTime = a.airTime || '00:00';
-      const bTime = b.airTime || '00:00';
-      return aTime.localeCompare(bTime);
+      const aTime = a.airTime?.hour ?? 0;
+      const bTime = b.airTime?.hour ?? 0;
+      return aTime - bTime;
     }
 
     return a.titleKor.localeCompare(b.titleKor);
@@ -226,8 +241,8 @@ export function sortDayAnimesThisWeek(
  * 요일별 애니메이션 정렬 (시즌별)
  */
 export function sortDayAnimesBySeason(
-  animes: AnimePreviewDto[]
-): AnimePreviewDto[] {
+  animes: Schemas['AnimePreviewDto'][]
+): Schemas['AnimePreviewDto'][] {
   return animes.sort((a, b) => {
     if (a.status === 'NOW_SHOWING' && b.status !== 'NOW_SHOWING') return -1;
     if (a.status !== 'NOW_SHOWING' && b.status === 'NOW_SHOWING') return 1;
@@ -243,8 +258,8 @@ export function sortDayAnimesBySeason(
  * "곧 시작" 애니메이션 정렬
  */
 export function sortUpcomingAnimes(
-  animes: AnimePreviewDto[]
-): AnimePreviewDto[] {
+  animes: Schemas['AnimePreviewDto'][]
+): Schemas['AnimePreviewDto'][] {
   return animes.sort((a, b) => {
     if (!a.scheduledAt || !b.scheduledAt) return 0;
 
@@ -273,24 +288,12 @@ export function sortUpcomingAnimes(
   });
 }
 
-interface ProcessedData {
-  schedule: {
-    MON?: AnimePreviewDto[];
-    TUE?: AnimePreviewDto[];
-    WED?: AnimePreviewDto[];
-    THU?: AnimePreviewDto[];
-    FRI?: AnimePreviewDto[];
-    SAT?: AnimePreviewDto[];
-    SUN?: AnimePreviewDto[];
-    SPECIAL?: AnimePreviewDto[];
-  };
-}
 
 /**
  * 빈 요일 확인
  */
 export function getEmptyDays(
-  processedData: ProcessedData | null,
+  processedData: (Pick<Schemas['ScheduleDto'], 'dayOfWeekShort'> & ProcessedData) | null,
   isSearchMode: boolean,
   showOnlyAiring: boolean,
   selectedOttServices: string[],
@@ -301,7 +304,7 @@ export function getEmptyDays(
   }
 
   const emptyDaysSet = new Set<string>();
-  const dayOrder: (keyof typeof processedData.schedule)[] = [
+  const dayOrder: (keyof ProcessedData['schedule'])[] = [
     'MON',
     'TUE',
     'WED',
@@ -313,15 +316,15 @@ export function getEmptyDays(
   ];
 
   dayOrder.forEach((day) => {
-    let dayAnimes = processedData.schedule[day] || [];
+    let dayAnimes: AnimePreviewDto[] = processedData.schedule[day] || [];
 
     if (day === 'SPECIAL') {
-      const movieAnimes = Object.values(processedData.schedule)
+      const movieAnimes = (Object.values(processedData.schedule) as AnimePreviewDto[][])
         .flat()
-        .filter((anime) => anime.medium === 'MOVIE');
+        .filter((anime: AnimePreviewDto) => anime.medium === 'MOVIE');
 
       const uniqueMovieAnimes = movieAnimes.filter(
-        (anime) =>
+        (anime: AnimePreviewDto) =>
           !processedData.schedule['SPECIAL']?.some(
             (special: AnimePreviewDto) => special.animeId === anime.animeId
           )
@@ -353,9 +356,9 @@ export function getEmptyDays(
 
   // "곧 시작" 그룹 확인 (이번 주만)
   if (isThisWeek && selectedOttServices.length === 0) {
-    const upcomingAnimes = Object.values(processedData.schedule)
+    const upcomingAnimes = (Object.values(processedData.schedule) as AnimePreviewDto[][])
       .flat()
-      .filter(isUpcomingAnime);
+      .filter((anime: AnimePreviewDto) => isUpcomingAnime(anime));
 
     if (upcomingAnimes.length === 0) {
       emptyDaysSet.add('곧 시작');
@@ -402,7 +405,7 @@ export function groupAnimesByDay(
     return {};
   }
 
-  const dayOrder: (keyof typeof processedData.schedule)[] = [
+  const dayOrder: (keyof ProcessedData['schedule'])[] = [
     'MON',
     'TUE',
     'WED',
@@ -416,9 +419,9 @@ export function groupAnimesByDay(
 
   // "곧 시작" 그룹 추가 (이번 주만)
   if (isThisWeek && selectedOttServices.length === 0 && !isSearchMode) {
-    const upcomingAnimes = Object.values(processedData.schedule)
+    const upcomingAnimes = (Object.values(processedData.schedule) as AnimePreviewDto[][])
       .flat()
-      .filter((anime) => {
+      .filter((anime: AnimePreviewDto) => {
         if (
           (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
           !anime.scheduledAt
@@ -437,12 +440,12 @@ export function groupAnimesByDay(
   dayOrder.forEach((day) => {
     if (day === 'SPECIAL') {
       const specialAnimes = processedData.schedule['SPECIAL'] || [];
-      const movieAnimes = Object.values(processedData.schedule)
+      const movieAnimes = (Object.values(processedData.schedule) as AnimePreviewDto[][])
         .flat()
-        .filter((anime) => anime.medium === 'MOVIE');
+        .filter((anime: AnimePreviewDto) => anime.medium === 'MOVIE');
 
       const uniqueMovieAnimes = movieAnimes.filter(
-        (anime) =>
+        (anime: AnimePreviewDto) =>
           !processedData.schedule['SPECIAL']?.some(
             (special: AnimePreviewDto) => special.animeId === anime.animeId
           )

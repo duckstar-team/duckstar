@@ -56,7 +56,7 @@ export function useImagePreloading() {
 
   // 애니메이션 상세 이미지 프리로딩 (높은 우선순위)
   const preloadAnimeDetails = useCallback(
-    (anime: Schemas['AnimePreviewDto']) => {
+    (anime: Schemas['AnimeInfoDto']) => {
       if (anime.mainThumbnailUrl) {
         addToQueue([anime.mainThumbnailUrl], 'high');
       }

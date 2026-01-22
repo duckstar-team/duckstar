@@ -109,26 +109,7 @@ export default async function AnimeDetailPage({
 
   return (
     <>
-      {animeInfo && (
-        <AnimeStructuredData
-          animeInfo={{
-            animeId: parseInt(animeId),
-            titleKor: animeInfo.titleKor || '애니메이션',
-            titleOrigin: animeInfo.titleOrigin,
-            synopsis: animeInfo.synopsis || '',
-            genre: animeInfo.genre,
-            medium: animeInfo.medium,
-            mainThumbnailUrl: animeInfo.mainThumbnailUrl,
-            premiereDateTime: animeInfo.premiereDateTime,
-            director: animeInfo.director,
-            corp: animeInfo.corp,
-            author: animeInfo.author,
-            minAge: animeInfo.minAge,
-            dayOfWeek: animeInfo.dayOfWeek,
-            airTime: animeInfo.airTime || '',
-          }}
-        />
-      )}
+      {animeInfo && <AnimeStructuredData animeInfo={animeInfo} />}
       <AnimeDetailClient />
     </>
   );
