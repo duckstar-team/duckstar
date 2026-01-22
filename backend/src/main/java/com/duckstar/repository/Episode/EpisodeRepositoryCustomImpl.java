@@ -18,7 +18,6 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -73,10 +72,7 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                 )
                 .from(episode)
                 .where(episode.anime.id.eq(animeId))
-                .orderBy(
-                        episode.scheduledAt.asc(),
-                        episode.isBreak.desc().nullsLast()
-                )
+                .orderBy(episode.scheduledAt.asc())
                 .fetch();
 
         // 이후 세팅
@@ -280,13 +276,12 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
     }
 
     @Override
-    public List<AnimeRankDto> getAnimeRankDtosByWeekIdWithOverFetch(
+    public List<AnimeRankDto> getAnimeRankDtosByWeekId(
             Long weekId,
             LocalDateTime weekEndDateTime,
-            Pageable pageable
+            int offset,
+            int limit
     ) {
-        int pageSize = pageable.getPageSize();
-
         List<Tuple> tuples = queryFactory.select(
                         anime.id,
                         anime.mainThumbnailUrl,
@@ -302,8 +297,8 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                         episode.rankInfo.rankedVoterCount.desc(),
                         episode.rankInfo.rankedAverage.desc(),
                         anime.titleKor.asc())
-                .offset((long) pageable.getPageNumber() * (pageSize - 1))
-                .limit(pageSize)
+                .offset(offset)
+                .limit(limit)
                 .fetch();
 
         List<Long> animeIds = tuples.stream()
@@ -520,10 +515,7 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                 .from(episode)
                 .leftJoin(adminActionLog).on(adminActionLog.episode.id.eq(episode.id))
                 .where(episode.anime.id.eq(animeId))
-                .orderBy(
-                        episode.scheduledAt.asc(),
-                        episode.id.asc()
-                )
+                .orderBy(episode.scheduledAt.asc())
                 .fetch();
 
         // 이후 세팅
@@ -570,10 +562,7 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                 .where(
                         episode.scheduledAt.between(week.startDateTime, week.endDateTime)
                 )
-                .orderBy(
-                        episode.scheduledAt.asc(),
-                        episode.isBreak.desc().nullsLast()
-                )
+                .orderBy(episode.scheduledAt.asc())
                 .fetch();
 
         // 이후 세팅
@@ -584,13 +573,10 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
     }
 
     @Override
-    public List<Episode> findEpisodesByReleaseOrder(Long animeId) {
+    public List<Episode> findEpisodesByReleaseOrderByAnimeId(Long animeId) {
         return queryFactory.selectFrom(episode)
                 .where(episode.anime.id.eq(animeId))
-                .orderBy(
-                        episode.scheduledAt.asc(),
-                        episode.isBreak.desc().nullsLast()
-                )
+                .orderBy(episode.scheduledAt.asc())
                 .fetch();
     }
 }
