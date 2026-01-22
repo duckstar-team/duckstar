@@ -17,9 +17,9 @@ export default function AnimeDetailClient() {
   const animeId = params.animeId as string;
   const [anime, setAnime] = useState<Schemas['AnimeInfoDto'] | null>(null);
   const [characters, setCharacters] = useState<Schemas['CastPreviewDto'][]>([]);
+  const [episodes, setEpisodes] = useState<Schemas['EpisodeDto'][]>([]);
   const [loading, setLoading] = useState(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [rawAnimeData, setRawAnimeData] = useState<any>(null); // 백엔드 원본 데이터 저장
   const isLoadingRef = useRef(false); // 중복 호출 방지용
   const prevAnimeIdRef = useRef<string | null>(null); // 이전 animeId 추적
 
@@ -93,7 +93,6 @@ export default function AnimeDetailClient() {
         'animeInfoDto' in updatedData
       ) {
         setAnime((updatedData as any).animeInfoDto);
-        setRawAnimeData(updatedData);
       }
 
       setIsEditingImage(false);
@@ -210,32 +209,21 @@ export default function AnimeDetailClient() {
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Request timeout')), 10000)
           ),
-        ])) as unknown;
+        ])) as Schemas['AnimeHomeDto'];
 
-        // 백엔드 원본 데이터 저장
-        setRawAnimeData(data);
-
-        // data는 AnimeHomeDto 구조
-        const dataTyped = data as {
-          animeInfoDto: Schemas['AnimeInfoDto'];
-          castPreviews?: Schemas['CastPreviewDto'][];
-        };
-        const animeInfo = dataTyped.animeInfoDto;
-        const castPreviews = dataTyped.castPreviews || [];
-
-        setAnime(animeInfo);
-        setCharacters(castPreviews);
-
+        setAnime(data.animeInfoDto);
+        setCharacters(data.castPreviews);
+        setEpisodes(data.episodeResponseDtos);
         // 애니메이션 상세 이미지 프리로딩 (비동기로 처리하여 로딩 속도 향상)
         setTimeout(() => {
-          if (animeInfo.mainThumbnailUrl) {
-            preloadAnimeDetails(
-              animeInfo as unknown as Schemas['AnimePreviewDto']
-            );
+          if (data.animeInfoDto.mainThumbnailUrl) {
+            preloadAnimeDetails(data.animeInfoDto);
           }
         }, 0);
       } catch (error) {
         setAnime(null);
+        setCharacters([]);
+        setEpisodes([]);
       } finally {
         setLoading(false);
         isLoadingRef.current = false;
@@ -357,8 +345,8 @@ export default function AnimeDetailClient() {
               <RightCommentPanel
                 animeId={parseInt(animeId)}
                 isImageModalOpen={isImageModalOpen}
-                animeData={anime} // 애니메이션 데이터 전달
-                rawAnimeData={rawAnimeData} // 백엔드 원본 데이터 전달
+                animeData={anime}
+                episodes={episodes}
               />
             </div>
           </div>
@@ -385,7 +373,7 @@ export default function AnimeDetailClient() {
                 isUploading={isUploading}
                 isMobile={false}
                 animeId={parseInt(animeId)}
-                rawAnimeData={rawAnimeData}
+                episodes={episodes || []}
               />
             </div>
           </div>
@@ -410,7 +398,7 @@ export default function AnimeDetailClient() {
             isUploading={isUploading}
             isMobile={true}
             animeId={parseInt(animeId)}
-            rawAnimeData={rawAnimeData}
+            episodes={episodes || []}
           />
         </div>
       </div>

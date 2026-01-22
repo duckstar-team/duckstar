@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import '@/styles/customScrollbar.css';
 import { cn } from '@/lib';
 import CharacterList from '@/components/domain/anime/CharacterList';
 import { Schemas, OttType } from '@/types';
@@ -31,9 +30,9 @@ interface LeftInfoPanelProps {
   isUploading?: boolean; // 이미지 업로드 중 여부
   isMobile?: boolean;
   animeId?: number; // 댓글 패널용 애니 ID
-  rawAnimeData?: any; // 댓글 패널용 원본 데이터
   anime: Schemas['AnimeInfoDto'];
   characters?: Schemas['CastPreviewDto'][];
+  episodes?: Schemas['EpisodeDto'][];
 }
 
 export default function LeftInfoPanel({
@@ -50,7 +49,7 @@ export default function LeftInfoPanel({
   isUploading = false,
   isMobile = false,
   animeId,
-  rawAnimeData,
+  episodes,
 }: LeftInfoPanelProps) {
   // 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<TabOption>('info');
@@ -164,7 +163,7 @@ export default function LeftInfoPanel({
   const characterScrollContainerHeight = Math.max(infoContentHeight, 90);
 
   const tabOptions: TabOptionConfig[] =
-    isMobile || (animeId && rawAnimeData)
+    isMobile || (animeId && anime)
       ? [
           {
             key: 'info' as const,
@@ -314,11 +313,6 @@ export default function LeftInfoPanel({
     premiereDateTime,
     minAge,
   } = anime;
-
-  const { year, quarter } = anime.quarterDtos?.[0] || {
-    year: 2026,
-    quarter: 1,
-  };
 
   // 이미지 로딩 상태 관리 (간소화)
   const [currentPosterImage, setCurrentPosterImage] = useState(
@@ -748,9 +742,13 @@ export default function LeftInfoPanel({
               className={`relative w-full shrink-0 text-[14.6px] leading-[0] font-medium text-white not-italic [text-shadow:rgba(0,0,0,0.4)_0px_0px_14.85px] ${isMobile ? 'max-w-none' : 'max-w-[400px]'}`}
             >
               <p className="leading-[normal]">
-                {`${year}년 ${quarter}분기`} ·{' '}
-                {medium === 'MOVIE' ? '극장판' : medium} ·{' '}
-                {getDayInKorean(dayOfWeek || '')} {formatAirTime(airTime)}
+                {anime.quarterDtos
+                  .map((quarter) => `${quarter.year}년 ${quarter.quarter}분기`)
+                  .join(' · ')}
+                {' · '}
+                {medium === 'MOVIE' ? '극장판' : medium}
+                {dayOfWeek &&
+                  ` · ${getDayInKorean(dayOfWeek || '')} ${formatAirTime(airTime)}`}
               </p>
             </div>
 
@@ -931,6 +929,7 @@ export default function LeftInfoPanel({
                   ? 'auto'
                   : `${characterScrollContainerHeight}px`,
                 scrollbarWidth: 'thin',
+                scrollbarColor: 'var(--color-brand-zinc-200) transparent',
               }}
             >
               <CharacterList
@@ -941,25 +940,24 @@ export default function LeftInfoPanel({
           )}
 
           {/* 댓글 탭 - 모바일 또는 댓글 데이터가 있을 때 표시 */}
-          {(isMobile || (animeId && rawAnimeData)) &&
-            currentTab === 'comments' && (
-              <div
-                className="custom-scrollbar w-full overflow-y-auto"
-                style={{
-                  height: isSmallScreen
-                    ? 'auto'
-                    : `${characterScrollContainerHeight}px`,
-                  scrollbarWidth: 'thin',
-                }}
-              >
-                <RightCommentPanel
-                  animeId={animeId}
-                  isImageModalOpen={false}
-                  animeData={anime}
-                  rawAnimeData={rawAnimeData}
-                />
-              </div>
-            )}
+          {(isMobile || (animeId && anime)) && currentTab === 'comments' && (
+            <div
+              className="custom-scrollbar w-full overflow-y-auto"
+              style={{
+                height: isSmallScreen
+                  ? 'auto'
+                  : `${characterScrollContainerHeight}px`,
+                scrollbarWidth: 'thin',
+              }}
+            >
+              <RightCommentPanel
+                animeId={animeId}
+                isImageModalOpen={false}
+                animeData={anime}
+                episodes={episodes || []}
+              />
+            </div>
+          )}
 
           {/* 정보 내용 - 애니 정보와 분기 성적 탭용 */}
           {currentTab !== 'characters' && currentTab !== 'comments' && (
@@ -974,11 +972,12 @@ export default function LeftInfoPanel({
             >
               {/* 스크롤 컨테이너 */}
               <div
-                className="overflow-y-auto"
+                className="custom-scrollbar overflow-y-auto"
                 style={{
                   width: isMobile ? '100%' : 'calc(100% + 12.5px)',
                   marginRight: isMobile ? '0' : '10px',
                   height: isSmallScreen ? 'auto' : `${scrollContainerHeight}px`,
+                  scrollbarColor: 'var(--color-brand-zinc-200) transparent',
                 }}
               >
                 {/* 탭별 내용 렌더링 */}

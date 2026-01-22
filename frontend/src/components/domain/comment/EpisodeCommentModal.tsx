@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import EpisodeSection from '../anime/EpisodeSection';
 import CommentPostForm from './CommentPostForm';
-import { getThisWeekRecord, cn } from '@/lib';
+import { cn } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
 import { showToast } from '@/components/common/Toast';
@@ -15,7 +15,8 @@ interface EpisodeCommentModalProps {
   isOpen: boolean;
   onClose: () => void;
   animeId: number;
-  animeData: Schemas['AnimeHomeDto'];
+  animeData: Schemas['AnimeInfoDto'] | null;
+  episodes: Schemas['EpisodeDto'][];
   onCommentSubmit?: (
     episodeIds: number[],
     content: string,
@@ -37,6 +38,7 @@ export default function EpisodeCommentModal({
   onClose,
   animeId,
   animeData,
+  episodes,
   onCommentSubmit,
 }: EpisodeCommentModalProps) {
   const { isAuthenticated } = useAuth();
@@ -59,25 +61,13 @@ export default function EpisodeCommentModal({
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // 분기/주차 계산 함수
-  const getQuarterAndWeek = (date: Date) => {
-    const record = getThisWeekRecord(date);
-
-    return {
-      quarter: `${record.quarterValue}분기`,
-      week: `${record.weekValue}주차`,
-    };
-  };
-
   // 실제 에피소드 데이터 사용
-  const finalEpisodes = animeData?.episodeResponseDtos;
+  const finalEpisodes = episodes;
 
   // 에피소드 클릭 핸들러 (한 개만 선택 가능, 현재 방영 중인 에피소드 제외)
   const handleEpisodeClick = (episodeId: number) => {
     // 현재 방영 중인 에피소드인지 확인
-    const episode = animeData?.episodeResponseDtos.find(
-      (ep: any) => ep.episodeId === episodeId
-    );
+    const episode = episodes.find((ep: any) => ep.episodeId === episodeId);
     if (!episode) return;
 
     // 현재 시간과 에피소드 방영 시간 비교
@@ -125,7 +115,7 @@ export default function EpisodeCommentModal({
       setErrorMessage('');
       // 성공 메시지 표시
       showToast.success(
-        `${animeData?.animeInfoDto?.titleKor || '애니메이션'}에 댓글이 성공적으로 작성되었습니다.`
+        `${animeData?.titleKor || '애니메이션'}에 댓글이 성공적으로 작성되었습니다.`
       );
       onClose();
     } catch (error) {
@@ -181,7 +171,7 @@ export default function EpisodeCommentModal({
           )}
           onClick={(e) => e.stopPropagation()}
           style={{
-            marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
+            marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : '',
           }}
         >
           {/* 헤더 */}
@@ -232,7 +222,7 @@ export default function EpisodeCommentModal({
                     <ChevronDown size={20} className="text-zinc-500" />
                   </div>
                   {selectedEpisodeIds.length > 0 && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       선택된 에피소드: {selectedEpisodeIds.length}개
                     </div>
                   )}
@@ -242,7 +232,7 @@ export default function EpisodeCommentModal({
                 <EpisodeSection
                   animeId={animeId}
                   episodes={finalEpisodes}
-                  totalEpisodes={animeData?.animeInfoDto?.totalEpisodes || 0}
+                  totalEpisodes={animeData?.totalEpisodes || 0}
                   selectedEpisodeIds={selectedEpisodeIds}
                   onEpisodeClick={handleEpisodeClick}
                   disableFutureEpisodes={true}
@@ -254,13 +244,14 @@ export default function EpisodeCommentModal({
 
             {/* 댓글 작성 섹션 */}
             <div>
-              <div className="mb-4 flex items-center gap-4">
+              <div className="mb-4 flex items-center gap-2">
                 <h3 className="text-lg font-semibold">댓글 작성</h3>
                 {selectedEpisodeIds.length > 0 && (
-                  <div className="text-2xl font-bold text-[#FFB310]">
+                  <div className="text-lg font-bold text-[#FFB310]">
                     {
                       finalEpisodes.find(
-                        (ep: any) => ep.episodeId === selectedEpisodeIds[0]
+                        (ep: Schemas['EpisodeDto']) =>
+                          ep.episodeId === selectedEpisodeIds[0]
                       )?.episodeNumber
                     }
                     화

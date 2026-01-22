@@ -10,7 +10,7 @@ import { Schemas } from '@/types';
 import { getAnimeEpisodes } from '@/api/search';
 import { createComment } from '@/api/comment';
 import { showToast } from '@/components/common/Toast';
-import { getThisWeekRecord, cn } from '@/lib';
+import { cn } from '@/lib';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { createSurveyComment } from '@/api/vote';
 
@@ -24,7 +24,13 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
   const hasComment = ballot.surveyCommentDto?.commentId !== null;
   const [isExpanded, setIsExpanded] = useState(hasComment);
   const [isEpisodeModalOpen, setIsEpisodeModalOpen] = useState(false);
-  const [episodeData, setEpisodeData] = useState<any>(null);
+  const [episodeData, setEpisodeData] = useState<{
+    animeInfoDto: Pick<
+      Schemas['AnimeInfoDto'],
+      'totalEpisodes' | 'titleKor' | 'mainThumbnailUrl'
+    > | null;
+    episodeResponseDtos: Schemas['EpisodeDto'][];
+  } | null>(null);
   const [commentBody, setCommentBody] = useState<string>(
     ballot.surveyCommentDto?.body || ''
   );
@@ -71,16 +77,13 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
       const episodes = await getAnimeEpisodes(ballot.animeId);
 
       // 에피소드 데이터를 EpisodeSection에서 사용할 수 있는 형태로 변환
-      const processedEpisodes = episodes.map((episode: any) => {
-        const scheduledAt = new Date(episode.scheduledAt);
-        const { quarterValue, weekValue } = getThisWeekRecord(scheduledAt);
-
+      episodes.map((episode: Schemas['EpisodeDto']) => {
         return {
           id: episode.episodeId,
           episodeId: episode.episodeId,
           episodeNumber: episode.episodeNumber,
-          quarter: `${quarterValue}분기`,
-          week: `${weekValue}주차`,
+          quarter: `${episode.weekDto.quarter}분기`,
+          week: `${episode.weekDto.week}주차`,
           scheduledAt: episode.scheduledAt,
           isBreak: episode.isBreak,
           isRescheduled: episode.isRescheduled,
@@ -93,7 +96,7 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
           titleKor: ballot.titleKor,
           mainThumbnailUrl: ballot.mainThumbnailUrl,
         },
-        episodeResponseDtos: processedEpisodes,
+        episodeResponseDtos: episodes,
       });
       setIsEpisodeModalOpen(true);
     } catch (error) {
@@ -284,7 +287,8 @@ export default function VoteResultCard({ ballot }: VoteResultCardProps) {
         isOpen={isEpisodeModalOpen}
         onClose={() => setIsEpisodeModalOpen(false)}
         animeId={ballot.animeId}
-        animeData={episodeData}
+        animeData={episodeData?.animeInfoDto as Schemas['AnimeInfoDto'] | null}
+        episodes={episodeData?.episodeResponseDtos || []}
         onCommentSubmit={handleEpisodeCommentSubmit}
       />
     </>
