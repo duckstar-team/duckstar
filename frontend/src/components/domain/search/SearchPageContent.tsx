@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getCurrentSchedule,
-  getScheduleByYearAndQuarter,
+  getScheduleByQuarter,
   searchAnimes,
 } from '@/api/search';
 import { Schemas } from '@/types';
@@ -64,7 +64,7 @@ export default function SearchPageContent({
       : ['schedule', year, quarter],
     queryFn: isThisWeek
       ? getCurrentSchedule
-      : () => getScheduleByYearAndQuarter(year!, quarter!),
+      : () => getScheduleByQuarter(year!, quarter!),
     enabled: isThisWeek ? true : isInitialized,
     ...queryConfig.search,
   });

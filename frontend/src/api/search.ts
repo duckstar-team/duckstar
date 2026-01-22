@@ -1,5 +1,5 @@
 import { Schemas } from '@/types';
-import { ApiResponse } from './http';
+import { apiCall, ApiResponse } from './http';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://duckstar.kr';
 
@@ -76,56 +76,6 @@ export async function getCurrentSchedule() {
 }
 
 /**
- * 특정 연도와 분기의 편성표를 조회합니다.
- * @param year 연도
- * @param quarter 분기 (1~4)
- * @returns 해당 분기 애니메이션 편성표
- */
-export async function getScheduleByYearAndQuarter(
-  year: number,
-  quarter: number
-) {
-  return getScheduleByQuarter(year, quarter);
-}
-
-export interface SeasonResponseItem {
-  year: number;
-  types: string[];
-}
-
-/**
- * 시즌 목록을 조회합니다.
- * @returns 연도별 시즌 목록 (백엔드 정렬 순서 유지)
- */
-export async function getSeasons(): Promise<SeasonResponseItem[]> {
-  try {
-    const response = await fetch(`${BASE_URL}/api/v1/search/seasons`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const apiResponse: ApiResponse<SeasonResponseItem[]> =
-      await response.json();
-
-    if (!apiResponse.isSuccess) {
-      throw new Error(apiResponse.message);
-    }
-
-    // 백엔드에서 정렬된 순서를 그대로 유지
-    return apiResponse.result;
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
  * 애니메이션 검색 API
  * @param query 검색어
  * @returns 검색된 애니메이션 목록
@@ -160,6 +110,16 @@ export async function searchAnimes(
   } catch (error) {
     throw error;
   }
+}
+
+/**
+ * 분기 목록 조회 API
+ * @returns 분기 목록
+ */
+export async function getQuarters(): Promise<
+  Schemas['ApiResponseListQuarterResponseDto']
+> {
+  return apiCall<Schemas['QuarterResponseDto'][]>('/api/v1/search/quarters');
 }
 
 /**

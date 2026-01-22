@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { getSeasons, type SeasonResponseItem } from '@/api/search';
 import { useQuery } from '@tanstack/react-query';
-import {
-  cn,
-  getQuarterFromSeason,
-  getSeasonFromQuarter,
-  getSeasonInKorean,
-} from '@/lib';
+import { cn, getSeasonFromQuarter, getSeasonInKorean } from '@/lib';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import { ChevronDown } from 'lucide-react';
+import { getQuarters } from '@/api/search';
+import { Schemas } from '@/types';
 
 interface SeasonSelectorProps {
   onSeasonSelect: (year: number, quarter: number) => void;
@@ -38,7 +34,7 @@ export default function SeasonSelector({
   // 시즌 목록 조회
   const { data: seasonsData } = useQuery({
     queryKey: ['seasons'],
-    queryFn: getSeasons,
+    queryFn: () => getQuarters(),
     staleTime: 10 * 60 * 1000, // 10분간 fresh 상태 유지
     gcTime: 30 * 60 * 1000, // 30분간 캐시 유지
   });
@@ -57,14 +53,13 @@ export default function SeasonSelector({
 
   if (seasonsData) {
     // 백엔드에서 정렬된 순서를 그대로 유지하여 순회
-    seasonsData.forEach((item: SeasonResponseItem) => {
-      item.types.forEach((season) => {
-        const quarter = getQuarterFromSeason(season);
+    seasonsData.result.forEach((item: Schemas['QuarterResponseDto']) => {
+      item.quarters.forEach((quarter) => {
         if (quarter) {
           seasonOptions.push({
             year: item.year,
             quarter,
-            label: `${item.year}년 ${getSeasonInKorean(season)} 애니메이션`,
+            label: `${item.year}년 ${quarter}분기 애니메이션`,
           });
         }
       });
