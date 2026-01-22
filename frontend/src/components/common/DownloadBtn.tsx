@@ -81,11 +81,17 @@ export default function DownloadBtn() {
   };
 
   const handleClick = () => {
-    toast.promise(handleDownload(), {
-      loading: '이미지 다운로드 중입니다...',
-      success: '이미지 다운로드가 완료되었습니다.',
-      error: '이미지 다운로드에 실패했습니다.',
-    });
+    toast.promise(
+      handleDownload(),
+      {
+        loading: '이미지 다운로드 중입니다...',
+        success: '이미지 다운로드가 완료되었습니다.',
+        error: '이미지 다운로드에 실패했습니다.',
+      },
+      {
+        className: 'dark:bg-black! dark:text-white!',
+      }
+    );
   };
 
   return (

@@ -14,7 +14,7 @@ import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import CommentPostForm from '@/components/domain/comment/CommentPostForm';
 import { getCandidate, submitVoteForm } from '@/api/vote';
-import { CandidateDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import StarDetailPopup from '@/components/domain/star/StarDetailPopup';
 import { useAuth } from '@/context/AuthContext';
@@ -47,7 +47,7 @@ export default function VoteModal({
   const { isLoginModalOpen, isVoteModalOpen } = useModal();
   const modalRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
-  const candidateQuery = useQuery<CandidateDto | null>({
+  const candidateQuery = useQuery<Schemas['CandidateFormDto'] | null>({
     queryKey: ['candidate', episodeId],
     queryFn: async () => {
       const response = await getCandidate(episodeId);

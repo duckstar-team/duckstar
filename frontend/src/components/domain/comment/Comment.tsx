@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommentDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import VoteCount from '@/components/domain/vote/VoteCount';
 import { cn } from '@/lib';
 
@@ -28,20 +28,20 @@ const imgCommentUnliked = '/icons/comment-unliked.svg';
 const imgCommentLiked = '/icons/comment-liked.svg';
 
 interface CommentProps {
-  comment: CommentDto;
+  comment: Schemas['CommentDto'];
   onLike?: (commentId: number) => void;
   onReply?: (commentId: number) => void;
   onDelete?: (commentId: number, surveyCandidateId: number | null) => void;
   className?: string;
 }
 
-const Comment: React.FC<CommentProps> = ({
+export default function Comment({
   comment,
   onLike,
   onReply,
   onDelete,
   className,
-}) => {
+}: CommentProps) {
   const {
     commentId,
     status,
@@ -291,6 +291,4 @@ const Comment: React.FC<CommentProps> = ({
       </div>
     </div>
   );
-};
-
-export default Comment;
+}

@@ -3,21 +3,17 @@
 import React, { useState } from 'react';
 import { CharacterImageSkeleton } from '@/components/skeletons';
 import { cn } from '@/lib';
-import { Character } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface CharacterCardProps {
-  character: Character;
-  variant?: 'figma';
+  character: Schemas['CastPreviewDto'];
   index?: number;
-  className?: string;
   isMobile?: boolean;
 }
 
 export default function CharacterCard({
   character,
-  variant = 'figma',
   index = 0,
-  className,
   isMobile = false,
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
@@ -35,7 +31,9 @@ export default function CharacterCard({
   // 기본 이미지 URL
   const defaultImageUrl = '/icons/profile-default.svg';
   const imageUrl =
-    character.imageUrl && !imageError ? character.imageUrl : defaultImageUrl;
+    character.mainThumbnailUrl && !imageError
+      ? character.mainThumbnailUrl
+      : defaultImageUrl;
 
   // index에 따른 배경색 결정 (odd/even 교차)
   const getBackgroundColor = (index: number) => {
@@ -47,8 +45,7 @@ export default function CharacterCard({
     <div
       className={cn(
         isMobile ? 'h-[225px] w-[162px]' : 'h-[250px] w-[180px]',
-        'overflow-hidden', // 내부 요소가 카드 경계를 벗어나지 않도록
-        className
+        'overflow-hidden'
       )}
     >
       {/* Profile 프레임 */}
@@ -56,7 +53,7 @@ export default function CharacterCard({
         className={`${isMobile ? 'h-[153px] w-[163px]' : 'h-[170px] w-[181px]'} relative flex items-center justify-center rounded-tl-[9.76px] rounded-tr-[9.76px] bg-[#F1F3F5] dark:bg-zinc-800`}
       >
         {/* 로딩 스켈레톤 */}
-        {imageLoading && character.imageUrl && !imageError && (
+        {imageLoading && character.mainThumbnailUrl && !imageError && (
           <CharacterImageSkeleton isMobile={isMobile} />
         )}
 
@@ -65,7 +62,7 @@ export default function CharacterCard({
           className={cn(
             isMobile ? 'h-[110px] w-[110px]' : 'h-[122px] w-[122px]',
             'rounded-[9.76px] object-cover transition-opacity duration-200',
-            imageLoading && character.imageUrl && !imageError
+            imageLoading && character.mainThumbnailUrl && !imageError
               ? 'absolute opacity-0'
               : 'opacity-100'
           )}
@@ -96,9 +93,7 @@ export default function CharacterCard({
             className={`justify-start self-stretch text-black ${isMobile ? 'text-xs' : 'text-sm'} leading-tight font-light`}
           >
             성우:{' '}
-            {character.voiceActor
-              ? character.voiceActor.replace(/\s*\([^)]*\)/g, '')
-              : '미정'}
+            {character.cv ? character.cv?.replace(/\s*\([^)]*\)/g, '') : '미정'}
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { differenceInDays } from 'date-fns';
-import { AnimeBallotDto, ApiResponseAnimeVoteHistoryDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { ChevronRight, RefreshCcw } from 'lucide-react';
 import { queryConfig, getCategoryText, getSurveyTypeLabel } from '@/lib';
 import VoteStamp from './VoteStamp';
@@ -14,7 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 
 interface VoteResultViewProps {
   surveyId: number;
-  endDate?: Date;
+  endDate?: Date | string;
   onRevoteClick: () => void;
   showConfetti?: boolean;
   onConfettiComplete?: () => void;
@@ -36,7 +36,9 @@ export default function VoteResultView({
     queryFn: async () => {
       const response = await fetch(`/api/v1/vote/surveys/${surveyId}/me`);
       if (!response.ok) throw new Error('투표 내역 조회 실패');
-      return response.json() as Promise<ApiResponseAnimeVoteHistoryDto>;
+      return response.json() as Promise<
+        Schemas['ApiResponseAnimeVoteHistoryDto']
+      >;
     },
     enabled: !!surveyId,
     ...queryConfig.vote,
@@ -162,7 +164,7 @@ export default function VoteResultView({
         voteHistory.animeBallotDtos.length > 0 ? (
           <div className="grid w-full grid-cols-1 gap-4 @md:grid-cols-2">
             {voteHistory.animeBallotDtos.map(
-              (ballot: AnimeBallotDto, index: number) => (
+              (ballot: Schemas['AnimeBallotDto'], index: number) => (
                 <div key={index}>
                   <VoteResultCard ballot={ballot} />
                 </div>

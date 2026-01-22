@@ -1,6 +1,6 @@
 'use client';
 
-import { SurveyRankDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import React, { useMemo, memo } from 'react';
 import SurveyResultComment from './SurveyResultComment';
 import {
@@ -120,7 +120,7 @@ const CustomLabel = (props: any) => {
 const AgeBarChart = memo(function AgeBarChart({
   voteRatioDto,
 }: {
-  voteRatioDto: any;
+  voteRatioDto: Schemas['VoteRatioDto'];
 }) {
   const ageData = useMemo(
     () => [
@@ -179,7 +179,7 @@ export default function SurveyResultCard({
   surveyRank,
   totalCount,
 }: {
-  surveyRank: SurveyRankDto;
+  surveyRank: Schemas['SurveyRankDto'];
   totalCount: number;
 }) {
   const {

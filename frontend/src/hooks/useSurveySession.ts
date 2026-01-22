@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
-import { SurveyDto } from '@/types/dtos';
-import { ApiResponse } from '@/api/http';
+import { Schemas } from '@/types';
 import { queryConfig, hasValidSurveySession, setSurveySession } from '@/lib';
 
 /**
@@ -12,12 +11,12 @@ export function useSurveySession() {
   const { isAuthenticated } = useAuth();
 
   // surveys 목록 조회
-  const { data: surveysData } = useQuery<ApiResponse<SurveyDto[]>>({
+  const { data: surveysData } = useQuery<Schemas['ApiResponseListSurveyDto']>({
     queryKey: ['surveys'],
     queryFn: async () => {
       const response = await fetch('/api/v1/vote/surveys');
       if (!response.ok) throw new Error('어워드 목록 조회 실패');
-      return response.json() as Promise<ApiResponse<SurveyDto[]>>;
+      return response.json() as Promise<Schemas['ApiResponseListSurveyDto']>;
     },
     ...queryConfig.vote,
   });

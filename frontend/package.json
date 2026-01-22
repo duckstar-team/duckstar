@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "analyze": "node scripts/analyze-bundle.js",
-    "build:analyze": "ANALYZE=true next build"
+    "build:analyze": "ANALYZE=true next build",
+    "openapi:sync": "curl http://localhost:8080/v3/api-docs | openapi-typescript -o src/types/generated/api.ts --enum --dedupe-enums --properties-required-by-default"
   },
   "dependencies": {
     "@tailwindcss/line-clamp": "^0.4.4",
@@ -43,6 +44,7 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.5.0",
+    "openapi-typescript": "^7.10.1",
     "postcss": "^8.5.6",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4.1.12",

@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useParams } from 'next/navigation';
 import Medal from '@/components/domain/chart/Medal';
-import { MedalPreviewDto } from '@/types/dtos';
-import { MedalType } from '@/types/enums';
+import { Schemas } from '@/types';
+import { MedalType } from '@/types';
 
 interface MedalGridProps {
-  medals: MedalPreviewDto[];
+  medals: Schemas['MedalPreviewDto'][];
   hideSeparators?: boolean;
 }
 
@@ -86,7 +86,7 @@ export default function MedalGrid({
   };
 
   const handleMedalClick = (
-    medal: MedalPreviewDto,
+    medal: Schemas['MedalPreviewDto'],
     event: React.MouseEvent
   ) => {
     event.stopPropagation(); // 카드 펼침 이벤트 전파 방지
@@ -172,7 +172,7 @@ export default function MedalGrid({
                     key={index}
                     data-property-1={medal.type}
                     className={`xs:w-7 xs:h-11 xs:gap-2.5 relative inline-flex h-8 w-5 items-center justify-center gap-1.5 sm:h-11 sm:w-7 sm:gap-2.5 ${
-                      medal.type === MedalType.None
+                      medal.type === MedalType.NONE
                         ? 'cursor-pointer rounded-md border-2 border-dashed border-gray-400/50 bg-gray-100/40 transition-all duration-200 hover:border-gray-500/60 hover:bg-gray-200/50'
                         : 'cursor-pointer transition-opacity hover:opacity-80'
                     }`}
@@ -191,7 +191,7 @@ export default function MedalGrid({
                     key={index}
                     data-property-1={medal.type}
                     className={`xs:w-7 xs:h-11 xs:gap-2.5 relative inline-flex h-8 w-5 items-center justify-center gap-1.5 sm:h-11 sm:w-7 sm:gap-2.5 ${
-                      medal.type === 'NONE'
+                      medal.type === MedalType.NONE
                         ? 'rounded-md border-2 border-dashed border-gray-400/50 bg-gray-100/40 transition-all duration-200 hover:border-gray-500/60 hover:bg-gray-200/50'
                         : 'cursor-pointer transition-opacity hover:opacity-80'
                     }`}

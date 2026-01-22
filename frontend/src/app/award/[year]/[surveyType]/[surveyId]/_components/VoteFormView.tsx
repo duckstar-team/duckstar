@@ -15,18 +15,14 @@ import SearchBar from '@/components/domain/search/SearchBar';
 import VoteStatus from './VoteStatus';
 import GenderSelection from './GenderSelection';
 import VoteDisabledState from './VoteDisabledState';
-import {
-  ApiResponseAnimeCandidateListDto,
-  ApiResponseAnimeVoteHistoryDto,
-  AnimeCandidateDto,
-} from '@/types/dtos';
+import { Schemas } from '@/types';
 import {
   AgeGroup,
   BallotType,
   Gender,
   SurveyStatus,
   SurveyType,
-} from '@/types/enums';
+} from '@/types';
 import { Megaphone } from 'lucide-react';
 import {
   cn,
@@ -51,7 +47,7 @@ interface VoteFormViewProps {
   onRevoteSuccess: () => void;
   voteStatus?: SurveyStatus;
   surveyType?: SurveyType;
-  surveyEndDate?: Date;
+  surveyEndDate?: Date | string;
 }
 
 export default function VoteFormView({
@@ -99,14 +95,16 @@ export default function VoteFormView({
     data: candidateData,
     isLoading,
     error,
-  } = useQuery<ApiResponseAnimeCandidateListDto>({
+  } = useQuery<Schemas['ApiResponseAnimeCandidateListDto']>({
     queryKey: ['anime-candidates', surveyId],
     queryFn: async () => {
       const response = await fetch(
         `/api/v1/vote/surveys/${surveyId}/candidates`
       );
       if (!response.ok) throw new Error('애니메이션 후보 조회 실패');
-      return response.json() as Promise<ApiResponseAnimeCandidateListDto>;
+      return response.json() as Promise<
+        Schemas['ApiResponseAnimeCandidateListDto']
+      >;
     },
     enabled: !!surveyId,
     ...queryConfig.vote,
@@ -118,7 +116,9 @@ export default function VoteFormView({
     queryFn: async () => {
       const response = await fetch(`/api/v1/vote/surveys/${surveyId}/me`);
       if (!response.ok) throw new Error('투표 내역 조회 실패');
-      return response.json() as Promise<ApiResponseAnimeVoteHistoryDto>;
+      return response.json() as Promise<
+        Schemas['ApiResponseAnimeVoteHistoryDto']
+      >;
     },
     enabled: !!surveyId && isRevoteMode,
     ...queryConfig.vote,
@@ -128,7 +128,7 @@ export default function VoteFormView({
   useEffect(() => {
     if (
       candidateData?.result?.memberGender &&
-      candidateData.result.memberGender !== Gender.Unknown &&
+      candidateData.result.memberGender !== Gender.UNKNOWN &&
       !selectedGender
     ) {
       setSelectedGender(candidateData.result.memberGender);
@@ -160,10 +160,10 @@ export default function VoteFormView({
         voteStatusData.result.animeBallotDtos.length > 0
       ) {
         const normalVotes = voteStatusData.result.animeBallotDtos
-          .filter((ballot) => ballot.ballotType === BallotType.Normal)
+          .filter((ballot) => ballot.ballotType === BallotType.NORMAL)
           .map((ballot) => ballot.animeCandidateId);
         const bonusVotes = voteStatusData.result.animeBallotDtos
-          .filter((ballot) => ballot.ballotType === BallotType.Bonus)
+          .filter((ballot) => ballot.ballotType === BallotType.BONUS)
           .map((ballot) => ballot.animeCandidateId);
 
         // 기존 투표 데이터를 즉시 상태에 설정
@@ -179,7 +179,7 @@ export default function VoteFormView({
         // 성별 정보 설정
         if (
           candidateData?.result?.memberGender &&
-          candidateData.result.memberGender !== Gender.Unknown
+          candidateData.result.memberGender !== Gender.UNKNOWN
         ) {
           setSelectedGender(candidateData.result.memberGender);
         }
@@ -233,7 +233,7 @@ export default function VoteFormView({
   // 전체 애니메이션 리스트 생성
   const allAnimeList = candidateData?.result?.animeCandidates || [];
 
-  const filteredAnimeList: AnimeCandidateDto[] = useMemo(() => {
+  const filteredAnimeList: Schemas['AnimeCandidateDto'][] = useMemo(() => {
     return searchQuery.trim() === ''
       ? allAnimeList
       : allAnimeList.filter((anime) =>
@@ -241,7 +241,7 @@ export default function VoteFormView({
         );
   }, [allAnimeList, searchQuery]);
 
-  const animeList: AnimeCandidateDto[] = useMemo(() => {
+  const animeList: Schemas['AnimeCandidateDto'][] = useMemo(() => {
     if (genderSelectionStep && scrollCompleted) {
       return filteredAnimeList
         .filter(
@@ -299,7 +299,7 @@ export default function VoteFormView({
 
   // 분기별 첫 번째 후보 찾기 (실제 렌더링되는 animeList 기준)
   const getFirstAnimeInQuarter = useCallback(
-    (quarter: number): AnimeCandidateDto | null => {
+    (quarter: number): Schemas['AnimeCandidateDto'] | null => {
       return animeList.find((anime) => anime.quarter === quarter) || null;
     },
     [animeList]
@@ -546,39 +546,39 @@ export default function VoteFormView({
       if (isRevoteMode && voteStatusData?.result?.submissionId) {
         const currentVotes = voteStatusData.result.animeBallotDtos || [];
         const currentNormalVotes = currentVotes
-          .filter((ballot) => ballot.ballotType === BallotType.Normal)
+          .filter((ballot) => ballot.ballotType === BallotType.NORMAL)
           .map((ballot) => ballot.animeCandidateId);
         const currentBonusVotes = currentVotes
-          .filter((ballot) => ballot.ballotType === BallotType.Bonus)
+          .filter((ballot) => ballot.ballotType === BallotType.BONUS)
           .map((ballot) => ballot.animeCandidateId);
 
         const added = [
           ...selected
             .filter((id) => !currentNormalVotes.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: BallotType.Normal })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.NORMAL })),
           ...bonusSelected
             .filter((id) => !currentBonusVotes.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: BallotType.Bonus })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.BONUS })),
         ];
 
         const removed = [
           ...currentNormalVotes
             .filter((id) => !selected.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: BallotType.Normal })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.NORMAL })),
           ...currentBonusVotes
             .filter((id) => !bonusSelected.includes(id))
-            .map((id) => ({ candidateId: id, ballotType: BallotType.Bonus })),
+            .map((id) => ({ candidateId: id, ballotType: BallotType.BONUS })),
         ];
 
         const updated = [];
         for (const id of selected) {
           if (currentBonusVotes.includes(id)) {
-            updated.push({ candidateId: id, ballotType: BallotType.Normal });
+            updated.push({ candidateId: id, ballotType: BallotType.NORMAL });
           }
         }
         for (const id of bonusSelected) {
           if (currentNormalVotes.includes(id)) {
-            updated.push({ candidateId: id, ballotType: BallotType.Bonus });
+            updated.push({ candidateId: id, ballotType: BallotType.BONUS });
           }
         }
 

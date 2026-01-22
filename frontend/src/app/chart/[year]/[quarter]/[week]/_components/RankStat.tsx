@@ -5,11 +5,11 @@ import WeekRatingStats from './WeekRatingStats';
 import { getThisWeekRecord } from '@/lib';
 import { format } from 'date-fns';
 import MedalGrid from './MedalGrid';
-import { AnimeRankDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { ChevronRight, TrendingUp } from 'lucide-react';
 
 interface RankStatProps {
-  anime: AnimeRankDto;
+  anime: Schemas['AnimeRankDto'];
 }
 
 export default function RankStat({ anime }: RankStatProps) {

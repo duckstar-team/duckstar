@@ -5,7 +5,7 @@ import BigCandidate from '@/components/domain/anime/BigCandidate';
 import SmallCandidate from '@/components/domain/anime/SmallCandidate';
 import AnimeCard from '@/components/domain/anime/AnimeCard';
 import { getStarCandidates } from '@/api/vote';
-import { AnimePreviewDto, LiveCandidateDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import {
   searchMatch,
   extractChosung,
@@ -104,7 +104,9 @@ export default function VotePageContent() {
     return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[900px] md:max-w-[700px]';
   };
   const queryClient = useQueryClient();
-  const [fallbackAnimes, setFallbackAnimes] = useState<AnimePreviewDto[]>([]); // fallback 애니메이션 데이터
+  const [fallbackAnimes, setFallbackAnimes] = useState<
+    Schemas['AnimePreviewDto'][]
+  >([]); // fallback 애니메이션 데이터
   const [isUsingFallback, setIsUsingFallback] = useState(false); // fallback 데이터 사용 여부
 
   // React Query를 사용한 별점 후보 조회
@@ -289,7 +291,10 @@ export default function VotePageContent() {
   };
 
   // 검색 필터링 함수 (초성 검색 포함)
-  const filterCandidates = (candidates: LiveCandidateDto[], query: string) => {
+  const filterCandidates = (
+    candidates: Schemas['LiveCandidateDto'][],
+    query: string
+  ) => {
     if (!query.trim()) return candidates;
 
     return candidates.filter((candidate) =>
@@ -298,7 +303,10 @@ export default function VotePageContent() {
   };
 
   // 검색 필터링 함수 (fallback 데이터용, 초성 검색 포함)
-  const filterFallbackAnimes = (animes: AnimePreviewDto[], query: string) => {
+  const filterFallbackAnimes = (
+    animes: Schemas['AnimePreviewDto'][],
+    query: string
+  ) => {
     if (!query.trim()) return animes;
 
     return animes.filter((anime) => searchMatch(query, anime.titleKor));
@@ -306,8 +314,8 @@ export default function VotePageContent() {
 
   // 투표 시간이 많이 남은 순서로 정렬하는 함수
   const sortCandidatesByVoteTimeRemaining = (
-    candidates: LiveCandidateDto[]
-  ): LiveCandidateDto[] => {
+    candidates: Schemas['LiveCandidateDto'][]
+  ): Schemas['LiveCandidateDto'][] => {
     const now = new Date();
     return [...candidates].sort((a, b) => {
       if (!a.scheduledAt || !b.scheduledAt) return 0;
@@ -338,8 +346,8 @@ export default function VotePageContent() {
 
   // 후보자 목록 렌더링 함수
   const renderLiveCandidates = (
-    candidates: LiveCandidateDto[],
-    filteredCandidates: LiveCandidateDto[],
+    candidates: Schemas['LiveCandidateDto'][],
+    filteredCandidates: Schemas['LiveCandidateDto'][],
     viewMode: 'large' | 'small'
   ) => {
     if (candidates.length === 0) return null;
@@ -395,7 +403,7 @@ export default function VotePageContent() {
 
   // 랜덤 placeholder 생성 함수
   const generateRandomPlaceholder = (
-    animes: (LiveCandidateDto | AnimePreviewDto)[]
+    animes: (Schemas['LiveCandidateDto'] | Schemas['AnimePreviewDto'])[]
   ) => {
     if (animes.length === 0) return '';
 

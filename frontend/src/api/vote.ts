@@ -1,13 +1,5 @@
-import {
-  LiveCandidateListDto,
-  CandidateDto,
-  CandidateListDto,
-  LiveVoteResultDto,
-  SurveyCommentDto,
-  AnimeVoteHistoryDto,
-} from '@/types/dtos';
 import { apiCall } from './http';
-import { AgeGroup, BallotType, Gender } from '@/types/enums';
+import { AgeGroup, BallotType, Gender, Schemas } from '@/types';
 
 // Device fingerprint 생성 함수
 async function generateDeviceFingerprint(): Promise<string> {
@@ -70,7 +62,7 @@ export async function submitStarVote(
 ) {
   const fingerprint = await generateDeviceFingerprint();
 
-  return apiCall<LiveVoteResultDto>('/api/v1/vote/star', {
+  return apiCall<Schemas['VoteResultDto']>('/api/v1/vote/star', {
     method: 'POST',
     headers: {
       'X-DEVICE-FP': fingerprint,
@@ -85,10 +77,13 @@ export async function submitStarVote(
 
 // 투표 폼(모달) 투표/수정 API (로그인 ONLY)
 export async function submitVoteForm(voteData: Record<string, unknown>) {
-  const response = await apiCall<LiveVoteResultDto>('/api/v1/vote/star-form', {
-    method: 'POST',
-    body: JSON.stringify(voteData),
-  });
+  const response = await apiCall<Schemas['VoteResultDto']>(
+    '/api/v1/vote/star-form',
+    {
+      method: 'POST',
+      body: JSON.stringify(voteData),
+    }
+  );
 
   if (!response.isSuccess) {
     throw response;
@@ -99,7 +94,7 @@ export async function submitVoteForm(voteData: Record<string, unknown>) {
 
 // 실시간 투표 리스트 조회 API
 export async function getStarCandidates() {
-  return apiCall<LiveCandidateListDto>('/api/v1/vote/star');
+  return apiCall<Schemas['LiveCandidateListDto']>('/api/v1/vote/star');
 }
 
 // 주차 후보 목록 조회 API
@@ -108,7 +103,7 @@ export async function getCandidateList(
   quarter: number,
   week: number
 ) {
-  return apiCall<CandidateListDto[]>(
+  return apiCall<Schemas['WeekCandidateDto'][]>(
     `/api/v1/vote/episodes/${year}/${quarter}/${week}`,
     {
       method: 'GET',
@@ -118,9 +113,12 @@ export async function getCandidateList(
 
 // 후보 단건 조회 API
 export async function getCandidate(episodeId: number) {
-  return apiCall<CandidateDto>(`/api/v1/vote/episodes/${episodeId}`, {
-    method: 'GET',
-  });
+  return apiCall<Schemas['CandidateFormDto']>(
+    `/api/v1/vote/episodes/${episodeId}`,
+    {
+      method: 'GET',
+    }
+  );
 }
 
 // 별점 회수 API
@@ -132,7 +130,9 @@ export async function withdrawStar(episodeId: number, episodeStarId: number) {
 
 // Survey 투표 기록 조회 API
 export async function getVoteHistory(surveyId: number) {
-  return apiCall<AnimeVoteHistoryDto>(`/api/v1/vote/surveys/${surveyId}/me`);
+  return apiCall<Schemas['AnimeVoteHistoryDto']>(
+    `/api/v1/vote/surveys/${surveyId}/me`
+  );
 }
 
 // Survey 재투표 API
@@ -171,8 +171,11 @@ export async function createSurveyComment(
     candidateId: number;
   }
 ) {
-  return apiCall<SurveyCommentDto>(`/api/v1/vote/surveys/${surveyId}/me`, {
-    method: 'POST',
-    body: JSON.stringify(requestBody),
-  });
+  return apiCall<Schemas['SurveyCommentDto']>(
+    `/api/v1/vote/surveys/${surveyId}/me`,
+    {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+    }
+  );
 }

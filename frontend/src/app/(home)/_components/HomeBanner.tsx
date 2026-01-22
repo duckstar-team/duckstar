@@ -4,10 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import BannerContent from './BannerContent';
 import BannerPagination from './BannerPagination';
-import { HomeBannerDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface HomeBannerProps {
-  homeBannerDtos: HomeBannerDto[];
+  homeBannerDtos: Schemas['HomeBannerDto'][];
 }
 
 export default function HomeBanner({ homeBannerDtos }: HomeBannerProps) {
@@ -111,7 +111,7 @@ export default function HomeBanner({ homeBannerDtos }: HomeBannerProps) {
     );
   }
 
-  const handleBannerClick = (banner: HomeBannerDto) => {
+  const handleBannerClick = (banner: Schemas['HomeBannerDto']) => {
     // 홈페이지에서 상세화면으로 이동할 때 스크롤 저장
     if (typeof window !== 'undefined') {
       const currentScrollY = window.scrollY || 0;
@@ -180,24 +180,13 @@ export default function HomeBanner({ homeBannerDtos }: HomeBannerProps) {
             style={{
               width: `${100 / homeBannerDtos.length}%`,
             }}
-            // style={{
-            //   backgroundImage: `url(${banner.animeImageUrl})`,
-            //   backgroundSize: 'cover',
-            //   backgroundPosition: 'center',
-            //   backgroundRepeat: 'no-repeat',
-            // }}
             onClick={() => handleBannerClick(banner)}
           >
-            {/* <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/10" /> */}
-            {/* <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(18,18,18,0.5)_0%,rgba(18,18,18,0)_50%),linear-gradient(rgba(18,18,18,0.5)_0%,rgba(18,18,18,0)_21.11%),linear-gradient(rgba(18,18,18,0)_50%,rgba(18,18,18,0.5)_100%)]" /> */}
-            {/* 왼쪽 텍스트 */}
             <div className="flex flex-1 items-center p-4 md:p-0">
               <BannerContent
                 header={`${banner.bannerType === 'HOT' ? '🔥 HOT 급상승' : banner.bannerType === 'NOTICEABLE' ? '✨ NEW 주목할만한' : banner.bannerType} ${banner.contentType === 'ANIME' ? '애니메이션' : '캐릭터'}`}
                 title={banner.mainTitle}
                 source={banner.subTitle}
-                date=""
-                className="absolute top-[16px] left-[20px]"
               />
             </div>
 

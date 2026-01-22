@@ -1,9 +1,9 @@
 import AnimeGrid from './AnimeGrid';
-import type { AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface ScheduleSectionProps {
   day: string;
-  dayAnimes: AnimePreviewDto[];
+  dayAnimes: Schemas['AnimePreviewDto'][];
   isCurrentSeason: boolean;
   sectionId: string;
 }

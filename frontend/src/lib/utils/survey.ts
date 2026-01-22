@@ -1,5 +1,4 @@
-import { SurveyDto } from '@/types/dtos';
-import { SurveyType, SurveyStatus } from '@/types/enums';
+import { SurveyStatus, SurveyType, Schemas } from '@/types';
 import { format } from 'date-fns';
 
 /**
@@ -32,7 +31,7 @@ export function getSurveyTypeLabel(
  * 예시: "2025/12/22 - 2025/12/28 | 4분기 결산"
  */
 export function getBannerSubtitle(
-  surveyData: SurveyDto | undefined,
+  surveyData: Schemas['SurveyDto'] | undefined,
   full: boolean = true
 ): string | undefined {
   if (!surveyData) return undefined;
@@ -44,22 +43,22 @@ export function getBannerSubtitle(
 
   let summaryText: string;
   switch (surveyData.type) {
-    case SurveyType.Q1End:
+    case SurveyType.Q1_END:
       summaryText = '1분기 결산';
       break;
-    case SurveyType.Q2End:
+    case SurveyType.Q2_END:
       summaryText = '2분기 결산';
       break;
-    case SurveyType.Q3End:
+    case SurveyType.Q3_END:
       summaryText = '3분기 결산';
       break;
-    case SurveyType.Q4End:
+    case SurveyType.Q4_END:
       summaryText = '4분기 결산';
       break;
-    case SurveyType.YearEnd:
+    case SurveyType.YEAR_END:
       summaryText = '연말 결산';
       break;
-    case SurveyType.Anticipated:
+    case SurveyType.ANTICIPATED:
       summaryText = '기대작 투표';
       break;
     default:
@@ -73,7 +72,7 @@ export function getBannerSubtitle(
  * SurveyDto를 받아서 배너 제목 반환
  */
 export function getBannerTitle(
-  surveyData: SurveyDto | undefined,
+  surveyData: Schemas['SurveyDto'] | undefined,
   isFull?: boolean
 ): string {
   if (!surveyData) return '2025 애니메이션 덕스타 어워드';
@@ -103,11 +102,11 @@ export function getCategoryText(category: string): string {
  */
 export function getStatusText(status: SurveyStatus | string): string {
   switch (String(status)) {
-    case SurveyStatus.Open:
+    case SurveyStatus.OPEN:
       return '진행중';
-    case SurveyStatus.Paused:
+    case SurveyStatus.PAUSED:
       return '일시 중지';
-    case SurveyStatus.Closed:
+    case SurveyStatus.CLOSED:
       return '종료';
     default:
       return '오픈 예정';
@@ -139,16 +138,16 @@ export const getStatusBadge = (status: SurveyStatus) => {
 export const getButtonText = (
   status: SurveyStatus,
   hasVoted: boolean,
-  endDateTime?: Date
+  endDateTime?: Date | string
 ) => {
-  if (status === SurveyStatus.Open && hasVoted) {
+  if (status === SurveyStatus.OPEN && hasVoted) {
     return '투표 완료';
-  } else if (status === SurveyStatus.Open && !hasVoted) {
+  } else if (status === SurveyStatus.OPEN && !hasVoted) {
     return '투표 하기';
-  } else if (status === SurveyStatus.Closed && endDateTime) {
+  } else if (status === SurveyStatus.CLOSED && endDateTime) {
     const endDate = format(endDateTime, 'M/d 오후 6시');
     return `결과 공개 - ${endDate}`;
-  } else if (status === SurveyStatus.ResultOpen) {
+  } else if (status === SurveyStatus.RESULT_OPEN) {
     return '결과 보기';
   }
   return '';

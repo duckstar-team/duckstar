@@ -1,4 +1,4 @@
-import { HomeDto, RankPreviewDto, WeeklyTopDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { apiCall } from './http';
 
 export const homeApi = {
@@ -7,7 +7,7 @@ export const homeApi = {
    * @param size - 조회할 데이터 개수 (기본값: 10, 최대: 50)
    */
   async getHome(size: number = 10) {
-    return apiCall<HomeDto>(`/api/v1/home?size=${size}`);
+    return apiCall<Schemas['HomeDto']>(`/api/v1/home?size=${size}`);
   },
 
   /**
@@ -23,7 +23,7 @@ export const homeApi = {
     week: number,
     size: number = 10
   ) {
-    return apiCall<RankPreviewDto[]>(
+    return apiCall<Schemas['RankPreviewDto'][]>(
       `/api/v1/home/${year}/${quarter}/${week}/anilab?size=${size}`
     );
   },
@@ -41,7 +41,7 @@ export const homeApi = {
     week: number,
     size: number = 10
   ) {
-    return apiCall<WeeklyTopDto>(
+    return apiCall<Schemas['WeeklyTopDto']>(
       `/api/v1/home/${year}/${quarter}/${week}/anime?size=${size}`
     );
   },

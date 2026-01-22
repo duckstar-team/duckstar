@@ -14,7 +14,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import LoginModal from '@/components/common/LoginModal';
 import { getWeeks } from '@/api/chart';
-import { WeekDto } from '@/types/dtos';
+import { WeekDto } from '@/types';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 import { Toaster } from 'react-hot-toast';
 import ScrollToBtn from '../common/ScrollToBtn';

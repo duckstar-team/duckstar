@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CommentDto, ReplyDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import SortingMenu, { SortOption } from '@/components/common/SortingMenu';
 import Comment from './Comment';
 import Reply from './Reply';
@@ -7,8 +7,8 @@ import OpenOrFoldReplies from './OpenOrFoldReplies';
 import CommentPostForm from './CommentPostForm';
 
 interface CommentsBoardProps {
-  comments: CommentDto[];
-  replies: { [commentId: number]: ReplyDto[] };
+  comments: Schemas['CommentDto'][];
+  replies: { [commentId: number]: Schemas['ReplyDto'][] };
   currentSort: SortOption;
   onSortChange: (sort: SortOption) => void;
   onCommentLike?: (commentId: number) => void;
@@ -19,7 +19,7 @@ interface CommentsBoardProps {
   onReplyDelete?: (replyId: number) => void;
 }
 
-const CommentsBoard: React.FC<CommentsBoardProps> = ({
+export default function CommentsBoard({
   comments,
   replies,
   currentSort,
@@ -30,7 +30,7 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
   onReplyLike,
   onReplyReply,
   onReplyDelete,
-}) => {
+}: CommentsBoardProps) {
   const [expandedReplies, setExpandedReplies] = useState<{
     [commentId: number]: boolean;
   }>({});
@@ -100,7 +100,7 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
   const createUnifiedList = () => {
     const unifiedList: Array<{
       type: 'comment' | 'reply' | 'toggle';
-      data: CommentDto | ReplyDto;
+      data: Schemas['CommentDto'] | Schemas['ReplyDto'];
       parentCommentId?: number;
       replyCount?: number;
     }> = [];
@@ -152,7 +152,7 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
         <div className="flex w-full flex-col items-start justify-start">
           {unifiedList.map((item, index) => {
             if (item.type === 'comment') {
-              const comment = item.data as CommentDto;
+              const comment = item.data as Schemas['CommentDto'];
               return (
                 <React.Fragment key={`comment-${comment.commentId}`}>
                   <div className="w-full">
@@ -172,7 +172,7 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
                 </React.Fragment>
               );
             } else if (item.type === 'reply') {
-              const reply = item.data as ReplyDto;
+              const reply = item.data as Schemas['ReplyDto'];
               return (
                 <React.Fragment key={`reply-${reply.replyId}`}>
                   <div className="w-full">
@@ -188,7 +188,7 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
                 </React.Fragment>
               );
             } else if (item.type === 'toggle') {
-              const comment = item.data as CommentDto;
+              const comment = item.data as Schemas['CommentDto'];
               const isExpanded = isRepliesExpanded(comment.commentId);
               return (
                 <div key={`toggle-${comment.commentId}`} className="h-auto">
@@ -206,6 +206,4 @@ const CommentsBoard: React.FC<CommentsBoardProps> = ({
       </div>
     </div>
   );
-};
-
-export default CommentsBoard;
+}

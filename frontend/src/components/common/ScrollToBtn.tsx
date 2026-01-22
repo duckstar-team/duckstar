@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function ScrollToBtn() {
   return (
-    <div className="fixed right-4 bottom-20 z-[9999] flex flex-col">
+    <div className="fixed right-4 bottom-20 z-40 flex flex-col">
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className="rounded-full bg-gray-400/20 p-2 text-white backdrop-blur-sm transition hover:bg-gray-400/40"
