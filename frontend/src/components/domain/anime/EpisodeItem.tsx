@@ -54,8 +54,8 @@ export default function EpisodeItem({
           </div>
           {!isLast && (
             <div
-              className={`pointer-events-none h-0 cursor-pointer outline outline-offset-[-0.58px] ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
-              style={{ outlineColor: '#FFB310' }}
+              className={`pointer-events-none h-0.5 ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
+              style={{ backgroundColor: '#FFB310' }}
             ></div>
           )}
         </div>
@@ -77,7 +77,7 @@ export default function EpisodeItem({
           onMouseLeave={onMouseLeave}
         >
           <div
-            className={`inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl outline outline-offset-[-1px] ${disableCursor ? '' : 'cursor-pointer'} relative z-10 transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
+            className={`inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl bg-zinc-50 outline-[1.5px] outline-offset-[-1px] dark:bg-zinc-900 ${disableCursor ? '' : 'cursor-pointer'} relative z-10 transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
             style={{ outlineColor: '#FFB310' }}
             onMouseMove={onMouseMove}
             onClick={(e) => {
@@ -94,8 +94,8 @@ export default function EpisodeItem({
           </div>
           {!isLast && (
             <div
-              className={`pointer-events-none h-0 cursor-pointer outline outline-offset-[-0.58px] ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
-              style={{ outlineColor: '#FFB310' }}
+              className={`pointer-events-none h-0.5 ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
+              style={{ backgroundColor: '#FFB310' }}
             ></div>
           )}
         </div>
@@ -123,7 +123,7 @@ export default function EpisodeItem({
           onMouseLeave={onMouseLeave}
         >
           <div
-            className={`relative z-10 inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl outline outline-offset-[-1px] outline-zinc-300 transition-transform duration-200 dark:outline-white ${isHovered ? 'scale-110' : ''}`}
+            className={`relative z-10 inline-flex h-8 w-8 flex-col items-center justify-center rounded-2xl bg-zinc-100 outline-[1.5px] outline-offset-[-1px] outline-zinc-300 transition-transform duration-200 dark:bg-zinc-900 dark:outline-white ${isHovered ? 'scale-110' : ''}`}
             onMouseMove={onMouseMove}
           >
             <div
@@ -135,8 +135,8 @@ export default function EpisodeItem({
           </div>
           {!isLast && (
             <div
-              className={`pointer-events-none h-0 outline outline-offset-[-0.58px] ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
-              style={{ outlineColor: '#CED4DA' }}
+              className={`pointer-events-none h-0.5 ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
+              style={{ backgroundColor: '#CED4DA' }}
             ></div>
           )}
         </div>
@@ -179,7 +179,7 @@ export default function EpisodeItem({
           </div>
           {!isLast && (
             <div
-              className={`pointer-events-none h-0 cursor-pointer outline outline-offset-[-0.58px] outline-rose-800 ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
+              className={`pointer-events-none h-0.5 bg-rose-800 ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
             ></div>
           )}
         </div>
@@ -222,7 +222,7 @@ export default function EpisodeItem({
           </div>
           {!isLast && (
             <div
-              className={`pointer-events-none h-0 cursor-pointer outline outline-offset-[-0.58px] outline-rose-800 ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
+              className={`pointer-events-none h-0.5 bg-rose-800 ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
             ></div>
           )}
         </div>
@@ -251,7 +251,7 @@ export default function EpisodeItem({
         </div>
         {!isLast && (
           <div
-            className={`pointer-events-none h-0 outline outline-offset-[-0.58px] ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
+            className={`pointer-events-none h-0 outline-[1.5px] outline-offset-[-0.58px] ${episodeNumber % 6 === 0 ? 'w-8' : 'w-12'}`}
             style={{ outlineColor: '#FFB310' }}
           ></div>
         )}
