@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { getSeasons, type SeasonResponseItem } from '@/api/search';
 import { useQuery } from '@tanstack/react-query';
-import {
-  cn,
-  getQuarterFromSeason,
-  getSeasonFromQuarter,
-  getSeasonInKorean,
-} from '@/lib';
+import { cn, getSeasonFromQuarter, getSeasonInKorean } from '@/lib';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
 import { ChevronDown } from 'lucide-react';
+import { getQuarters } from '@/api/search';
+import { Schemas } from '@/types';
 
 interface SeasonSelectorProps {
   onSeasonSelect: (year: number, quarter: number) => void;
@@ -38,7 +34,7 @@ export default function SeasonSelector({
   // 시즌 목록 조회
   const { data: seasonsData } = useQuery({
     queryKey: ['seasons'],
-    queryFn: getSeasons,
+    queryFn: () => getQuarters(),
     staleTime: 10 * 60 * 1000, // 10분간 fresh 상태 유지
     gcTime: 30 * 60 * 1000, // 30분간 캐시 유지
   });
@@ -57,14 +53,13 @@ export default function SeasonSelector({
 
   if (seasonsData) {
     // 백엔드에서 정렬된 순서를 그대로 유지하여 순회
-    seasonsData.forEach((item: SeasonResponseItem) => {
-      item.types.forEach((season) => {
-        const quarter = getQuarterFromSeason(season);
+    seasonsData.result.forEach((item: Schemas['QuarterResponseDto']) => {
+      item.quarters.forEach((quarter) => {
         if (quarter) {
           seasonOptions.push({
             year: item.year,
             quarter,
-            label: `${item.year}년 ${getSeasonInKorean(season)} 애니메이션`,
+            label: `${item.year}년 ${quarter}분기 애니메이션`,
           });
         }
       });
@@ -92,9 +87,9 @@ export default function SeasonSelector({
     <div className={cn('relative', className)} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 max-md:border max-md:border-gray-300 sm:max-w-[320px] md:w-fit md:justify-center md:py-3"
+        className="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl bg-white px-3 py-2.5 max-md:border max-md:border-gray-300 sm:max-w-[320px] md:w-fit md:justify-center md:py-3 dark:bg-zinc-900 dark:max-md:border-zinc-800 dark:md:border-none"
       >
-        <span className="text-left font-medium break-keep text-black transition-colors duration-200 hover:text-gray-400 max-sm:text-sm">
+        <span className="text-left font-medium break-keep transition-colors duration-200 hover:text-gray-400 max-sm:text-sm">
           {currentSeasonLabel}
         </span>
         <ChevronDown
@@ -104,7 +99,7 @@ export default function SeasonSelector({
       </button>
       {/* 드롭다운 메뉴 */}
       {isOpen && (
-        <div className="absolute top-full left-0 z-30 mt-1 w-full max-w-[280px] min-w-[200px] overflow-hidden rounded-lg bg-white shadow-lg sm:max-w-[320px]">
+        <div className="absolute top-full left-0 z-30 mt-1 w-full max-w-[280px] min-w-[200px] overflow-hidden rounded-lg bg-white shadow-lg sm:max-w-[320px] dark:border dark:border-zinc-800 dark:bg-zinc-900">
           {seasonOptions.map((option) => (
             <button
               key={
@@ -113,7 +108,7 @@ export default function SeasonSelector({
                   : `${option.year}-${option.quarter}`
               }
               onClick={() => handleSeasonSelect(option)}
-              className="w-full border-b border-gray-100 px-3 py-2.5 text-left font-medium transition-colors duration-150 last:border-b-0 hover:bg-gray-50 max-sm:text-sm"
+              className="w-full border-b border-gray-100 px-3 py-2.5 text-left font-medium transition-colors duration-150 last:border-b-0 hover:bg-gray-50 max-sm:text-sm dark:border-none dark:hover:bg-zinc-800"
             >
               {option.label}
             </button>

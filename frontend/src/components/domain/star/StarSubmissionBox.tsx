@@ -1,6 +1,7 @@
 import React from 'react';
 import StarDetailPopup from '@/components/domain/star/StarDetailPopup';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
+import { VoteInfoSkeleton } from '@/components/skeletons';
 
 interface StarSubmissionBoxProps {
   /** 현재 선택된 별점 (0.5~5.0) */
@@ -130,9 +131,7 @@ export default function StarSubmissionBox({
             {voteInfo ? (
               `${voteInfo.quarter}분기 ${voteInfo.week}주차 투표`
             ) : (
-              <div className="animate-pulse">
-                <div className="h-4 w-24 rounded bg-gray-400/50"></div>
-              </div>
+              <VoteInfoSkeleton />
             )}
           </div>
         </div>

@@ -1,31 +1,17 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import EpisodeItem from './EpisodeItem';
 import QuarterWeekLabel from './QuarterWeekLabel';
-import { getThisWeekRecord } from '@/lib';
+import { cn, getThisWeekRecord } from '@/lib';
 import {
   updateAnimeTotalEpisodes,
   setAnimeTotalEpisodesUnknown,
 } from '@/api/search';
 import { useAuth } from '@/context/AuthContext';
-
-// 타입 정의
-interface Episode {
-  id: number;
-  episodeId: number;
-  episodeNumber: number;
-  quarter: string;
-  week: string;
-  scheduledAt: string;
-}
+import { ChevronDown } from 'lucide-react';
+import { Schemas } from '@/types';
 
 interface EpisodeSectionProps {
-  episodes: Episode[];
+  episodes: Schemas['EpisodeDto'][];
   totalEpisodes: number;
   selectedEpisodeIds: number[];
   onEpisodeClick: (episodeId: number) => void;
@@ -231,7 +217,9 @@ export default function EpisodeSection({
   // totalEpisodes가 0이면 기본값 12로 설정
   const effectiveTotalEpisodes = totalEpisodes > 0 ? totalEpisodes : 12;
   // 실제 에피소드 데이터의 길이를 기준으로 페이지 수 계산
-  const totalPages = Math.ceil(episodes.length / episodesPerPage);
+  const episodesLength =
+    episodes && Array.isArray(episodes) ? episodes.length : 0;
+  const totalPages = Math.ceil(episodesLength / episodesPerPage);
 
   // 호버 상태
   const [hoveredEpisodeId, setHoveredEpisodeId] = useState<number | null>(null);
@@ -245,12 +233,6 @@ export default function EpisodeSection({
     timeout: null,
     mouseMoveTimeout: null,
   });
-
-  // 현재 페이지의 에피소드들
-  const currentPageEpisodes = useMemo(() => {
-    const startIndex = currentPage * episodesPerPage;
-    return episodes.slice(startIndex, startIndex + episodesPerPage);
-  }, [episodes, currentPage, episodesPerPage]);
 
   // 페이지 네비게이션 핸들러
   const handlePreviousPage = useCallback(() => {
@@ -290,7 +272,7 @@ export default function EpisodeSection({
   );
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent, episodeId: number) => {
+    (e: React.MouseEvent) => {
       setTooltipState((prev) => ({
         ...prev,
         isMouseStopped: false,
@@ -360,7 +342,7 @@ export default function EpisodeSection({
         className={`${isSmallScreen ? 'w-full max-w-[100%]' : 'w-full'} inline-flex h-5 items-center justify-start gap-3.5 px-6`}
       >
         <div
-          className={`justify-start text-center leading-snug font-semibold text-black ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
+          className={`justify-start text-center leading-snug font-semibold ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
         >
           에피소드 공개
         </div>
@@ -368,7 +350,7 @@ export default function EpisodeSection({
           {isEditing ? (
             // 편집 모드
             <div className="flex items-center gap-2">
-              <span className="text-base leading-snug font-semibold text-black">
+              <span className="text-base leading-snug font-semibold">
                 총 화수:
               </span>
               <input
@@ -380,9 +362,7 @@ export default function EpisodeSection({
                 className="w-16 rounded border border-gray-300 px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 disabled={isUpdating}
               />
-              <span className="text-base leading-snug font-semibold text-black">
-                화
-              </span>
+              <span className="text-base leading-snug font-semibold">화</span>
               <div className="flex gap-1">
                 <button
                   onClick={handleEditSave}
@@ -405,13 +385,13 @@ export default function EpisodeSection({
             <>
               {totalEpisodes && totalEpisodes > 0 ? (
                 <>
-                  <span className="text-base leading-snug font-semibold text-black">
+                  <span className="text-base leading-snug font-semibold">
                     총{' '}
                   </span>
                   <span className="text-base leading-snug font-semibold text-rose-800">
                     {totalEpisodes}
                   </span>
-                  <span className="text-base leading-snug font-semibold text-black">
+                  <span className="text-base leading-snug font-semibold">
                     {' '}
                     화
                   </span>
@@ -436,14 +416,14 @@ export default function EpisodeSection({
                 <div className="ml-2 flex gap-1">
                   <button
                     onClick={handleEditToggle}
-                    className="cursor-pointer rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-200"
+                    className="bg-brand-zinc-200 hover:bg-brand-zinc-300 cursor-pointer rounded px-2 py-1 text-xs text-gray-600 transition-colors dark:text-white"
                   >
                     편집
                   </button>
                   <button
                     onClick={handleSetUnknown}
                     disabled={isUpdating}
-                    className="cursor-pointer rounded bg-orange-100 px-2 py-1 text-xs text-orange-600 transition-colors hover:bg-orange-200 disabled:opacity-50"
+                    className="cursor-pointer rounded bg-orange-100 px-2 py-1 text-xs text-orange-600 transition-colors hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-400/50 dark:text-white dark:hover:bg-orange-400/70"
                   >
                     {isUpdating ? '처리중...' : '모름'}
                   </button>
@@ -461,77 +441,79 @@ export default function EpisodeSection({
           <div className="relative">
             <button
               onClick={handleDropdownToggle}
-              className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left hover:bg-gray-50"
+              className="flex w-full items-center justify-between rounded-lg border border-gray-300 px-4 py-3 text-left transition hover:bg-gray-100 dark:border-zinc-700 dark:hover:bg-zinc-800/20"
             >
-              <span className="text-base font-medium text-black">
+              <span className="text-base font-medium">
                 {selectedEpisodeIds.length > 0
                   ? `선택된 에피소드: ${selectedEpisodeIds.length}개`
                   : '에피소드 선택'}
               </span>
-              <svg
-                className={`h-5 w-5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <ChevronDown
+                className={cn(
+                  'size-5 transition-transform dark:text-zinc-400',
+                  dropdownOpen && 'rotate-180'
+                )}
+              />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg">
-                {episodes.map((episode) => {
-                  const isSelected = selectedEpisodeIds.includes(episode.id);
-                  const status = getEpisodeStatus(episode.scheduledAt);
-                  const isDisabled =
-                    disableFutureEpisodes &&
-                    (status === 'current' || status === 'future');
+              <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                {episodes && Array.isArray(episodes) && episodes.length > 0 ? (
+                  episodes.map((episode) => {
+                    const isSelected = selectedEpisodeIds.includes(
+                      episode.episodeId
+                    );
+                    const status = getEpisodeStatus(episode.scheduledAt);
+                    const isDisabled =
+                      disableFutureEpisodes &&
+                      (status === 'current' || status === 'future');
 
-                  return (
-                    <button
-                      key={episode.id}
-                      onClick={() => handleEpisodeSelect(episode.id)}
-                      disabled={isDisabled}
-                      className={`w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-gray-50 ${
-                        isSelected
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700'
-                      } ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">
-                            {episode.episodeNumber}화
+                    return (
+                      <button
+                        key={episode.episodeId}
+                        onClick={() => handleEpisodeSelect(episode.episodeId)}
+                        disabled={isDisabled}
+                        className={`w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-zinc-700 ${
+                          isSelected
+                            ? 'bg-blue-50 text-blue-700 dark:bg-zinc-800 dark:text-white'
+                            : 'text-gray-700 hover:bg-gray-50 dark:text-white dark:hover:bg-zinc-800/20'
+                        } ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">
+                              {episode.episodeNumber}화
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {episode.weekDto?.quarter}분기{' '}
+                              {episode.weekDto?.week}주차 ·{' '}
+                              {formatScheduledAt(episode.scheduledAt)}
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {episode.quarter} {episode.week} ·{' '}
-                            {formatScheduledAt(episode.scheduledAt)}
-                          </div>
+                          {isSelected && (
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500">
+                              <svg
+                                className="h-3 w-3 text-white"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                        {isSelected && (
-                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500">
-                            <svg
-                              className="h-3 w-3 text-white"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="px-4 py-3 text-center text-gray-500">
+                    에피소드가 없습니다.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -572,37 +554,43 @@ export default function EpisodeSection({
                 }}
               >
                 <div className="ml-2 inline-flex items-center justify-start overflow-visible pl-2">
-                  {episodes.map((episode, index) => {
-                    const isSelected = selectedEpisodeIds.includes(episode.id);
-                    const status = getEpisodeStatus(episode.scheduledAt);
-                    const variant = getEpisodeVariant(status, isSelected);
-                    const isLast = index === episodes.length - 1;
+                  {episodes && Array.isArray(episodes) && episodes.length > 0
+                    ? episodes.map((episode, index) => {
+                        const isSelected = selectedEpisodeIds.includes(
+                          episode.episodeId
+                        );
+                        const status = getEpisodeStatus(episode.scheduledAt);
+                        const variant = getEpisodeVariant(status, isSelected);
+                        const isLast = index === episodes.length - 1;
 
-                    return (
-                      <div
-                        key={episode.id}
-                        data-episode-id={episode.id}
-                        className="overflow-visible transition-opacity duration-200"
-                      >
-                        <EpisodeItem
-                          property1={variant}
-                          episodeNumber={episode.episodeNumber}
-                          quarter={episode.quarter}
-                          week={episode.week}
-                          isLast={isLast}
-                          isHovered={hoveredEpisodeId === episode.id}
-                          onMouseEnter={() => handleMouseEnter(episode.id)}
-                          onMouseMove={(e) => handleMouseMove(e, episode.id)}
-                          onMouseLeave={handleMouseLeave}
-                          onClick={() => handleEpisodeClick(episode.id, status)}
-                          disableCursor={
-                            disableFutureEpisodes &&
-                            (status === 'current' || status === 'future')
-                          }
-                        />
-                      </div>
-                    );
-                  })}
+                        return (
+                          <div
+                            key={episode.episodeId}
+                            data-episode-id={episode.episodeId}
+                            className="overflow-visible transition-opacity duration-200"
+                          >
+                            <EpisodeItem
+                              property1={variant}
+                              episodeNumber={episode.episodeNumber}
+                              isLast={isLast}
+                              isHovered={hoveredEpisodeId === episode.episodeId}
+                              onMouseEnter={() =>
+                                handleMouseEnter(episode.episodeId)
+                              }
+                              onMouseMove={(e) => handleMouseMove(e)}
+                              onMouseLeave={handleMouseLeave}
+                              onClick={() =>
+                                handleEpisodeClick(episode.episodeId, status)
+                              }
+                              disableCursor={
+                                disableFutureEpisodes &&
+                                (status === 'current' || status === 'future')
+                              }
+                            />
+                          </div>
+                        );
+                      })
+                    : null}
                 </div>
               </div>
             </div>
@@ -617,36 +605,42 @@ export default function EpisodeSection({
                 }}
               >
                 <div className="ml-2 inline-flex items-start justify-center">
-                  {episodes.map((episode, index) => {
-                    const isSelected = selectedEpisodeIds.includes(episode.id);
-                    const status = getEpisodeStatus(episode.scheduledAt);
-                    const isLast = index === episodes.length - 1;
+                  {episodes && Array.isArray(episodes) && episodes.length > 0
+                    ? episodes.map((episode) => {
+                        const isSelected = selectedEpisodeIds.includes(
+                          episode.episodeId
+                        );
+                        const status = getEpisodeStatus(episode.scheduledAt);
 
-                    return (
-                      <div
-                        key={`label-${episode.id}`}
-                        className="transition-opacity duration-200"
-                      >
-                        <QuarterWeekLabel
-                          variant={status}
-                          quarter={episode.quarter}
-                          week={episode.week}
-                          episodeNumber={episode.episodeNumber}
-                          isLast={isLast}
-                          isSelected={isSelected}
-                          isHovered={hoveredEpisodeId === episode.id}
-                          onMouseEnter={() => handleMouseEnter(episode.id)}
-                          onMouseMove={(e) => handleMouseMove(e, episode.id)}
-                          onMouseLeave={handleMouseLeave}
-                          onClick={() => handleEpisodeClick(episode.id, status)}
-                          disableCursor={
-                            disableFutureEpisodes &&
-                            (status === 'current' || status === 'future')
-                          }
-                        />
-                      </div>
-                    );
-                  })}
+                        return (
+                          <div
+                            key={`label-${episode.episodeId}`}
+                            className="transition-opacity duration-200"
+                          >
+                            <QuarterWeekLabel
+                              variant={status}
+                              quarter={episode.weekDto?.quarter}
+                              week={episode.weekDto?.week}
+                              episodeNumber={episode.episodeNumber}
+                              isSelected={isSelected}
+                              isHovered={hoveredEpisodeId === episode.episodeId}
+                              onMouseEnter={() =>
+                                handleMouseEnter(episode.episodeId)
+                              }
+                              onMouseMove={(e) => handleMouseMove(e)}
+                              onMouseLeave={handleMouseLeave}
+                              onClick={() =>
+                                handleEpisodeClick(episode.episodeId, status)
+                              }
+                              disableCursor={
+                                disableFutureEpisodes &&
+                                (status === 'current' || status === 'future')
+                              }
+                            />
+                          </div>
+                        );
+                      })
+                    : null}
                 </div>
               </div>
             </div>
@@ -671,22 +665,26 @@ export default function EpisodeSection({
       )}
 
       {/* 툴팁 */}
-      {tooltipState.showTooltip && tooltipState.hoveredEpisodeId && (
-        <div
-          className="pointer-events-none fixed z-50 rounded bg-gray-800 px-2 py-1 text-xs text-white shadow-lg"
-          style={{
-            left: tooltipState.position.x,
-            top: tooltipState.position.y,
-            opacity: tooltipState.showTooltip ? 1 : 0,
-            transition: 'opacity 0.2s ease-in-out',
-          }}
-        >
-          {formatScheduledAt(
-            episodes.find((e) => e.id === tooltipState.hoveredEpisodeId)
-              ?.scheduledAt || ''
-          )}
-        </div>
-      )}
+      {tooltipState.showTooltip &&
+        tooltipState.hoveredEpisodeId &&
+        episodes &&
+        Array.isArray(episodes) && (
+          <div
+            className="pointer-events-none fixed z-50 rounded bg-gray-800 px-2 py-1 text-xs text-white shadow-lg"
+            style={{
+              left: tooltipState.position.x,
+              top: tooltipState.position.y,
+              opacity: tooltipState.showTooltip ? 1 : 0,
+              transition: 'opacity 0.2s ease-in-out',
+            }}
+          >
+            {formatScheduledAt(
+              episodes.find(
+                (e) => e.episodeId === tooltipState.hoveredEpisodeId
+              )?.scheduledAt || ''
+            )}
+          </div>
+        )}
     </div>
   );
 }

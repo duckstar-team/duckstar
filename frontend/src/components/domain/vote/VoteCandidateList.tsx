@@ -1,14 +1,15 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import VoteModal from './VoteModal';
 import { getCandidateList } from '@/api/vote';
-import { CandidateListDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useModal } from '@/components/layout/AppContainer';
-import { searchMatch } from '@/lib';
+import { cn, searchMatch } from '@/lib';
+import { useSidebarWidth } from '@/hooks/useSidebarWidth';
 
 interface VoteCandidateListProps {
   title?: string;
@@ -19,9 +20,7 @@ interface VoteCandidateListProps {
 }
 
 const getItemsPerPage = (width: number) => {
-  if (width < 480) return 2;
   if (width < 640) return 4;
-  if (width < 768) return 3;
   if (width < 1024) return 5;
   if (width < 1280) return 6;
   return 7;
@@ -33,7 +32,11 @@ const getCheckCircleSize = (width: number) => {
 };
 
 // 후보 카드 컴포넌트
-const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
+const CandidateCard = ({
+  candidate,
+}: {
+  candidate: Schemas['WeekCandidateDto'];
+}) => {
   return (
     <div className="relative flex w-full flex-col items-start gap-2">
       {candidate.hasVoted && (
@@ -52,7 +55,7 @@ const CandidateCard = ({ candidate }: { candidate: CandidateListDto }) => {
           filter: candidate.state === 'CLOSED' ? 'grayscale(100%)' : 'none',
         }}
       />
-      <p className="line-clamp-2 text-sm leading-tight font-semibold text-black">
+      <p className="line-clamp-2 text-sm leading-tight font-medium text-black dark:text-white">
         {candidate.titleKor}
       </p>
     </div>
@@ -69,15 +72,21 @@ export default function VoteCandidateList({
 }: VoteCandidateListProps) {
   const { openVoteModal, closeVoteModal, isVoteModalOpen } = useModal();
   const queryClient = useQueryClient();
+  const sidebarWidth = useSidebarWidth();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     if (typeof window === 'undefined') return 5;
-    return getItemsPerPage(window.innerWidth);
+    return getItemsPerPage(window.innerWidth - sidebarWidth);
   });
-  const [currentPage, setCurrentPage] = useState(0);
-  const [selectedCandidate, setSelectedCandidate] =
-    useState<CandidateListDto | null>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+  const scrollStateRef = useRef({ atStart: true, atEnd: false });
+  const [selectedCandidate, setSelectedCandidate] = useState<
+    Schemas['WeekCandidateDto'] | null
+  >(null);
 
-  const { data: candidates = [] } = useQuery<CandidateListDto[]>({
+  const { data: candidates = [] } = useQuery<Schemas['WeekCandidateDto'][]>({
     queryKey: ['candidateList', year, quarter, week],
     queryFn: async () => {
       const response = await getCandidateList(year, quarter, week);
@@ -114,48 +123,88 @@ export default function VoteCandidateList({
   useEffect(() => {
     const handleResize = () => {
       if (typeof window === 'undefined') return;
-      setItemsPerPage(getItemsPerPage(window.innerWidth));
+      setItemsPerPage(getItemsPerPage(window.innerWidth - sidebarWidth));
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [sidebarWidth]);
 
-  // 후보를 페이지 단위로 나누기
-  const pages = useMemo(() => {
-    if (filteredCandidates.length === 0) return [];
-    const chunked: CandidateListDto[][] = [];
-    for (let i = 0; i < filteredCandidates.length; i += itemsPerPage) {
-      chunked.push(filteredCandidates.slice(i, i + itemsPerPage));
-    }
-    return chunked;
-  }, [filteredCandidates, itemsPerPage]);
-
-  const totalPages = pages.length;
-
+  // 스크롤 컨테이너 너비 측정 (그룹 단위 = 뷰포트 너비)
   useEffect(() => {
-    if (totalPages === 0) {
-      setCurrentPage(0);
-      return;
-    }
-    setCurrentPage((prev) => Math.min(prev, totalPages - 1));
-  }, [totalPages]);
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const update = () => setContainerWidth(el.clientWidth);
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [filteredCandidates.length]);
+
+  const gap = (containerWidth || window.innerWidth) >= 640 ? 16 : 8;
+
+  const cardWidth = useMemo(() => {
+    const cw = containerWidth > 0 ? containerWidth : 400;
+    if (itemsPerPage <= 0) return 150;
+    return (cw - gap * (itemsPerPage - 1)) / itemsPerPage;
+  }, [containerWidth, itemsPerPage, gap]);
+
+  // 스크롤 위치로 이전/다음 가능 여부만 갱신 (변경 시에만 setState)
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || containerWidth <= 0) return;
+
+    let tick: number | null = null;
+    const update = () => {
+      tick = null;
+      const sl = el.scrollLeft;
+      const sw = el.scrollWidth;
+      const cw = el.clientWidth;
+      const margin = 2;
+      const start = sl <= margin;
+      const end = sw <= cw + margin || sl >= sw - cw - margin;
+
+      if (
+        scrollStateRef.current.atStart !== start ||
+        scrollStateRef.current.atEnd !== end
+      ) {
+        scrollStateRef.current = { atStart: start, atEnd: end };
+        setAtStart(start);
+        setAtEnd(end);
+      }
+    };
+
+    const onScroll = () => {
+      if (tick == null) tick = requestAnimationFrame(update);
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    update();
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      if (tick != null) cancelAnimationFrame(tick);
+    };
+  }, [containerWidth, filteredCandidates.length]);
 
   const handlePrev = () => {
-    if (totalPages <= 1) return;
-    setCurrentPage((prev) => (prev === 0 ? totalPages - 1 : prev - 1));
+    const el = scrollContainerRef.current;
+    if (!el || atStart) return;
+    el.scrollBy({ left: -el.clientWidth, behavior: 'smooth' });
   };
 
   const handleNext = () => {
-    if (totalPages <= 1) return;
-    setCurrentPage((prev) => (prev === totalPages - 1 ? 0 : prev + 1));
+    const el = scrollContainerRef.current;
+    if (!el || atEnd) return;
+    el.scrollBy({ left: el.clientWidth, behavior: 'smooth' });
   };
 
   return (
     <div className="mt-16">
       <div className="flex items-end gap-4">
-        <h1 className="text-2xl font-bold text-black">{title}</h1>
+        <h1 className="text-2xl font-bold">{title}</h1>
         <span className="text-xs text-gray-400">
           {searchQuery.trim()
             ? `검색 결과 ${filteredCandidates.length}개 / 전체 ${candidates.length}개 작품`
@@ -163,87 +212,74 @@ export default function VoteCandidateList({
         </span>
       </div>
       {filteredCandidates.length === 0 && searchQuery.trim() ? (
-        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
           <div className="text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-zinc-300">
               '{searchQuery}'에 대한 검색 결과가 없습니다.
             </p>
           </div>
         </div>
       ) : (
-        <div className="relative rounded-3xl px-4 pb-8 text-white sm:px-8">
+        <div className="relative mx-4 rounded-3xl pb-8 text-white">
           <button
             type="button"
-            aria-label="이전 페이지"
+            aria-label="이전"
             onClick={handlePrev}
-            disabled={totalPages <= 1}
-            className="absolute top-1/3 -left-4 z-1 rounded-full border border-white/20 bg-white p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30"
+            disabled={atStart}
+            className={cn(
+              'absolute top-[35%] -left-6 z-10 transition sm:-left-8',
+              atStart
+                ? 'cursor-not-allowed opacity-30'
+                : 'cursor-pointer hover:opacity-70'
+            )}
           >
-            <ChevronLeft className="h-8 w-8 stroke-1 text-gray-500" />
+            <ChevronLeft className="size-8 w-full stroke-[1.5px] text-zinc-500 dark:text-zinc-200" />
           </button>
 
           <button
             type="button"
-            aria-label="다음 페이지"
+            aria-label="다음"
             onClick={handleNext}
-            disabled={totalPages <= 1}
-            className="absolute top-1/3 -right-4 z-1 rounded-full border border-white/20 bg-white p-1 text-black shadow-lg transition hover:bg-white/20 disabled:opacity-30"
+            disabled={atEnd}
+            className={cn(
+              'absolute top-[35%] -right-6 z-10 transition sm:-right-8',
+              atEnd
+                ? 'cursor-not-allowed opacity-30'
+                : 'cursor-pointer hover:opacity-70'
+            )}
           >
-            <ChevronRight className="h-8 w-8 stroke-1 text-gray-500" />
+            <ChevronRight className="size-8 w-full stroke-[1.5px] text-zinc-500 dark:text-zinc-200" />
           </button>
 
-          <div className="overflow-hidden pt-8">
+          <div
+            ref={scrollContainerRef}
+            className="custom-scrollbar overflow-x-scroll overflow-y-hidden pt-8"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
             <div
-              className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,0.61,0.36,1)]"
-              style={{ transform: `translateX(-${currentPage * 100}%)` }}
+              className="flex gap-2 @sm:gap-4"
+              style={{ width: 'max-content' }}
             >
-              {pages.map((page, pageIndex) => (
+              {filteredCandidates.map((candidate) => (
                 <div
-                  key={`page-${pageIndex}`}
-                  className="w-full flex-shrink-0 px-4 sm:px-6"
+                  key={candidate.episodeId}
+                  className={`flex flex-shrink-0 flex-col gap-2 ${candidate.state === 'CLOSED' ? 'cursor-auto' : 'cursor-pointer'}`}
+                  style={{ width: `${cardWidth}px` }}
+                  onClick={() => {
+                    if (candidate.state === 'CLOSED') return;
+                    setSelectedCandidate(candidate);
+                    openVoteModal();
+                  }}
                 >
-                  <div
-                    className="grid w-full gap-4"
-                    style={{
-                      gridTemplateColumns: `repeat(${itemsPerPage}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {page.map((candidate) => (
-                      <div
-                        key={candidate.episodeId}
-                        className={`flex flex-col gap-2 ${candidate.state === 'CLOSED' ? 'cursor-auto' : 'cursor-pointer'}`}
-                        onClick={() => {
-                          if (candidate.state === 'CLOSED') {
-                            return;
-                          }
-                          setSelectedCandidate(candidate);
-                          openVoteModal();
-                        }}
-                      >
-                        <CandidateCard candidate={candidate} />
-                      </div>
-                    ))}
+                  <div className="mt-2">
+                    <CandidateCard candidate={candidate} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
-          {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-2">
-              {pages.map((_, index) => (
-                <button
-                  key={`indicator-${index}`}
-                  type="button"
-                  onClick={() => setCurrentPage(index)}
-                  className={`h-2.5 w-2.5 rounded-full transition ${
-                    index === currentPage ? 'bg-amber-400' : 'bg-gray-800/30'
-                  }`}
-                  aria-label={`${index + 1}번째 페이지로 이동`}
-                />
-              ))}
-            </div>
-          )}
 
           {/* 모달을 컴포넌트 최상위 레벨에서 한 번만 렌더링 */}
           {isVoteModalOpen && selectedCandidate && (

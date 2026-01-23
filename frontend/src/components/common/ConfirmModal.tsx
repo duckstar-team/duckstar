@@ -30,18 +30,18 @@ export default function ConfirmModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed inset-0 z-60 flex w-full transform items-center justify-center px-4"
+        className="fixed inset-0 z-60 flex w-full transform items-center justify-center px-4 dark:bg-black/50"
         onClick={(e) => e.stopPropagation()}
       >
         <div
           ref={modalRef}
-          className="w-fit rounded-2xl bg-white p-6 text-center shadow-2xl"
+          className="w-fit rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-zinc-800"
           style={{
             marginLeft: sidebarWidth > 0 ? `${sidebarWidth}px` : 0,
           }}
         >
-          <h3 className="mb-4 text-lg font-bold text-gray-900">{title}</h3>
-          <p className="mb-6 text-sm leading-relaxed text-gray-600">
+          <h3 className="mb-4 text-lg font-bold">{title}</h3>
+          <p className="mb-6 text-sm leading-relaxed text-gray-600 dark:text-zinc-400">
             {description}
           </p>
           <button
@@ -49,7 +49,7 @@ export default function ConfirmModal({
               openLoginModal();
               setIsConfirm(false);
             }}
-            className="w-full rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-80"
+            className="w-full rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-80 dark:bg-zinc-300 dark:text-black"
           >
             로그인
           </button>

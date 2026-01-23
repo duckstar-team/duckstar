@@ -1,26 +1,24 @@
 interface QuarterWeekLabelProps {
-  variant?: 'past' | 'current' | 'future';
-  quarter?: string;
-  week?: string;
-  episodeNumber?: number;
-  isLast?: boolean;
-  isSelected?: boolean;
-  isHovered?: boolean;
-  onMouseEnter?: () => void;
-  onMouseMove?: (e: React.MouseEvent) => void;
-  onMouseLeave?: () => void;
-  onClick?: () => void;
-  disableCursor?: boolean; // 커서 비활성화 옵션
+  variant: 'past' | 'current' | 'future';
+  quarter?: number;
+  week?: number;
+  episodeNumber: number;
+  isSelected: boolean;
+  isHovered: boolean;
+  onMouseEnter: () => void;
+  onMouseMove: (e: React.MouseEvent) => void;
+  onMouseLeave: () => void;
+  onClick: () => void;
+  disableCursor: boolean; // 커서 비활성화 옵션
 }
 
 export default function QuarterWeekLabel({
-  variant = 'past',
-  quarter = '3분기',
-  week = '7주차',
-  episodeNumber = 1,
-  isLast = false,
-  isSelected = false,
-  isHovered = false,
+  variant,
+  quarter,
+  week,
+  episodeNumber,
+  isSelected,
+  isHovered,
   onMouseEnter,
   onMouseMove,
   onMouseLeave,
@@ -55,21 +53,21 @@ export default function QuarterWeekLabel({
           <span
             className={`text-sm ${
               isSelected
-                ? 'font-semibold text-[#990033] underline decoration-solid'
-                : 'font-light text-black'
+                ? 'text-brand font-semibold underline decoration-solid'
+                : 'font-light'
             }`}
           >
-            {quarter}
+            {quarter}분기
             <br />
           </span>
           <span
             className={`text-base ${
               isSelected
-                ? 'font-semibold text-[#990033] underline decoration-solid'
-                : 'font-medium text-black'
+                ? 'text-brand font-semibold underline decoration-solid'
+                : 'font-medium'
             }`}
           >
-            {week}
+            {week}주차
           </span>
         </div>
         <div className="pointer-events-none h-full w-8 bg-transparent opacity-0">
@@ -107,21 +105,21 @@ export default function QuarterWeekLabel({
           <span
             className={`text-sm ${
               isSelected
-                ? 'font-semibold text-[#990033] underline decoration-solid'
+                ? 'text-brand font-semibold underline decoration-solid'
                 : 'font-light'
             }`}
             style={{ color: isSelected ? '#990033' : '#FFB310' }}
           >
-            {quarter}
+            {quarter}분기
             <br />
           </span>
           <span
             className={`text-base font-semibold ${
-              isSelected ? 'text-[#990033] underline decoration-solid' : ''
+              isSelected ? 'text-brand underline decoration-solid' : ''
             }`}
             style={{ color: isSelected ? '#990033' : '#FFB310' }}
           >
-            {week}
+            {week}주차
           </span>
         </div>
         <div className="pointer-events-none h-full w-8 bg-transparent opacity-0">
@@ -144,11 +142,11 @@ export default function QuarterWeekLabel({
           onMouseLeave={onMouseLeave}
         >
           <span className="text-sm font-light" style={{ color: '#CED4DA' }}>
-            {quarter}
+            {quarter}분기
             <br />
           </span>
           <span className="text-base font-medium" style={{ color: '#CED4DA' }}>
-            {week}
+            {week}주차
           </span>
         </div>
         <div className="pointer-events-none h-full w-8 bg-transparent opacity-0">
@@ -167,10 +165,10 @@ export default function QuarterWeekLabel({
         className={`${episodeNumber % 6 === 0 ? 'w-auto whitespace-nowrap' : 'w-12'} pointer-events-none justify-start text-center`}
       >
         <span className="text-sm font-light text-black">
-          {quarter}
+          {quarter}분기
           <br />
         </span>
-        <span className="text-base font-medium text-black">{week}</span>
+        <span className="text-base font-medium text-black">{week}주차</span>
       </div>
     </div>
   );

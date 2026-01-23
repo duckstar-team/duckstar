@@ -83,8 +83,8 @@ export default function QuarterNavigation({
                 ? 'justify-start px-2 py-1.5 sm:px-2.5 sm:py-1.5 md:px-3 md:py-2'
                 : 'justify-center py-1.5 sm:py-1.5 md:py-2',
               activeQuarter === quarter
-                ? 'bg-[#990033]/10 text-gray-900'
-                : 'text-gray-600 hover:bg-[#990033]/5 hover:text-gray-900'
+                ? 'bg-brand/10 text-gray-900'
+                : 'hover:bg-brand/5 text-gray-600 hover:text-gray-900'
             )}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -101,8 +101,8 @@ export default function QuarterNavigation({
                 className={cn(
                   'flex-shrink-0 rounded-full transition-all duration-150',
                   activeQuarter === quarter
-                    ? 'h-2.5 w-2.5 bg-[#990033] sm:h-3 sm:w-3'
-                    : 'h-1.5 w-1.5 bg-[#990033]/30 sm:h-2 sm:w-2'
+                    ? 'bg-brand h-2.5 w-2.5 sm:h-3 sm:w-3'
+                    : 'bg-brand/30 h-1.5 w-1.5 sm:h-2 sm:w-2'
                 )}
                 animate={{
                   scale: activeQuarter === quarter && !isHovered ? 1 : 1,

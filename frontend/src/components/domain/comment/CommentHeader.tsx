@@ -55,7 +55,7 @@ export default function CommentHeader({
   );
 
   return (
-    <div className="inline-flex w-full max-w-[570px] flex-col items-start justify-end gap-3.5 pl-6">
+    <div className="inline-flex w-full flex-col items-start justify-end gap-3.5 pl-6">
       {/* 필터가 없을 때는 기본 헤더만 표시 */}
       {variant === 'default' ? (
         <div className="inline-flex h-12 w-full max-w-[570px] items-end justify-start gap-3.5 pt-5 pr-6">
@@ -67,21 +67,16 @@ export default function CommentHeader({
             />
           </div>
           <div
-            className={`justify-start text-center leading-snug font-semibold text-black ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
+            className={`justify-start text-center leading-snug font-semibold ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
           >
             애니 댓글
           </div>
           <div className="justify-start text-center">
-            <span className="text-base leading-snug font-semibold text-black">
-              총{' '}
-            </span>
+            <span className="text-base leading-snug font-semibold">총 </span>
             <span className="text-base leading-snug font-semibold text-rose-800">
               {totalComments}
             </span>
-            <span className="text-base leading-snug font-semibold text-black">
-              {' '}
-              개
-            </span>
+            <span className="text-base leading-snug font-semibold"> 개</span>
           </div>
         </div>
       ) : (
@@ -97,21 +92,16 @@ export default function CommentHeader({
               />
             </div>
             <div
-              className={`ml-3.5 justify-start text-center leading-snug font-semibold text-black ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
+              className={`ml-3.5 justify-start text-center leading-snug font-semibold ${isVerySmallScreen ? 'text-lg' : 'text-xl'}`}
             >
               애니 댓글
             </div>
             <div className="ml-3.5 justify-start text-center">
-              <span className="text-base leading-snug font-semibold text-black">
-                총{' '}
-              </span>
+              <span className="text-base leading-snug font-semibold">총 </span>
               <span className="text-base leading-snug font-semibold text-rose-800">
                 {totalComments}
               </span>
-              <span className="text-base leading-snug font-semibold text-black">
-                {' '}
-                개
-              </span>
+              <span className="text-base leading-snug font-semibold"> 개</span>
             </div>
             <button
               onClick={onClearFilters}

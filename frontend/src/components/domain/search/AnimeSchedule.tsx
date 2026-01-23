@@ -2,7 +2,7 @@ import SearchResultsSection from './SearchResultsSection';
 import FilteredResultsSection from './FilteredResultsSection';
 import ScheduleSection from './ScheduleSection';
 import EmptyState from './EmptyState';
-import type { AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface AnimeScheduleProps {
   isThisWeek: boolean;
@@ -10,7 +10,7 @@ interface AnimeScheduleProps {
   quarter: number | null;
   searchQuery: string;
   selectedOttServices: string[];
-  groupedAnimes: { [key: string]: AnimePreviewDto[] };
+  groupedAnimes: { [key: string]: Schemas['AnimePreviewDto'][] };
   getSectionId: (baseId: string) => string;
 }
 
@@ -54,7 +54,9 @@ export default function AnimeSchedule({
   return (
     <>
       {dayOrder
-        .filter((dayKey) => groupedAnimes[dayKey] && groupedAnimes[dayKey].length > 0)
+        .filter(
+          (dayKey) => groupedAnimes[dayKey] && groupedAnimes[dayKey].length > 0
+        )
         .map((dayKey) => {
           const dayAnimes = groupedAnimes[dayKey];
           const baseSectionId =

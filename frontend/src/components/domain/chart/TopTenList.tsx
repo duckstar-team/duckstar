@@ -2,14 +2,7 @@
 
 import React from 'react';
 import { MdOutlineHowToVote } from 'react-icons/md';
-import {
-  AnimeRankSliceDto,
-  RankPreviewDto,
-  SurveyDto,
-  SurveyRankDto,
-  SurveyResultDto,
-  WeekDto,
-} from '@/types/dtos';
+import { Schemas, WeekDto } from '@/types';
 import { getBannerSubtitle, cn, getRankDiffType } from '@/lib';
 import { format } from 'date-fns';
 import RankDiff from './RankDiff';
@@ -18,12 +11,12 @@ import { Users } from 'lucide-react';
 type TopTenListProps =
   | {
       type: 'award';
-      topTen: SurveyResultDto;
-      titleData: SurveyDto | null;
+      topTen: Schemas['SurveyRankPage'];
+      titleData: Schemas['SurveyDto'] | null;
     }
   | {
       type: 'weekly';
-      topTen: AnimeRankSliceDto;
+      topTen: Schemas['AnimeRankSliceDto'];
       titleData: WeekDto | null;
     };
 
@@ -39,7 +32,7 @@ export default function TopTenList({
     return '';
   };
 
-  const renderAwardItem = (item: SurveyRankDto, index: number) => (
+  const renderAwardItem = (item: Schemas['SurveyRankDto'], index: number) => (
     <div
       key={`${item.animeId}-${index}`}
       className="flex items-center gap-5 rounded-xl border border-gray-200 bg-white px-4 py-2"
@@ -80,13 +73,13 @@ export default function TopTenList({
       </div>
 
       {/* 메달 이미지 */}
-      {item.rank <= 3 && (
+      {item.rank && item.rank <= 3 && (
         <img src={getMedalImg(item.rank)} alt="medal" width={30} height={30} />
       )}
     </div>
   );
 
-  const renderWeeklyItem = (item: RankPreviewDto) => (
+  const renderWeeklyItem = (item: Schemas['RankPreviewDto']) => (
     <div
       key={item.contentId}
       className="flex items-center gap-5 rounded-xl border border-gray-200 bg-white py-2"
@@ -134,7 +127,10 @@ export default function TopTenList({
     </div>
   );
 
-  const renderAwardTitle = (surveyDto: SurveyDto, voteTotalCount: number) => (
+  const renderAwardTitle = (
+    surveyDto: Schemas['SurveyDto'],
+    voteTotalCount: number
+  ) => (
     <div className="flex items-center justify-between rounded-lg bg-white px-4 py-2.5">
       <h2 className="text-2xl font-bold text-black">
         {surveyDto.year}년 {getBannerSubtitle(surveyDto, false)}{' '}

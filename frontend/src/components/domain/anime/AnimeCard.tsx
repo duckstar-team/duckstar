@@ -2,12 +2,11 @@
 
 import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
-import { AnimePreviewDto } from '@/types/dtos';
+import { Schemas, OttType } from '@/types';
 import { useNavigation } from '@/hooks/useNavigation';
-import { OttType } from '@/types/enums';
 
 interface AnimeCardProps {
-  anime: AnimePreviewDto;
+  anime: Schemas['AnimePreviewDto'];
   className?: string;
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   isUpcomingGroup?: boolean; // "곧 시작" 그룹인지 여부
@@ -60,7 +59,11 @@ export default function AnimeCard({
 
   // 디데이 계산 함수 (DayOfWeekShort 기준)
   const calculateDaysUntilAir = (targetDayOfWeek: string) => {
-    if (!targetDayOfWeek || targetDayOfWeek === 'NONE' || targetDayOfWeek === 'SPECIAL') {
+    if (
+      !targetDayOfWeek ||
+      targetDayOfWeek === 'NONE' ||
+      targetDayOfWeek === 'SPECIAL'
+    ) {
       return 0;
     }
 
@@ -125,27 +128,63 @@ export default function AnimeCard({
       return `${month}/${day} 개봉`;
     }
 
-    // UPCOMING 상태인 경우 DayOfWeekShort 기준으로 디데이 계산
+    // UPCOMING 상태인 경우 scheduledAt 기준으로 디데이 계산
     // 단, scheduledAt이 현재 시각을 지나지 않았을 때만 표시
-    if (status === 'UPCOMING' && dayOfWeek && dayOfWeek !== 'NONE' && dayOfWeek !== 'SPECIAL') {
+    if (status === 'UPCOMING' && dayOfWeek !== 'SPECIAL') {
       // scheduledAt이 현재 시각을 지나지 않았는지 확인
       if (scheduledAt) {
         const scheduledDate = new Date(scheduledAt);
         const now = new Date();
-        
+
         // scheduledAt이 현재 시각보다 미래인 경우에만 디데이 표시
         if (!isNaN(scheduledDate.getTime()) && scheduledDate > now) {
-          const daysUntil = calculateDaysUntilAir(dayOfWeek);
-          if (daysUntil > 0) {
-            return `D-${daysUntil}`;
-          } else if (daysUntil === 0) {
+          // scheduledAt의 날짜와 현재 날짜를 비교하여 D-Day 계산
+          // 00:00 ~ 05:00 시간대는 전날로 간주
+          let scheduledYear = scheduledDate.getFullYear();
+          let scheduledMonth = scheduledDate.getMonth();
+          let scheduledDay = scheduledDate.getDate();
+          const scheduledHours = scheduledDate.getHours();
+
+          // 00:00 ~ 05:00인 경우 하루 빼기
+          if (scheduledHours < 5) {
+            const prevDay = new Date(
+              scheduledYear,
+              scheduledMonth,
+              scheduledDay - 1
+            );
+            scheduledYear = prevDay.getFullYear();
+            scheduledMonth = prevDay.getMonth();
+            scheduledDay = prevDay.getDate();
+          }
+
+          const scheduledDateOnly = new Date(
+            scheduledYear,
+            scheduledMonth,
+            scheduledDay
+          );
+          const nowDateOnly = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          );
+          const daysDiff = Math.floor(
+            (scheduledDateOnly.getTime() - nowDateOnly.getTime()) /
+              (1000 * 60 * 60 * 24)
+          );
+
+          if (daysDiff > 0) {
+            return `D-${daysDiff}`;
+          } else if (daysDiff === 0) {
             return 'D-DAY';
           }
         }
         // scheduledAt이 현재 시각을 지났으면 시간만 표시
         if (!isNaN(scheduledDate.getTime()) && scheduledDate <= now) {
           let hours = scheduledDate.getHours();
-          const minutes = scheduledDate.getMinutes().toString().padStart(2, '0');
+          const minutes = scheduledDate
+            .getMinutes()
+            .toString()
+            .padStart(2, '0');
           // 00:00 ~ 04:59인 경우 24시간 더하기
           if (hours < 5) {
             hours += 24;
@@ -437,11 +476,11 @@ export default function AnimeCard({
     <div
       data-anime-item
       className={cn(
-        'overflow-hidden rounded-lg bg-white transition-all duration-200 hover:scale-[1.02] sm:rounded-2xl',
+        'overflow-hidden rounded-lg bg-white transition-all duration-200 hover:scale-[1.02] sm:rounded-2xl dark:bg-zinc-800',
         'flex h-full w-full max-w-[250px] flex-col sm:max-w-[280px]',
         'shadow-[0_1.9px_7.2px_rgba(0,0,0,0.1)]',
         'cursor-pointer',
-        isCurrentlyAiring() && 'ring-2 ring-[#990033]',
+        isCurrentlyAiring() && 'ring-brand ring-2',
         className
       )}
       onClick={handleCardClick}
@@ -474,35 +513,35 @@ export default function AnimeCard({
                 }
               }}
             >
-              {ott.ottType === OttType.Netflix && (
+              {ott.ottType === OttType.NETFLIX && (
                 <img
                   src="/icons/netflix-logo.svg"
                   alt="Netflix"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Laftel && (
+              {ott.ottType === OttType.LAFTEL && (
                 <img
                   src="/icons/laftel-logo.svg"
                   alt="LAFTEL"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Tving && (
+              {ott.ottType === OttType.TVING && (
                 <img
                   src="/icons/tving-logo.svg"
                   alt="Tving"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Wavve && (
+              {ott.ottType === OttType.WAVVE && (
                 <img
                   src="/icons/wavve-logo.svg"
                   alt="Wavve"
                   className="h-full w-full object-contain"
                 />
               )}
-              {ott.ottType === OttType.Watcha && (
+              {ott.ottType === OttType.WATCHA && (
                 <img
                   src="/icons/watcha-logo.svg"
                   alt="Watcha"
@@ -533,7 +572,7 @@ export default function AnimeCard({
         {/* Live Badge - 현재 방영중인 경우에만 표시 */}
         {isCurrentlyAiring() && (
           <div className="absolute top-3 left-16">
-            <span className="rounded bg-[#990033] px-2 py-1 text-xs font-bold text-white">
+            <span className="bg-brand rounded px-2 py-1 text-xs font-bold text-white">
               라이브
             </span>
           </div>
@@ -554,7 +593,9 @@ export default function AnimeCard({
             <div
               className={cn(
                 'flex items-center rounded-md px-2 py-1',
-                isCurrentlyAiring() ? 'bg-[#990033]' : 'bg-yellow-400'
+                isCurrentlyAiring()
+                  ? 'bg-brand'
+                  : 'bg-yellow-400 dark:bg-[#FED783]'
               )}
             >
               <span
@@ -588,7 +629,7 @@ export default function AnimeCard({
           >
             <h3
               className={cn(
-                'line-clamp-2 leading-tight font-bold text-gray-900',
+                'line-clamp-2 leading-tight font-bold',
                 screenSize === 'mobile'
                   ? 'text-[12px]'
                   : 'text-[14px] sm:text-[16px]'
@@ -599,7 +640,7 @@ export default function AnimeCard({
 
             {/* 제목 아래 회색선 - 제목 프레임 내에서 아래 왼쪽 정렬 */}
             <div className="absolute bottom-0 left-0 h-0 w-[90px]">
-              <div className="h-[1px] w-full bg-[#ced4da]"></div>
+              <div className="h-[1px] w-full bg-[#ced4da] dark:bg-zinc-700"></div>
             </div>
           </div>
 
@@ -614,7 +655,7 @@ export default function AnimeCard({
               {(() => {
                 const airTimeText = formatAirTime(
                   scheduledAt,
-                  anime.airTime || ''
+                  anime.airTime?.toString() || ''
                 );
                 const isUpcomingCountdown =
                   status === 'UPCOMING' && airTimeText.includes('D-');
@@ -642,8 +683,7 @@ export default function AnimeCard({
                       <span className="text-[14px] font-medium text-[#868E96]">
                         {medium === 'MOVIE'
                           ? getDayInKorean(dayOfWeek) // 극장판은 요일만 표시
-                          : medium === 'TVA' &&
-                              (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL')
+                          : medium === 'TVA' && dayOfWeek === 'SPECIAL'
                             ? getDayInKorean(dayOfWeek)
                             : getDayInKorean(dayOfWeek)}
                       </span>
@@ -660,11 +700,13 @@ export default function AnimeCard({
                   return (
                     <span className="text-[14px] font-medium text-[#868E96]">
                       {medium === 'MOVIE'
-                        ? formatAirTime(scheduledAt, anime.airTime || '') // 극장판은 요일 없이 시간만 표시
-                        : medium === 'TVA' &&
-                            (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL')
-                          ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime || '')}`
-                          : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime || '')}`}
+                        ? formatAirTime(
+                            scheduledAt,
+                            anime.airTime?.toString() || ''
+                          ) // 극장판은 요일 없이 시간만 표시
+                        : medium === 'TVA' && dayOfWeek === 'SPECIAL'
+                          ? `${getDayInKorean(dayOfWeek)} · ${formatAirTime(scheduledAt, anime.airTime?.toString() || '')}`
+                          : `${getDayInKorean(dayOfWeek)} ${formatAirTime(scheduledAt, anime.airTime?.toString() || '')}`}
                     </span>
                   );
                 }
@@ -681,7 +723,9 @@ export default function AnimeCard({
                 <div
                   className={cn(
                     'flex items-center rounded-md px-2 py-0.5',
-                    isCurrentlyAiring() ? 'bg-[#990033]' : 'bg-yellow-400'
+                    isCurrentlyAiring()
+                      ? 'bg-brand'
+                      : 'bg-yellow-400 dark:bg-[#FED783]'
                   )}
                 >
                   <span
@@ -720,7 +764,7 @@ export default function AnimeCard({
             {(() => {
               const airTimeText = formatAirTime(
                 scheduledAt,
-                anime.airTime || ''
+                anime.airTime?.toString() || ''
               );
               const isUpcomingCountdown =
                 status === 'UPCOMING' && airTimeText.includes('D-');
@@ -740,7 +784,9 @@ export default function AnimeCard({
               <div
                 className={cn(
                   'flex items-center rounded-md px-2 py-1',
-                  isCurrentlyAiring() ? 'bg-[#990033]' : 'bg-yellow-400'
+                  isCurrentlyAiring()
+                    ? 'bg-brand'
+                    : 'bg-yellow-400 dark:bg-[#FED783]'
                 )}
               >
                 <span

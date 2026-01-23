@@ -4,6 +4,7 @@ import React from 'react';
 import html2canvas from 'html2canvas-pro';
 import { Download } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getProxiedImageUrl, needsProxy } from '@/lib/utils/image';
 
 export default function DownloadBtn() {
   // 이미지 저장 함수
@@ -28,15 +29,25 @@ export default function DownloadBtn() {
         return;
       }
 
-      // 같은 도메인 이미지(상대 경로, 같은 origin)는 프록시 불필요
-      const isSameOrigin =
-        src.startsWith('/') ||
-        src.startsWith('./') ||
-        src.startsWith('../') ||
-        src.includes(window.location.hostname);
-
-      if (isSameOrigin) {
-        // 같은 도메인이지만 crossOrigin 설정으로 로드 확인
+      // 프록시가 필요한 이미지인지 확인 (img.duckstar.kr 등)
+      if (needsProxy(src)) {
+        // 프록시를 통해 로드
+        try {
+          const proxyUrl = getProxiedImageUrl(src);
+          img.src = proxyUrl;
+          // 이미지 로드 대기
+          await new Promise((resolve, reject) => {
+            const tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = () => resolve(undefined);
+            tempImg.onerror = () => reject(new Error('Failed to load image'));
+            tempImg.src = proxyUrl;
+          });
+        } catch (error) {
+          console.warn('이미지 프록시 로드 실패:', src, error);
+        }
+      } else {
+        // 같은 도메인 이미지는 그대로 사용 (로드 확인만)
         await new Promise((resolve) => {
           const tempImg = new Image();
           tempImg.crossOrigin = 'anonymous';
@@ -44,23 +55,6 @@ export default function DownloadBtn() {
           tempImg.onerror = () => resolve(undefined); // 실패해도 계속 진행
           tempImg.src = src;
         });
-        return;
-      }
-
-      // 외부 이미지만 프록시를 통해 로드
-      try {
-        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(src)}`;
-        img.src = proxyUrl;
-        // 이미지 로드 대기
-        await new Promise((resolve, reject) => {
-          const tempImg = new Image();
-          tempImg.crossOrigin = 'anonymous';
-          tempImg.onload = () => resolve(undefined);
-          tempImg.onerror = () => reject(new Error('Failed to load image'));
-          tempImg.src = proxyUrl;
-        });
-      } catch (error) {
-        console.warn('이미지 프록시 로드 실패:', src, error);
       }
     });
     await Promise.all(promises);
@@ -87,17 +81,23 @@ export default function DownloadBtn() {
   };
 
   const handleClick = () => {
-    toast.promise(handleDownload(), {
-      loading: '이미지 다운로드 중입니다...',
-      success: '이미지 다운로드가 완료되었습니다.',
-      error: '이미지 다운로드에 실패했습니다.',
-    });
+    toast.promise(
+      handleDownload(),
+      {
+        loading: '이미지 다운로드 중입니다...',
+        success: '이미지 다운로드가 완료되었습니다.',
+        error: '이미지 다운로드에 실패했습니다.',
+      },
+      {
+        className: 'dark:bg-black! dark:text-white!',
+      }
+    );
   };
 
   return (
     <button
       onClick={handleClick}
-      className="rounded-full p-2 transition hover:bg-gray-200"
+      className="rounded-full p-2 transition hover:bg-gray-200 dark:hover:bg-zinc-800"
       aria-label="이미지 다운로드"
       title="이미지 다운로드"
     >

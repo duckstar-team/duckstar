@@ -4,22 +4,22 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import LeftInfoPanel from './LeftInfoPanel';
 import RightCommentPanel from './RightCommentPanel';
+import { AnimeDetailSkeleton } from '@/components/skeletons';
 import { getAnimeDetail } from '@/api/search';
 import { useImagePreloading } from '@/hooks/useImagePreloading';
-import { Character } from '@/types/dtos';
 import { useAuth } from '@/context/AuthContext';
 import { updateAnimeImage } from '@/api/admin';
-import { AnimeInfoDto, AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 export default function AnimeDetailClient() {
   const params = useParams();
   const router = useRouter();
   const animeId = params.animeId as string;
-  const [anime, setAnime] = useState<AnimeInfoDto | null>(null);
-  const [characters, setCharacters] = useState<Character[]>([]);
+  const [anime, setAnime] = useState<Schemas['AnimeInfoDto'] | null>(null);
+  const [characters, setCharacters] = useState<Schemas['CastPreviewDto'][]>([]);
+  const [episodes, setEpisodes] = useState<Schemas['EpisodeDto'][]>([]);
   const [loading, setLoading] = useState(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [rawAnimeData, setRawAnimeData] = useState<any>(null); // 백엔드 원본 데이터 저장
   const isLoadingRef = useRef(false); // 중복 호출 방지용
   const prevAnimeIdRef = useRef<string | null>(null); // 이전 animeId 추적
 
@@ -30,6 +30,11 @@ export default function AnimeDetailClient() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
+  const [leftPanelPosition, setLeftPanelPosition] = useState({
+    left: 0,
+    width: 584,
+  });
 
   // 이미지 프리로딩 훅
   const { preloadAnimeDetails } = useImagePreloading();
@@ -88,7 +93,6 @@ export default function AnimeDetailClient() {
         'animeInfoDto' in updatedData
       ) {
         setAnime((updatedData as any).animeInfoDto);
-        setRawAnimeData(updatedData);
       }
 
       setIsEditingImage(false);
@@ -131,8 +135,6 @@ export default function AnimeDetailClient() {
       fileInputRef.current.value = '';
     }
   };
-
-  const [error, setError] = useState<string | null>(null);
 
   // 컴포넌트 마운트 시 스크롤을 맨 위로 강제 이동 (상세화면에서만)
   useEffect(() => {
@@ -200,7 +202,6 @@ export default function AnimeDetailClient() {
         isLoadingRef.current = true;
         prevAnimeIdRef.current = animeId;
         setLoading(true);
-        setError(null);
 
         // 실제 API 호출 (병렬 처리로 성능 최적화)
         const data = (await Promise.race([
@@ -208,86 +209,21 @@ export default function AnimeDetailClient() {
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Request timeout')), 10000)
           ),
-        ])) as unknown;
+        ])) as Schemas['AnimeHomeDto'];
 
-        // 백엔드 원본 데이터 저장
-        setRawAnimeData(data);
-
-        // data는 AnimeHomeDto 구조
-        const dataTyped = data as {
-          animeInfoDto: AnimeInfoDto;
-          castPreviews?: unknown[];
-        };
-        const animeInfo = dataTyped.animeInfoDto;
-        const castPreviews = dataTyped.castPreviews || [];
-
-        setAnime(animeInfo);
-
-        // 캐릭터 데이터 변환
-        const mapCastPreviewsToCharacters = (
-          castPreviews: unknown[]
-        ): Character[] => {
-          if (!castPreviews || !Array.isArray(castPreviews)) {
-            return [];
-          }
-
-          return castPreviews.map((cast, index) => {
-            const castData = cast as Record<string, unknown>;
-            return {
-              characterId: (castData.characterId as number) || index + 1,
-              nameKor: (castData.nameKor as string) || '이름 없음',
-              nameJpn: castData.nameJpn as string,
-              nameEng: castData.nameEng as string,
-              imageUrl: castData.mainThumbnailUrl as string, // API에서 mainThumbnailUrl 사용
-              description: castData.description as string,
-              voiceActor: (castData.cv as string) || '미정', // API에서 cv 사용
-              role:
-                (castData.role as 'MAIN' | 'SUPPORTING' | 'MINOR') ||
-                (index < 2 ? 'MAIN' : index < 4 ? 'SUPPORTING' : 'MINOR'),
-              gender:
-                (castData.gender as 'FEMALE' | 'MALE' | 'OTHER' | undefined) ||
-                (index % 2 === 0 ? 'FEMALE' : 'MALE'),
-              age: castData.age as number,
-              height: castData.height as number,
-              weight: castData.weight as number,
-              birthday: castData.birthday as string,
-              bloodType: castData.bloodType as string,
-              occupation: castData.occupation as string,
-              personality: castData.personality
-                ? Array.isArray(castData.personality)
-                  ? (castData.personality as string[])
-                  : [castData.personality as string]
-                : [],
-              abilities: castData.abilities
-                ? Array.isArray(castData.abilities)
-                  ? (castData.abilities as string[])
-                  : [castData.abilities as string]
-                : [],
-              relationships: (
-                (castData.relationships as Array<{
-                  characterName: string;
-                  relationship: string;
-                }>) || []
-              ).map((rel, relIndex) => ({
-                characterId: relIndex + 1,
-                characterName: rel.characterName,
-                relationship: rel.relationship,
-              })),
-            };
-          });
-        };
-
-        const characterData = mapCastPreviewsToCharacters(castPreviews);
-        setCharacters(characterData);
-
+        setAnime(data.animeInfoDto);
+        setCharacters(data.castPreviews);
+        setEpisodes(data.episodeResponseDtos);
         // 애니메이션 상세 이미지 프리로딩 (비동기로 처리하여 로딩 속도 향상)
         setTimeout(() => {
-          preloadAnimeDetails(animeInfo as unknown as AnimePreviewDto);
+          if (data.animeInfoDto.mainThumbnailUrl) {
+            preloadAnimeDetails(data.animeInfoDto);
+          }
         }, 0);
       } catch (error) {
-        setError('애니메이션 정보를 불러오는데 실패했습니다.');
-        // 에러 시 mock 데이터 제거
         setAnime(null);
+        setCharacters([]);
+        setEpisodes([]);
       } finally {
         setLoading(false);
         isLoadingRef.current = false;
@@ -297,195 +233,34 @@ export default function AnimeDetailClient() {
     if (animeId) {
       fetchAnimeData();
     }
+  }, [animeId]);
 
-    // cleanup 함수: 컴포넌트 언마운트 시 스크롤 복원
-    return () => {
-      document.body.style.overflow = 'auto';
+  // LeftInfoPanel 위치 계산
+  useEffect(() => {
+    const updateLeftPanelPosition = () => {
+      if (leftPanelRef.current) {
+        const rect = leftPanelRef.current.getBoundingClientRect();
+        setLeftPanelPosition({
+          left: rect.left,
+          width: rect.width,
+        });
+      }
     };
-  }, [animeId]); // animeId가 변경될 때만 실행
+
+    updateLeftPanelPosition();
+    window.addEventListener('resize', updateLeftPanelPosition);
+    window.addEventListener('scroll', updateLeftPanelPosition, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener('resize', updateLeftPanelPosition);
+      window.removeEventListener('scroll', updateLeftPanelPosition);
+    };
+  }, [anime]);
 
   if (loading) {
-    return (
-      <main
-        className="w-full max-w-full overflow-x-hidden overflow-y-visible"
-        style={{ backgroundColor: '#F8F9FA', minHeight: 'calc(100vh - 60px)' }}
-      >
-        {/* 데스크톱 스켈레톤 - 1280px 이상 */}
-        <div className="hidden w-full xl:block">
-          <div className="w-full px-4">
-            <div className="mx-auto flex max-w-7xl gap-4">
-              {/* 왼쪽 영역: 스켈레톤 로딩 */}
-              <div className="max-w-[584px] min-w-0 flex-1">
-                <div
-                  className="animate-pulse rounded-2xl bg-white shadow-lg"
-                  style={{ minHeight: 'calc(100vh - 120px)' }}
-                >
-                  {/* 메인 이미지 스켈레톤 */}
-                  <div className="h-[300px] rounded-t-2xl bg-gradient-to-r from-gray-200 to-gray-300"></div>
-
-                  {/* 정보 영역 스켈레톤 */}
-                  <div className="space-y-3 p-6">
-                    {/* 제목 영역 */}
-                    <div className="h-6 w-3/4 rounded bg-gray-200"></div>
-                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
-
-                    {/* 탭 영역 스켈레톤 */}
-                    <div className="mt-4 flex gap-4">
-                      <div className="h-8 w-16 rounded bg-gray-200"></div>
-                      <div className="h-8 w-20 rounded bg-gray-200"></div>
-                      <div className="h-8 w-18 rounded bg-gray-200"></div>
-                    </div>
-
-                    {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
-                    <div className="mt-4 space-y-2">
-                      <div className="h-4 rounded bg-gray-200"></div>
-                      <div className="h-4 w-5/6 rounded bg-gray-200"></div>
-                      <div className="h-4 w-4/6 rounded bg-gray-200"></div>
-                    </div>
-
-                    {/* 추가 정보 영역 */}
-                    <div className="mt-4 space-y-2">
-                      <div className="h-3 w-1/3 rounded bg-gray-200"></div>
-                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 오른쪽 영역: 스켈레톤 로딩 */}
-              <div className="w-full max-w-[610px] min-w-0 flex-1">
-                <div
-                  className="animate-pulse border-r border-l border-gray-300 bg-white"
-                  style={{ minHeight: 'calc(100vh - 60px)' }}
-                >
-                  {/* 에피소드 섹션 스켈레톤 */}
-                  <div className="flex justify-center pt-7 pb-1">
-                    <div className="h-[200px] w-[534px] rounded-lg bg-gradient-to-r from-gray-200 to-gray-300"></div>
-                  </div>
-
-                  {/* 댓글 헤더 스켈레톤 */}
-                  <div className="sticky top-[60px] z-20 bg-white px-6 py-4">
-                    <div className="h-6 w-1/3 rounded bg-gray-200"></div>
-                  </div>
-
-                  {/* 댓글 작성 폼 스켈레톤 */}
-                  <div className="px-6 py-4">
-                    <div className="space-y-3 rounded-lg bg-gray-100 p-4">
-                      <div className="h-4 w-1/4 rounded bg-gray-200"></div>
-                      <div className="h-20 rounded bg-gray-200"></div>
-                      <div className="flex justify-end">
-                        <div className="h-8 w-16 rounded bg-gray-200"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 댓글 목록 스켈레톤 */}
-                  <div className="space-y-4 px-6">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <div key={index} className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-gray-200"></div>
-                          <div className="h-4 w-20 rounded bg-gray-200"></div>
-                          <div className="h-3 w-16 rounded bg-gray-200"></div>
-                        </div>
-                        <div className="ml-11 space-y-2">
-                          <div className="h-4 rounded bg-gray-200"></div>
-                          <div className="h-4 w-3/4 rounded bg-gray-200"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 중간 레이아웃 스켈레톤 - 1024px~1279px (left panel 584px 고정) */}
-        <div className="hidden w-full lg:block xl:hidden">
-          <div className="w-full px-4">
-            <div className="mx-auto max-w-7xl">
-              <div className="mx-auto max-w-[584px] pt-[30px]">
-                <div
-                  className="animate-pulse rounded-2xl bg-white shadow-lg"
-                  style={{ minHeight: 'calc(100vh - 120px)' }}
-                >
-                  {/* 메인 이미지 스켈레톤 */}
-                  <div className="h-[300px] rounded-t-2xl bg-gradient-to-r from-gray-200 to-gray-300"></div>
-
-                  {/* 정보 영역 스켈레톤 */}
-                  <div className="space-y-3 p-6">
-                    {/* 제목 영역 */}
-                    <div className="h-6 w-3/4 rounded bg-gray-200"></div>
-                    <div className="h-4 w-1/2 rounded bg-gray-200"></div>
-
-                    {/* 탭 영역 스켈레톤 */}
-                    <div className="mt-4 flex gap-4">
-                      <div className="h-8 w-16 rounded bg-gray-200"></div>
-                      <div className="h-8 w-20 rounded bg-gray-200"></div>
-                      <div className="h-8 w-18 rounded bg-gray-200"></div>
-                    </div>
-
-                    {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
-                    <div className="mt-4 space-y-2">
-                      <div className="h-4 rounded bg-gray-200"></div>
-                      <div className="h-4 w-5/6 rounded bg-gray-200"></div>
-                      <div className="h-4 w-4/6 rounded bg-gray-200"></div>
-                    </div>
-
-                    {/* 추가 정보 영역 */}
-                    <div className="mt-4 space-y-2">
-                      <div className="h-3 w-1/3 rounded bg-gray-200"></div>
-                      <div className="h-3 w-1/4 rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 모바일 스켈레톤 - 1024px 미만 (right panel 숨김) */}
-        <div className="w-full lg:hidden">
-          <div className="w-full px-1">
-            <div
-              className="animate-pulse rounded-2xl bg-white shadow-lg"
-              style={{ minHeight: 'calc(100vh - 120px)' }}
-            >
-              {/* 메인 이미지 스켈레톤 */}
-              <div className="h-[300px] rounded-t-2xl bg-gradient-to-r from-gray-200 to-gray-300"></div>
-
-              {/* 정보 영역 스켈레톤 */}
-              <div className="space-y-3 p-6">
-                {/* 제목 영역 */}
-                <div className="h-6 w-3/4 rounded bg-gray-200"></div>
-                <div className="h-4 w-1/2 rounded bg-gray-200"></div>
-
-                {/* 탭 영역 스켈레톤 */}
-                <div className="mt-4 flex gap-4">
-                  <div className="h-8 w-16 rounded bg-gray-200"></div>
-                  <div className="h-8 w-20 rounded bg-gray-200"></div>
-                  <div className="h-8 w-18 rounded bg-gray-200"></div>
-                </div>
-
-                {/* 컨텐츠 영역 스켈레톤 - 간소화 */}
-                <div className="mt-4 space-y-2">
-                  <div className="h-4 rounded bg-gray-200"></div>
-                  <div className="h-4 w-5/6 rounded bg-gray-200"></div>
-                  <div className="h-4 w-4/6 rounded bg-gray-200"></div>
-                </div>
-
-                {/* 추가 정보 영역 */}
-                <div className="mt-4 space-y-2">
-                  <div className="h-3 w-1/3 rounded bg-gray-200"></div>
-                  <div className="h-3 w-1/4 rounded bg-gray-200"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
+    return <AnimeDetailSkeleton />;
   }
 
   // 뒤로가기 핸들러 - 브라우저 뒤로가기와 정확히 일치
@@ -499,8 +274,8 @@ export default function AnimeDetailClient() {
 
   return (
     <main
-      className="w-full max-w-full overflow-x-hidden overflow-y-visible"
-      style={{ backgroundColor: '#F8F9FA', minHeight: 'calc(100vh - 60px)' }}
+      className="w-full max-w-full overflow-hidden"
+      style={{ minHeight: 'calc(100vh - 60px)' }}
     >
       {/* 숨겨진 파일 입력 필드 */}
       <input
@@ -515,22 +290,54 @@ export default function AnimeDetailClient() {
       <div className="hidden w-full xl:block">
         <div className="w-full px-4">
           <div className="mx-auto flex max-w-7xl justify-center gap-7">
-            {/* 왼쪽 영역: 반응형 너비 */}
-            <div className="max-w-[584px] min-w-0 flex-1 pt-[30px]">
-              <LeftInfoPanel
-                anime={anime!}
-                onBack={handleBack}
-                characters={characters}
-                onImageModalToggle={setIsImageModalOpen}
-                isAdmin={isAdmin}
-                onImageEdit={handleImageEdit}
-                isEditingImage={isEditingImage}
-                imageFile={imageFile}
-                onImageUpdate={handleImageUpdate}
-                onImageEditCancel={handleImageEditCancel}
-                isUploading={isUploading}
-                isMobile={false}
-              />
+            {/* 왼쪽 영역: 반응형 너비 - fixed로 고정 */}
+            <div
+              ref={leftPanelRef}
+              className="max-w-[584px] min-w-0 flex-1 pt-[30px]"
+            >
+              {/* 공간 유지를 위한 플레이스홀더 */}
+              <div className="invisible">
+                <LeftInfoPanel
+                  anime={anime!}
+                  onBack={handleBack}
+                  characters={characters}
+                  onImageModalToggle={setIsImageModalOpen}
+                  isAdmin={isAdmin}
+                  onImageEdit={handleImageEdit}
+                  isEditingImage={isEditingImage}
+                  imageFile={imageFile}
+                  onImageUpdate={handleImageUpdate}
+                  onImageEditCancel={handleImageEditCancel}
+                  isUploading={isUploading}
+                  isMobile={false}
+                />
+              </div>
+              {/* 실제 고정된 패널 */}
+              <div
+                className="fixed z-10"
+                style={{
+                  top: '60px',
+                  left: `${leftPanelPosition.left}px`,
+                  width: `${leftPanelPosition.width}px`,
+                }}
+              >
+                <div className="pt-[30px]">
+                  <LeftInfoPanel
+                    anime={anime!}
+                    onBack={handleBack}
+                    characters={characters}
+                    onImageModalToggle={setIsImageModalOpen}
+                    isAdmin={isAdmin}
+                    onImageEdit={handleImageEdit}
+                    isEditingImage={isEditingImage}
+                    imageFile={imageFile}
+                    onImageUpdate={handleImageUpdate}
+                    onImageEditCancel={handleImageEditCancel}
+                    isUploading={isUploading}
+                    isMobile={false}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* 오른쪽 영역 */}
@@ -538,8 +345,8 @@ export default function AnimeDetailClient() {
               <RightCommentPanel
                 animeId={parseInt(animeId)}
                 isImageModalOpen={isImageModalOpen}
-                animeData={anime} // 애니메이션 데이터 전달
-                rawAnimeData={rawAnimeData} // 백엔드 원본 데이터 전달
+                animeData={anime}
+                episodes={episodes}
               />
             </div>
           </div>
@@ -566,7 +373,7 @@ export default function AnimeDetailClient() {
                 isUploading={isUploading}
                 isMobile={false}
                 animeId={parseInt(animeId)}
-                rawAnimeData={rawAnimeData}
+                episodes={episodes || []}
               />
             </div>
           </div>
@@ -591,7 +398,7 @@ export default function AnimeDetailClient() {
             isUploading={isUploading}
             isMobile={true}
             animeId={parseInt(animeId)}
-            rawAnimeData={rawAnimeData}
+            episodes={episodes || []}
           />
         </div>
       </div>

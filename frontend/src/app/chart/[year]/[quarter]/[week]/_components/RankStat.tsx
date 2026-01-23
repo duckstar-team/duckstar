@@ -5,11 +5,11 @@ import WeekRatingStats from './WeekRatingStats';
 import { getThisWeekRecord } from '@/lib';
 import { format } from 'date-fns';
 import MedalGrid from './MedalGrid';
-import { AnimeRankDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { ChevronRight, TrendingUp } from 'lucide-react';
 
 interface RankStatProps {
-  anime: AnimeRankDto;
+  anime: Schemas['AnimeRankDto'];
 }
 
 export default function RankStat({ anime }: RankStatProps) {
@@ -27,24 +27,18 @@ export default function RankStat({ anime }: RankStatProps) {
 
   // 날짜 클릭 핸들러: 해당 날짜의 00시를 기준으로 분기/주차 계산 후 차트 페이지로 이동
   const handleDateClick = (dateString: string) => {
-    try {
-      // 날짜 문자열을 Date 객체로 변환 (YYYY-MM-DD 형식 가정)
-      const date = new Date(dateString);
+    // 날짜 문자열을 Date 객체로 변환 (YYYY-MM-DD 형식 가정)
+    const date = new Date(dateString);
 
-      // 해당 날짜의 00시로 설정
-      date.setHours(0, 0, 0, 0);
+    // 분기/주차 계산
+    const record = getThisWeekRecord(date);
 
-      // 분기/주차 계산
-      const record = getThisWeekRecord(date);
-
-      // 차트 페이지로 이동
-      router.push(
-        `/chart/${record.yearValue}/${record.quarterValue}/${record.weekValue}`
-      );
-    } catch (error) {
-      console.error('날짜 변환 실패:', error);
-    }
+    // 차트 페이지로 이동
+    router.push(
+      `/chart/${record.yearValue}/${record.quarterValue}/${record.weekValue}`
+    );
   };
+
   return (
     <div className="xs:gap-4 flex w-full items-center justify-center gap-2 bg-black px-2 py-4 sm:px-8 md:gap-10 @max-md:flex-col">
       {/* 아랫줄: 별분산과 평균별점 + 메달 섹션 (768px 미만에서만 별도 줄) */}

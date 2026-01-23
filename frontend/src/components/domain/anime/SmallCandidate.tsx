@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { StarInfoDto, LiveVoteResultDto, AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import StarRatingSimple from '@/components/domain/star/StarRatingSimple';
 import StarDistributionChart from '@/components/domain/star/StarDistributionChart';
 import { submitStarVote, withdrawStar } from '@/api/vote';
@@ -14,17 +14,16 @@ import {
   differenceInMinutes,
   differenceInSeconds,
 } from 'date-fns';
-import { ApiResponse } from '@/api/http';
 
 interface SmallCandidateProps {
-  anime: AnimePreviewDto;
+  anime: Schemas['LiveCandidateDto'];
   isCurrentSeason: boolean;
   voteInfo: {
     year: number;
     quarter: number;
     week: number;
   };
-  starInfo: StarInfoDto | null;
+  starInfo: Schemas['StarInfoDto'] | null;
   voterCount: number;
   onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void;
 }
@@ -44,26 +43,8 @@ const getKoreanDayOfWeek = (dayOfWeek: string): string => {
 };
 
 // 방영 시간 포맷팅 (BigCandidate와 동일한 로직)
-const formatAirTime = (anime: AnimePreviewDto) => {
-  const { scheduledAt, airTime, dayOfWeek, status, medium } = anime;
-
-  // dateTime 형식인지 확인 (ISO 8601 형식: "T" 포함 또는 숫자와 하이픈/콜론 포함)
-  const isDateTimeFormat = (str: string) => {
-    return /^\d{4}-\d{2}-\d{2}/.test(str) || str.includes('T');
-  };
-
-  // 극장판의 경우 airTime 필드 사용
-  if (medium === 'MOVIE' && airTime) {
-    if (isDateTimeFormat(airTime)) {
-      const date = new Date(airTime);
-      if (!isNaN(date.getTime())) {
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        return `${month}/${day} 개봉`;
-      }
-    }
-    return `${airTime} 개봉`;
-  }
+const formatAirTime = (anime: Schemas['LiveCandidateDto']) => {
+  const { scheduledAt, dayOfWeek, medium } = anime;
 
   // 극장판이지만 airTime이 없는 경우 scheduledAt 사용
   if (medium === 'MOVIE' && scheduledAt) {
@@ -71,37 +52,6 @@ const formatAirTime = (anime: AnimePreviewDto) => {
     const month = date.getMonth() + 1; // 0부터 시작하므로 +1
     const day = date.getDate();
     return `${month}/${day} 개봉`;
-  }
-
-  // airTime이 있는 경우 우선 사용 (검색 결과 포함)
-  if (airTime) {
-    // HH:MM 또는 HH:MM:SS 형식인 경우 (LocalTime은 HH:MM:SS로 올 수 있음)
-    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(airTime)) {
-      const [hoursStr, minutesStr] = airTime.split(':');
-      let hours = parseInt(hoursStr, 10);
-      // 00:00 ~ 04:59인 경우 24시간 더하기
-      if (hours < 5) {
-        hours += 24;
-      }
-      const formattedTime = `${hours.toString().padStart(2, '0')}:${minutesStr}`;
-      return `${getKoreanDayOfWeek(dayOfWeek || '')} ${formattedTime}`;
-    }
-
-    // airTime에 이미 요일이 포함되어 있으면 그대로 사용
-    if (
-      airTime.includes('요일') ||
-      airTime.includes('일') ||
-      airTime.includes('월') ||
-      airTime.includes('화') ||
-      airTime.includes('수') ||
-      airTime.includes('목') ||
-      airTime.includes('금') ||
-      airTime.includes('토')
-    ) {
-      return airTime;
-    }
-    // 요일이 없으면 요일 추가
-    return `${getKoreanDayOfWeek(dayOfWeek || '')} ${airTime}`;
   }
 
   // airTime이 없는 경우 scheduledAt 사용
@@ -114,11 +64,6 @@ const formatAirTime = (anime: AnimePreviewDto) => {
       hours += 24;
     }
     return `${getKoreanDayOfWeek(dayOfWeek || '')} ${hours.toString().padStart(2, '0')}:${minutes}`;
-  }
-
-  // 종영 애니메이션의 경우 "(종영)" 표시
-  if (status === 'ENDED') {
-    return '· 종영';
   }
 
   return '시간 미정';
@@ -140,7 +85,7 @@ export default function SmallCandidate({
       // 이미 투표한 경우(수정) episodeStarId 전달
       return await submitStarVote(anime.episodeId, starScore, episodeStarId);
     },
-    onMutate: async (starScore) => {
+    onMutate: async () => {
       // 처음 투표하는 경우에만 voterCount +1 (수정 시에는 업데이트 안 함)
       const isFirstVote =
         !starInfo?.userStarScore || starInfo.userStarScore === 0;
@@ -430,7 +375,7 @@ export default function SmallCandidate({
 
   // 별점 분포 업데이트 함수 (BigCandidate와 동일)
   const updateStarDistribution = (
-    response: ApiResponse<LiveVoteResultDto>,
+    response: Schemas['ApiResponseVoteResultDto'],
     userStarScore?: number
   ) => {
     if (response.result.info) {
@@ -584,7 +529,7 @@ export default function SmallCandidate({
   }, [anime.scheduledAt]);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white p-4">
+    <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white p-4 dark:border-none dark:bg-zinc-800">
       <div className="flex items-start gap-5">
         {/* 썸네일 */}
         <div className="flex-shrink-0">
@@ -610,17 +555,17 @@ export default function SmallCandidate({
           {/* 제목과 시간 정보 */}
           <div className="mb-2">
             <h3
-              className="mb-2 line-clamp-2 h-[3rem] cursor-pointer text-lg leading-tight font-semibold text-black transition-colors hover:text-[#990033] md:line-clamp-3 md:h-[4.5rem]"
+              className="hover:text-brand mb-2 line-clamp-2 h-[3rem] cursor-pointer text-lg leading-tight font-semibold transition-colors md:line-clamp-3 md:h-[4.5rem]"
               onClick={() => router.push(`/animes/${anime.animeId}`)}
             >
               {anime.titleKor || '제목 없음'}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400">
               <span>{formatAirTime(anime)}</span>
               {timeRemaining &&
                 timeRemaining !== '시간 미정' &&
                 timeRemaining !== '종료' && (
-                  <div className="rounded bg-[#990033] px-2 py-1 text-xs font-bold text-white">
+                  <div className="bg-brand rounded px-2 py-1 text-xs font-bold text-white">
                     <span className="hidden items-center gap-1 sm:flex">
                       <Clock size={14} /> 투표: {getVoteTimeRemainingShort()}{' '}
                       남음
@@ -635,7 +580,7 @@ export default function SmallCandidate({
 
           {/* 장르와 별점을 같은 줄에 배치 */}
           <div className="relative flex items-center justify-end sm:justify-between">
-            <span className="hidden min-w-0 flex-shrink-1 truncate text-xs text-gray-500 sm:block">
+            <span className="hidden min-w-0 flex-shrink-1 truncate text-xs text-gray-500 sm:block dark:text-zinc-400">
               {anime.genre || ''}
             </span>
             <div className="relative mt-3 flex flex-shrink-0 items-center gap-2 sm:mt-0">
@@ -647,7 +592,7 @@ export default function SmallCandidate({
                     // 별점 회수 mutation 실행
                     withdrawMutation.mutate();
                   }}
-                  className="z-10 mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 transition-colors duration-200 hover:bg-white/20 hover:text-white"
+                  className="z-10 mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 transition-colors duration-200 hover:bg-zinc-100 hover:text-white dark:hover:bg-zinc-700/50"
                   aria-label="별점 회수"
                 >
                   <img

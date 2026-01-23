@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib';
-import { SurveyStatus } from '@/types/enums';
+import { SurveyStatus } from '@/types';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -14,7 +14,7 @@ interface SurveyCountdownProps {
 
 export default function SurveyCountdown({
   text = '오픈까지',
-  type = SurveyStatus.NotYet,
+  type = SurveyStatus.NOT_YET,
   startDate,
   className,
 }: SurveyCountdownProps) {
@@ -31,7 +31,7 @@ export default function SurveyCountdown({
     const update = () => {
       const now = Date.now();
       const diff =
-        type === SurveyStatus.Closed
+        type === SurveyStatus.CLOSED
           ? target + 18 * 3600 * 1000 - now
           : target - now;
       const totalSeconds = Math.floor(diff / 1000);

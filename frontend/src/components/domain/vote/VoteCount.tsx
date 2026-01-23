@@ -7,7 +7,7 @@ interface VoteCountProps {
   voteCount: number;
 }
 
-const VoteCount: React.FC<VoteCountProps> = ({ voteCount }) => {
+export default function VoteCount({ voteCount }: VoteCountProps) {
   const element = (
     <div className="justify-start text-[14px] leading-snug font-normal text-[#adb5bd]">
       <p className="leading-[22px] whitespace-pre">·</p>
@@ -31,7 +31,7 @@ const VoteCount: React.FC<VoteCountProps> = ({ voteCount }) => {
           {iconVote}
           {iconVote}
           <div className="relative flex shrink-0 flex-col content-stretch items-end justify-center gap-2.5 py-0 pr-0 pl-0.5">
-            <div className="relative flex h-4 shrink-0 content-stretch items-center justify-center gap-2.5 rounded-[6px] bg-[#990033] px-1 py-0">
+            <div className="bg-brand relative flex h-4 shrink-0 content-stretch items-center justify-center gap-2.5 rounded-[6px] px-1 py-0">
               <div className="justify-start text-[13px] leading-snug font-semibold text-white">
                 +{remainingCount}
               </div>
@@ -59,6 +59,4 @@ const VoteCount: React.FC<VoteCountProps> = ({ voteCount }) => {
       </div>
     </div>
   );
-};
-
-export default VoteCount;
+}

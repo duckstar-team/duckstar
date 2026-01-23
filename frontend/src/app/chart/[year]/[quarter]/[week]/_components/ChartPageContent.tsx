@@ -173,7 +173,7 @@ export default function ChartPageContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center bg-gray-50 py-20">
+      <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
         <span className="ml-3 text-gray-600">차트 데이터 로딩 중...</span>
       </div>
@@ -182,7 +182,7 @@ export default function ChartPageContent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center bg-gray-50 py-20">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="mb-2 text-4xl text-red-500">⚠️</div>
           <h3 className="mb-2 text-lg font-semibold text-red-600">
@@ -396,13 +396,13 @@ export default function ChartPageContent() {
 
                   {/* 드롭다운 메뉴 */}
                   {isDropdownOpen && (
-                    <div className="absolute top-full right-0 z-[70] mt-1 w-fit rounded-lg border border-gray-200 bg-white shadow-lg">
+                    <div className="absolute top-full right-0 z-[70] mt-1 w-fit overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
                       <button
                         onClick={() => {
                           setActiveView('anime-corner');
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full px-4 py-3 text-left whitespace-nowrap hover:bg-gray-50 ${
+                        className={`w-full px-4 py-3 text-left whitespace-nowrap hover:bg-gray-50 dark:hover:bg-zinc-800 ${
                           activeView === 'anime-corner'
                             ? 'font-semibold text-[#FED783]'
                             : 'text-gray-400'
@@ -415,7 +415,7 @@ export default function ChartPageContent() {
                           setActiveView('anilab');
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full px-4 py-3 text-left whitespace-nowrap hover:bg-gray-50 ${
+                        className={`w-full px-4 py-3 text-left whitespace-nowrap hover:bg-gray-50 dark:hover:bg-zinc-800 ${
                           activeView === 'anilab'
                             ? 'font-semibold text-[#FED783]'
                             : 'text-gray-400'

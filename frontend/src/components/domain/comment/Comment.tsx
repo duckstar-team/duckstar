@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommentDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import VoteCount from '@/components/domain/vote/VoteCount';
 import { cn } from '@/lib';
 
@@ -28,20 +28,20 @@ const imgCommentUnliked = '/icons/comment-unliked.svg';
 const imgCommentLiked = '/icons/comment-liked.svg';
 
 interface CommentProps {
-  comment: CommentDto;
+  comment: Schemas['CommentDto'];
   onLike?: (commentId: number) => void;
   onReply?: (commentId: number) => void;
   onDelete?: (commentId: number, surveyCandidateId: number | null) => void;
   className?: string;
 }
 
-const Comment: React.FC<CommentProps> = ({
+export default function Comment({
   comment,
   onLike,
   onReply,
   onDelete,
   className,
-}) => {
+}: CommentProps) {
   const {
     commentId,
     status,
@@ -155,7 +155,7 @@ const Comment: React.FC<CommentProps> = ({
   return (
     <div
       className={cn(
-        'relative flex h-fit w-full content-stretch items-start justify-start gap-5 bg-white pb-2',
+        'relative flex h-fit w-full content-stretch items-start justify-start gap-5 pb-2',
         className
       )}
     >
@@ -179,7 +179,7 @@ const Comment: React.FC<CommentProps> = ({
           <div className="relative flex w-full flex-wrap items-center justify-start gap-2">
             <div className="flex flex-wrap items-center justify-start gap-[5px]">
               {/* 작성자명 */}
-              <div className="justify-start text-base leading-snug font-semibold whitespace-nowrap text-black">
+              <div className="justify-start text-base leading-snug font-semibold whitespace-nowrap">
                 {author}
               </div>
 
@@ -239,7 +239,7 @@ const Comment: React.FC<CommentProps> = ({
           {/* 댓글 내용 */}
           <div className="flex flex-col gap-2 self-stretch">
             {content && (
-              <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap text-black">
+              <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap">
                 {content}
               </div>
             )}
@@ -262,23 +262,19 @@ const Comment: React.FC<CommentProps> = ({
           {/* 푸터 (좋아요, 답글) */}
           <div className="relative flex h-[30px] w-full shrink-0 content-stretch items-center justify-start gap-[25px]">
             {/* 좋아요 */}
-            <div className="relative flex shrink-0 content-stretch items-center justify-start gap-2">
+            <div className="relative flex shrink-0 content-stretch items-center justify-start gap-1">
               <button
                 onClick={() => onLike?.(commentId)}
-                className={`relative size-5 shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70 ${isLiked ? 'opacity-100' : 'opacity-60'}`}
+                className={`relative size-4 shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70 ${isLiked ? 'opacity-100' : 'opacity-60'}`}
                 aria-label={isLiked ? '좋아요 취소' : '좋아요'}
               >
-                <div className="absolute inset-[9.07%_3.55%_8.86%_3.57%]">
-                  <div className="absolute inset-[-4.35%_-3.85%_-4.35%_-3.84%]">
-                    <img
-                      alt="좋아요 아이콘"
-                      className="block size-full max-w-none"
-                      src={isLiked ? imgCommentLiked : imgCommentUnliked}
-                    />
-                  </div>
-                </div>
+                <img
+                  alt="좋아요 아이콘"
+                  className="block size-full max-w-none"
+                  src={isLiked ? imgCommentLiked : imgCommentUnliked}
+                />
               </button>
-              <div className="justify-start text-base leading-snug font-semibold text-[#868e96]">
+              <div className="justify-start text-sm leading-snug font-medium text-gray-500 dark:text-white">
                 {likeCount}
               </div>
             </div>
@@ -295,6 +291,4 @@ const Comment: React.FC<CommentProps> = ({
       </div>
     </div>
   );
-};
-
-export default Comment;
+}

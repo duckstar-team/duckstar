@@ -1,11 +1,11 @@
 import RankDiff from '@/components/domain/chart/RankDiff';
 import StarRatingDisplay from '@/components/domain/star/StarRatingDisplay';
-import { AnimeRankDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { getRankDiffType } from '@/lib';
 import TooltipBtn from '@/components/common/TooltipBtn';
 
 interface RankContentsProps {
-  anime: AnimeRankDto;
+  anime: Schemas['AnimeRankDto'];
   variant?: 'default' | 'winner';
 }
 
@@ -44,7 +44,7 @@ export default function RankContents({
     >
       {/* 순위 및 변동 정보 */}
       <div className="inline-flex w-9 shrink-0 flex-col items-center justify-start">
-        <div className="xs:text-[32px] justify-start text-center text-[28px] leading-normal font-bold text-[#868E96] sm:text-[32px]">
+        <div className="xs:text-[32px] justify-start text-center text-[28px] leading-normal font-bold text-zinc-500 sm:text-[32px] dark:text-zinc-100">
           {rank}
         </div>
         <RankDiff
@@ -71,7 +71,7 @@ export default function RankContents({
       {/* 제목, 스튜디오, 별점 정보 */}
       <div className="flex min-w-0 flex-1 flex-col items-end justify-center gap-2">
         <div className="flex w-full flex-col items-start justify-start gap-[3px]">
-          <div className="xs:text-lg line-clamp-2 leading-snug font-bold text-black">
+          <div className="xs:text-lg line-clamp-2 leading-snug font-bold">
             {title}
           </div>
           <div className="xs:text-sm text-xs leading-snug font-normal text-gray-400">

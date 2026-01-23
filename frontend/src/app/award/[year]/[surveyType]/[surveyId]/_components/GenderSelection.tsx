@@ -1,6 +1,6 @@
 'use client';
 
-import { AgeGroup, Gender } from '@/types/enums';
+import { AgeGroup, Gender } from '@/types';
 import VoteButton from './VoteButton';
 import { cn } from '@/lib';
 import { useState } from 'react';
@@ -30,17 +30,17 @@ type AgeGroupOption = {
 
 // Constants
 const GENDER_OPTIONS: GenderOption[] = [
-  { value: Gender.Male, label: '남성' },
-  { value: Gender.Female, label: '여성' },
+  { value: Gender.MALE, label: '남성' },
+  { value: Gender.FEMALE, label: '여성' },
 ] as const;
 
 const AGE_GROUP_OPTIONS: AgeGroupOption[] = [
-  { value: AgeGroup.Under14, label: '14세 이하' },
-  { value: AgeGroup.Age15_19, label: '15-19세' },
-  { value: AgeGroup.Age20_24, label: '20-24세' },
-  { value: AgeGroup.Age25_29, label: '25-29세' },
-  { value: AgeGroup.Age30_34, label: '30-34세' },
-  { value: AgeGroup.Over35, label: '35세 이상' },
+  { value: AgeGroup.UNDER_14, label: '14세 이하' },
+  { value: AgeGroup.AGE_15_19, label: '15-19세' },
+  { value: AgeGroup.AGE_20_24, label: '20-24세' },
+  { value: AgeGroup.AGE_25_29, label: '25-29세' },
+  { value: AgeGroup.AGE_30_34, label: '30-34세' },
+  { value: AgeGroup.OVER_35, label: '35세 이상' },
 ] as const;
 
 // Main component

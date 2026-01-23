@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useParams } from 'next/navigation';
 import Medal from '@/components/domain/chart/Medal';
-import { MedalPreviewDto } from '@/types/dtos';
-import { MedalType } from '@/types/enums';
+import { Schemas } from '@/types';
+import { MedalType } from '@/types';
 
 interface MedalGridProps {
-  medals: MedalPreviewDto[];
+  medals: Schemas['MedalPreviewDto'][];
   hideSeparators?: boolean;
 }
 
@@ -86,7 +86,7 @@ export default function MedalGrid({
   };
 
   const handleMedalClick = (
-    medal: MedalPreviewDto,
+    medal: Schemas['MedalPreviewDto'],
     event: React.MouseEvent
   ) => {
     event.stopPropagation(); // 카드 펼침 이벤트 전파 방지
@@ -123,7 +123,7 @@ export default function MedalGrid({
           }
           className={`flex h-[52px] items-center ${totalPages > 1 && currentPage !== 0 ? 'cursor-pointer' : ''}`}
         >
-          <div className="h-[52px] w-0 border-l border-gray-300"></div>
+          <div className="h-[52px] w-0 border-l border-gray-300 dark:border-zinc-700"></div>
         </div>
       )}
 
@@ -131,7 +131,7 @@ export default function MedalGrid({
       {totalPages > 1 && currentPage !== 0 ? (
         <div
           onClick={(e) => handlePageChange(currentPage - 1, e)}
-          className="xs:gap-[10px] flex h-[52px] cursor-pointer items-center gap-[6px] rounded px-1 transition-all duration-200 hover:bg-gray-200/60 sm:gap-[10px]"
+          className="xs:gap-[10px] flex h-[52px] cursor-pointer items-center gap-[6px] rounded px-1 transition-all duration-200 hover:bg-gray-200/60 sm:gap-[10px] dark:hover:bg-zinc-700/50"
         >
           {/* 왼쪽 화살표 */}
           <div className="xs:w-3 xs:h-5.5 xs:pr-1 flex h-4.5 w-2.5 items-center justify-center pr-0.5 sm:h-5.5 sm:w-3 sm:pr-1">
@@ -172,7 +172,7 @@ export default function MedalGrid({
                     key={index}
                     data-property-1={medal.type}
                     className={`xs:w-7 xs:h-11 xs:gap-2.5 relative inline-flex h-8 w-5 items-center justify-center gap-1.5 sm:h-11 sm:w-7 sm:gap-2.5 ${
-                      medal.type === MedalType.None
+                      medal.type === MedalType.NONE
                         ? 'cursor-pointer rounded-md border-2 border-dashed border-gray-400/50 bg-gray-100/40 transition-all duration-200 hover:border-gray-500/60 hover:bg-gray-200/50'
                         : 'cursor-pointer transition-opacity hover:opacity-80'
                     }`}
@@ -191,7 +191,7 @@ export default function MedalGrid({
                     key={index}
                     data-property-1={medal.type}
                     className={`xs:w-7 xs:h-11 xs:gap-2.5 relative inline-flex h-8 w-5 items-center justify-center gap-1.5 sm:h-11 sm:w-7 sm:gap-2.5 ${
-                      medal.type === 'NONE'
+                      medal.type === MedalType.NONE
                         ? 'rounded-md border-2 border-dashed border-gray-400/50 bg-gray-100/40 transition-all duration-200 hover:border-gray-500/60 hover:bg-gray-200/50'
                         : 'cursor-pointer transition-opacity hover:opacity-80'
                     }`}
@@ -214,7 +214,7 @@ export default function MedalGrid({
       {totalPages > 1 && currentPage !== totalPages - 1 ? (
         <div
           onClick={(e) => handlePageChange(currentPage + 1, e)}
-          className="xs:gap-[10px] flex h-[52px] cursor-pointer items-center gap-[6px] rounded px-1 transition-all duration-200 hover:bg-gray-200/60 sm:gap-[10px]"
+          className="xs:gap-[10px] flex h-[52px] cursor-pointer items-center gap-[6px] rounded px-1 transition-all duration-200 hover:bg-gray-200/60 sm:gap-[10px] dark:hover:bg-zinc-700/50"
         >
           {/* 오른쪽 화살표 */}
           <div className="xs:w-3 xs:h-5.5 xs:pl-1 flex h-4.5 w-2.5 items-center justify-center pl-0.5 sm:h-5.5 sm:w-3 sm:pl-1">
@@ -245,7 +245,7 @@ export default function MedalGrid({
           }
           className={`flex h-[52px] items-center ${totalPages > 1 && currentPage !== totalPages - 1 ? 'cursor-pointer' : ''}`}
         >
-          <div className="h-[52px] w-0 border-l border-gray-300"></div>
+          <div className="h-[52px] w-0 border-l border-gray-300 dark:border-zinc-700"></div>
         </div>
       )}
 

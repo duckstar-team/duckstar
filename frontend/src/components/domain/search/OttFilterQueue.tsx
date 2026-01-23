@@ -13,7 +13,7 @@ export default function OttFilterQueue({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="max-xs:hidden text-sm font-medium text-gray-700">
+      <span className="max-xs:hidden text-sm font-medium text-gray-700 dark:text-white/80">
         선택됨:
       </span>
 

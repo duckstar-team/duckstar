@@ -5,21 +5,35 @@ import com.duckstar.domain.Week;
 import com.duckstar.domain.common.BaseEntity;
 import com.duckstar.domain.enums.EpEvaluateState;
 import com.duckstar.domain.vo.RankInfo;
+import com.duckstar.util.QuarterUtil;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_episode_as",
+                        columnNames = {"anime_id", "scheduled_at"})
+        },
         indexes = {
                 @Index(name = "idx_episode_s",
                         columnList = "scheduled_at"),
         }
 )
 public class Episode extends BaseEntity {
+    /**
+     * 역할 3가지
+     *  1. 애니메이션 회차 정보 (anime, episodeNumber, isBreak, isRescheduled)
+     *  2. 시간 슬롯 역할 (scheduledAt, nextEpScheduledAt)
+     *  3. 순위/별점 정보
+     *
+     * //TODO 추후 반드시 정규화
+     */
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,8 +47,6 @@ public class Episode extends BaseEntity {
     @JoinColumn(name = "week_id")
     private Week week;  // 순위 결정 시점에 셋팅
 
-    //=== 결방, 변칙 편성 update API 마련 필요 ===//
-
     private Integer episodeNumber;
 
     @Column(nullable = false)
@@ -46,8 +58,8 @@ public class Episode extends BaseEntity {
 
     private LocalDateTime nextEpScheduledAt;
 
-    // ** 마지막 에피소드 식별 플래그
-    private Boolean isLastEpisode = false;
+    // ** 마지막 에피소드 식별 플래그 for 1분 윈도우 스케줄링 방식
+    private boolean isLastEpisode = false;
 
     // [별점 방식]
     private Integer voterCount = 0;  // 투표 수 (또는 투표자 수)
@@ -94,13 +106,15 @@ public class Episode extends BaseEntity {
             LocalDateTime nextEpScheduledAt,
             Boolean isLastEpisode
     ) {
-        return new Episode(
+        Episode episode = new Episode(
                 anime,
                 episodeNumber,
                 scheduledAt,
                 nextEpScheduledAt,
                 isLastEpisode
         );
+        episode.updateEvaluateState(LocalDateTime.now());
+        return episode;
     }
 
     public void addVoterCount() {
@@ -172,7 +186,7 @@ public class Episode extends BaseEntity {
     }
 
     public double getStarAverage() {
-        return (voterCount == 0) ? 0.0 : getWeightedSum() / (double) voterCount;
+        return (voterCount.equals(0)) ? 0.0 : getWeightedSum() / (double) voterCount;
     }
 
     public double getUiStarAverage() {
@@ -216,8 +230,9 @@ public class Episode extends BaseEntity {
         return isBreak;
     }
 
-    public void setIsBreak(boolean isBreak) {
-        this.isBreak = isBreak;
+    public void breakEpisode() {
+        this.isBreak = true;
+        this.isLastEpisode = false;
         this.evaluateState = null;
     }
 
@@ -225,19 +240,48 @@ public class Episode extends BaseEntity {
         this.episodeNumber = episodeNumber;
     }
 
-    public void setScheduledAt(LocalDateTime scheduledAt) {
-        this.scheduledAt = scheduledAt;
-    }
-
     public void setNextEpScheduledAt(LocalDateTime nextEpScheduledAt) {
         this.nextEpScheduledAt = nextEpScheduledAt;
     }
 
-    public int[] getStarList() {
-        return new int[]{star_0_5, star_1_0, star_1_5, star_2_0, star_2_5, star_3_0, star_3_5, star_4_0, star_4_5, star_5_0};
-    }
+//    public int[] getStarList() {
+//        return new int[]{star_0_5, star_1_0, star_1_5, star_2_0, star_2_5, star_3_0, star_3_5, star_4_0, star_4_5, star_5_0};
+//    }
 
     public void setEvaluateState(EpEvaluateState state) {
         this.evaluateState = state;
+    }
+
+    public void setIsLastEpisode(boolean isLastEpisode) {
+        this.isLastEpisode = isLastEpisode;
+    }
+
+    public void reschedule(LocalDateTime scheduledAt) {
+        this.scheduledAt = scheduledAt;
+        this.isRescheduled = true;
+        updateEvaluateState(LocalDateTime.now());
+    }
+
+    public void updateEvaluateState(LocalDateTime now) {
+        if (isBreak) {
+            this.evaluateState = null;
+        }
+
+        int hours = (int) Duration.between(this.scheduledAt, now).toHours();
+        LocalDateTime thisWeekEndAt = QuarterUtil.getThisWeekStartedAt(now).plusWeeks(1);
+
+        if (hours < 0) {
+            this.evaluateState = EpEvaluateState.CLOSED;
+        } else if (hours < 36) {
+            this.evaluateState = EpEvaluateState.VOTING_WINDOW;
+        } else if (now.isBefore(thisWeekEndAt)) {
+            this.evaluateState = EpEvaluateState.LOGIN_REQUIRED;
+        } else {
+            this.evaluateState = EpEvaluateState.ALWAYS_OPEN;
+        }
+    }
+
+    public void setScheduledAt(LocalDateTime scheduledAt) {
+        this.scheduledAt = scheduledAt;
     }
 }

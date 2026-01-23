@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { WeekDto } from '@/types/dtos';
-import { SurveyStatus } from '@/types/enums';
+import { WeekDto } from '@/types';
+import { SurveyStatus } from '@/types';
 
 interface VoteDisabledStateProps {
   status: SurveyStatus;

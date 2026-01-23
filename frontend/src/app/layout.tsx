@@ -9,6 +9,7 @@ import { ToastContainer } from '@/components/common/Toast';
 import PageViewTracker from '@/components/analytics/PageViewTracker';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AppContainer from '@/components/layout/AppContainer';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 
 // Pretendard 폰트만 사용 (성능 최적화)
 const pretendard = localFont({
@@ -35,11 +36,16 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   title: '덕스타 - 애니메이션 투표 플랫폼',
   description: '애니메이션 투표 및 차트 서비스',
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
-  },
+  icons: [
+    {
+      rel: 'icon',
+      url: '/icons/favicon.svg',
+    },
+    {
+      rel: 'apple-touch-icon',
+      url: '/icons/favicon.svg',
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -48,14 +54,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         {/* 반응형 뷰포트 설정 */}
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"
         />
-        <link rel="icon" href="/icons/favicon.svg" />
       </head>
       <body className={`${pretendard.variable} antialiased`}>
         {/* Google Analytics 4 - 개발 환경에서는 로드하지 않음 */}
@@ -67,17 +72,19 @@ export default function RootLayout({
         </Suspense>
 
         <QueryProvider>
-          <AuthProvider>
-            <AppContainer>{children}</AppContainer>
+          <ThemeProvider>
+            <AuthProvider>
+              <AppContainer>{children}</AppContainer>
 
-            {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
-            <Suspense fallback={null}>
-              <MigrationToast />
-            </Suspense>
+              {/* 마이그레이션 완료 토스트 - 모든 페이지에서 작동 */}
+              <Suspense fallback={null}>
+                <MigrationToast />
+              </Suspense>
 
-            {/* 토스트 컨테이너 - 모든 페이지에서 작동 */}
-            <ToastContainer />
-          </AuthProvider>
+              {/* 토스트 컨테이너 - 모든 페이지에서 작동 */}
+              <ToastContainer />
+            </AuthProvider>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>

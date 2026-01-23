@@ -20,13 +20,13 @@ export default function CandidateCardSkeleton({
         {Array.from({ length: cardCount }).map((_, index) => (
           <div
             key={index}
-            className="rounded-xl border border-gray-200 bg-white p-4 shadow"
+            className="rounded-xl border border-brand-zinc-200 bg-white dark:bg-zinc-800 p-4 shadow"
           >
             <div className="flex items-center gap-4">
-              <div className="h-36 w-28 animate-pulse rounded-md bg-gray-200" />
+              <div className="h-36 w-28 animate-pulse rounded-md bg-brand-zinc-200" />
               <div className="flex-1">
-                <div className="mb-2 h-6 animate-pulse rounded bg-gray-200" />
-                <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
+                <div className="mb-2 h-6 animate-pulse rounded bg-brand-zinc-200" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-brand-zinc-200" />
               </div>
             </div>
           </div>

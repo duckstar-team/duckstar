@@ -16,13 +16,7 @@ import Reply from '@/components/domain/comment/Reply';
 import OpenOrFoldReplies from '@/components/domain/comment/OpenOrFoldReplies';
 import SortingMenu from '@/components/common/SortingMenu';
 import { SortOption } from '@/components/common/SortingMenu';
-import {
-  CommentDto,
-  CommentRequestDto,
-  PageInfo,
-  ReplyDto,
-  ReplyRequestDto,
-} from '@/types/dtos';
+import { Schemas, PageInfo } from '@/types';
 import { getThisWeekRecord } from '@/lib';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/components/layout/AppContainer';
@@ -40,15 +34,15 @@ import { ChevronRight } from 'lucide-react';
 interface RightCommentPanelProps {
   animeId?: number;
   isImageModalOpen?: boolean; // 이미지 모달 상태
-  animeData?: any | null; // 애니메이션 데이터
-  rawAnimeData?: any; // 백엔드 원본 데이터
+  animeData: Schemas['AnimeInfoDto'] | null; // 애니메이션 데이터
+  episodes: Schemas['EpisodeDto'][];
 }
 
 export default function RightCommentPanel({
   animeId = 1,
   isImageModalOpen = false,
   animeData,
-  rawAnimeData,
+  episodes,
 }: RightCommentPanelProps) {
   // 인증 상태 확인
   const { isAuthenticated } = useAuth();
@@ -56,9 +50,6 @@ export default function RightCommentPanel({
 
   // 검색 페이지에서는 아예 렌더링하지 않음
   const [isSearchPage, setIsSearchPage] = useState(false);
-
-  // 화면 크기 감지 (425px 미만에서 텍스트 크기 조정)
-  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
 
   useEffect(() => {
     const checkPath = () => {
@@ -72,33 +63,19 @@ export default function RightCommentPanel({
       }
     };
 
-    const checkScreenSize = () => {
-      setIsVerySmallScreen(window.innerWidth < 425);
-    };
-
     checkPath();
-    checkScreenSize();
 
     // 경로 변경 감지
     const interval = setInterval(checkPath, 100);
 
-    // 화면 크기 변경 감지
-    window.addEventListener('resize', checkScreenSize);
-
     return () => {
       clearInterval(interval);
-      window.removeEventListener('resize', checkScreenSize);
     };
   }, []);
 
   if (isSearchPage) {
     return null;
   }
-
-  // 상태 관리
-  // 애니메이션 데이터는 부모 컴포넌트에서 전달받음
-  const [loading, setLoading] = useState(false); // 애니메이션 데이터는 부모에서 전달받으므로 로딩 불필요
-  const [error, setError] = useState<string | null>(null);
 
   // 댓글 관련 상태 (useComments 훅 사용)
   const {
@@ -107,7 +84,6 @@ export default function RightCommentPanel({
     commentsLoading,
     commentsError,
     currentPage,
-    setCurrentPage,
     hasMoreComments,
     totalCommentCount,
     loadingMore,
@@ -130,14 +106,11 @@ export default function RightCommentPanel({
 
   // 현재 분기/주차에 해당하는 페이지로 초기 설정 (NOW_SHOWING 상태일 때만)
   useEffect(() => {
-    if (
-      rawAnimeData?.episodeResponseDtos?.length > 0 &&
-      rawAnimeData?.animeInfoDto?.status === 'NOW_SHOWING'
-    ) {
+    if (episodes?.length > 0 && animeData?.status === 'NOW_SHOWING') {
       const currentRecord = getThisWeekRecord(new Date());
 
-      const currentEpisodeIndex = rawAnimeData.episodeResponseDtos.findIndex(
-        (episode: any) => {
+      const currentEpisodeIndex = episodes.findIndex(
+        (episode: Schemas['EpisodeDto']) => {
           const episodeDate = new Date(episode.scheduledAt);
           const episodeRecord = getThisWeekRecord(episodeDate);
 
@@ -154,50 +127,12 @@ export default function RightCommentPanel({
         setEpisodeCurrentPage(targetPage);
       }
     }
-  }, [rawAnimeData?.episodeResponseDtos, rawAnimeData?.animeInfoDto?.status]);
-
-  // 에피소드 섹션 페이지 상태를 부모에서 관리
-
-  // 분기/주차 계산 함수 (올바른 비즈니스 로직 사용)
-  const getQuarterAndWeek = (date: Date) => {
-    const record = getThisWeekRecord(date);
-
-    return {
-      quarter: `${record.quarterValue}분기`,
-      week: `${record.weekValue}주차`,
-    };
-  };
-
-  // 필터 관련 함수들
-  const addFilter = (episodeNumber: number) => {
-    if (!activeFilters.includes(episodeNumber)) {
-      setActiveFilters((prev) => {
-        const newFilters = [...prev, episodeNumber];
-        return newFilters.sort((a, b) => a - b); // 에피소드 번호 오름차순 정렬
-      });
-    }
-  };
-
-  const removeFilter = (episodeNumber: number) => {
-    setActiveFilters((prev) => prev.filter((num) => num !== episodeNumber));
-    // 필터가 제거될 때 해당 에피소드의 선택 상태도 해제
-    setSelectedEpisodeIds((prev) => prev.filter((id) => id !== episodeNumber));
-  };
-
-  const clearAllFilters = () => {
-    setActiveFilters([]);
-    // 모든 필터가 제거될 때 모든 에피소드 선택 상태도 해제
-    setSelectedEpisodeIds([]);
-  };
-
-  // 애니메이션 데이터는 부모 컴포넌트에서 전달받음 (API 호출 제거)
+  }, [episodes, animeData?.status]);
 
   // 댓글 데이터 로드
   useEffect(() => {
     loadComments(0, true);
   }, [loadComments]);
-
-  // 에피소드 필터는 시각적 표시만 하고 댓글 API 호출하지 않음
 
   // 무한스크롤을 위한 Intersection Observer
   useEffect(() => {
@@ -270,7 +205,7 @@ export default function RightCommentPanel({
     setActiveFilters((prev) => prev.filter((ep) => ep !== episodeNumber));
 
     // episodeNumber에 해당하는 episodeId를 찾아서 selectedEpisodeIds에서 제거
-    const episode = rawAnimeData?.episodeResponseDtos?.find(
+    const episode = episodes?.find(
       (ep: any) => ep.episodeNumber === episodeNumber
     );
     if (episode) {
@@ -285,9 +220,6 @@ export default function RightCommentPanel({
   const [expandedReplies, setExpandedReplies] = useState<{
     [commentId: number]: boolean;
   }>({});
-  const [replyFormValues, setReplyFormValues] = useState<{
-    [key: string]: string;
-  }>({});
   const [replyPageInfo, setReplyPageInfo] = useState<{
     [commentId: number]: PageInfo;
   }>({});
@@ -300,14 +232,12 @@ export default function RightCommentPanel({
   // 스티키 상태 관리
   const [isCommentHeaderSticky, setIsCommentHeaderSticky] = useState(false);
   const [isSortingMenuSticky, setIsSortingMenuSticky] = useState(false);
-  const [rightPanelLeft, setRightPanelLeft] = useState(200); // RightCommentPanel의 left 위치
   const [commentHeaderHeight, setCommentHeaderHeight] = useState(60); // 댓글 헤더 높이 (기본값)
 
   // 스티키 요소들의 ref
   const commentHeaderRef = useRef<HTMLDivElement>(null);
   const sortingMenuRef = useRef<HTMLDivElement>(null);
   const commentListRef = useRef<HTMLDivElement>(null);
-  const rightPanelRef = useRef<HTMLDivElement>(null);
 
   // 스크롤 플래그 상태
   const [shouldScrollToComments, setShouldScrollToComments] = useState(false);
@@ -384,15 +314,16 @@ export default function RightCommentPanel({
     }
 
     try {
-      const request: ReplyRequestDto = {
-        listenerId: listenerId, // 답글의 답글인 경우 대상 멤버 ID
+      const request: Schemas['ReplyRequestDto'] = {
+        listenerId: listenerId || 0, // 답글의 답글인 경우 대상 멤버 ID
         commentRequestDto: {
           body: content, // 줄바꿈을 포함한 원본 텍스트
-          attachedImage: images && images.length > 0 ? images[0] : undefined, // 첫 번째 이미지만 전송
+          attachedImage:
+            images && images.length > 0 ? images[0].name : undefined, // 첫 번째 이미지만 전송
         },
       };
 
-      const result = await createReply(commentId, request);
+      await createReply(commentId, request);
 
       setActiveReplyForm(null);
 
@@ -441,10 +372,6 @@ export default function RightCommentPanel({
         alert('답글 작성에 실패했습니다. 다시 시도해주세요.');
       }
     }
-  };
-
-  const handleReplyCancel = () => {
-    setActiveReplyForm(null);
   };
 
   const handleToggleReplies = async (commentId: number) => {
@@ -516,10 +443,10 @@ export default function RightCommentPanel({
   ) => {
     try {
       // 에피소드별 댓글 생성 API 호출
-      const request: CommentRequestDto = {
+      const request: Schemas['CommentRequestDto'] = {
         episodeId: episodeIds[0], // 선택된 에피소드 ID (하나만 선택 가능)
         body: content,
-        attachedImage: images && images.length > 0 ? images[0] : undefined, // 첫 번째 이미지만 전송
+        attachedImage: images && images.length > 0 ? images[0].name : undefined, // 첫 번째 이미지만 전송
       };
 
       await createCommentHandler(request);
@@ -529,11 +456,10 @@ export default function RightCommentPanel({
   };
 
   // 댓글/답글 핸들러 함수들 (useComments 훅의 함수들 사용)
-
   const onReplyLike = async (replyId: number) => {
     try {
       // 현재 답글의 좋아요 상태 확인
-      let currentReply: ReplyDto | undefined;
+      let currentReply: Schemas['ReplyDto'] | undefined;
       let currentLikeId: number | undefined;
 
       Object.values(replies).forEach((replyList) => {
@@ -560,7 +486,7 @@ export default function RightCommentPanel({
                     ...reply,
                     isLiked: false,
                     likeCount: result.likeCount,
-                    replyLikeId: currentLikeId, // 좋아요 취소해도 likeId는 유지
+                    replyLikeId: currentLikeId || 0, // 좋아요 취소해도 likeId는 유지
                   }
                 : reply
             );
@@ -656,26 +582,6 @@ export default function RightCommentPanel({
     [handleReplySubmit]
   );
 
-  // RightCommentPanel의 실제 위치 계산
-  useEffect(() => {
-    const updateRightPanelPosition = () => {
-      if (rightPanelRef.current) {
-        const rect = rightPanelRef.current.getBoundingClientRect();
-        setRightPanelLeft(rect.left);
-      }
-    };
-
-    // 초기 위치 설정
-    updateRightPanelPosition();
-
-    // 리사이즈 이벤트 리스너
-    window.addEventListener('resize', updateRightPanelPosition);
-
-    return () => {
-      window.removeEventListener('resize', updateRightPanelPosition);
-    };
-  }, []);
-
   // 댓글 헤더 높이 동적 측정
   useEffect(() => {
     const updateCommentHeaderHeight = () => {
@@ -769,39 +675,13 @@ export default function RightCommentPanel({
     };
   }, [isCommentHeaderSticky, isSortingMenuSticky, commentHeaderHeight]);
 
-  // 댓글 데이터 로드 - mock 데이터 제거됨
-
-  // 총 에피소드 수 계산 (백엔드 원본 데이터에서 가져옴)
-  const totalEpisodes = rawAnimeData?.animeInfoDto?.totalEpisodes || 0;
-
-  // 에피소드 데이터 처리 (백엔드 원본 데이터에서 가져옴) - 메모이제이션
-  const processedEpisodes = useMemo(() => {
-    return (
-      rawAnimeData?.episodeResponseDtos?.map((episodeDto: any) => {
-        const scheduledAt = new Date(episodeDto.scheduledAt);
-        const { quarter, week } = getQuarterAndWeek(scheduledAt);
-
-        return {
-          id: episodeDto.episodeId, // episodeId를 id로 사용
-          episodeId: episodeDto.episodeId,
-          episodeNumber: episodeDto.episodeNumber,
-          scheduledAt: episodeDto.scheduledAt,
-          quarter,
-          week,
-          isBreak: episodeDto.isBreak,
-          isRescheduled: episodeDto.isRescheduled,
-        };
-      }) || []
-    );
-  }, [rawAnimeData?.episodeResponseDtos]);
-
   // 댓글 목록 렌더링을 위한 메모이제이션
   const renderCommentsList = useMemo(() => {
     // CommentsBoard의 로직을 여기로 이동
     const createUnifiedList = () => {
       const unifiedList: Array<{
         type: 'comment';
-        data: CommentDto;
+        data: Schemas['CommentDto'];
         commentId: number;
       }> = [];
 
@@ -847,7 +727,7 @@ export default function RightCommentPanel({
     }
 
     return unifiedList.map((item, index) => {
-      const comment = item.data as CommentDto;
+      const comment = item.data as Schemas['CommentDto'];
       const commentReplies = replies[comment.commentId] || [];
 
       return (
@@ -951,9 +831,7 @@ export default function RightCommentPanel({
   // 에피소드 클릭 핸들러 (다중 선택 및 필터 추가/제거)
   const handleEpisodeClick = useCallback(
     (episodeId: number) => {
-      const episode = rawAnimeData?.episodeResponseDtos?.find(
-        (ep: any) => ep.episodeId === episodeId
-      );
+      const episode = episodes?.find((ep: any) => ep.episodeId === episodeId);
 
       setSelectedEpisodeIds((prev) => {
         if (prev.includes(episodeId)) {
@@ -979,309 +857,241 @@ export default function RightCommentPanel({
         }
       });
     },
-    [rawAnimeData?.episodeResponseDtos]
-  );
-
-  // 로딩 상태 렌더링
-  const renderLoadingState = () => (
-    <div
-      className="w-full border-r border-l border-gray-300 bg-white"
-      style={{ minHeight: 'calc(100vh - 60px)' }}
-    >
-      {/* 에피소드 섹션 스켈레톤 */}
-      <div className="flex justify-center pt-7 pb-1" style={{ width: '100%' }}>
-        <div className="h-[200px] w-full max-w-[534px] animate-pulse rounded-lg bg-gray-100"></div>
-      </div>
-
-      {/* 댓글 섹션 스켈레톤 */}
-      <div className="flex w-full flex-col bg-white">
-        <div className="flex w-full flex-col items-start justify-start pb-7">
-          <div className="flex w-full items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
-            <span className="ml-2 text-gray-500">로딩 중...</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // 에러 상태 렌더링
-  const renderErrorState = () => (
-    <div
-      className="border-r border-l border-gray-300 bg-white"
-      style={{ minHeight: 'calc(100vh - 60px)', width: '100%' }}
-    >
-      {/* 에피소드 섹션 */}
-      <div className="flex justify-center pt-7 pb-1" style={{ width: '100%' }}>
-        <EpisodeSection
-          episodes={processedEpisodes}
-          totalEpisodes={totalEpisodes}
-          selectedEpisodeIds={selectedEpisodeIds}
-          onEpisodeClick={handleEpisodeClick}
-          animeId={animeId || 1}
-          currentPage={episodeCurrentPage}
-          onPageChange={setEpisodeCurrentPage}
-        />
-      </div>
-
-      {/* 에러 메시지 */}
-      <div className="flex w-full flex-col bg-white" style={{ width: '100%' }}>
-        <div className="flex w-full flex-col items-start justify-start pb-7">
-          <div className="flex w-full items-center justify-center py-8">
-            <div className="text-red-500">{error}</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    [episodes]
   );
 
   return (
     <>
-      {commentsLoading ? (
-        renderLoadingState()
-      ) : error ? (
-        renderErrorState()
-      ) : (
-        <div
-          ref={rightPanelRef}
-          className="w-full border-r border-l border-gray-300 bg-white"
-          style={{
-            minHeight: '100% + 60px',
-            maxWidth: '100%',
-          }}
-        >
-          {/* section/episode */}
-          <div className="flex justify-center pt-7 pb-1">
-            <EpisodeSection
-              episodes={processedEpisodes}
-              totalEpisodes={totalEpisodes}
-              selectedEpisodeIds={selectedEpisodeIds}
-              onEpisodeClick={handleEpisodeClick}
-              animeId={animeId}
-              currentPage={episodeCurrentPage}
-              onPageChange={setEpisodeCurrentPage}
-              isMobile={true}
-            />
-          </div>
-
-          {/* 댓글 헤더 - 항상 렌더링하되 스티키 상태에 따라 스타일 변경 */}
-          {!isImageModalOpen && (
-            <>
-              {/* 스티키일 때 원래 공간 유지를 위한 플레이스홀더 */}
-              {isCommentHeaderSticky && (
-                <div
-                  style={{
-                    height: `${commentHeaderHeight}px`, // 댓글 헤더의 실제 높이
-                    visibility: 'hidden', // 보이지 않지만 공간은 차지
-                  }}
-                />
-              )}
-              <div
-                ref={commentHeaderRef}
-                className="z-30 bg-white pb-3"
-                style={{
-                  position: isCommentHeaderSticky ? 'fixed' : 'static',
-                  top: isCommentHeaderSticky ? '60px' : 'auto',
-                  left: isCommentHeaderSticky ? 'auto' : 'auto',
-                  width: isCommentHeaderSticky
-                    ? window.innerWidth >= 1024
-                      ? '584px'
-                      : '100%'
-                    : '100%',
-                  maxWidth: isCommentHeaderSticky
-                    ? window.innerWidth >= 1024
-                      ? '584px'
-                      : '100%'
-                    : '100%',
-                }}
-              >
-                <div className="size- flex flex-col items-start justify-start gap-5">
-                  <CommentHeader
-                    totalComments={totalCommentCount}
-                    variant={
-                      activeFilters.length > 0 ? 'withFilters' : 'default'
-                    }
-                    activeFilters={activeFilters}
-                    onClearFilters={handleClearFilters}
-                    onRemoveFilter={handleRemoveFilter}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* 댓글 작성 폼 */}
-          {!isImageModalOpen && (
-            <div
-              data-comment-form
-              className="flex w-full flex-col items-center justify-center gap-2.5 px-0 pt-5"
-            >
-              <div className="flex w-full max-w-[100%] flex-col items-center justify-center gap-[10px] self-stretch overflow-hidden bg-[#F8F9FA] px-[11px] pt-[10px] pb-[16px]">
-                {/* First Row - Episode Comment Header */}
-                <div className="inline-flex w-full items-center justify-end">
-                  <button
-                    onClick={() => setIsEpisodeCommentModalOpen(true)}
-                    className="mr-2 inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:underline"
-                  >
-                    <span>에피소드 댓글 남기기</span>
-                    <ChevronRight className="size-[14px]" />
-                  </button>
-                </div>
-
-                <CommentPostForm
-                  key="main-comment-form" // 안정적인 key로 댓글 폼 고정
-                  onSubmit={async (comment, images) => {
-                    // 인증 상태 확인
-                    if (!isAuthenticated) {
-                      const shouldLogin = confirm(
-                        '댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?'
-                      );
-                      if (shouldLogin) {
-                        openLoginModal();
-                      }
-                      return;
-                    }
-
-                    try {
-                      const request: CommentRequestDto = {
-                        body: comment, // 줄바꿈을 포함한 원본 텍스트
-                        attachedImage:
-                          images && images.length > 0 ? images[0] : undefined, // 첫 번째 이미지만 전송
-                      };
-
-                      await createCommentHandler(request);
-                    } catch (error) {
-                      if (
-                        error instanceof Error &&
-                        error.message.includes('401')
-                      ) {
-                        const shouldReLogin = confirm(
-                          '로그인이 만료되었습니다. 다시 로그인하시겠습니까?'
-                        );
-                        if (shouldReLogin) {
-                          openLoginModal();
-                        }
-                      } else {
-                        alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
-                      }
-                    }
-                  }}
-                  onImageUpload={(file) => {
-                    // 이미지 업로드 기능은 현재 구현되지 않음
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* 정렬 메뉴 - 항상 렌더링하되 스티키 상태에 따라 스타일 변경 */}
-          {!isImageModalOpen && (
-            <>
-              {/* 스티키일 때 원래 공간 유지를 위한 플레이스홀더 */}
-              {isSortingMenuSticky && (
-                <div
-                  style={{
-                    height: '60px', // 소팅 메뉴의 실제 높이
-                    visibility: 'hidden', // 보이지 않지만 공간은 차지
-                  }}
-                />
-              )}
-              <div
-                ref={sortingMenuRef}
-                className="z-30 bg-white"
-                style={{
-                  position: isSortingMenuSticky ? 'fixed' : 'static',
-                  top: isSortingMenuSticky
-                    ? `${60 + commentHeaderHeight}px`
-                    : 'auto',
-                  left: isSortingMenuSticky ? 'auto' : 'auto',
-                  width: isSortingMenuSticky
-                    ? window.innerWidth >= 1024
-                      ? '584px'
-                      : '100%'
-                    : '100%',
-                  maxWidth: isSortingMenuSticky
-                    ? window.innerWidth >= 1024
-                      ? '584px'
-                      : '100%'
-                    : '100%',
-                }}
-              >
-                <div className="pt-3">
-                  <SortingMenu
-                    currentSort={currentSort}
-                    onSortChange={handleSortChange}
-                    onScrollToTop={handleScrollToSortingMenu}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* 댓글 목록 */}
-          <div className="flex w-full flex-col bg-white">
-            {/* 댓글 목록 */}
-            <div
-              ref={commentListRef}
-              className="flex w-full flex-col items-start justify-start pb-7"
-            >
-              {commentsLoading && comments.length === 0 ? (
-                <div className="flex w-full flex-col items-center py-8">
-                  <div className="mb-2 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
-                  <div className="text-gray-500">댓글을 불러오는 중...</div>
-                </div>
-              ) : commentsError ? (
-                <div className="flex w-full items-center justify-center py-8">
-                  <div className="text-red-500">{commentsError}</div>
-                </div>
-              ) : (
-                renderCommentsList
-              )}
-
-              {/* 무한스크롤 트리거 */}
-              {hasMoreComments && !commentsLoading && (
-                <div
-                  ref={loadMoreRef}
-                  className="flex min-h-[50px] w-full cursor-pointer justify-center py-4"
-                  onClick={() => {
-                    if (!loadingMore && !commentsLoading) {
-                      loadComments(currentPage + 1, false);
-                    }
-                  }}
-                >
-                  {loadingMore ? (
-                    <div className="text-sm text-gray-500">
-                      댓글을 불러오는 중...
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-400">
-                      스크롤하거나 클릭하여 더 많은 댓글 보기
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {commentsLoading && comments.length > 0 && (
-                <div className="flex w-full justify-center py-4">
-                  <div className="text-gray-500">
-                    더 많은 댓글을 불러오는 중...
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 에피소드 댓글 모달 */}
-          <EpisodeCommentModal
-            isOpen={isEpisodeCommentModalOpen}
-            onClose={() => setIsEpisodeCommentModalOpen(false)}
+      <div
+        className="w-full border-r border-l border-gray-300 dark:border-zinc-800"
+        style={{
+          minHeight: '100% + 60px',
+          maxWidth: '100%',
+        }}
+      >
+        {/* section/episode */}
+        <div className="flex justify-center pt-7 pb-1">
+          <EpisodeSection
+            episodes={episodes}
+            totalEpisodes={animeData?.totalEpisodes || 0}
+            selectedEpisodeIds={selectedEpisodeIds}
+            onEpisodeClick={handleEpisodeClick}
             animeId={animeId}
-            animeData={animeData} // 애니메이션 데이터 전달
-            rawAnimeData={rawAnimeData} // 백엔드 원본 데이터 전달
-            onCommentSubmit={handleEpisodeCommentSubmit}
+            currentPage={episodeCurrentPage}
+            onPageChange={setEpisodeCurrentPage}
+            isMobile={true}
           />
         </div>
-      )}
+
+        {/* 댓글 헤더 - 항상 렌더링하되 스티키 상태에 따라 스타일 변경 */}
+        {!isImageModalOpen && (
+          <>
+            {/* 스티키일 때 원래 공간 유지를 위한 플레이스홀더 */}
+            {isCommentHeaderSticky && (
+              <div
+                style={{
+                  height: `${commentHeaderHeight}px`, // 댓글 헤더의 실제 높이
+                  visibility: 'hidden', // 보이지 않지만 공간은 차지
+                }}
+              />
+            )}
+            <div
+              ref={commentHeaderRef}
+              className="z-30 bg-gray-50 pb-3 dark:bg-zinc-900"
+              style={{
+                position: isCommentHeaderSticky ? 'fixed' : 'static',
+                top: isCommentHeaderSticky ? '60px' : 'auto',
+                left: isCommentHeaderSticky ? 'auto' : 'auto',
+                width: '100%',
+                maxWidth: isCommentHeaderSticky
+                  ? window.innerWidth >= 1024
+                    ? '608px'
+                    : '100%'
+                  : '100%',
+              }}
+            >
+              <div className="flex flex-col items-start justify-start gap-5">
+                <CommentHeader
+                  totalComments={totalCommentCount}
+                  variant={activeFilters.length > 0 ? 'withFilters' : 'default'}
+                  activeFilters={activeFilters}
+                  onClearFilters={handleClearFilters}
+                  onRemoveFilter={handleRemoveFilter}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* 댓글 작성 폼 */}
+        {!isImageModalOpen && (
+          <div
+            data-comment-form
+            className="flex w-full flex-col items-center justify-center gap-2.5"
+          >
+            <div className="flex w-full max-w-[100%] flex-col items-center justify-center gap-[10px] self-stretch overflow-hidden px-6 pb-[16px]">
+              {/* First Row - Episode Comment Header */}
+              <div className="inline-flex w-full items-center justify-end">
+                <button
+                  onClick={() => setIsEpisodeCommentModalOpen(true)}
+                  className="mr-2 inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:underline"
+                >
+                  <span>에피소드 댓글 남기기</span>
+                  <ChevronRight className="size-[14px]" />
+                </button>
+              </div>
+
+              <CommentPostForm
+                key="main-comment-form" // 안정적인 key로 댓글 폼 고정
+                onSubmit={async (comment, images) => {
+                  // 인증 상태 확인
+                  if (!isAuthenticated) {
+                    const shouldLogin = confirm(
+                      '댓글을 작성하려면 로그인이 필요합니다. 로그인하시겠습니까?'
+                    );
+                    if (shouldLogin) {
+                      openLoginModal();
+                    }
+                    return;
+                  }
+
+                  try {
+                    const request: Schemas['CommentRequestDto'] = {
+                      body: comment, // 줄바꿈을 포함한 원본 텍스트
+                      attachedImage:
+                        images && images.length > 0
+                          ? images[0].name
+                          : undefined, // 첫 번째 이미지만 전송
+                    };
+
+                    await createCommentHandler(request);
+                  } catch (error) {
+                    if (
+                      error instanceof Error &&
+                      error.message.includes('401')
+                    ) {
+                      const shouldReLogin = confirm(
+                        '로그인이 만료되었습니다. 다시 로그인하시겠습니까?'
+                      );
+                      if (shouldReLogin) {
+                        openLoginModal();
+                      }
+                    } else {
+                      alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
+                    }
+                  }
+                }}
+                onImageUpload={(file) => {
+                  // 이미지 업로드 기능은 현재 구현되지 않음
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 정렬 메뉴 - 항상 렌더링하되 스티키 상태에 따라 스타일 변경 */}
+        {!isImageModalOpen && (
+          <>
+            {/* 스티키일 때 원래 공간 유지를 위한 플레이스홀더 */}
+            {isSortingMenuSticky && (
+              <div
+                style={{
+                  height: '60px', // 소팅 메뉴의 실제 높이
+                  visibility: 'hidden', // 보이지 않지만 공간은 차지
+                }}
+              />
+            )}
+            <div
+              ref={sortingMenuRef}
+              className="z-30"
+              style={{
+                position: isSortingMenuSticky ? 'fixed' : 'static',
+                top: isSortingMenuSticky
+                  ? `${60 + commentHeaderHeight}px`
+                  : 'auto',
+                left: isSortingMenuSticky ? 'auto' : 'auto',
+                width: '100%',
+                maxWidth: isSortingMenuSticky
+                  ? window.innerWidth >= 1024
+                    ? '608px'
+                    : '100%'
+                  : '100%',
+              }}
+            >
+              <div className="bg-gray-50 pt-3 dark:bg-zinc-900">
+                <SortingMenu
+                  currentSort={currentSort}
+                  onSortChange={handleSortChange}
+                  onScrollToTop={handleScrollToSortingMenu}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* 댓글 목록 */}
+        <div className="flex w-full flex-col">
+          {/* 댓글 목록 */}
+          <div
+            ref={commentListRef}
+            className="flex w-full flex-col items-start justify-start pb-7"
+          >
+            {commentsLoading && comments.length === 0 ? (
+              <div className="flex w-full flex-col items-center py-8">
+                <div className="mb-2 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
+                <div className="text-gray-500">댓글을 불러오는 중...</div>
+              </div>
+            ) : commentsError ? (
+              <div className="flex w-full items-center justify-center py-8">
+                <div className="text-red-500">{commentsError}</div>
+              </div>
+            ) : (
+              renderCommentsList
+            )}
+
+            {/* 무한스크롤 트리거 */}
+            {hasMoreComments && !commentsLoading && (
+              <div
+                ref={loadMoreRef}
+                className="flex min-h-[50px] w-full cursor-pointer justify-center py-4"
+                onClick={() => {
+                  if (!loadingMore && !commentsLoading) {
+                    loadComments(currentPage + 1, false);
+                  }
+                }}
+              >
+                {loadingMore ? (
+                  <div className="text-sm text-gray-500">
+                    댓글을 불러오는 중...
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-400">
+                    스크롤하거나 클릭하여 더 많은 댓글 보기
+                  </div>
+                )}
+              </div>
+            )}
+
+            {commentsLoading && comments.length > 0 && (
+              <div className="flex w-full justify-center py-4">
+                <div className="text-gray-500">
+                  더 많은 댓글을 불러오는 중...
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 에피소드 댓글 모달 */}
+        <EpisodeCommentModal
+          isOpen={isEpisodeCommentModalOpen}
+          onClose={() => setIsEpisodeCommentModalOpen(false)}
+          animeId={animeId}
+          animeData={animeData}
+          episodes={episodes}
+          onCommentSubmit={handleEpisodeCommentSubmit}
+        />
+      </div>
     </>
   );
 }

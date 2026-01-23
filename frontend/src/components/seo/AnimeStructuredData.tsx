@@ -1,25 +1,13 @@
+import { Schemas } from '@/types';
+
 interface AnimeStructuredDataProps {
-  animeInfo: {
-    animeId: number;
-    titleKor: string;
-    titleOrigin?: string;
-    synopsis?: string;
-    genre?: string;
-    medium?: string;
-    mainThumbnailUrl?: string;
-    premiereDateTime?: string;
-    director?: string;
-    corp?: string;
-    author?: string;
-    minAge?: number;
-    dayOfWeek?: string;
-    airTime?: string;
-  };
+  animeInfo: Schemas['AnimeInfoDto'];
 }
 
-export default function AnimeStructuredData({ animeInfo }: AnimeStructuredDataProps) {
+export default function AnimeStructuredData({
+  animeInfo,
+}: AnimeStructuredDataProps) {
   const {
-    animeId,
     titleKor,
     titleOrigin,
     synopsis,
@@ -31,18 +19,23 @@ export default function AnimeStructuredData({ animeInfo }: AnimeStructuredDataPr
     corp,
     author,
     minAge,
-    dayOfWeek,
-    airTime,
   } = animeInfo;
 
   // medium에 따라 스키마 타입 결정
   const schemaType = medium === 'MOVIE' ? 'Movie' : 'TVSeries';
 
   // 장르 배열 생성
-  const genreArray = genre ? genre.split(',').map(g => g.trim()).filter(Boolean) : [];
+  const genreArray = genre
+    ? genre
+        .split(',')
+        .map((g) => g.trim())
+        .filter(Boolean)
+    : [];
 
   // 날짜 포맷팅
-  const datePublished = premiereDateTime ? new Date(premiereDateTime).toISOString() : undefined;
+  const datePublished = premiereDateTime
+    ? new Date(premiereDateTime).toISOString()
+    : undefined;
 
   // 연령 등급
   const contentRating = minAge ? `${minAge}세 이상` : undefined;
@@ -53,9 +46,10 @@ export default function AnimeStructuredData({ animeInfo }: AnimeStructuredDataPr
     '@type': schemaType,
     name: titleKor,
     alternateName: titleOrigin || undefined,
-    description: synopsis || `${titleKor} 정보, 에피소드, 캐릭터, 댓글을 확인하고 투표에 참여하세요.`,
+    description:
+      synopsis ||
+      `${titleKor} 정보, 에피소드, 캐릭터, 댓글을 확인하고 투표에 참여하세요.`,
     image: mainThumbnailUrl || undefined,
-    url: `https://duckstar.kr/animes/${animeId}`,
     ...(datePublished && { datePublished }),
     ...(director && { director: { '@type': 'Person', name: director } }),
     ...(corp && { productionCompany: { '@type': 'Organization', name: corp } }),
@@ -83,4 +77,3 @@ export default function AnimeStructuredData({ animeInfo }: AnimeStructuredDataPr
     />
   );
 }
-

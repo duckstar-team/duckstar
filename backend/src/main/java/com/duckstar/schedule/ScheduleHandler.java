@@ -1,6 +1,8 @@
 package com.duckstar.schedule;
 
+import com.duckstar.domain.Quarter;
 import com.duckstar.service.AnimeService.AnimeCommandService;
+import com.duckstar.service.QuarterService;
 import com.duckstar.service.SurveyService;
 import com.duckstar.service.WeekService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import static com.duckstar.util.QuarterUtil.*;
+import static com.duckstar.util.QuarterUtil.getThisWeekRecord;
+import static com.duckstar.util.QuarterUtil.getThisWeekStartedAt;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -19,17 +25,13 @@ public class ScheduleHandler {
     private static final int ANCHOR_HOUR = 18;
 
     private final WeekService weekService;
-    private final ScheduleState scheduleState;
     private final AnimeCommandService animeCommandService;
     private final SurveyService surveyService;
+    private final QuarterService quarterService;
 
     // 매 분마다 시작 or 종영 체크
     @Scheduled(cron = "0 * * * * *")
     public void checkAnimeStatus() {
-        if (scheduleState.isAdminMode()) {
-            return;
-        }
-
         animeCommandService.updateStatesByWindows();
     }
 
@@ -50,10 +52,18 @@ public class ScheduleHandler {
                 LocalTime.of(ANCHOR_HOUR, 0)
         );
 
-        LocalDateTime lastWeekStartedAt = nowWithAnchorHour.minusWeeks(1);
-
         // 새로운 주 생성
-        weekService.setupWeeklyVote(lastWeekStartedAt, nowWithAnchorHour);
+        YQWRecord record = getThisWeekRecord(nowWithAnchorHour);
+        getOrCreateQuarterAndWeek(record, getThisWeekStartedAt(nowWithAnchorHour));
+    }
+
+    // 파사드
+    public void getOrCreateQuarterAndWeek(YQWRecord record, LocalDateTime weekStartedAt) {
+        int yearValue = record.yearValue();
+
+        Quarter quarter = quarterService.getOrCreateQuarter(yearValue, record.quarterValue());
+
+        weekService.getOrCreateWeek(record, weekStartedAt,quarter);
     }
 
     /**

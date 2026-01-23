@@ -1,14 +1,14 @@
-import { MePreviewDto, UpdateProfileResponseDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { apiCall } from './http';
 
 // 유저 정보 조회 API
 export async function getCurrentUser() {
-  return apiCall<MePreviewDto>('/api/v1/members/me');
+  return apiCall<Schemas['MePreviewDto']>('/api/v1/members/me');
 }
 
 // 프로필 수정 API
 export async function updateProfile(formData: FormData) {
-  return apiCall<UpdateProfileResponseDto>(
+  return apiCall<Schemas['UpdateReceiptDto']>(
     '/api/v1/members/me/profile',
     {
       method: 'PATCH',

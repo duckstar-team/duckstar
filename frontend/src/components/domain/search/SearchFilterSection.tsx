@@ -19,7 +19,7 @@ export default function SearchFilterSection({
   onSearch,
 }: SearchFilterSectionProps) {
   return (
-    <div className="mt-5 h-[100px] w-full border-y border-gray-200 bg-white">
+    <div className="mt-5 h-[100px] w-full border-t border-gray-200 dark:border-zinc-800">
       <div className="mx-auto flex w-full max-w-[852px] flex-col px-6">
         <SearchFilters
           selectedOttServices={selectedOttServices}

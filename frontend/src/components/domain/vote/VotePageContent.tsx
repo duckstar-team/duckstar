@@ -5,7 +5,7 @@ import BigCandidate from '@/components/domain/anime/BigCandidate';
 import SmallCandidate from '@/components/domain/anime/SmallCandidate';
 import AnimeCard from '@/components/domain/anime/AnimeCard';
 import { getStarCandidates } from '@/api/vote';
-import { AnimePreviewDto, LiveCandidateDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import {
   searchMatch,
   extractChosung,
@@ -13,16 +13,19 @@ import {
   addVotedEpisodeWithTTL,
   removeVotedEpisode,
   queryConfig,
+  cn,
 } from '@/lib';
 import { useModal } from '@/components/layout/AppContainer';
 import { useAuth } from '@/context/AuthContext';
-import { getUpcomingAnimes } from '@/api/search';
+import { getCurrentSchedule } from '@/api/search';
 import VoteBanner from './VoteBanner';
 import { format, subDays, addHours, differenceInSeconds } from 'date-fns';
 import VoteCandidateList from './VoteCandidateList';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SearchBar from '@/components/domain/search/SearchBar';
 import { useSidebarWidth } from '@/hooks/useSidebarWidth';
+import { sortUpcomingAnimes } from '@/lib/utils/schedule';
+import { Stamp } from 'lucide-react';
 
 export default function VotePageContent() {
   const { openLoginModal } = useModal();
@@ -98,10 +101,12 @@ export default function VotePageContent() {
   // 창 너비에 따른 동적 컨테이너 너비 계산 (그리드 최적화)
   const getOptimalContainerWidth = () => {
     // 창 너비에 따라 점진적으로 줄어드는 너비 (큰 화면부터)
-    return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[900px] md:max-w-[700px] sm:max-w-[500px]';
+    return 'max-w-[1320px] 2xl:max-w-[1320px] xl:max-w-[1000px] lg:max-w-[900px] md:max-w-[700px]';
   };
   const queryClient = useQueryClient();
-  const [fallbackAnimes, setFallbackAnimes] = useState<AnimePreviewDto[]>([]); // fallback 애니메이션 데이터
+  const [fallbackAnimes, setFallbackAnimes] = useState<
+    Schemas['AnimePreviewDto'][]
+  >([]); // fallback 애니메이션 데이터
   const [isUsingFallback, setIsUsingFallback] = useState(false); // fallback 데이터 사용 여부
 
   // React Query를 사용한 별점 후보 조회
@@ -286,7 +291,10 @@ export default function VotePageContent() {
   };
 
   // 검색 필터링 함수 (초성 검색 포함)
-  const filterCandidates = (candidates: LiveCandidateDto[], query: string) => {
+  const filterCandidates = (
+    candidates: Schemas['LiveCandidateDto'][],
+    query: string
+  ) => {
     if (!query.trim()) return candidates;
 
     return candidates.filter((candidate) =>
@@ -295,7 +303,10 @@ export default function VotePageContent() {
   };
 
   // 검색 필터링 함수 (fallback 데이터용, 초성 검색 포함)
-  const filterFallbackAnimes = (animes: AnimePreviewDto[], query: string) => {
+  const filterFallbackAnimes = (
+    animes: Schemas['AnimePreviewDto'][],
+    query: string
+  ) => {
     if (!query.trim()) return animes;
 
     return animes.filter((anime) => searchMatch(query, anime.titleKor));
@@ -303,8 +314,8 @@ export default function VotePageContent() {
 
   // 투표 시간이 많이 남은 순서로 정렬하는 함수
   const sortCandidatesByVoteTimeRemaining = (
-    candidates: LiveCandidateDto[]
-  ): LiveCandidateDto[] => {
+    candidates: Schemas['LiveCandidateDto'][]
+  ): Schemas['LiveCandidateDto'][] => {
     const now = new Date();
     return [...candidates].sort((a, b) => {
       if (!a.scheduledAt || !b.scheduledAt) return 0;
@@ -335,23 +346,21 @@ export default function VotePageContent() {
 
   // 후보자 목록 렌더링 함수
   const renderLiveCandidates = (
-    candidates: LiveCandidateDto[],
-    filteredCandidates: LiveCandidateDto[],
+    candidates: Schemas['LiveCandidateDto'][],
+    filteredCandidates: Schemas['LiveCandidateDto'][],
     viewMode: 'large' | 'small'
   ) => {
     if (candidates.length === 0) return null;
 
     return (
       <div
-        className={
+        className={cn(
           viewMode === 'large'
-            ? `${
-                filteredCandidates.length <= 3
-                  ? 'flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-[40px]'
-                  : 'grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-1 sm:gap-6 md:grid-cols-2 lg:grid-cols-2 lg:gap-[40px] xl:grid-cols-3 2xl:grid-cols-4'
-              }`
+            ? filteredCandidates.length <= 3
+              ? 'flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-[40px]'
+              : 'grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 sm:gap-6 md:grid-cols-2 lg:gap-[40px] xl:grid-cols-3 2xl:grid-cols-4'
             : 'flex flex-col gap-4 lg:grid lg:min-w-[500px] lg:grid-cols-2 lg:gap-4'
-        }
+        )}
       >
         {filteredCandidates.map((candidate) =>
           viewMode === 'large' ? (
@@ -373,15 +382,7 @@ export default function VotePageContent() {
           ) : (
             <SmallCandidate
               key={candidate.episodeId}
-              anime={
-                {
-                  ...candidate,
-                  ottDtos: [],
-                  status: 'NOW_SHOWING' as const,
-                  isBreak: false,
-                  isRescheduled: null,
-                } as AnimePreviewDto
-              }
+              anime={candidate}
               isCurrentSeason={true}
               voteInfo={{
                 year: candidate.year,
@@ -402,7 +403,7 @@ export default function VotePageContent() {
 
   // 랜덤 placeholder 생성 함수
   const generateRandomPlaceholder = (
-    animes: (LiveCandidateDto | AnimePreviewDto)[]
+    animes: (Schemas['LiveCandidateDto'] | Schemas['AnimePreviewDto'])[]
   ) => {
     if (animes.length === 0) return '';
 
@@ -457,18 +458,32 @@ export default function VotePageContent() {
       );
       setIsUsingFallback(true);
 
-      const upcomingData = await getUpcomingAnimes();
-      const noneSchedule = upcomingData.scheduleDtos.find(
-        (dto) => dto.dayOfWeekShort === 'NONE'
+      const scheduleData = await getCurrentSchedule();
+
+      // 모든 scheduleDtos에서 애니메이션을 가져옴
+      const allAnimes = scheduleData.scheduleDtos.flatMap(
+        (dto) => dto.animePreviews
       );
-      const upcomingAnimes = noneSchedule?.animePreviews || [];
+
+      // 12시간 이내 방영 예정인 애니메이션만 필터링
+      const now = new Date();
+      const filteredAnimes = allAnimes.filter((anime) => {
+        if (
+          (anime.status !== 'NOW_SHOWING' && anime.status !== 'UPCOMING') ||
+          !anime.scheduledAt
+        )
+          return false;
+
+        const scheduled = new Date(anime.scheduledAt);
+        if (isNaN(scheduled.getTime())) return false;
+
+        // 12시간 이내 방영 예정인 애니메이션만 필터링
+        const timeDiff = scheduled.getTime() - now.getTime();
+        return timeDiff >= 0 && timeDiff <= 12 * 60 * 60 * 1000; // 12시간 = 12 * 60 * 60 * 1000ms
+      });
 
       // 남은 시간 순으로 정렬 (가장 가까운 시간부터)
-      const sortedAnimes = upcomingAnimes.sort((a, b) => {
-        const timeA = new Date(a.scheduledAt).getTime();
-        const timeB = new Date(b.scheduledAt).getTime();
-        return timeA - timeB; // 오름차순 정렬 (가장 가까운 시간이 먼저)
-      });
+      const sortedAnimes = sortUpcomingAnimes(filteredAnimes);
 
       // AnimePreviewDto 형태로 저장 (검색화면과 동일한 형태)
       setFallbackAnimes(sortedAnimes);
@@ -644,7 +659,7 @@ export default function VotePageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <div className="mx-auto w-full max-w-[600px] px-2 py-3 sm:px-4 sm:py-6">
           <div className="text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
@@ -759,7 +774,7 @@ export default function VotePageContent() {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div>
       <div className="w-full">
         {/* 배너 */}
         <div className="mb-4 flex justify-center">
@@ -805,7 +820,7 @@ export default function VotePageContent() {
       </div>
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="mb-4 bg-white pt-4 pb-2">
+      <div className="mb-4 pt-4 pb-2 dark:bg-zinc-900">
         <div
           className={`w-full ${getOptimalContainerWidth()} mx-auto ${
             isUsingFallback ? 'mb-0' : 'mb-2'
@@ -813,24 +828,12 @@ export default function VotePageContent() {
         >
           {/* 투표 안내 텍스트 */}
           <div className="flex w-full items-center justify-between gap-4 px-10 max-lg:flex-col">
-            <div className="flex h-8 w-fit max-w-full items-center justify-start rounded-lg bg-[#f1f2f3] py-0 pr-2 pl-1 sm:h-9 sm:pr-3 sm:pl-2 lg:pr-5">
-              <div className="flex items-center justify-start gap-1 px-1 py-0 sm:gap-2 sm:px-2 lg:gap-2.5 lg:px-2.5">
-                <div className="relative size-3 overflow-hidden sm:size-4">
-                  <img
-                    src="/icons/voteSection-notify-icon.svg"
-                    alt="Notification Icon"
-                    className="h-full w-full"
-                  />
-                </div>
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-center font-['Pretendard',_sans-serif] text-xs font-semibold text-[#23272b] sm:text-base">
-                <p className="leading-normal break-words">
-                  마음에 든 애니메이션을 투표해주세요!
-                </p>
-              </div>
+            <div className="flex w-fit max-w-full items-center justify-start gap-2 rounded-lg bg-zinc-200/50 py-1.5 pr-3 pl-2 text-sm font-medium dark:bg-zinc-800">
+              <Stamp size={16} />
+              마음에 든 애니메이션에 투표해주세요!
             </div>
 
-            <div className="text-center text-gray-700 lg:text-right">
+            <div className="text-center text-gray-700 lg:text-right dark:text-zinc-300">
               <p className="mb-2">
                 <span className="sm:hidden">
                   모든 후보는 방영 이후
@@ -841,7 +844,7 @@ export default function VotePageContent() {
                   모든 후보는 방영 이후 36시간 이내에 투표할 수 있어요.
                 </span>
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-zinc-400">
                 <span className="sm:hidden">
                   *덕스타 투표 시 중복 방지를 위해
                   <br />
@@ -861,7 +864,7 @@ export default function VotePageContent() {
               <div className="group relative">
                 <button
                   onClick={openLoginModal}
-                  className="flex cursor-pointer items-center gap-1 text-base text-gray-500 transition-colors duration-200 hover:text-gray-700"
+                  className="flex cursor-pointer items-center gap-1 text-base text-gray-500 transition-colors duration-200 hover:text-gray-700 dark:text-zinc-400"
                   style={{
                     borderBottom: '1px solid #c4c7cc',
                     lineHeight: '1.1',
@@ -906,10 +909,10 @@ export default function VotePageContent() {
       {/* 이번주차 검색창 섹션 */}
       <div
         ref={currentWeekSearchBarRef}
-        className={`p-4 shadow-sm ${
+        className={`p-4 shadow-sm dark:shadow-none ${
           isCurrentWeekSearchBarSticky && !isLastWeekSearchBarSticky
-            ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px]'
-            : 'mb-7 bg-white md:mb-8'
+            ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px] dark:bg-zinc-900/80'
+            : 'mb-7 bg-white md:mb-8 dark:bg-zinc-800'
         }`}
         style={{
           left: `${sidebarWidth}px`,
@@ -933,23 +936,23 @@ export default function VotePageContent() {
           {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
           {currentWeekLiveCandidates.length > 0 &&
             filteredcurrentWeekLiveCandidates.length > 0 && (
-              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+              <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-none dark:bg-zinc-700">
                 <button
                   onClick={() => handleCurrentViewModeChange('large')}
-                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                  className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors duration-200 sm:text-sm ${
                     currentViewMode === 'large'
-                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                   }`}
                 >
                   크게 보기
                 </button>
                 <button
                   onClick={() => handleCurrentViewModeChange('small')}
-                  className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
+                  className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors duration-200 sm:text-sm ${
                     currentViewMode === 'small'
-                      ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border border-gray-200 bg-white text-gray-900 dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                   }`}
                 >
                   작게 보기
@@ -971,7 +974,7 @@ export default function VotePageContent() {
       >
         {/* 이번주차 실시간 투표 섹션 */}
         <div className="mb-8">
-          <div className="mb-8 text-2xl font-bold text-black">실시간 투표</div>
+          <div className="mb-8 text-2xl font-bold">실시간 투표</div>
           {!isUsingFallback ? (
             <>
               {renderLiveCandidates(
@@ -982,9 +985,9 @@ export default function VotePageContent() {
               {/* 검색 결과가 없는 경우 (이번주차만) */}
               {currentWeekSearchQuery.trim() &&
                 filteredcurrentWeekLiveCandidates.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                       </p>
                     </div>
@@ -999,7 +1002,7 @@ export default function VotePageContent() {
                 <div className="mb-8">
                   <div className="mb-6">
                     <div className="mb-6 flex items-end gap-2">
-                      <h3 className="text-xl font-semibold text-black">
+                      <h3 className="text-xl font-semibold">
                         이번 주차 곧 시작!
                       </h3>
                       <p className="text-sm text-gray-500">
@@ -1023,9 +1026,9 @@ export default function VotePageContent() {
               {/* 검색 결과가 없는 경우 (fallback 데이터) */}
               {currentWeekSearchQuery.trim() &&
                 filteredFallbackAnimes.length === 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         '{currentWeekSearchQuery}'에 대한 검색 결과가 없습니다.
                       </p>
                     </div>
@@ -1034,9 +1037,9 @@ export default function VotePageContent() {
               {/* Fallback 데이터도 비어있는 경우 */}
               {fallbackAnimes.length === 0 &&
                 !currentWeekSearchQuery.trim() && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-none dark:bg-zinc-800">
                     <div className="text-center">
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-zinc-300">
                         곧 시작하는 애니메이션이 없습니다.
                       </p>
                     </div>
@@ -1087,10 +1090,10 @@ export default function VotePageContent() {
           {/* 지난주차 검색창 섹션 */}
           <div
             ref={lastWeekSearchBarRef}
-            className={`p-4 shadow-sm ${
+            className={`p-4 shadow-sm dark:shadow-none ${
               isLastWeekSearchBarSticky
-                ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px]'
-                : 'mt-4 mb-7 bg-white md:mb-8'
+                ? 'fixed top-[60px] right-0 z-20 bg-white/80 backdrop-blur-[6px] dark:bg-zinc-900/80'
+                : 'mt-4 mb-7 bg-white md:mb-8 dark:bg-zinc-800'
             }`}
             style={{
               left: `${sidebarWidth}px`,
@@ -1116,13 +1119,13 @@ export default function VotePageContent() {
               {/* 뷰 모드 토글 버튼 - 실제 투표 후보가 있을 때만 표시 */}
               {lastWeekLiveCandidates.length > 0 &&
                 filteredlastWeekLiveCandidates.length > 0 && (
-                  <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1">
+                  <div className="flex flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 p-0.5 shadow-sm sm:p-1 dark:border-none dark:bg-zinc-700">
                     <button
                       onClick={() => handleLastViewModeChange('large')}
                       className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
                         lastViewMode === 'large'
-                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
+                          : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                       }`}
                     >
                       크게 보기
@@ -1131,8 +1134,8 @@ export default function VotePageContent() {
                       onClick={() => handleLastViewModeChange('small')}
                       className={`rounded px-2 py-1 text-xs font-medium transition-colors duration-200 sm:px-4 sm:py-2 sm:text-sm ${
                         lastViewMode === 'small'
-                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-none dark:bg-zinc-600 dark:text-zinc-300'
+                          : 'text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300'
                       }`}
                     >
                       작게 보기
@@ -1152,9 +1155,7 @@ export default function VotePageContent() {
           <div
             className={`w-full ${getOptimalContainerWidth()} mx-auto p-3 px-2 sm:p-6 sm:px-4`}
           >
-            <h1 className="mb-8 text-2xl font-bold text-black">
-              지난 주 실시간 투표
-            </h1>
+            <h1 className="mb-8 text-2xl font-bold">지난 주 실시간 투표</h1>
 
             {renderLiveCandidates(
               lastWeekLiveCandidates,

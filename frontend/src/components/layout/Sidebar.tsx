@@ -7,6 +7,7 @@ import { NAV_ITEMS } from '@/lib';
 import ThinNavDetail from './ThinNavDetail';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
+import ThemeToggle from '../common/ThemeToggle';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -29,7 +30,7 @@ export default function Sidebar() {
   return (
     <div className="flex h-screen">
       <div
-        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5"
+        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5 dark:border-zinc-800 dark:bg-zinc-900"
         onMouseEnter={
           isThinNavPage ? () => setIsThinNavHovered(true) : undefined
         }
@@ -53,7 +54,7 @@ export default function Sidebar() {
                 <motion.button
                   type="button"
                   className={cn(
-                    'flex h-10 items-center overflow-hidden rounded-lg hover:bg-[#ffd4e2]',
+                    'flex h-10 items-center overflow-hidden rounded-lg hover:bg-[#ffd4e2] dark:hover:bg-zinc-800',
                     isActive && 'bg-gradient-to-r from-[#cb285e] to-[#9c1f49]'
                   )}
                   animate={{
@@ -76,7 +77,7 @@ export default function Sidebar() {
                       'overflow-hidden whitespace-nowrap max-md:text-sm',
                       isActive
                         ? 'font-bold text-white'
-                        : 'font-medium text-gray-500'
+                        : 'font-medium text-gray-500 dark:text-white'
                     )}
                     animate={{
                       opacity: isThinNav ? 0 : 1,
@@ -95,29 +96,46 @@ export default function Sidebar() {
           })}
         </div>
 
-        {/* Footer - 일반 페이지에만 표시 */}
-        {!isThinNavPage && (
-          <footer className="ml-1 flex flex-col text-sm text-gray-500">
-            {/* 상단 링크 */}
-            <Link href="/about" className="hover:text-gray-800">
-              덕스타 소개
-            </Link>
+        <div className="flex flex-col gap-4">
+          {/* Footer - 일반 페이지에만 표시 */}
+          {!isThinNavPage && (
+            <footer className="ml-1 flex flex-col text-sm text-gray-500">
+              {/* 상단 링크 */}
+              <Link
+                href="/about"
+                className="hover:text-gray-800 dark:hover:text-zinc-200"
+              >
+                덕스타 소개
+              </Link>
 
-            {/* 하단 링크들 */}
-            <div className="flex items-center gap-[5px]">
-              <Link href="/terms" className="hover:text-gray-800">
-                이용약관
-              </Link>
-              <span>·</span>
-              <Link href="/privacy-policy" className="hover:text-gray-800">
-                개인정보처리방침
-              </Link>
+              {/* 하단 링크들 */}
+              <div className="flex items-center gap-[5px]">
+                <Link
+                  href="/terms"
+                  className="hover:text-gray-800 dark:hover:text-zinc-200"
+                >
+                  이용약관
+                </Link>
+                <span>·</span>
+                <Link
+                  href="/privacy-policy"
+                  className="hover:text-gray-800 dark:hover:text-zinc-200"
+                >
+                  개인정보처리방침
+                </Link>
+              </div>
+
+              {/* 저작권 텍스트 */}
+              <div className="mt-5">© 2025 DUCKSTAR</div>
+            </footer>
+          )}
+
+          {(!isThinNavPage || isExpanded) && (
+            <div className="ml-auto">
+              <ThemeToggle />
             </div>
-
-            {/* 저작권 텍스트 */}
-            <div className="mt-5">© 2025 DUCKSTAR</div>
-          </footer>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ThinNavDetail - Chart 또는 Award 페이지에만 표시 */}

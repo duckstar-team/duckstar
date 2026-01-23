@@ -1,10 +1,14 @@
-import { SurveyDto } from '@/types/dtos';
-import { SurveyStatus } from '@/types/enums';
+import { Schemas } from '@/types';
+import { SurveyStatus } from '@/types';
 import React from 'react';
 import SurveyCountdown from './SurveyCountdown';
 
-export default function SurveyDisabled({ survey }: { survey: SurveyDto }) {
-  const isNotYet = survey.status === SurveyStatus.NotYet;
+export default function SurveyDisabled({
+  survey,
+}: {
+  survey: Schemas['SurveyDto'];
+}) {
+  const isNotYet = survey.status === SurveyStatus.NOT_YET;
 
   if (isNotYet) {
     return (
@@ -42,7 +46,7 @@ export default function SurveyDisabled({ survey }: { survey: SurveyDto }) {
         </h2>
         <p className="my-6 text-center text-gray-600">
           <SurveyCountdown
-            type={SurveyStatus.Closed}
+            type={SurveyStatus.CLOSED}
             text="결과 공개까지"
             startDate={survey?.endDateTime}
             className="text-[1.5rem] font-bold! text-red-400! @md:text-[2rem]"

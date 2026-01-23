@@ -8,7 +8,6 @@ import com.duckstar.security.domain.QShadowBan;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -39,9 +38,7 @@ public class WeekVoteSubmissionRepositoryCustomImpl implements WeekVoteSubmissio
     }
 
     @Override
-    public List<SubmissionCountDto> getSubmissionCountDtos(Pageable pageable) {
-        int pageSize = pageable.getPageSize();
-
+    public List<SubmissionCountDto> getSubmissionCountDtos(int offset, int limit) {
         return queryFactory.select(
                         Projections.constructor(
                                 SubmissionCountDto.class,
@@ -61,8 +58,8 @@ public class WeekVoteSubmissionRepositoryCustomImpl implements WeekVoteSubmissio
                 .leftJoin(shadowBan).on(shadowBan.ipHash.eq(weekVoteSubmission.ipHash))
                 .groupBy(week.id, weekVoteSubmission.ipHash)
                 .orderBy(week.startDateTime.desc(), weekVoteSubmission.count().desc())
-                .offset((long) pageable.getPageNumber() * (pageSize - 1))
-                .limit(pageSize)
+                .offset(offset)
+                .limit(limit)
                 .fetch();
     }
 
@@ -83,20 +80,5 @@ public class WeekVoteSubmissionRepositoryCustomImpl implements WeekVoteSubmissio
                 )
                 .orderBy(episodeStar.updatedAt.desc())
                 .fetch();
-    }
-
-    @Override
-    public boolean existsByWeek_IdAndMember_Id(Long weekId, Long memberId) {
-        return queryFactory.select(
-                        episodeStar.starScore
-                ).from(episodeStar)
-                .join(episodeStar.weekVoteSubmission, weekVoteSubmission)
-                .where(
-                        weekVoteSubmission.week.id.eq(weekId)
-                                .and(weekVoteSubmission.member.id.eq(memberId))
-                                // null 이거나 0인 starScore 제외
-                                .and(episodeStar.starScore.gt(0))
-                )
-                .fetchFirst() != null;
     }
 }

@@ -15,7 +15,7 @@ export default function AiringCheckbox({
 }: AiringCheckboxProps) {
   return (
     <div
-      className={`flex w-fit items-center justify-center gap-2 rounded-xl md:bg-white md:px-6 md:py-2.5 ${className}`}
+      className={`flex w-fit items-center justify-center gap-2 rounded-xl md:bg-white md:px-6 md:py-2.5 dark:md:bg-zinc-900 ${className}`}
     >
       <input
         type="checkbox"

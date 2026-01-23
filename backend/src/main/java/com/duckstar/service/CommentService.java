@@ -23,14 +23,15 @@ import com.duckstar.web.dto.CommentResponseDto.CommentDto;
 import com.duckstar.web.dto.CommentResponseDto.DeleteResultDto;
 import com.duckstar.web.dto.PageInfo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.duckstar.web.dto.CommentResponseDto.*;
 import static com.duckstar.web.dto.BoardRequestDto.*;
@@ -39,16 +40,15 @@ import static com.duckstar.web.dto.BoardRequestDto.*;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CommentService {
-
     private final AnimeCommentRepository animeCommentRepository;
     private final EpisodeRepository episodeRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final MemberRepository memberRepository;
     private final AnimeRepository animeRepository;
+    private final EpisodeStarRepository episodeStarRepository;
 
     private final AnimeQueryService animeQueryService;
     private final S3Uploader s3Uploader;
-    private final EpisodeStarRepository episodeStarRepository;
 
     @Transactional
     public CommentDto leaveAnimeComment(
@@ -131,22 +131,16 @@ public class CommentService {
             totalCount = animeCommentRepository.countTotalElements(animeId, episodeIds);
         }
 
-        Pageable overFetch = PageRequest.of(
-                page,
-                size + 1,
-                pageable.getSort()
-        );
-
         List<CommentDto> rows = animeCommentRepository.getCommentDtos(
                 animeId,
                 episodeIds,
                 sortBy,
-                overFetch,
-                principal
+                principal,
+                page * size,
+                size + 1
         );
 
         boolean commentsHasNext = rows.size() > size;
-
         if (commentsHasNext) rows = rows.subList(0, size);
 
         PageInfo pageInfo = PageInfo.builder()
@@ -271,5 +265,40 @@ public class CommentService {
                 .createdAt(comment.getCreatedAt())
                 .deletedAt(comment.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void redefineRelationWithTails(
+            Long animeId,
+            List<Episode> addedTails,
+            List<Episode> deletedTails
+    ) {
+        // 새로이 만들어지는 에피소드를 댓글에 셋팅
+        if (addedTails != null && !addedTails.isEmpty()) {
+            LocalDateTime firstScheduledAt = addedTails.get(0).getScheduledAt();
+            List<AnimeComment> comments = animeCommentRepository
+                    .findAllByAnime_IdAndCreatedAtGreaterThanEqualOrderByCreatedAtAsc(
+                            animeId, firstScheduledAt);
+
+            for (AnimeComment comment : comments) {
+                LocalDateTime createdAt = comment.getCreatedAt();
+                long daysDiff = Duration.between(firstScheduledAt, createdAt).toDays();
+                int offset = (int) (daysDiff / 7);
+
+                if (offset >= addedTails.size()) break;
+
+                comment.setEpisode(addedTails.get(offset));
+            }
+        }
+
+        // 댓글에서 끊어야 할 에피소드들 관계 끊기
+        //TODO 벌크 쿼리의 필요성 리서치?
+        if (deletedTails != null && !deletedTails.isEmpty()) {
+            Set<Long> deletedEpisodeIds = deletedTails.stream()
+                    .map(Episode::getId)
+                    .collect(Collectors.toSet());
+            animeCommentRepository.findAllByEpisode_IdIn(deletedEpisodeIds)
+                    .forEach(ac -> ac.setEpisode(null));
+        }
     }
 }

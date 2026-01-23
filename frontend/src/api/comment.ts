@@ -1,14 +1,4 @@
-import {
-  AnimeCommentSliceDto,
-  CommentDto,
-  CommentRequestDto,
-  DeleteResultDto,
-  DiscardLikeResultDto,
-  LikeResultDto,
-  ReplyDto,
-  ReplyRequestDto,
-  ReplySliceDto,
-} from '@/types/dtos';
+import { Schemas } from '@/types';
 import { ApiResponse } from './http';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -34,7 +24,7 @@ export async function getAnimeComments(
   sortBy: string = 'RECENT',
   page: number = 0,
   size: number = 10
-): Promise<AnimeCommentSliceDto> {
+): Promise<Schemas['AnimeCommentSliceDto']> {
   try {
     const params = new URLSearchParams({
       sortBy,
@@ -61,7 +51,7 @@ export async function getAnimeComments(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<AnimeCommentSliceDto> =
+    const apiResponse: ApiResponse<Schemas['AnimeCommentSliceDto']> =
       await response.json();
 
     if (!apiResponse.isSuccess) {
@@ -77,8 +67,8 @@ export async function getAnimeComments(
 // 댓글 작성 API
 export async function createComment(
   animeId: number,
-  request: CommentRequestDto
-): Promise<CommentDto> {
+  request: Schemas['CommentRequestDto']
+): Promise<Schemas['CommentDto']> {
   try {
     // FormData 생성
     const formData = new FormData();
@@ -112,7 +102,8 @@ export async function createComment(
       );
     }
 
-    const apiResponse: ApiResponse<CommentDto> = await response.json();
+    const apiResponse: ApiResponse<Schemas['CommentDto']> =
+      await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
@@ -127,7 +118,7 @@ export async function createComment(
 // 댓글 삭제 API
 export async function deleteComment(
   commentId: number
-): Promise<DeleteResultDto> {
+): Promise<Schemas['DeleteResultDto']> {
   try {
     const url = `${BASE_URL}/api/v1/comments/${commentId}`;
 
@@ -146,7 +137,8 @@ export async function deleteComment(
       );
     }
 
-    const apiResponse: ApiResponse<DeleteResultDto> = await response.json();
+    const apiResponse: ApiResponse<Schemas['DeleteResultDto']> =
+      await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
@@ -163,7 +155,7 @@ export async function getReplies(
   commentId: number,
   page: number = 0,
   size: number = 10
-): Promise<ReplySliceDto> {
+): Promise<Schemas['ReplySliceDto']> {
   try {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -185,7 +177,8 @@ export async function getReplies(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<ReplySliceDto> = await response.json();
+    const apiResponse: ApiResponse<Schemas['ReplySliceDto']> =
+      await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
@@ -200,8 +193,8 @@ export async function getReplies(
 // 답글 작성 API
 export async function createReply(
   commentId: number,
-  request: ReplyRequestDto
-): Promise<ReplyDto> {
+  request: Schemas['ReplyRequestDto']
+): Promise<Schemas['ReplyDto']> {
   try {
     // FormData 생성
     const formData = new FormData();
@@ -252,7 +245,7 @@ export async function createReply(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: ApiResponse<ReplyDto> = await response.json();
+    const apiResponse: ApiResponse<Schemas['ReplyDto']> = await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
@@ -265,7 +258,9 @@ export async function createReply(
 }
 
 // 답글 삭제 API
-export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
+export async function deleteReply(
+  replyId: number
+): Promise<Schemas['DeleteResultDto']> {
   try {
     const url = `${BASE_URL}/api/v1/replies/${replyId}`;
 
@@ -284,7 +279,8 @@ export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
       );
     }
 
-    const apiResponse: ApiResponse<DeleteResultDto> = await response.json();
+    const apiResponse: ApiResponse<Schemas['DeleteResultDto']> =
+      await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
@@ -300,7 +296,7 @@ export async function deleteReply(replyId: number): Promise<DeleteResultDto> {
 export async function likeComment(
   commentId: number,
   likeId?: number
-): Promise<LikeResultDto> {
+): Promise<Schemas['LikeResultDto']> {
   try {
     const url = `${BASE_URL}/api/v1/comments/${commentId}/like`;
 
@@ -320,7 +316,8 @@ export async function likeComment(
       );
     }
 
-    const apiResponse: ApiResponse<LikeResultDto> = await response.json();
+    const apiResponse: ApiResponse<Schemas['LikeResultDto']> =
+      await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
@@ -336,7 +333,7 @@ export async function likeComment(
 export async function unlikeComment(
   commentId: number,
   commentLikeId: number
-): Promise<DiscardLikeResultDto> {
+): Promise<Schemas['DiscardLikeResultDto']> {
   try {
     const url = `${BASE_URL}/api/v1/comments/${commentId}/like/${commentLikeId}`;
 
@@ -355,7 +352,7 @@ export async function unlikeComment(
       );
     }
 
-    const apiResponse: ApiResponse<DiscardLikeResultDto> =
+    const apiResponse: ApiResponse<Schemas['DiscardLikeResultDto']> =
       await response.json();
 
     if (!apiResponse.isSuccess) {
@@ -372,7 +369,7 @@ export async function unlikeComment(
 export async function likeReply(
   replyId: number,
   likeId?: number
-): Promise<LikeResultDto> {
+): Promise<Schemas['LikeResultDto']> {
   try {
     const url = `${BASE_URL}/api/v1/replies/${replyId}/like`;
 
@@ -392,7 +389,8 @@ export async function likeReply(
       );
     }
 
-    const apiResponse: ApiResponse<LikeResultDto> = await response.json();
+    const apiResponse: ApiResponse<Schemas['LikeResultDto']> =
+      await response.json();
 
     if (!apiResponse.isSuccess) {
       throw new Error(apiResponse.message);
@@ -408,7 +406,7 @@ export async function likeReply(
 export async function unlikeReply(
   replyId: number,
   replyLikeId: number
-): Promise<DiscardLikeResultDto> {
+): Promise<Schemas['DiscardLikeResultDto']> {
   try {
     const url = `${BASE_URL}/api/v1/replies/${replyId}/like/${replyLikeId}`;
 
@@ -427,7 +425,7 @@ export async function unlikeReply(
       );
     }
 
-    const apiResponse: ApiResponse<DiscardLikeResultDto> =
+    const apiResponse: ApiResponse<Schemas['DiscardLikeResultDto']> =
       await response.json();
 
     if (!apiResponse.isSuccess) {

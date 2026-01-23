@@ -6,11 +6,11 @@ import RankDiff from '@/components/domain/chart/RankDiff';
 import Medal from '@/components/domain/chart/Medal';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import StarRatingDisplay from '@/components/domain/star/StarRatingDisplay';
-import { ContentType, MedalType } from '@/types/enums';
+import { ContentType, MedalType } from '@/types';
 
 interface HomeRankInfoProps {
-  rank?: number;
-  rankDiff?:
+  rank: number;
+  rankDiff:
     | 'up-greater-equal-than-5'
     | 'up-less-than-5'
     | 'down-less-than-5'
@@ -18,42 +18,33 @@ interface HomeRankInfoProps {
     | 'same-rank'
     | 'new'
     | 'Zero';
-  rankDiffValue?: string | number;
-  title?: string;
-  studio?: string;
-  image?: string;
-  percentage?: string;
-  averageRating?: number; // 백엔드에서 받은 평균 별점
-  voterCount?: number; // 백엔드에서 받은 참여자 수
-  medal?: MedalType;
-  type?: ContentType;
-  contentId?: number;
-  className?: string;
+  rankDiffValue: string | number;
+  title: string;
+  studio: string;
+  image: string;
+  averageRating: number;
+  voterCount: number;
+  medal: MedalType;
+  type: ContentType;
+  contentId: number;
 }
 
 export default function HomeRankInfo({
-  rank = 1,
+  rank,
   rankDiff = 'up-greater-equal-than-5',
-  rankDiffValue = '5',
-  title = '내가 연인이 될 수 있을 리 없잖아, 무리무리! (※무리가 아니었다?!)',
-  studio = 'Studio Mother',
-  image = '',
-  percentage = '15.18',
-  averageRating = 4.5, // 기본값
-  voterCount = 0, // 기본값
-  medal = MedalType.Gold,
-  type = ContentType.Anime,
-  contentId = 1,
-  className = '',
+  rankDiffValue,
+  title,
+  studio,
+  image,
+  averageRating,
+  voterCount,
+  medal,
+  type,
+  contentId,
 }: HomeRankInfoProps) {
   const router = useRouter();
   const [showTooltip, setShowTooltip] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  // 평균 별점을 정수 부분과 소수 부분으로 분리 (소수점 첫째 자리에서 버림)
-  const integerPart = Math.floor(averageRating);
-  const decimalPart = Math.floor((averageRating - integerPart) * 10) / 10; // 소수점 첫째 자리에서 버림
-  const decimalString = decimalPart.toFixed(1).substring(1); // ".9" 형태
 
   // 컴포넌트 상태 정의
   const isTopThree = rank <= 3;
@@ -63,7 +54,7 @@ export default function HomeRankInfo({
 
   // 색상 및 스타일 결정
   const getStarColor = () => {
-    if (isFirst) return 'text-[#990033] opacity-80';
+    if (isFirst) return 'text-brand opacity-80';
     if (isSecond) return 'text-[#868E96] opacity-70';
     if (isThird) return 'text-[#E37429] opacity-70';
     return 'text-[#ADB5BD]';
@@ -85,8 +76,6 @@ export default function HomeRankInfo({
     return isTopThree ? 'top-[14px]' : 'top-[30px]';
   };
 
-  // 홈페이지에서는 간단한 라우터 사용 (스크롤 복원 훅 사용 안 함)
-
   const handleClick = () => {
     if (!contentId) return; // contentId가 null이면 클릭 무시
 
@@ -103,24 +92,22 @@ export default function HomeRankInfo({
     }
 
     // Next.js 클라이언트 사이드 라우팅 사용 (간단한 라우터)
-    if (type === ContentType.Anime) {
+    if (type === ContentType.ANIME) {
       router.push(`/animes/${contentId}`);
     } else {
       router.push(`/characters/${contentId}`);
     }
   };
   return (
-    <div
-      className={`inline-flex h-24 w-full items-center justify-start gap-5 overflow-hidden rounded-xl bg-white px-4 outline outline-gray-200 ${className}`}
-    >
+    <div className="inline-flex h-24 w-full items-center justify-start gap-5 overflow-hidden rounded-xl px-4 outline outline-gray-200 dark:bg-zinc-900 dark:outline-none">
       {/* 왼쪽 영역 - 클릭 가능 */}
       <div
-        className={`flex flex-1 items-center justify-start gap-5 pl-0.5 ${contentId ? '-m-2 cursor-pointer rounded-lg p-2 transition-colors duration-200 hover:bg-gray-50' : 'cursor-default'}`}
+        className={`flex flex-1 items-center justify-start gap-5 pl-0.5 dark:hover:bg-zinc-800/40 ${contentId ? '-m-2 cursor-pointer rounded-lg p-2 transition-colors duration-200 hover:bg-gray-50' : 'cursor-default'}`}
         onClick={handleClick}
       >
         {/* 순위와 변화 */}
         <div className="ml-2 inline-flex w-8 flex-col items-center justify-center self-stretch pb-1">
-          <div className="justify-start text-center text-3xl leading-snug font-bold text-gray-500">
+          <div className="justify-start text-center text-3xl leading-snug font-bold text-gray-500 dark:text-gray-300">
             {rank}
           </div>
           <div className="inline-flex items-center justify-center gap-px self-stretch">
@@ -156,7 +143,7 @@ export default function HomeRankInfo({
 
         {/* 제목과 스튜디오 */}
         <div className="inline-flex flex-1 flex-col items-start justify-start gap-0.5">
-          <div className="w-96 justify-start text-lg leading-snug font-semibold text-black">
+          <div className="w-96 justify-start text-lg leading-snug font-semibold">
             {title}
           </div>
           <div className="justify-start text-center text-sm leading-snug font-normal text-gray-400">
@@ -193,12 +180,12 @@ export default function HomeRankInfo({
                 <span
                   className={`text-2xl ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {integerPart}
+                  {Math.floor(averageRating)}
                 </span>
                 <span
                   className={`text-base ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {decimalString}
+                  {averageRating.toFixed(1).substring(1)}
                 </span>
               </div>
             </div>
@@ -245,12 +232,12 @@ export default function HomeRankInfo({
                 <span
                   className={`text-2xl ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {integerPart}
+                  {Math.floor(averageRating)}
                 </span>
                 <span
                   className={`text-base ${getFontWeight()} leading-snug tracking-widest ${getStarColor()}`}
                 >
-                  {decimalString}
+                  {averageRating.toFixed(1).substring(1)}
                   <br />
                   {voterCount}명 참여
                 </span>
@@ -265,7 +252,7 @@ export default function HomeRankInfo({
         )}
 
         {/* 구분선 */}
-        <div className="absolute top-[24px] left-0 h-12 w-0 outline outline-offset-[-0.50px] outline-gray-200" />
+        <div className="absolute top-[24px] left-0 h-12 w-0 outline outline-offset-[-0.50px] outline-gray-200 dark:outline-zinc-800" />
       </div>
     </div>
   );

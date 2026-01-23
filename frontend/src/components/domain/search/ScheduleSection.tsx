@@ -1,9 +1,9 @@
 import AnimeGrid from './AnimeGrid';
-import type { AnimePreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface ScheduleSectionProps {
   day: string;
-  dayAnimes: AnimePreviewDto[];
+  dayAnimes: Schemas['AnimePreviewDto'][];
   isCurrentSeason: boolean;
   sectionId: string;
 }
@@ -31,9 +31,7 @@ export default function ScheduleSection({
   return (
     <div>
       <div key={day} id={sectionId} className="mb-6 flex items-end gap-3">
-        <h2 className="text-lg font-bold text-gray-900 sm:text-2xl">
-          {dayInKorean}
-        </h2>
+        <h2 className="text-lg font-bold sm:text-2xl">{dayInKorean}</h2>
         {day === 'NONE' && (
           <span className="text-[12px] font-normal text-[#868E96]">
             앞으로 12시간 이내
@@ -48,7 +46,7 @@ export default function ScheduleSection({
       />
 
       {day !== 'SPECIAL' && (
-        <div className="my-10 h-px w-full bg-gray-200"></div>
+        <div className="my-10 h-px w-full bg-gray-200 dark:bg-zinc-800"></div>
       )}
     </div>
   );

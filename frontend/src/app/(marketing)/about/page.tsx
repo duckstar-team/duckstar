@@ -5,7 +5,7 @@ interface SectionProps {
 
 const Section: React.FC<SectionProps> = ({ title, children }) => (
   <section>
-    <h2 className="mb-3 text-xl font-semibold text-gray-900">{title}</h2>
+    <h2 className="mb-3 text-xl font-semibold">{title}</h2>
     {children}
   </section>
 );
@@ -13,7 +13,7 @@ const Section: React.FC<SectionProps> = ({ title, children }) => (
 const FeatureList: React.FC<{ items: string[] }> = ({ items }) => (
   <ul className="list-inside list-disc space-y-2 leading-relaxed">
     {items.map((item, index) => (
-      <li key={index} className="text-gray-700">
+      <li key={index} className="text-gray-700 dark:text-zinc-400">
         {item}
       </li>
     ))}
@@ -44,12 +44,12 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="mx-auto max-w-4xl px-4">
-        <div className="rounded-lg bg-white p-8 shadow-sm">
-          <h1 className="mb-8 text-3xl font-bold text-gray-900">덕스타 소개</h1>
+        <div className="rounded-lg bg-white p-8 shadow-sm dark:bg-zinc-800">
+          <h1 className="mb-8 text-3xl font-bold">덕스타 소개</h1>
 
-          <div className="space-y-6 text-gray-700">
+          <div className="space-y-6">
             <Section title="서비스 소개">
               <p className="leading-relaxed">
                 덕스타는 분기 신작 애니메이션 팬들을 위한 종합 플랫폼입니다.

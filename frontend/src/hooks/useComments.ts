@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { CommentDto, CommentRequestDto, ReplyDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import {
   getAnimeComments,
   createComment,
@@ -18,7 +18,7 @@ export function useComments(animeId: number) {
   const queryClient = useQueryClient();
 
   // 댓글 관련 상태
-  const [comments, setComments] = useState<CommentDto[]>([]);
+  const [comments, setComments] = useState<Schemas['CommentDto'][]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsError, setCommentsError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -27,9 +27,9 @@ export function useComments(animeId: number) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<number[]>([]);
   const [currentSort, setCurrentSort] = useState<SortOption>('Recent');
-  const [replies, setReplies] = useState<{ [commentId: number]: ReplyDto[] }>(
-    {}
-  );
+  const [replies, setReplies] = useState<{
+    [commentId: number]: Schemas['ReplyDto'][];
+  }>({});
 
   // 중복 호출 방지용 ref
   const isLoadingRef = useRef(false);
@@ -118,7 +118,7 @@ export function useComments(animeId: number) {
 
   // 댓글 생성
   const createCommentHandler = useCallback(
-    async (request: CommentRequestDto) => {
+    async (request: Schemas['CommentRequestDto']) => {
       await createComment(animeId, request);
       loadComments(0, true);
     },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReplyDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import VoteCount from '@/components/domain/vote/VoteCount';
 
 // 시간 포맷팅 유틸리티 함수
@@ -26,13 +26,18 @@ const imgCommentUnliked = '/icons/comment-unliked.svg';
 const imgCommentLiked = '/icons/comment-liked.svg';
 
 interface ReplyProps {
-  reply: ReplyDto;
+  reply: Schemas['ReplyDto'];
   onLike?: (replyId: number) => void;
   onReply?: (replyId: number) => void;
   onDelete?: (replyId: number) => void;
 }
 
-const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
+export default function Reply({
+  reply,
+  onLike,
+  onReply,
+  onDelete,
+}: ReplyProps) {
   const {
     replyId,
     nickname: author,
@@ -49,7 +54,7 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
 
   return (
     <div className="flex w-full flex-col items-end justify-center gap-2.5 pr-[10px]">
-      <div className="flex w-[calc(100%-76px)] items-start justify-start gap-3.5 rounded-2xl bg-[#f8f9fa] px-5 py-3">
+      <div className="flex w-[calc(100%-76px)] items-start justify-start gap-3.5 rounded-2xl px-5 py-3">
         {/* 프로필 이미지 */}
         <div className="relative size-10 shrink-0">
           <img
@@ -69,7 +74,7 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
           <div className="relative flex w-full items-center justify-start gap-[15px]">
             <div className="relative flex flex-shrink-0 items-center justify-start gap-[5px]">
               {/* 작성자명 */}
-              <div className="justify-start text-base leading-snug font-semibold whitespace-nowrap text-black">
+              <div className="justify-start text-base leading-snug font-semibold whitespace-nowrap">
                 {author}
               </div>
 
@@ -112,8 +117,8 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
           <div className="flex flex-col gap-2 self-stretch">
             {/* @이름과 텍스트 내용을 한 줄로 표시 */}
             {(content || attachedImageUrl) && listenerNickname && content ? (
-              <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap text-black">
-                <span className="mr-2 inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-sm font-medium text-blue-600">
+              <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap">
+                <span className="mr-2 inline-flex items-center text-sm font-medium text-blue-500">
                   @{listenerNickname}
                 </span>
                 {content}
@@ -123,7 +128,7 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
                 {/* @이름만 표시 (텍스트가 없는 경우) */}
                 {listenerNickname && (
                   <div className="flex justify-start">
-                    <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-sm font-medium text-blue-600">
+                    <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">
                       @{listenerNickname}
                     </span>
                   </div>
@@ -131,7 +136,7 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
 
                 {/* 텍스트 내용 */}
                 {content && (
-                  <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap text-black">
+                  <div className="justify-start text-base leading-normal font-medium whitespace-pre-wrap">
                     {content}
                   </div>
                 )}
@@ -156,10 +161,10 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
           {/* 푸터 (좋아요, 답글) */}
           <div className="relative flex h-[30px] w-full shrink-0 content-stretch items-center justify-start gap-[25px]">
             {/* 좋아요 */}
-            <div className="relative flex shrink-0 content-stretch items-center justify-start gap-2">
+            <div className="relative flex shrink-0 content-stretch items-center justify-start gap-1">
               <button
                 onClick={() => onLike?.(replyId)}
-                className={`relative size-5 shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70 ${isLiked ? 'opacity-100' : 'opacity-60'}`}
+                className={`relative size-4.5 shrink-0 cursor-pointer overflow-clip transition-opacity hover:opacity-70 ${isLiked ? 'opacity-100' : 'opacity-60'}`}
                 aria-label={isLiked ? '좋아요 취소' : '좋아요'}
               >
                 <div className="absolute inset-[9.07%_3.55%_8.86%_3.57%]">
@@ -172,7 +177,7 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
                   </div>
                 </div>
               </button>
-              <div className="justify-start text-base leading-snug font-semibold text-[#868e96]">
+              <div className="justify-start text-sm leading-snug font-medium text-[#868e96] dark:text-white">
                 {likeCount}
               </div>
             </div>
@@ -189,6 +194,4 @@ const Reply: React.FC<ReplyProps> = ({ reply, onLike, onReply, onDelete }) => {
       </div>
     </div>
   );
-};
-
-export default Reply;
+}

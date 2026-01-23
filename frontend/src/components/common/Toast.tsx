@@ -82,7 +82,7 @@ export const Toast = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -50, scale: 0.3 }}
       transition={{ duration: 0.2 }}
-      className={`fixed top-20 right-4 z-50 ml-auto w-fit rounded-lg border-l-4 bg-white shadow-lg ${
+      className={`fixed top-20 right-4 z-50 ml-auto w-fit rounded-lg border-l-4 bg-white shadow-lg dark:bg-black ${
         type === 'success'
           ? 'border-green-500'
           : type === 'error'
@@ -94,11 +94,11 @@ export const Toast = ({
         <div className="flex items-center">
           <div className={`flex-shrink-0 ${getToastStyles()}`}>{getIcon()}</div>
           <div className="ml-3 w-0 flex-1">
-            <p className="text-sm font-medium text-gray-900">{message}</p>
+            <p className="text-sm font-medium">{message}</p>
           </div>
           <div className="ml-4 flex flex-shrink-0">
             <button
-              className="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+              className="inline-flex text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none dark:text-zinc-300"
               onClick={() => onClose(id)}
             >
               <span className="sr-only">Close</span>
@@ -174,7 +174,7 @@ export const showToast = {
   custom: (message: string, duration?: number) => {
     toast.success(message, {
       duration,
-      position: 'bottom-center',
+      position: 'top-center',
       style: {
         fontSize: '14px',
         backgroundColor: '#000',

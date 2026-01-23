@@ -7,14 +7,9 @@ import ButtonVote from './ButtonVote';
 import HeaderList from './HeaderList';
 import HomeChart from './HomeChart';
 import RightHeaderList from './RightHeaderList';
-import RightPanel from '@/components/domain/chart/RightPanel';
+import RightPanel from './RightPanel';
 import { homeApi } from '@/api/home';
-import {
-  WeekDto,
-  RankPreviewDto,
-  DuckstarRankPreviewDto,
-  HomeDto,
-} from '@/types/dtos';
+import { WeekDto, Schemas } from '@/types';
 import { scrollToTop, queryConfig } from '@/lib';
 import React from 'react';
 import { ApiResponse } from '@/api/http';
@@ -70,16 +65,18 @@ export default function HomeClient() {
   }, []);
 
   // 기존 상태 관리 유지 (점진적 최적화)
-  const [rightPanelData, setRightPanelData] = useState<RankPreviewDto[]>([]);
-  const [rightPanelLoading, setRightPanelLoading] = useState(false);
+  const [rightPanelData, setRightPanelData] = useState<
+    Schemas['RankPreviewDto'][]
+  >([]);
   const [selectedWeek, setSelectedWeek] = useState<WeekDto | null>(null);
-  const [leftPanelData, setLeftPanelData] = useState<DuckstarRankPreviewDto[]>(
-    []
-  );
-  const [leftPanelLoading, setLeftPanelLoading] = useState(false);
+  const [leftPanelData, setLeftPanelData] = useState<
+    Schemas['DuckstarRankPreviewDto'][]
+  >([]);
   const [leftPanelError, setLeftPanelError] = useState<string | null>(null);
-  const [anilabData, setAnilabData] = useState<RankPreviewDto[]>([]);
-  const [animeCornerData, setAnimeCornerData] = useState<RankPreviewDto[]>([]);
+  const [anilabData, setAnilabData] = useState<Schemas['RankPreviewDto'][]>([]);
+  const [animeCornerData, setAnimeCornerData] = useState<
+    Schemas['RankPreviewDto'][]
+  >([]);
   const [selectedRightTab, setSelectedRightTab] = useState<
     'anilab' | 'anime-corner'
   >('anime-corner');
@@ -98,7 +95,7 @@ export default function HomeClient() {
     data: homeData,
     error,
     isLoading,
-  } = useQuery<ApiResponse<HomeDto>>({
+  } = useQuery<ApiResponse<Schemas['HomeDto']>>({
     queryKey: ['home'],
     queryFn: () => homeApi.getHome(10),
     ...queryConfig.home, // 통일된 홈 데이터 캐싱 전략 적용
@@ -149,18 +146,16 @@ export default function HomeClient() {
     if (homeData?.result) {
       // 초기 데이터 설정
       const initialAnilabData =
-        homeData.result.weeklyTopDto.anilabRankPreviews || [];
+        homeData.result.weeklyTopDto?.anilabRankPreviews || [];
       const initialAnimeCornerData =
-        homeData.result.weeklyTopDto.animeCornerRankPreviews || [];
+        homeData.result.weeklyTopDto?.animeCornerRankPreviews || [];
 
       setAnilabData(initialAnilabData); // Anilab 데이터 별도 저장
       setAnimeCornerData(initialAnimeCornerData); // Anime Corner 데이터 별도 저장
 
-      // 근본적 해결: 데이터 설정은 useEffect에서 자동 처리
-
       // Left Panel 초기 데이터 설정
       const initialDuckstarData =
-        homeData.result.weeklyTopDto.duckstarRankPreviews || [];
+        homeData.result.weeklyTopDto?.duckstarRankPreviews || [];
 
       setLeftPanelData(initialDuckstarData); // Left Panel 초기값 설정
 
@@ -192,7 +187,7 @@ export default function HomeClient() {
 
       if (!shouldRestore && !hasRestoredWeek && !selectedWeek) {
         const pastWeeks = homeData.result.pastWeekDtos;
-        if (pastWeeks.length > 0) {
+        if (pastWeeks && pastWeeks.length > 0) {
           setSelectedWeek(pastWeeks[0]);
         }
       }
@@ -370,12 +365,11 @@ export default function HomeClient() {
     setSelectedWeek(week);
 
     try {
-      setLoadingStates(true);
       clearErrorState();
 
       // 선택된 주차의 모든 데이터 조회
       const response = await homeApi.getAnimeRank(
-        week.year,
+        week.year ?? 0,
         week.quarter,
         week.week,
         10
@@ -391,15 +385,7 @@ export default function HomeClient() {
       handleWeekChangeError(
         `데이터 로딩 에러: ${err instanceof Error ? err.message : '알 수 없는 오류'}`
       );
-    } finally {
-      setLoadingStates(false);
     }
-  };
-
-  // 로딩 상태 설정
-  const setLoadingStates = (loading: boolean) => {
-    setRightPanelLoading(loading);
-    setLeftPanelLoading(loading);
   };
 
   // 모든 패널 데이터 업데이트 (리팩토링)
@@ -515,7 +501,7 @@ export default function HomeClient() {
         </div>
 
         {/* 헤더 리스트 영역 */}
-        <div className="sticky top-[60px] z-20 w-full bg-white px-4 pt-2 sm:pt-3">
+        <div className="sticky top-[60px] z-20 w-full bg-white px-4 pt-2 sm:pt-3 dark:bg-zinc-900">
           <div className="mx-auto flex w-full max-w-[1147px] flex-col gap-4 xl:flex-row xl:items-end xl:justify-center xl:gap-6">
             {/* Left Panel 헤더 - 애니메이션 순위(한국) */}
             <div className="w-full xl:w-[750px] xl:flex-shrink-0">
@@ -540,16 +526,7 @@ export default function HomeClient() {
           <div className="mx-auto flex w-full max-w-[1147px] flex-col gap-4 xl:flex-row xl:justify-center xl:gap-6">
             {/* Left Panel */}
             <div className="flex w-full flex-col items-center gap-4 xl:w-[750px] xl:flex-shrink-0">
-              {leftPanelLoading ? (
-                <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white p-5">
-                  <div className="flex h-full items-center justify-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-800"></div>
-                    <span className="ml-3 text-gray-600">
-                      Left Panel 데이터 로딩 중...
-                    </span>
-                  </div>
-                </div>
-              ) : leftPanelError ? (
+              {leftPanelError ? (
                 <div className="w-full max-w-[750px] rounded-xl border border-[#D1D1D6] bg-white p-5">
                   <div className="flex h-full flex-col items-center justify-center">
                     <div className="mb-2 text-4xl text-red-500">⚠️</div>
@@ -579,7 +556,7 @@ export default function HomeClient() {
 
             {/* 모바일용 해외 순위 헤더 - 한국 순위 패널 아래, 해외 순위 패널 위에 위치 */}
             <div className="w-full xl:hidden">
-              <div className="mx-auto w-full rounded-lg bg-white py-1">
+              <div className="mx-auto w-full rounded-lg py-1">
                 <div className="mx-auto flex justify-center">
                   <RightHeaderList
                     selectedTab={selectedRightTab}
@@ -594,7 +571,6 @@ export default function HomeClient() {
               <RightPanel
                 rightPanelData={rightPanelData}
                 selectedRightTab={selectedRightTab}
-                rightPanelLoading={rightPanelLoading}
                 selectedWeek={selectedWeek}
               />
             </div>

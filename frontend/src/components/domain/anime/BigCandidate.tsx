@@ -3,10 +3,9 @@
 import { cn } from '@/lib';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LiveCandidateDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import StarSubmissionBox from '@/components/domain/star/StarSubmissionBox';
 import { submitStarVote, withdrawStar } from '@/api/vote';
-import { StarInfoDto, LiveVoteResultDto } from '@/types/dtos';
 import { Clock } from 'lucide-react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
@@ -15,14 +14,13 @@ import {
   differenceInMinutes,
   differenceInSeconds,
 } from 'date-fns';
-import { ApiResponse } from '@/api/http';
 
 interface BigCandidateProps {
-  anime: LiveCandidateDto;
+  anime: Schemas['LiveCandidateDto'];
   className?: string;
   isCurrentSeason?: boolean; // 현재 시즌인지 여부
   voteInfo?: { year: number; quarter: number; week: number } | null; // 투표 정보
-  starInfo: StarInfoDto | null; // 별점 정보 (사용자 투표 이력 포함)
+  starInfo: Schemas['StarInfoDto'] | null; // 별점 정보 (사용자 투표 이력 포함)
   voterCount: number;
   onVoteComplete?: (episodeId: number, voteTimeLeft: number) => void; // 투표 완료 시 호출되는 콜백
 }
@@ -398,7 +396,7 @@ export default function BigCandidate({
 
   // API 응답을 별점 분포로 변환하는 함수
   const updateStarDistribution = (
-    response: ApiResponse<LiveVoteResultDto>,
+    response: Schemas['ApiResponseVoteResultDto'],
     userStarScore?: number
   ) => {
     if (response.result.info) {
@@ -715,7 +713,7 @@ export default function BigCandidate({
     <div
       data-anime-item
       className={cn(
-        'overflow-hidden rounded-2xl bg-white transition-all duration-200',
+        'overflow-hidden rounded-2xl transition-all duration-200 dark:bg-zinc-800',
         // submitted 상태가 아닐 때만 호버 스케일 효과 적용
         voteState !== 'submitted' ? 'hover:scale-[1.02]' : '',
         // submitted 상태일 때는 약간의 그림자 강화로 투표 완료 상태임을 시각적으로 표현
@@ -729,7 +727,7 @@ export default function BigCandidate({
     >
       {/* Thumbnail Image */}
       <div
-        className="relative h-[340px] w-full cursor-pointer overflow-hidden bg-gray-300"
+        className="relative h-[340px] w-full cursor-pointer overflow-hidden"
         onClick={() => router.push(`/animes/${animeId}`)}
       >
         {localVoterCount > 0 && (
@@ -752,7 +750,7 @@ export default function BigCandidate({
           {/* Title - 고정 높이로 2줄 기준 설정 */}
           <div className="relative h-[48px]">
             <h3
-              className="line-clamp-2 cursor-pointer text-[16px] leading-tight font-bold text-gray-900 transition-colors hover:text-[#990033]"
+              className="hover:text-brand line-clamp-2 cursor-pointer text-[16px] leading-tight font-bold transition-colors"
               onClick={() => router.push(`/animes/${animeId}`)}
             >
               {titleKor}
@@ -760,76 +758,21 @@ export default function BigCandidate({
 
             {/* 제목 아래 회색선 - 제목 프레임 내에서 아래 왼쪽 정렬 */}
             <div className="absolute bottom-0 left-0 h-0 w-[90px]">
-              <div className="h-[1px] w-full bg-[#ced4da]"></div>
+              <div className="h-[1px] w-full bg-[#ced4da] dark:bg-zinc-700"></div>
             </div>
           </div>
 
-          {/* Air Time and Countdown */}
+          {/* Air Time */}
           <div className="mt-[9px] flex items-center">
             <div className="flex items-center gap-2">
-              {(() => {
-                const airTimeText = formatAirTime(
-                  scheduledAt,
-                  anime.airTime || ''
-                );
-                const isUpcomingCountdown =
-                  status === 'UPCOMING' && airTimeText.includes('D-');
-
-                if (isUpcomingCountdown) {
-                  // UPCOMING 상태의 "D-" 텍스트에 검정 바탕에 흰 글씨 스타일 적용
-                  // scheduledAt에서 시간 추출
-                  const getTimeFromScheduledAt = (scheduledAt: string) => {
-                    if (!scheduledAt) return '';
-                    const date = new Date(scheduledAt);
-                    let hours = date.getHours();
-                    const minutes = date
-                      .getMinutes()
-                      .toString()
-                      .padStart(2, '0');
-                    // 00:00 ~ 04:59인 경우 24시간 더하기
-                    if (hours < 5) {
-                      hours += 24;
-                    }
-                    return `${hours.toString().padStart(2, '0')}:${minutes}`;
-                  };
-
-                  return (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-medium text-[#868E96]">
-                        {medium === 'MOVIE'
-                          ? getDayInKorean(dayOfWeek) // 극장판은 요일만 표시
-                          : medium === 'TVA' &&
-                              (dayOfWeek === 'NONE' || dayOfWeek === 'SPECIAL')
-                            ? getDayInKorean(dayOfWeek)
-                            : getDayInKorean(dayOfWeek)}
-                      </span>
-                      <span className="rounded bg-black px-2 py-1 text-[13px] font-bold text-white">
-                        {airTimeText}
-                      </span>
-                      <span className="text-[14px] font-medium text-[#868E96]">
-                        {getTimeFromScheduledAt(scheduledAt)}
-                      </span>
-                    </div>
-                  );
-                } else {
-                  // 일반적인 airTime 표시
-                  return (
-                    <span className="text-[14px] font-medium text-[#868E96]">
-                      {formatAirTime(scheduledAt, anime.airTime || '')}
-                    </span>
-                  );
-                }
-              })()}
-              {/* {isRescheduled && (
-                <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-600">
-                  편성 변경
-                </span>
-              )} */}
+              <span className="text-[14px] font-medium text-[#868E96]">
+                {formatAirTime(scheduledAt)}
+              </span>
             </div>
             {/* 투표 남은 시간 배지 */}
             <div className="w-[7px]"></div>
             <div
-              className={`flex items-center rounded-md px-2 py-0.5 ${getVoteTimeRemaining() === '종료' ? 'bg-black' : 'bg-[#990033]'}`}
+              className={`flex items-center rounded-md px-2 py-0.5 ${getVoteTimeRemaining() === '종료' ? 'bg-black' : 'bg-brand'}`}
             >
               <span className="flex items-center gap-1 text-[13px] font-bold text-white">
                 <Clock size={14} /> 투표: {getVoteTimeRemaining()}{' '}
@@ -849,7 +792,7 @@ export default function BigCandidate({
 
       {/* 라벨 띠 - 카드 호버 시 디자인 변경, 라벨 띠 호버 시 블랙박스 */}
       <div
-        className={`h-6 bg-[#F1F3F5] ${
+        className={`h-6 bg-[#F1F3F5] dark:bg-zinc-700 ${
           voteState === 'submitted' && isPanelVisible
             ? 'bg-black'
             : 'group-hover:bg-black hover:bg-black'
@@ -862,12 +805,12 @@ export default function BigCandidate({
         {(voteState !== 'submitted' || !isPanelVisible) && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex items-center space-x-2">
-              <div className="text-xs font-medium text-gray-600 opacity-70 transition-all duration-200 group-hover:text-white group-hover:opacity-100">
+              <div className="text-xs font-medium text-gray-600 opacity-70 transition-all duration-200 group-hover:text-white group-hover:opacity-100 dark:text-zinc-100">
                 {voteState === 'submitted'
                   ? '투표 내역 보기'
                   : '마우스를 올려서 투표'}
               </div>
-              <div className="h-0 w-0 animate-bounce border-r-[6px] border-b-[6px] border-l-[6px] border-transparent border-b-gray-600 opacity-60 transition-all duration-200 group-hover:border-b-white group-hover:opacity-100"></div>
+              <div className="h-0 w-0 animate-bounce border-r-[6px] border-b-[6px] border-l-[6px] border-transparent border-b-gray-600 opacity-60 transition-all duration-200 group-hover:border-b-white group-hover:opacity-100 dark:border-b-zinc-100"></div>
             </div>
           </div>
         )}

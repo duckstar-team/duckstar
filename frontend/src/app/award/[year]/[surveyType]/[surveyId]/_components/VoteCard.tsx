@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import VoteToggle from './VoteToggle';
-import { AnimeCandidateDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 import { MAX_VOTES } from '@/lib';
 
 interface VoteCardProps {
-  anime: AnimeCandidateDto;
+  anime: Schemas['AnimeCandidateDto'];
   checked: boolean;
   onChange?: (isBonusVote?: boolean) => void;
   showError?: boolean;
@@ -177,7 +177,7 @@ export default function VoteCard({
 
       {/* 에러 메시지 - 빨간 테두리 위에 작은 글씨 */}
       {showError && (
-        <div className="absolute -top-2 left-4 bg-white px-2 text-xs font-medium text-[#990033] transition-opacity duration-3000 ease-in-out">
+        <div className="text-brand absolute -top-2 left-4 bg-white px-2 text-xs font-medium transition-opacity duration-3000 ease-in-out">
           일반 투표 횟수(10회)를 모두 소진하였습니다.
         </div>
       )}

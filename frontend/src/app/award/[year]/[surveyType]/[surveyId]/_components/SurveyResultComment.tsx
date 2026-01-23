@@ -1,6 +1,6 @@
 'use client';
 
-import { CommentDto, ReplyDto, ReplyRequestDto, PageInfo } from '@/types/dtos';
+import { Schemas, PageInfo } from '@/types';
 import React, { useState } from 'react';
 import Comment from '@/components/domain/comment/Comment';
 import Reply from '@/components/domain/comment/Reply';
@@ -25,7 +25,7 @@ import { useModal } from '@/components/layout/AppContainer';
 
 interface SurveyResultCommentProps {
   animeId: number;
-  commentDtos: CommentDto[];
+  commentDtos: Schemas['CommentDto'][];
   commentTotalCount: number;
   surveyCandidateId: number;
 }
@@ -54,9 +54,9 @@ export default function SurveyResultComment({
   const [expandedReplies, setExpandedReplies] = useState<{
     [commentId: number]: boolean;
   }>({});
-  const [replies, setReplies] = useState<{ [commentId: number]: ReplyDto[] }>(
-    {}
-  );
+  const [replies, setReplies] = useState<{
+    [commentId: number]: Schemas['ReplyDto'][];
+  }>({});
   const [replyPageInfo, setReplyPageInfo] = useState<{
     [commentId: number]: PageInfo;
   }>({});
@@ -92,8 +92,8 @@ export default function SurveyResultComment({
     }
 
     try {
-      const request: ReplyRequestDto = {
-        listenerId: activeReplyForm.listenerId,
+      const request: Schemas['ReplyRequestDto'] = {
+        listenerId: activeReplyForm.listenerId || 0,
         commentRequestDto: {
           body: content,
         },
@@ -241,7 +241,7 @@ export default function SurveyResultComment({
     }
 
     try {
-      let currentReply: ReplyDto | undefined;
+      let currentReply: Schemas['ReplyDto'] | undefined;
       let currentLikeId: number | undefined;
 
       Object.values(replies).forEach((replyList) => {
@@ -265,7 +265,7 @@ export default function SurveyResultComment({
                     ...reply,
                     isLiked: false,
                     likeCount: result.likeCount,
-                    replyLikeId: currentLikeId,
+                    replyLikeId: currentLikeId || 0,
                   }
                 : reply
             );
@@ -304,12 +304,12 @@ export default function SurveyResultComment({
       {/* 댓글 토글 버튼 */}
       <button
         onClick={() => setIsCommentOpen((prev) => !prev)}
-        className="flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-lg font-semibold text-gray-800"
+        className="flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-lg font-semibold text-gray-800 dark:bg-zinc-700 dark:text-zinc-200"
       >
         댓글 {commentTotalCount}개
         <ChevronDown
           className={cn(
-            'text-gray-500 transition',
+            'text-gray-500 transition dark:text-zinc-400',
             isCommentOpen && 'rotate-180'
           )}
         />

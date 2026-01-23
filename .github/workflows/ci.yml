@@ -5,6 +5,11 @@ on:
     branches:
       - dev
       - master
+    # 루트의 설정 파일이나 각 디렉토리 변경 시에만 작동하도록 최적화
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   # 백엔드 빌드 및 테스트
@@ -62,7 +67,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 18
 
       # 3. npm 캐싱 (속도 최적화)
       - name: Cache node_modules

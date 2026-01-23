@@ -4,10 +4,10 @@ import { useRouter } from 'next/navigation';
 import ImagePlaceholder from '@/components/common/ImagePlaceholder';
 import RankDiff from '@/components/domain/chart/RankDiff';
 import { cn } from '@/lib';
-import { RankPreviewDto } from '@/types/dtos';
+import { Schemas } from '@/types';
 
 interface AbroadRankCardProps {
-  rankPreview: RankPreviewDto;
+  rankPreview: Schemas['RankPreviewDto'];
   rankDiff:
     | 'up-greater-equal-than-5'
     | 'up-less-than-5'
@@ -43,7 +43,7 @@ export default function AbroadRankCard({
   return (
     <div
       className={cn(
-        'flex max-w-[370px] flex-wrap items-center gap-4 overflow-hidden rounded-xl border border-zinc-300 bg-white p-4',
+        'flex max-w-[370px] flex-wrap items-center gap-4 overflow-hidden rounded-xl border border-zinc-300 bg-white p-4 dark:border-none dark:bg-zinc-800 dark:hover:bg-zinc-800/50',
         isWinner ? 'h-[180px] sm:h-[210px]' : 'h-[120px] sm:h-[140px]',
         contentId ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default',
         'transition-colors'
@@ -52,7 +52,7 @@ export default function AbroadRankCard({
     >
       {/* 순위 섹션 */}
       <div className="flex w-8 shrink-0 flex-col items-center justify-center gap-1">
-        <div className="text-2xl font-bold text-gray-500 lg:text-3xl">
+        <div className="text-2xl font-bold text-zinc-500 lg:text-3xl dark:text-zinc-100">
           {rank}
         </div>
         <RankDiff property1={rankDiff} value={rankDiffValue} />
@@ -90,7 +90,7 @@ export default function AbroadRankCard({
 
       {/* 제목과 스튜디오 */}
       <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1">
-        <div className="line-clamp-3 leading-tight font-bold text-gray-600 md:text-lg">
+        <div className="line-clamp-3 leading-tight font-bold md:text-lg">
           {title}
         </div>
         <div className="text-xs text-gray-400 md:text-sm">{subTitle}</div>
