@@ -36,19 +36,22 @@ const nextConfig: NextConfig = {
 
   // API 프록시 설정
   async rewrites() {
+    // Docker 환경에서는 서비스 이름 사용, 로컬에서는 localhost 사용
+    // 빌드 타임에 BACKEND_URL이 설정되어 있으면 사용, 없으면 localhost 사용
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
     return [
       {
         source: '/oauth2/:path*',
-        destination: 'http://localhost:8080/oauth2/:path*',
+        destination: `${backendUrl}/oauth2/:path*`,
       },
       {
         source: '/login/:path*',
-        destination: 'http://localhost:8080/login/:path*',
+        destination: `${backendUrl}/login/:path*`,
       },
       // /api/image-proxy는 Next.js 라우트 핸들러로 처리되므로 제외
       {
         source: '/api/:path((?!image-proxy).*)',
-        destination: 'http://localhost:8080/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },

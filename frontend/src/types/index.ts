@@ -37,3 +37,8 @@ export { WeekCandidateDtoState as EpEvaluateState } from './generated/api';
 export { HomeBannerDtoBannerType as BannerType } from './generated/api';
 export { HomeBannerDtoContentType as ContentType } from './generated/api';
 export { MedalPreviewDtoType as MedalType } from './generated/api';
+
+// Admin 관련
+export type OttDto = Schemas['OttDto'];
+export type IpManagementLogDto = Schemas['IpManagementLogDto'];
+export type SubmissionCountDto = Schemas['SubmissionCountDto'];

@@ -11,8 +11,7 @@ import {
   undoWithdrawnSubmissions,
   getAdminLogsOnIpManagement,
 } from '@/api/admin';
-import { IpManagementLogDto, OttDto, SubmissionCountDto } from '@/types/dtos';
-import { OttType } from '@/types/enums';
+import { OttType, OttDto, IpManagementLogDto, SubmissionCountDto } from '@/types';
 
 // 기존 AnimeData 인터페이스와 컴포넌트는 그대로 유지
 
@@ -201,11 +200,13 @@ export default function AdminPage() {
         isRequestingLogs = true;
         setIsLoadingMoreLogs(true);
         try {
-          const response = await getAdminLogsOnIpManagement(logsPage + 1, 10);
+          const response = await getAdminLogsOnIpManagement(logsPage + 1, 10, 'IP');
           if (response.isSuccess) {
+            // 백엔드 응답 필드명: managementLogDtos
+            const logs = (response.result as any).managementLogDtos || response.result.ipManagementLogDtos || [];
             setLogs((prev) => [
               ...prev,
-              ...response.result.ipManagementLogDtos,
+              ...logs,
             ]);
             setLogsHasNextPage(response.result.pageInfo.hasNext);
             setLogsPage((prev) => prev + 1);
@@ -276,12 +277,14 @@ export default function AdminPage() {
       setIsLoadingMoreLogs(true);
     }
     try {
-      const response = await getAdminLogsOnIpManagement(page, 10);
+      const response = await getAdminLogsOnIpManagement(page, 10, 'IP');
       if (response.isSuccess) {
+        // 백엔드 응답 필드명: managementLogDtos (generated API 문서가 업데이트되면 타입도 변경 필요)
+        const logs = (response.result as any).managementLogDtos || response.result.ipManagementLogDtos || [];
         if (reset) {
-          setLogs(response.result.ipManagementLogDtos);
+          setLogs(logs);
         } else {
-          setLogs((prev) => [...prev, ...response.result.ipManagementLogDtos]);
+          setLogs((prev) => [...prev, ...logs]);
         }
         setLogsHasNextPage(response.result.pageInfo.hasNext);
         setLogsPage(page);
@@ -948,7 +951,7 @@ export default function AdminPage() {
       ...prev,
       ottDtos: [
         ...(prev.ottDtos || []),
-        { ottType: OttType.Netflix, watchUrl: '' },
+        { ottType: OttType.NETFLIX, watchUrl: '' },
       ],
     }));
   };
@@ -1703,29 +1706,34 @@ export default function AdminPage() {
                       <div className="text-gray-500">로그가 없습니다.</div>
                     ) : (
                       logs.map((log, index) => {
+                        const taskType = log.memberProfileDto?.taskType;
                         const taskTypeText =
-                          log.taskType === 'BAN'
+                          taskType === 'BAN'
                             ? '차단'
-                            : log.taskType === 'UNBAN'
+                            : taskType === 'UNBAN'
                               ? '차단 해제'
-                              : log.taskType === 'WITHDRAW'
+                              : taskType === 'WITHDRAW'
                                 ? '표 몰수'
                                 : '표 몰수 롤백';
 
+                        // 백엔드 응답이 weekDto를 반환할 수도 있고, year/quarter/week를 직접 반환할 수도 있음
+                        const weekYear = (log as any).weekDto?.year || log.year;
+                        const weekQuarter = (log as any).weekDto?.quarter || log.quarter;
+                        const weekWeek = (log as any).weekDto?.week || log.week;
                         const weekInfo =
-                          log.weekId && log.year && log.quarter && log.week
-                            ? formatDate(log.year, log.quarter, log.week)
+                          log.weekId && weekYear && weekQuarter && weekWeek
+                            ? formatDate(weekYear, weekQuarter, weekWeek)
                             : '알 수 없음';
 
-                        const dateTime = new Date(log.managedAt);
+                        const dateTime = new Date(log.memberProfileDto?.managedAt || '');
                         const formattedDate = `${dateTime.getFullYear()}.${String(dateTime.getMonth() + 1).padStart(2, '0')}.${String(dateTime.getDate()).padStart(2, '0')}.${String(dateTime.getHours()).padStart(2, '0')}:${String(dateTime.getMinutes()).padStart(2, '0')}`;
 
                         const taskTypeColor =
-                          log.taskType === 'BAN'
+                          taskType === 'BAN'
                             ? 'text-red-400'
-                            : log.taskType === 'UNBAN'
+                            : taskType === 'UNBAN'
                               ? 'text-green-400'
-                              : log.taskType === 'WITHDRAW'
+                              : taskType === 'WITHDRAW'
                                 ? 'text-orange-400'
                                 : 'text-blue-400';
 
@@ -1734,24 +1742,24 @@ export default function AdminPage() {
                             key={`log-${index}`}
                             className="leading-relaxed text-gray-300"
                           >
-                            {log.profileImageUrl && (
+                            {log.memberProfileDto?.profileImageUrl && (
                               <img
-                                src={log.profileImageUrl}
-                                alt={log.managerNickname}
+                                src={log.memberProfileDto.profileImageUrl}
+                                alt={log.memberProfileDto.managerNickname}
                                 className="mr-1.5 inline-block h-4 w-4 rounded-full align-middle"
                               />
                             )}
                             <span className="text-green-400">
-                              {log.managerNickname}
+                              {log.memberProfileDto?.managerNickname}
                             </span>
                             <span className="text-gray-400"> 님이 </span>
                             <span className="font-mono text-cyan-400">
                               {log.ipHash}
                             </span>
                             {log.weekId &&
-                              log.year &&
-                              log.quarter &&
-                              log.week && (
+                              ((log as any).weekDto?.year || log.year) &&
+                              ((log as any).weekDto?.quarter || log.quarter) &&
+                              ((log as any).weekDto?.week || log.week) && (
                                 <span className="text-gray-400">
                                   {' '}
                                   ({weekInfo})
@@ -1765,7 +1773,7 @@ export default function AdminPage() {
                             <span className="text-gray-500">
                               {formattedDate}
                             </span>
-                            {log.taskType === 'WITHDRAW' && (
+                            {taskType === 'WITHDRAW' && (
                               <button
                                 onClick={(e) => handleUndoWithdraw(log, e)}
                                 disabled={
