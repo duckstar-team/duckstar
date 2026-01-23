@@ -238,16 +238,40 @@ jobs:
           MAX_ATTEMPTS=12
           for i in $(seq 1 $MAX_ATTEMPTS); do
             echo "Checking health... (attempt $i of $MAX_ATTEMPTS)"
+            
+            # 컨테이너 상태 확인
+            CONTAINER_STATUS=$(ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
+              "docker ps -a --filter name=duckstar-backend --format '{{.Status}}'" 2>&1)
+            echo "Container status: $CONTAINER_STATUS"
+            
+            # 컨테이너가 실행 중인지 확인
+            if ! ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
+              "docker ps --filter name=duckstar-backend --format '{{.Names}}' | grep -q duckstar-backend"; then
+              echo "⚠️ 컨테이너가 실행 중이 아닙니다. 로그 확인 중..."
+              ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
+                "docker logs duckstar-backend --tail 50" || true
+              sleep 5
+              continue
+            fi
+            
+            # 헬스체크 실행 (wget 사용 - docker-compose.yml의 healthcheck와 동일)
             if ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
              "docker exec duckstar-backend \
-              curl -f -s http://localhost:8080/actuator/health > /dev/null 2>&1"; then
+              wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health 2>&1"; then
               echo "✅ 헬스체크 성공!"
               echo "status=success" >> $GITHUB_OUTPUT
               exit 0
+            else
+              echo "⚠️ 헬스체크 실패. 컨테이너 로그 확인 중..."
+              ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
+                "docker logs duckstar-backend --tail 20" || true
             fi
             sleep 5
           done
-          echo "❌ 헬스체크 실패"
+          echo "❌ 헬스체크 실패 (최대 시도 횟수 초과)"
+          echo "최종 컨테이너 로그:"
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
+            "docker logs duckstar-backend --tail 50" || true
           echo "status=failed" >> $GITHUB_OUTPUT
           exit 1
 
