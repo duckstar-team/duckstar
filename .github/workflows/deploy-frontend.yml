@@ -60,9 +60,6 @@ jobs:
             NEXT_PUBLIC_KAKAO_APP_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_APP_KEY }}
 
   deploy:
-    resources:
-      limits:
-        memory: 512M # 최대 512MB로 제한
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
