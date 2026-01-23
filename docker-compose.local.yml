@@ -1,0 +1,74 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.local
+    container_name: duckstar-backend
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+    ports:
+      - '8080:8080'
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - duckstar-net
+    # 로컬호스트 MySQL 접근을 위한 설정 (macOS/Windows)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+        NEXT_PUBLIC_KAKAO_APP_KEY: ${NEXT_PUBLIC_KAKAO_APP_KEY}
+        BACKEND_URL: http://backend:8080
+    environment:
+      BACKEND_URL: http://backend:8080
+    container_name: duckstar-frontend
+    ports:
+      - '3000:3000'
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - duckstar-net
+    volumes:
+      - frontend-static:/app/.next/static
+      - frontend-public:/app/public
+
+networks:
+  duckstar-net:
+    driver: bridge
+
+volumes:
+  frontend-static:
+  frontend-public:
+
+# 로컬 개발 환경에서는 nginx 없이 직접 접근:
+# - Frontend: http://localhost:3000
+# - Backend: http://localhost:8080

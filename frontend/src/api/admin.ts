@@ -99,11 +99,13 @@ export async function undoWithdrawnSubmissions(
 export async function getAdminLogsOnIpManagement(
   page: number = 0,
   size: number = 10,
+  filterType: 'ALL' | 'ANIME' | 'EPISODE' | 'IP' = 'IP',
   sort?: string[]
 ) {
   const params = new URLSearchParams({
     page: page.toString(),
     size: size.toString(),
+    filterType: filterType,
   });
 
   if (sort && sort.length > 0) {
@@ -111,7 +113,7 @@ export async function getAdminLogsOnIpManagement(
   }
 
   return apiCall<Schemas['IpManagementLogSliceDto']>(
-    `/api/admin/submissions/logs?${params.toString()}`
+    `/api/admin/logs?${params.toString()}`
   );
 }
 

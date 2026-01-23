@@ -2,8 +2,7 @@ name: Deploy Frontend
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
     paths:
       - 'frontend/**'
       - 'nginx/**'
@@ -15,9 +14,8 @@ concurrency:
   cancel-in-progress: false # 진행 중인 배포는 취소하지 않고 대기
 
 jobs:
-  deploy-frontend:
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -40,6 +38,34 @@ jobs:
           }' \
             ${{ secrets.DISCORD_WEBHOOK_URL }} || true
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/duckstar-docker-hub:frontend
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_KAKAO_APP_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_APP_KEY }}
+
+  deploy:
+    resources:
+      limits:
+        memory: 512M # 최대 512MB로 제한
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
       - name: Get public IP of GitHub Actions runner
         id: ip
         run: echo "IP=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_OUTPUT
@@ -72,95 +98,72 @@ jobs:
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Create .env file
-        run: |
-          cat <<EOF > .env
-          SPRING_PROFILES_ACTIVE=prod
-          SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
-          SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          SECURITY_IP_HASH_KEY=${{ secrets.SECURITY_IP_HASH_KEY }}
-          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
-          NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
-          KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
-          KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
-          KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
-          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_KAKAO_APP_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_APP_KEY }}
-          EOF
-
-      - name: Upload code to EC2
-        run: |
-          echo "📦 코드 압축 중..."
-          tar -czf /tmp/duckstar-code.tar.gz \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='backend/build' \
-            --exclude='frontend/.next' \
-            --exclude='frontend/node_modules' \
-            frontend/ \
-            docker-compose.yml \
-            nginx/ \
-            .env
-
-          echo "📤 EC2로 코드 전송 중..."
-          scp -o StrictHostKeyChecking=no /tmp/duckstar-code.tar.gz ubuntu@${{ secrets.EC2_HOST }}:/tmp/duckstar-code.tar.gz
-
-          echo "📂 EC2에서 기존 코드 삭제 및 새 코드 압축 해제 중..."
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
-          set -e
-          cd /home/ubuntu/duckstar
+      
+      - name: Copy docker-compose.yml to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml" # 로컬(Runner)의 파일
+          target: "/home/ubuntu/duckstar/" # EC2의 목적지
           
-          if [ -d "frontend" ]; then
-            echo "frontend 내의 public을 제외하고 정리 중..."
-            # public 폴더만 남기고 나머지 삭제
-            find frontend -mindepth 1 -maxdepth 1 ! -name 'public' -exec rm -rf {} +
-          fi
-          
-          if [ -d "nginx" ]; then
-            rm -rf nginx
-          fi
-          
-          tar -xzf /tmp/duckstar-code.tar.gz -C /home/ubuntu/duckstar
-          EOF
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/duckstar
+            
+            # 1. .env 파일 생성 (도커 아이디와 서비스 환경변수 주입)
+            cat <<EOF > .env
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_KAKAO_APP_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_APP_KEY }}
+            EOF
+            
+            # 2. 이미지 풀 및 컨테이너 재시작
+            echo "📥 최신 이미지 Pull 중..."
+            docker compose pull frontend nginx
+            
+            echo "🛠 컨테이너 재시작 중..."
+            # Frontend 먼저 재시작 (nginx는 frontend가 healthy 될 때까지 대기)
+            docker compose up -d --no-deps frontend
 
-          # 로컬 임시 파일 정리
-          rm -f /tmp/duckstar-code.tar.gz
+            # Frontend가 준비될 때까지 대기
+            echo "⏳ Frontend 준비 대기 중..."
+            timeout 60 bash -c 'until docker exec duckstar-frontend wget --spider -q http://localhost:3000/; do sleep 2; done' || true
+            
+            # 그 다음 nginx 재시작 (최소 다운타임)
+            docker compose up -d --no-deps nginx
+            
+            echo "🧹 사용하지 않는 이미지 정리 중..."
+            docker image prune -f
 
-      - name: Deploy Frontend and Nginx to EC2
+      # 🏥 헬스체크 단계
+      - name: Health Check
+        id: health_check
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} <<'EOF'
-          set -e
-          cd /home/ubuntu/duckstar
-
-          echo "🧹 빌드 공간 확보: 오래된 도커 데이터 정리 (빌드 전)"
-          # 중지된 컨테이너만 삭제 (실행 중인 컨테이너는 유지)
-          docker container prune -f
-          # 태그가 없는(dangling) 이미지만 삭제 (빌드 캐시는 유지)
-          docker image prune -f
-          # 24시간 이상 사용되지 않은 빌드 캐시만 삭제 (최근 캐시는 유지하여 빌드 속도 향상)
-          docker builder prune -f --filter "until=24h"
-
-          echo "🛠 프론트엔드 및 Nginx 빌드 시작"
-          # 이제 깨끗한 상태에서 빌드
-          docker compose up -d --build frontend nginx
-
-          echo "📋 컨테이너 상태"
-          docker ps -a
-
-          echo "📄 프론트엔드 최근 로그"
-          docker compose logs --tail=50 frontend
-
-          echo "📄 Nginx 최근 로그"
-          docker compose logs --tail=50 nginx
-          EOF
+          MAX_ATTEMPTS=12
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Checking health... (attempt $i of $MAX_ATTEMPTS)"
+            if ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
+             "docker exec duckstar-frontend \
+              wget --no-verbose --tries=1 --spider http://localhost:3000/ > /dev/null 2>&1"; then
+              echo "✅ 헬스체크 성공!"
+              echo "status=success" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ 헬스체크 실패"
+          echo "status=failed" >> $GITHUB_OUTPUT
+          exit 1
 
       - name: Discord Notification - 배포 성공
-        if: success()
+        if: steps.health_check.outputs.status == 'success'
         run: |
           curl -H "Content-Type: application/json" \
             -d '{
@@ -170,7 +173,8 @@ jobs:
               "fields": [
                 {"name": "브랜치", "value": "${{ github.ref_name }}", "inline": true},
                 {"name": "커밋", "value": "[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})", "inline": false},
-                {"name": "작성자", "value": "${{ github.actor }}", "inline": true}
+                {"name": "작성자", "value": "${{ github.actor }}", "inline": true},
+                {"name": "헬스체크", "value": "✅ 통과", "inline": true}
               ],
               "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
             }]
