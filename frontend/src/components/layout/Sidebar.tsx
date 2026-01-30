@@ -40,7 +40,7 @@ export default function Sidebar() {
   return (
     <div className="flex h-screen">
       <div
-        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5 dark:border-zinc-800 dark:bg-zinc-900"
+        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-30 md:px-2.5 dark:border-zinc-800 dark:bg-zinc-900"
         onMouseEnter={
           isThinNavPage && canHover
             ? () => setIsThinNavHovered(true)
@@ -110,10 +110,10 @@ export default function Sidebar() {
           })}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <footer className="flex flex-col gap-4">
           {/* Footer - 일반 페이지에만 표시 */}
           {!isThinNavPage && (
-            <footer className="ml-1 flex flex-col text-sm text-gray-500">
+            <div className="ml-1 flex flex-col text-sm text-gray-500">
               {/* 상단 링크 */}
               <Link
                 href="/about"
@@ -141,7 +141,7 @@ export default function Sidebar() {
 
               {/* 저작권 텍스트 */}
               <div className="mt-5">© 2025 DUCKSTAR</div>
-            </footer>
+            </div>
           )}
 
           {(!isThinNavPage || isExpanded || !canHover) && (
@@ -149,7 +149,7 @@ export default function Sidebar() {
               <ThemeToggle />
             </div>
           )}
-        </div>
+        </footer>
       </div>
 
       {/* ThinNavDetail - Chart 또는 Award 페이지에만 표시 */}
