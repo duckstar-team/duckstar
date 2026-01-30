@@ -120,7 +120,12 @@ export default function TopTenList({
             item.rankDiff,
             item.consecutiveWeeksAtSameRank
           )}
-          value={item.consecutiveWeeksAtSameRank}
+          value={
+            getRankDiffType(item.rankDiff, item.consecutiveWeeksAtSameRank) ===
+            'same-rank'
+              ? (item.consecutiveWeeksAtSameRank || 0).toString()
+              : (item.rankDiff || 0).toString()
+          }
           isTopTen={true}
         />
       </div>

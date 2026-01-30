@@ -14,6 +14,16 @@ export default function Sidebar() {
   const router = useRouter();
   const [isThinNavHovered, setIsThinNavHovered] = useState(false);
   const [isThinNavDetailHovered, setIsThinNavDetailHovered] = useState(false);
+  const [canHover, setCanHover] = useState(true);
+
+  // hover 가능 여부 (마우스 vs 터치) — 화면 너비와 무관
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: hover)');
+    const update = () => setCanHover(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   // ThinNav 여부 확인
   const isThinNavPage =
@@ -30,12 +40,16 @@ export default function Sidebar() {
   return (
     <div className="flex h-screen">
       <div
-        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-24 md:px-2.5 dark:border-zinc-800 dark:bg-zinc-900"
+        className="flex flex-col justify-between border-r border-gray-200 bg-white px-2 py-3 pb-30 md:px-2.5 dark:border-zinc-800 dark:bg-zinc-900"
         onMouseEnter={
-          isThinNavPage ? () => setIsThinNavHovered(true) : undefined
+          isThinNavPage && canHover
+            ? () => setIsThinNavHovered(true)
+            : undefined
         }
         onMouseLeave={
-          isThinNavPage ? () => setIsThinNavHovered(false) : undefined
+          isThinNavPage && canHover
+            ? () => setIsThinNavHovered(false)
+            : undefined
         }
         onClick={(e) => e.stopPropagation()}
       >
@@ -96,10 +110,10 @@ export default function Sidebar() {
           })}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <footer className="flex flex-col gap-4">
           {/* Footer - 일반 페이지에만 표시 */}
           {!isThinNavPage && (
-            <footer className="ml-1 flex flex-col text-sm text-gray-500">
+            <div className="ml-1 flex flex-col text-sm text-gray-500">
               {/* 상단 링크 */}
               <Link
                 href="/about"
@@ -127,26 +141,32 @@ export default function Sidebar() {
 
               {/* 저작권 텍스트 */}
               <div className="mt-5">© 2025 DUCKSTAR</div>
-            </footer>
+            </div>
           )}
 
-          {(!isThinNavPage || isExpanded) && (
+          {(!isThinNavPage || isExpanded || !canHover) && (
             <div className="ml-auto">
               <ThemeToggle />
             </div>
           )}
-        </div>
+        </footer>
       </div>
 
       {/* ThinNavDetail - Chart 또는 Award 페이지에만 표시 */}
       {isThinNavPage && (
         <div
-          onMouseEnter={() => {
-            if (isThinNavHovered) {
-              setIsThinNavDetailHovered(true);
-            }
-          }}
-          onMouseLeave={() => setIsThinNavDetailHovered(false)}
+          onMouseEnter={
+            canHover
+              ? () => {
+                  if (isThinNavHovered) {
+                    setIsThinNavDetailHovered(true);
+                  }
+                }
+              : undefined
+          }
+          onMouseLeave={
+            canHover ? () => setIsThinNavDetailHovered(false) : undefined
+          }
           onClick={(e) => e.stopPropagation()}
         >
           <ThinNavDetail

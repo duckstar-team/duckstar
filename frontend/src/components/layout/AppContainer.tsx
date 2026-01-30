@@ -192,7 +192,7 @@ export default function AppContainer({ children }: AppContainerProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 top-15 z-[9999999] bg-black/50 md:hidden"
+              className="fixed inset-0 top-15 z-[9999999] h-screen bg-black/50 md:hidden"
               onClick={() => setIsSidebarOpen(false)}
             >
               <motion.div
