@@ -397,26 +397,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/episodes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 에피소드 추가(큐잉) API
-         * @description 큐잉만 가능 - Tail(끝) 에피소드 추가 방식
-         */
-        post: operations["queueEpisode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/admin/episodes/{episodeId}": {
         parameters: {
             query?: never;
@@ -430,9 +410,9 @@ export interface paths {
         post: operations["breakEpisode"];
         /**
          * 에피소드 삭제 API
-         * @description 아직 투표를 받지 않았거나 관련 댓글이 없을 때만 삭제 가능. (기능 사용 대표 예시: 아직 방영하지 않은 에피소드가 삭제 대상일 때 사용)
+         * @description 다음 주부터의 에피소드만 삭제 가능
          */
-        delete: operations["deleteEpisode"];
+        delete: operations["deleteMoreThanNextWeekEpisode"];
         options?: never;
         head?: never;
         /** 에피소드 정보 수정 API */
@@ -469,7 +449,7 @@ export interface paths {
         get: operations["getAnimes"];
         put?: never;
         /** 애니메이션 등록 API */
-        post: operations["addAnime"];
+        post: operations["createAnime"];
         delete?: never;
         options?: never;
         head?: never;
@@ -490,7 +470,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * 애니메이션 정보 수정 API
+         * @description TVA의 방향 업데이트, 애니메이션의 상태, 제작사 업데이트
+         */
+        patch: operations["updateInfo"];
         trace?: never;
     };
     "/api/admin/animes/{animeId}/total-episodes": {
@@ -504,6 +488,27 @@ export interface paths {
         put?: never;
         /** 애니메이션 총 화수 수정 API */
         post: operations["updateTotalEpisodes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/animes/{animeId}/episodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 애니메이션 별 에피소드 조회 */
+        get: operations["getEpisodesByAnime"];
+        put?: never;
+        /**
+         * 에피소드 추가(큐잉) API
+         * @description 큐잉만 가능 - Tail(끝) 에피소드 추가 방식
+         */
+        post: operations["queueEpisode"];
         delete?: never;
         options?: never;
         head?: never;
@@ -946,7 +951,7 @@ export interface paths {
             cookie?: never;
         };
         /** 애니메이션 에피소드 조회 API */
-        get: operations["getEpisodesByAnime"];
+        get: operations["getEpisodesByAnime_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1026,7 +1031,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/submissions/logs": {
+    "/api/admin/logs": {
         parameters: {
             query?: never;
             header?: never;
@@ -1034,7 +1039,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * IP 관리 로그 조회 API
+         * 매니저 관리 로그 조회 API
          * @description 커서 기반 무한 스크롤
          */
         get: operations["getAdminLogsOnIpManagement"];
@@ -1055,23 +1060,6 @@ export interface paths {
         };
         /** 특정 주차, 특정 ip 제출 현황 전체 조회 API */
         get: operations["getSubmissionsByWeekAndIp"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/animes/{animeId}/episodes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 애니메이션 별 에피소드 조회 */
-        get: operations["getEpisodesByAnime_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1333,13 +1321,6 @@ export interface components {
             /** Format: int64 */
             surveyCandidateId: number;
         };
-        CreateRequestDto: {
-            /** Format: int32 */
-            episodeNumber: number;
-            /** Format: date-time */
-            scheduledAt: string;
-            isBreak: boolean;
-        };
         ApiResponseEpisodeManageResultDto: {
             isSuccess: boolean;
             code: string;
@@ -1389,6 +1370,16 @@ export interface components {
             /** Format: date */
             endDate: string;
         };
+        LocalTime: {
+            /** Format: int32 */
+            hour: number;
+            /** Format: int32 */
+            minute: number;
+            /** Format: int32 */
+            second: number;
+            /** Format: int32 */
+            nano: number;
+        };
         OttDto: {
             /** @enum {string} */
             ottType: OttDtoOttType;
@@ -1400,11 +1391,11 @@ export interface components {
             titleEng?: string;
             /** @enum {string} */
             medium: PostRequestDtoMedium;
-            airTime?: string;
             /** Format: date-time */
             premiereDateTime?: string;
             /** @enum {string} */
             dayOfWeek?: PostRequestDtoDayOfWeek;
+            airTime?: components["schemas"]["LocalTime"];
             /** Format: int32 */
             totalEpisodes?: number;
             corp?: string;
@@ -1485,6 +1476,20 @@ export interface components {
             episodeNumber: number;
             /** Format: date-time */
             rescheduledAt: string;
+        };
+        ApiResponseListManagerProfileDto: {
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["ManagerProfileDto"][];
+        };
+        InfoRequestDto: {
+            /** @enum {string} */
+            dayOfWeek: PostRequestDtoDayOfWeek;
+            airTime: components["schemas"]["LocalTime"];
+            /** @enum {string} */
+            status: InfoRequestDtoStatus;
+            corp: string;
         };
         ApiResponseListSurveyDto: {
             isSuccess: boolean;
@@ -1658,7 +1663,7 @@ export interface components {
             titleKor: string;
             mainThumbnailUrl: string;
             /** @enum {string} */
-            status: AnimePreviewDtoStatus;
+            status: InfoRequestDtoStatus;
             isBreak: boolean;
             isRescheduled: boolean;
             genre: string;
@@ -1683,16 +1688,6 @@ export interface components {
             code: string;
             message: string;
             result: components["schemas"]["AnimePreviewListDto"];
-        };
-        LocalTime: {
-            /** Format: int32 */
-            hour: number;
-            /** Format: int32 */
-            minute: number;
-            /** Format: int32 */
-            second: number;
-            /** Format: int32 */
-            nano: number;
         };
         ScheduleDto: {
             /** @enum {string} */
@@ -1925,7 +1920,7 @@ export interface components {
             /** @enum {string} */
             medium: PostRequestDtoMedium;
             /** @enum {string} */
-            status: AnimePreviewDtoStatus;
+            status: InfoRequestDtoStatus;
             /** Format: int32 */
             totalEpisodes: number;
             /** Format: date-time */
@@ -2045,30 +2040,32 @@ export interface components {
             submissionCountDtos: components["schemas"]["SubmissionCountDto"][];
             pageInfo: components["schemas"]["PageInfo"];
         };
-        ApiResponseIpManagementLogSliceDto: {
+        ApiResponseManagementLogSliceDto: {
             isSuccess: boolean;
             code: string;
             message: string;
-            result: components["schemas"]["IpManagementLogSliceDto"];
+            result: components["schemas"]["ManagementLogSliceDto"];
         };
-        IpManagementLogDto: {
+        ManagementLogDto: {
             /** Format: int64 */
             logId: number;
             /** Format: int64 */
-            weekId: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            /** Format: int32 */
-            week: number;
+            animeId: number;
+            /** Format: int64 */
+            episodeId: number;
             ipHash: string;
+            titleKor: string;
+            /** Format: int32 */
+            episodeNumber: number;
+            /** Format: int64 */
+            weekId: number;
+            weekDto: components["schemas"]["WeekDto"];
             reason: string;
             isUndoable: boolean;
             memberProfileDto: components["schemas"]["ManagerProfileDto"];
         };
-        IpManagementLogSliceDto: {
-            ipManagementLogDtos: components["schemas"]["IpManagementLogDto"][];
+        ManagementLogSliceDto: {
+            managementLogDtos: components["schemas"]["ManagementLogDto"][];
             pageInfo: components["schemas"]["PageInfo"];
         };
         ApiResponseListEpisodeStarDto: {
@@ -2087,10 +2084,48 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        AdminAnimeDto: {
+            /** Format: int64 */
+            animeId: number;
+            titleKor: string;
+            corp: string;
+            mainThumbnailUrl: string;
+            /** @enum {string} */
+            status: InfoRequestDtoStatus;
+            /** @enum {string} */
+            dayOfWeek: PostRequestDtoDayOfWeek;
+            airTime: components["schemas"]["LocalTime"];
+            /** Format: int32 */
+            totalEpisodes: number;
+            managerProfileDto: components["schemas"]["ManagerProfileDto"];
+        };
+        AdminAnimeListDto: {
+            adminAnimeDtos: components["schemas"]["AdminAnimeDto"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            isFirst: boolean;
+            isLast: boolean;
+        };
+        ApiResponseAdminAnimeListDto: {
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["AdminAnimeListDto"];
+        };
+        AdminEpisodeDto: {
+            episodeDto: components["schemas"]["EpisodeDto"];
+            managerProfileDto: components["schemas"]["ManagerProfileDto"];
+        };
         AdminEpisodeListDto: {
             /** Format: int32 */
             episodeTotalCount: number;
-            episodeInfoDtos: components["schemas"]["EpisodeInfoDto"][];
+            adminEpisodeDtos: components["schemas"]["AdminEpisodeDto"][];
         };
         ApiResponseAdminEpisodeListDto: {
             isSuccess: boolean;
@@ -2098,9 +2133,11 @@ export interface components {
             message: string;
             result: components["schemas"]["AdminEpisodeListDto"];
         };
-        EpisodeInfoDto: {
-            episodeDto: components["schemas"]["EpisodeDto"];
-            managerProfileDto: components["schemas"]["ManagerProfileDto"];
+        ApiResponseManagerProfileDto: {
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: components["schemas"]["ManagerProfileDto"];
         };
     };
     responses: never;
@@ -2749,28 +2786,6 @@ export interface operations {
             };
         };
     };
-    queueEpisode: {
-        parameters: {
-            query: {
-                request: components["schemas"]["CreateRequestDto"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
-                };
-            };
-        };
-    };
     breakEpisode: {
         parameters: {
             query?: never;
@@ -2793,7 +2808,7 @@ export interface operations {
             };
         };
     };
-    deleteEpisode: {
+    deleteMoreThanNextWeekEpisode: {
         parameters: {
             query?: never;
             header?: never;
@@ -2810,7 +2825,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
+                    "*/*": components["schemas"]["ApiResponseManagerProfileDto"];
                 };
             };
         };
@@ -2834,7 +2849,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
+                    "*/*": components["schemas"]["ApiResponseListManagerProfileDto"];
                 };
             };
         };
@@ -2869,7 +2884,15 @@ export interface operations {
     };
     getAnimes: {
         parameters: {
-            query?: never;
+            query: {
+                quarterId: number;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2882,12 +2905,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
+                    "*/*": components["schemas"]["ApiResponseAdminAnimeListDto"];
                 };
             };
         };
     };
-    addAnime: {
+    createAnime: {
         parameters: {
             query: {
                 request: components["schemas"]["PostRequestDto"];
@@ -2933,6 +2956,32 @@ export interface operations {
             };
         };
     };
+    updateInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InfoRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListManagerProfileDto"];
+                };
+            };
+        };
+    };
     updateTotalEpisodes: {
         parameters: {
             query?: never;
@@ -2947,6 +2996,50 @@ export interface operations {
                 "application/json": components["schemas"]["TotalEpisodesRequestDto"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
+                };
+            };
+        };
+    };
+    getEpisodesByAnime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminEpisodeListDto"];
+                };
+            };
+        };
+    };
+    queueEpisode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                animeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -3488,7 +3581,7 @@ export interface operations {
             };
         };
     };
-    getEpisodesByAnime: {
+    getEpisodesByAnime_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3612,7 +3705,8 @@ export interface operations {
     };
     getAdminLogsOnIpManagement: {
         parameters: {
-            query?: {
+            query: {
+                filterType: PathsApiAdminLogsGetParametersQueryFilterType;
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */
@@ -3632,7 +3726,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseIpManagementLogSliceDto"];
+                    "*/*": components["schemas"]["ApiResponseManagementLogSliceDto"];
                 };
             };
         };
@@ -3660,33 +3754,17 @@ export interface operations {
             };
         };
     };
-    getEpisodesByAnime_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAdminEpisodeListDto"];
-                };
-            };
-        };
-    };
 }
 export enum PathsApiV1AnimesAnimeIdCommentsGetParametersQuerySortBy {
     POPULAR = "POPULAR",
     RECENT = "RECENT",
     OLDEST = "OLDEST"
+}
+export enum PathsApiAdminLogsGetParametersQueryFilterType {
+    ALL = "ALL",
+    ANIME = "ANIME",
+    EPISODE = "EPISODE",
+    IP = "IP"
 }
 export enum AnimeVoteRequestGender {
     MALE = "MALE",
@@ -3718,8 +3796,12 @@ export enum ManagerProfileDtoTaskType {
     EPISODE_BREAK = "EPISODE_BREAK",
     EPISODE_RESCHEDULE = "EPISODE_RESCHEDULE",
     EPISODE_CREATE = "EPISODE_CREATE",
-    EPISODE_DELETE = "EPISODE_DELETE",
+    FUTURE_EPISODE_DELETE = "FUTURE_EPISODE_DELETE",
     EPISODE_MODIFY_NUMBER = "EPISODE_MODIFY_NUMBER",
+    ANIME_CREATE = "ANIME_CREATE",
+    ANIME_INFO_UPDATE = "ANIME_INFO_UPDATE",
+    ANIME_STATUS_UPDATE = "ANIME_STATUS_UPDATE",
+    ANIME_DIRECTION_UPDATE = "ANIME_DIRECTION_UPDATE",
     ANIME_EPISODE_TOTAL_COUNT = "ANIME_EPISODE_TOTAL_COUNT"
 }
 export enum OttDtoOttType {
@@ -3757,6 +3839,12 @@ export enum MePreviewDtoRole {
     USER = "USER",
     NONE = "NONE"
 }
+export enum InfoRequestDtoStatus {
+    UPCOMING = "UPCOMING",
+    NOW_SHOWING = "NOW_SHOWING",
+    COOLING = "COOLING",
+    ENDED = "ENDED"
+}
 export enum SurveyDtoStatus {
     NOT_YET = "NOT_YET",
     OPEN = "OPEN",
@@ -3777,12 +3865,6 @@ export enum WeekCandidateDtoState {
     VOTING_WINDOW = "VOTING_WINDOW",
     LOGIN_REQUIRED = "LOGIN_REQUIRED",
     ALWAYS_OPEN = "ALWAYS_OPEN"
-}
-export enum AnimePreviewDtoStatus {
-    UPCOMING = "UPCOMING",
-    NOW_SHOWING = "NOW_SHOWING",
-    COOLING = "COOLING",
-    ENDED = "ENDED"
 }
 export enum HomeBannerDtoBannerType {
     HOT = "HOT",
