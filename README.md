@@ -1,165 +1,111 @@
-# DUCK⭐️STAR - 애니메이션 투표 플랫폼
+# DUCKSTAR - 애니메이션 투표 플랫폼
 
 <div align="center">
   <img src="screenshots/logo.svg" alt="DuckStar Logo" width="200"/>
   
-  [![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-  [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-6DB33F?style=for-the-badge&logo=spring-boot)](https://spring.io/projects/spring-boot)
+  [![Next.js](https://img.shields.io/badge/Next.js-15.5.7-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+  [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-6DB33F?style=for-the-badge&logo=spring-boot)](https://spring.io/projects/spring-boot)
   [![Java](https://img.shields.io/badge/Java-17-red?style=for-the-badge&logo=java)](https://www.java.com/)
+</div>
+<div align="center">
+  
+  [![Docker](https://img.shields.io/badge/Docker-28.3.3-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
+  [![Nginx](https://img.shields.io/badge/Nginx-1.28.1-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
   [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql)](https://www.mysql.com/)
-  [![Docker](https://img.shields.io/badge/Docker-24.0-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 </div>
 
-## 📋 프로젝트 개요
 
-이번 분기의 마음에 드는 애니메이션과 캐릭터에 투표하세요!
-<br/>
-**Duckstar**는 분기 신작 애니메이션 팬들을 위한 주차별 투표와 차트 제공 플랫폼입니다.
-<br/>
-일요일마다 결과를 확인하며, 방영 애니메이션의 간략한 정보와 함께 다른 팬들과 소통할 수 있는 댓글 공간을 제공합니다.
-
-### 🎯 주요 기능
-- **실시간 투표 시스템**: 주차별 애니메이션 투표  **[구현 완료 ✅]**
-- 차트 시스템: 주차별 애니메이션/캐릭터 순위 차트와 득표 정보 제공 **[Backend 구현 완료]**
-- 애니메이션 홈: 애니메이션별 정보, 분기별 성적, 등장인물 **[Backend 구현 완료]**
-- 커뮤니티 기능: 애니메이션별 댓글 및 답글 시스템 **[Backend 구현 완료]**
-- 검색 기능 및 편성표: 애니메이션 및 캐릭터 검색, 분기별 애니메이션 편성 정보 제공 **[Backend 구현 완료]**
-- OAuth 인증: 카카오 로그인 연동 **[Backend 구현 완료]**
-
-## 🏗️ Architecture
-```
-[Frontend]
- ├─ Next.js + TypeScript
- │   └─ Tailwind CSS
- ↓
-[Backend]
- ├─ Spring Boot API
- │   └─ QueryDSL + JPA
- ↓
-[Database]
- └─ MySQL RDS
-
-[Infra]
- ├─ Docker + Nginx + EC2
- └─ Vercel (프론트 호스팅)
-```
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Spring Boot 3.5.4** - Java 기반 웹 프레임워크
-- **Spring Security** - 인증 및 권한 관리
-- **Spring Data JPA** - 데이터 접근 계층
-- **QueryDSL** - 타입 안전한 쿼리 작성
-- **JWT** - 토큰 기반 인증
-- **SpringDoc OpenAPI** - API 문서화
-
-### Frontend
-- **Next.js 15.5.0** - React 기반 풀스택 프레임워크
-- **TypeScript 5.0** - 타입 안정성
-- **Tailwind CSS 4.1** - 유틸리티 기반 CSS 프레임워크
-- **Framer Motion** - 애니메이션 라이브러리
-- **SWR** - 데이터 페칭 라이브러리
-
-### Database
-- **MySQL 8.0** - 메인 데이터베이스
-- **H2 Database** - 테스트 개발용 인메모리 데이터베이스
-
-### DevOps
-- **Docker & Docker Compose** - 컨테이너화
-- **Nginx** - 리버스 프록시 및 로드 밸런싱
-- **Gradle** - 빌드 도구
-
-## 🚀 프로젝트 구조
+**1. 전체 구조**
 
 ```
-duckstar/
-├── frontend/                 # Next.js 프론트엔드
-│   ├── src/
-│   │   ├── app/
-│   │   ├── components/
-│   │   ├── api/
-│   │   └── types/
-│   └── public/
-├── backend/                 # Spring Boot 백엔드
-│   ├── src/main/java/
-│   │   └── com/duckstar/
-│   │       ├── domain/
-│   │       │   ├── common/
-│   │       │   ├── enums/
-│   │       │   ├── mapping/
-│   │       │   └── vo/
-│   │       ├── web/
-│   │       │   ├── controller/
-│   │       │   ├── dto/
-│   │       │   └── support/     # 웹 지원 클래스
-│   │       ├── service/
-│   │       ├── repository/
-│   │       ├── security/    # 보안 및 인증
-│   │       │   ├── config/
-│   │       │   ├── domain/
-│   │       │   ├── presentation/
-│   │       │   ├── providers/
-│   │       │   ├── repository/
-│   │       │   └── service/
-│   │       ├── apiPayload/  # API 응답 표준화
-│   │       │   ├── code/           # 응답 코드 정의
-│   │       │   └── exception/      # 예외 처리
-│   │       ├── config/
-│   │       ├── crawler/     # CSV 읽기
-│   │       ├── validation/  # 유효성 검증
-│   │       └── util/
-│   ├── src/main/resources/
-│   └── build.gradle
-├── nginx/                   # Nginx 설정
-└── docker-compose.yml       # Docker Compose 설정
+[개발자 Push/PR] → [GitHub Actions] → (빌드·테스트·배포)
+                                           ↓
+                                 [EC2 Docker Compose]
+                                           ↓
+  [클라이언트]   →   [Nginx]    →   [Frontend / Backend]  ←→  [S3]
+                [:80 / :443]       [:3000 / :8080]      
+                                           ↓
+                                      [MySQL RDS]
 ```
 
-## 🖼️ 디자인 데모
-
-<div align="center">
-  <img src="screenshots/1.png" alt="홈페이지-애니" width="300"/>
-  <img src="screenshots/2.png" alt="홈페이지-캐릭터" width="300"/>
-<br/>
-  <img src="screenshots/4.png" alt="차트 페이지" width="300"/>
-  <img src="screenshots/3.png" alt="애니 홈 - 분기성적 탭" width="300"/>
-</div>
-
-<div align="center">
-<br/>
-
-[Duckstar](https://duckstar.kr) (기능들 순차 배포 예정)
-
-**투표 페이지 준비 완료 ✅**: 
-
-<div align="center">
-  <img src="screenshots/7.png" alt="투표 페이지" width="900"/>
-</div>
-
-<br/>
-
-**검색 페이지 준비 완료 ✅**
-
-<div align="center">
-  <img src="screenshots/5.png" alt="검색 페이지" width="900"/>
-</div>
-
-<br/>
-
-**애니메이션 홈 준비 완료 ✅**
-
-<div align="center">
-  <img src="screenshots/6.png" alt="애니메이션 홈" width="900"/>
-</div>
-
-<br/>
+- **인프라**: Docker Compose + Nginx + EC2 (백엔드·프론트엔드 모두 EC2에서 Docker Compose로 운영)
+- **프론트**: Next.js (SSR/클라이언트)
+- **백엔드**: Spring Boot API
+- **DB**: MySQL 8.0 (운영), H2 (테스트)
 
 ---
 
-<br/>
+**2. 요청 흐름 (Nginx 라우팅)**
+
+nginx/default.conf 기준:
+
+| 경로 | 대상 | 용도 |
+| --- | --- | --- |
+| /api/image-proxy | Frontend:3000 | Next.js API (이미지 프록시 등) |
+| /api | Backend:8080 | REST API |
+| /oauth2 | Backend:8080 | OAuth2(카카오) |
+| /login | Backend:8080 | 로그인 |
+| / | Frontend:3000 | 페이지/정적 리소스 |
+
+HTTPS(443) + HTTP→HTTPS 리다이렉트(80→301) 구성
+
+---
+
+**3. 백엔드 (Spring Boot) – 계층형 + 도메인 중심**
+
+- **web/** – Controller, DTO (요청/응답)
+- **service/** – 비즈니스 로직 (Command/Query 분리, 예: AnimeCommandService, AnimeQueryService)
+- **repository/** – JPA + QueryDSL
+- **domain/** – 엔티티, enum, 매핑/연관관계, VO
+- **security/** – JWT, OAuth2(카카오), 필터/프로바이더
+- **apiPayload/** – 공통 API 응답 형식, ExceptionAdvice + 도메인별 Handler
+- **config/** – Swagger, QueryDSL, S3, Hasher 등
+- **validation/** – 커스텀 검증 애노테이션/Validator
+- **abroad/** – 해외 관련 csv 업로드 로직
+- **schedule/** – 스케줄/초기화
+- **s3/** – S3 업로드
+
+**특징:** Controller → Service → Repository 계층 + 도메인 중심 설계, RESTful API, JWT + OAuth2, ApiPayload로 응답/에러 표준화.
+
+---
+
+**4. 프론트엔드 (Next.js) – App Router + 기능별 모듈**
+
+**디렉터리 구조:**
+
+- **app/** – App Router 페이지/레이아웃
+- **components/** – 공통(common/), 도메인별(anime/, chart/, comment/, search/, vote/ 등), 레이아웃, SEO, 스켈레톤
+- **api/** – 백엔드 API 클라이언트 (auth, chart, comment, home, member, search, vote, admin 등)
+- **hooks/** – 댓글, 이미지 캐시/프리로드, 네비게이션, 화면 크기 등
+- **context/** – AuthContext 등 전역 상태
+- **lib/** – SWR 설정, 상수, 이미지/쿠키/스토리지 유틸
+- **types/** – DTO/enum (백엔드와 맞춤)
+- **providers/** – React Query, 테마 등
+- **middleware.ts** – 라우트/인증 등 미들웨어
+
+**기술:** Next.js 15, TypeScript, Tailwind CSS, SWR(데이터 페칭), Framer Motion. SVG/WebP는 `<img>` 사용 등 이미지 규칙 있음.
+
+---
+
+**5. 데이터 흐름**
+
+1. 브라우저 → Nginx(HTTPS)
+2. Nginx가 경로에 따라 Frontend(Next.js) 또는 Backend(Spring Boot)로 프록시
+3. 프론트 `api/*`가 백엔드 `/api`, `/oauth2`, `/login` 호출
+4. 백엔드는 JPA/QueryDSL로 MySQL 접근, JWT/OAuth2로 인증
+5. 응답은 ApiPayload 형식으로 통일, 프론트는 types/와 SWR로 처리
+
+---
+
+**6. 배포/운영**
+
+- **프로덕션**: EC2 한 서버에서 **Docker Compose**로 **백엔드·프론트엔드·Nginx** 모두 실행 (풀스택 EC2 배포).
+- **로컬/스테이징**: 동일한 docker-compose.yml로 backend, frontend, nginx를 한 네트워크에서 실행.
+- **CI/CD**: .github/workflows/ – ci.yml, deploy-backend.yml, deploy-frontend.yml.
+---
 
 <div align="center">
-  <p>Made by Godot-B</p>
+  <p>Made by Duckstar Team</p>
   <p>© 2025 Duckstar. All rights reserved.</p>
 </div>
