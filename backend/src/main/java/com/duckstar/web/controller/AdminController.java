@@ -74,13 +74,14 @@ public class AdminController {
      */
     // 모든 분기 조회 API : GET /api/v1/search/quarters 재사용
 
-    @GetMapping("/animes")
+    @GetMapping("/animes/{year}/{quarter}")
     public ApiResponse<AdminAnimeListDto> getAnimes(
-            @RequestParam Long quarterId,
+            @PathVariable Integer year,
+            @PathVariable Integer quarter,
             @ParameterObject @PageableDefault(size = 20) Pageable pageable
     ) {
         return ApiResponse.onSuccess(
-                animeQueryService.getAdminAnimeListDto(quarterId, pageable));
+                animeQueryService.getAdminAnimeListDto(year, quarter, pageable));
     }
 
     @Operation(summary = "애니메이션 등록 API")
@@ -173,8 +174,8 @@ public class AdminController {
     // 모든 주차 조회 API : GET /api/v1/chart/weeks 재사용
 
     @Operation(summary = "주간(월 18시 정책 기준) 에피소드 조회")
-    @GetMapping("/weeks/{weekId}")
-    public ApiResponse<AdminScheduleInfoDto> getEpisodes(@PathVariable Long weekId) {
+    @GetMapping("/episodes")
+    public ApiResponse<AdminScheduleInfoDto> getEpisodes(@RequestParam Long weekId) {
         return ApiResponse.onSuccess(
                 episodeQueryService.getAdminScheduleByWeekId(weekId));
     }

@@ -1,19 +1,21 @@
 # DUCKSTAR - 애니메이션 투표 플랫폼
-
-<div align="center">
+<p align="center">
   <img src="screenshots/logo.svg" alt="DuckStar Logo" width="200"/>
-  
-  [![Next.js](https://img.shields.io/badge/Next.js-15.5.7-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-  [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-6DB33F?style=for-the-badge&logo=spring-boot)](https://spring.io/projects/spring-boot)
-  [![Java](https://img.shields.io/badge/Java-17-red?style=for-the-badge&logo=java)](https://www.java.com/)
-</div>
-<div align="center">
-  
-  [![Docker](https://img.shields.io/badge/Docker-28.3.3-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
-  [![Nginx](https://img.shields.io/badge/Nginx-1.28.1-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
-  [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql)](https://www.mysql.com/)
-</div>
+</p>
+
+<p align="center">
+    <img src="https://img.shields.io/badge/Next.js-15.5.7-black?style=for-the-badge&logo=next.js"/>
+    <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript"/>
+    <img src="https://img.shields.io/badge/Spring%20Boot-3.5.4-6DB33F?style=for-the-badge&logo=spring-boot"/>
+    <img src="https://img.shields.io/badge/Java-17-red?style=for-the-badge&logo=java"/>
+</p>
+
+<p align="center">
+    <img src="https://img.shields.io/badge/Docker-28.3.3-2496ED?style=for-the-badge&logo=docker"/>
+    <img src="https://img.shields.io/badge/Nginx-1.28.1-009639?style=for-the-badge&logo=nginx&logoColor=white"/>
+    <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql"/>
+</p>
+
 
 
 **1. 전체 구조**
