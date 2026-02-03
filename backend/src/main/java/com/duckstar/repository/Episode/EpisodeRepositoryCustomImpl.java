@@ -180,6 +180,7 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                             episodeStar.weekVoteSubmission.principalKey.eq(principalKey)
                     )
                 .where(
+                        episode.isBreak.isFalse(),
                         episode.scheduledAt.between(week.startDateTime, week.endDateTime)
                 )
                 .orderBy(episode.scheduledAt.asc())

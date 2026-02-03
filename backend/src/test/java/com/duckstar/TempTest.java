@@ -8,6 +8,7 @@ import com.duckstar.repository.*;
 import com.duckstar.repository.Episode.EpisodeRepository;
 import com.duckstar.repository.Week.WeekRepository;
 import com.duckstar.service.ChartService;
+import com.duckstar.service.EpisodeService.EpisodeCommandService;
 import com.duckstar.service.WeekService;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+
+import static com.duckstar.web.dto.admin.ContentResponseDto.*;
 
 @SpringBootTest
 @Disabled("로컬 개발용 테스트")
@@ -34,6 +37,8 @@ public class TempTest {
     private AnimeRepository animeRepository;
     @Autowired
     private WeekService weekService;
+    @Autowired
+    private EpisodeCommandService episodeCommandService;
 
     @Test
     @Transactional
@@ -126,4 +131,14 @@ public class TempTest {
 //                true
 //        );
 //    }
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    public void 수동_휴방하기() {
+        Long targetEpId = 2297L;
+
+        EpisodeManageResultDto result = episodeCommandService
+                .breakEpisode(6L, targetEpId);
+    }
 }
