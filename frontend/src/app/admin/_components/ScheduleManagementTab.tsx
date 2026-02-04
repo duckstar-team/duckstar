@@ -1,45 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { breakEpisode, deleteEpisode } from '@/api/admin';
 import { LogFilterType, Schemas } from '@/types';
 import AdminLogSection from './AdminLogSection';
 import EpisodeTable, { EpisodeTableColumn } from './EpisodeTable';
 import { format } from 'date-fns';
-import { showToast } from '@/components/common/Toast';
 import { useWeeks } from '@/features/admin/hooks/useWeeks';
 import { useScheduleByWeek } from '@/features/admin/hooks/useScheduleByWeek';
+import { useEpisodeActions } from '@/features/admin/hooks/useEpisodeActions';
 
 export default function ScheduleManagementTab() {
   const { weekOptions, selectedWeek, setSelectedWeek } = useWeeks();
-  const { schedule, loading, refreshSchedule } =
-    useScheduleByWeek(selectedWeek);
+  const { schedule, loading } = useScheduleByWeek(selectedWeek);
+  const { handleBreakEpisode, handleDeleteEpisode } = useEpisodeActions();
   const [logFilterType, setLogFilterType] = useState<LogFilterType>(
     LogFilterType.EPISODE
   );
-
-  const handleBreakEpisode = async (episodeId: number) => {
-    try {
-      const res = await breakEpisode(episodeId);
-      if (res.isSuccess) {
-        showToast.success('휴방 처리되었습니다.');
-        refreshSchedule();
-      }
-    } catch (e) {
-      showToast.error('휴방 처리에 실패했습니다.');
-    }
-  };
-
-  const handleDeleteEpisode = async (episodeId: number) => {
-    if (!confirm('이 에피소드를 삭제하시겠습니까?')) return;
-    try {
-      await deleteEpisode(episodeId);
-      showToast.success('에피소드가 삭제되었습니다.');
-      refreshSchedule();
-    } catch (e) {
-      showToast.error('에피소드 삭제에 실패했습니다.');
-    }
-  };
 
   const rows = schedule?.scheduleInfoDtos ?? [];
 
@@ -86,7 +62,9 @@ export default function ScheduleManagementTab() {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleBreakEpisode(row.episodeDto.episodeId);
+                  handleBreakEpisode(row.episodeDto.episodeId, {
+                    weekId: selectedWeek?.weekId,
+                  });
                 }}
                 className="rounded bg-orange-100 px-2 py-0.5 text-xs text-orange-500 hover:bg-orange-200/80 dark:bg-orange-400/20 dark:text-orange-400 dark:hover:bg-orange-400/40"
               >
@@ -98,7 +76,11 @@ export default function ScheduleManagementTab() {
           </div>
           <button
             type="button"
-            onClick={() => handleDeleteEpisode(row.episodeDto.episodeId)}
+            onClick={() =>
+              handleDeleteEpisode(row.episodeDto.episodeId, {
+                weekId: selectedWeek?.weekId,
+              })
+            }
             className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-800 hover:bg-red-200/80 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-500/30"
           >
             삭제

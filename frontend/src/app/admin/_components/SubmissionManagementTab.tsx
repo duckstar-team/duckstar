@@ -1,190 +1,28 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import {
-  getSubmissionsByWeekAndIp,
-  banIp,
-  withdrawVotesByWeekAndIp,
-  undoWithdrawnSubmissions,
-} from '@/api/admin';
-import { SubmissionCountDto, LogFilterType, Schemas } from '@/types';
+import { getSubmissionsByWeekAndIp } from '@/api/admin';
+import { SubmissionCountDto, LogFilterType } from '@/types';
 import AdminLogSection from './AdminLogSection';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { formatWeekLabel } from '@/lib';
-import { REASON_MAX_LENGTH } from '@/features/admin/constants';
 import { useSubmissions } from '@/features/admin/hooks/useSubmissions';
 import { useScrollSync } from '@/features/admin/hooks/useScrollSync';
+import { useSubmissionMutations } from '@/features/admin/hooks/useSubmissionMutations';
 
 export default function SubmissionManagementTab() {
-  const {
-    submissions,
-    setSubmissions,
-    isLoadingSubmissions,
-    isLoadingMore,
-    loadSubmissions,
-  } = useSubmissions();
-  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const { submissions, isLoadingSubmissions, isLoadingMore } = useSubmissions();
+  const { handleBanIp, handleWithdrawVotes, handleUndoWithdraw, isProcessing } =
+    useSubmissionMutations();
 
-  // 제출 현황 탭용 로그 (AdminLogSection에서 filterType=IP, 롤백 시 목록 갱신용)
-  const [logRefreshKey, setLogRefreshKey] = useState(0);
   const [submissionsLogFilterType, setSubmissionsLogFilterType] =
     useState<LogFilterType>(LogFilterType.IP);
 
-  // 스크롤 동기화를 위한 ref
   const leftScrollTopRef = useRef<HTMLDivElement>(null);
   const leftScrollBottomRef = useRef<HTMLDivElement>(null);
 
   useScrollSync(leftScrollTopRef, leftScrollBottomRef, [submissions]);
-
-  const handleBanIp = async (
-    submission: SubmissionCountDto,
-    e: React.MouseEvent
-  ) => {
-    e.stopPropagation();
-    const id = `${submission.weekId}-${submission.ipHash}`;
-
-    if (processingIds.has(id)) return;
-
-    const newBanStatus = !submission.isBlocked;
-    const action = newBanStatus ? '차단' : '차단 해제';
-
-    if (
-      !confirm(
-        `정말로 이 IP를 ${action}하시겠습니까?\n주차: ${formatWeekLabel(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}`
-      )
-    ) {
-      return;
-    }
-
-    // reason 입력 받기
-    const reason = prompt(`${action} 사유를 입력해주세요 (최대 300자):`, '');
-    if (reason === null) {
-      return; // 취소 버튼 클릭
-    }
-    if (reason.length > REASON_MAX_LENGTH) {
-      alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
-      return;
-    }
-
-    setProcessingIds((prev) => new Set(prev).add(id));
-
-    try {
-      await banIp(submission.ipHash, newBanStatus, reason);
-
-      // 로컬 상태 업데이트
-      setSubmissions((prev) =>
-        prev.map((s) =>
-          s.weekId === submission.weekId && s.ipHash === submission.ipHash
-            ? { ...s, isBlocked: newBanStatus }
-            : s
-        )
-      );
-
-      setLogRefreshKey((k) => k + 1);
-    } catch (error) {
-      console.error('IP 차단 실패:', error);
-    } finally {
-      setProcessingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  };
-
-  const handleWithdrawVotes = async (
-    submission: SubmissionCountDto,
-    e: React.MouseEvent
-  ) => {
-    e.stopPropagation();
-    const id = `${submission.weekId}-${submission.ipHash}`;
-
-    if (processingIds.has(id)) return;
-
-    if (submission.isAllWithdrawn) {
-      alert('이미 모든 표가 몰수되었습니다.');
-      return;
-    }
-
-    if (!submission.isBlocked) {
-      alert('표 몰수는 차단된 IP에만 가능합니다. 먼저 IP를 차단해주세요.');
-      return;
-    }
-
-    if (
-      !confirm(
-        `정말로 이 IP의 모든 표를 몰수하시겠습니까?\n주차: ${formatWeekLabel(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}\n제출 수: ${submission.count}`
-      )
-    ) {
-      return;
-    }
-
-    // reason 입력 받기
-    const reason = prompt('표 몰수 사유를 입력해주세요 (최대 300자):', '');
-    if (reason === null) {
-      return; // 취소 버튼 클릭
-    }
-    if (reason.length > REASON_MAX_LENGTH) {
-      alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
-      return;
-    }
-
-    setProcessingIds((prev) => new Set(prev).add(id));
-
-    try {
-      await withdrawVotesByWeekAndIp(
-        submission.weekId,
-        submission.ipHash,
-        reason
-      );
-      await loadSubmissions(0, true);
-      setLogRefreshKey((k) => k + 1);
-    } catch (error) {
-      console.error('표 몰수 실패:', error);
-    } finally {
-      setProcessingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  };
-
-  // AdminLogSection용 롤백 핸들러 (IP 필터에서만 롤백 버튼 노출)
-  const handleUndoWithdrawForLog = (log: Schemas['ManagementLogDto']) => {
-    if (!log.isUndoable || log.weekId == null || !log.logId) {
-      alert('되돌릴 수 없는 작업입니다.');
-      return;
-    }
-    const weekYear = (log as any).weekDto?.year ?? (log as any).year;
-    const weekQuarter = (log as any).weekDto?.quarter ?? (log as any).quarter;
-    const weekWeek = (log as any).weekDto?.week ?? (log as any).week;
-    const weekInfo =
-      weekYear != null && weekQuarter != null && weekWeek != null
-        ? formatWeekLabel(weekYear, weekQuarter, weekWeek)
-        : '알 수 없음';
-    if (
-      !confirm(
-        `정말로 이 표 몰수를 되돌리시겠습니까?\n주차: ${weekInfo}\nIP: ${log.ipHash}`
-      )
-    )
-      return;
-    const reason = prompt('되돌리기 사유를 입력해주세요 (최대 300자):', '');
-    if (reason === null) return;
-    if (reason.length > REASON_MAX_LENGTH) {
-      alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
-      return;
-    }
-    undoWithdrawnSubmissions(log.logId, log.weekId, log.ipHash, reason)
-      .then(() => {
-        loadSubmissions(0, true);
-        setLogRefreshKey((k) => k + 1);
-      })
-      .catch((error) => {
-        console.error('표 몰수 되돌리기 실패:', error);
-      });
-  };
 
   const handleSubmissionClick = async (submission: SubmissionCountDto) => {
     // 새 창으로 제출 상세 열기
@@ -578,10 +416,9 @@ export default function SubmissionManagementTab() {
   return (
     <div className="space-y-6">
       <AdminLogSection
-        key={logRefreshKey}
         filterType={submissionsLogFilterType as LogFilterType}
         onFilterChange={setSubmissionsLogFilterType}
-        onUndo={handleUndoWithdrawForLog}
+        onUndo={handleUndoWithdraw}
         title="IP 관리 로그"
       />
 
@@ -707,7 +544,7 @@ export default function SubmissionManagementTab() {
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={(e) => handleBanIp(submission, e)}
-                                disabled={processingIds.has(
+                                disabled={isProcessing(
                                   `${submission.weekId}-${submission.ipHash}`
                                 )}
                                 className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors ${
@@ -723,7 +560,7 @@ export default function SubmissionManagementTab() {
                                   handleWithdrawVotes(submission, e)
                                 }
                                 disabled={
-                                  processingIds.has(
+                                  isProcessing(
                                     `${submission.weekId}-${submission.ipHash}`
                                   ) ||
                                   !submission.isBlocked ||

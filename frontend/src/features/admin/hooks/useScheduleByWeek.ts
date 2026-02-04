@@ -1,39 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getEpisodesByWeek } from '@/api/admin';
-import { Schemas } from '@/types';
 import { WeekOption } from './useWeeks';
+import { queryConfig } from '@/lib';
 
 export function useScheduleByWeek(selectedWeek: WeekOption | null) {
-  const [schedule, setSchedule] = useState<
-    Schemas['AdminScheduleInfoDto'] | null
-  >(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (selectedWeek == null) return;
-    setLoading(true);
-    getEpisodesByWeek(selectedWeek.weekId)
-      .then((res) => {
-        if (res.isSuccess && res.result) {
-          setSchedule(res.result);
-        } else {
-          setSchedule(null);
-        }
-      })
-      .catch(() => setSchedule(null))
-      .finally(() => setLoading(false));
-  }, [selectedWeek]);
-
-  const refreshSchedule = () => {
-    if (selectedWeek == null) return;
-    getEpisodesByWeek(selectedWeek.weekId).then((res) => {
-      if (res.isSuccess && res.result) setSchedule(res.result);
-    });
-  };
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['admin', 'schedule', selectedWeek?.weekId],
+    queryFn: async () => {
+      if (!selectedWeek) return null;
+      const res = await getEpisodesByWeek(selectedWeek.weekId);
+      if (res.isSuccess && res.result) {
+        return res.result;
+      }
+      return null;
+    },
+    enabled: selectedWeek !== null,
+    ...queryConfig.search,
+  });
 
   return {
-    schedule,
-    loading,
-    refreshSchedule,
+    schedule: data ?? null,
+    loading: isLoading,
+    refreshSchedule: refetch,
   };
 }

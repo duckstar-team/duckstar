@@ -1,18 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  breakEpisode,
-  deleteEpisode,
-  queueEpisode,
-  getAnimesByQuarter,
-} from '@/api/admin';
 import { AdminEpisodeDto, LogFilterType } from '@/types';
 import AdminLogSection from './AdminLogSection';
 import { MdPlayArrow } from 'react-icons/md';
 import { cn, formatAirTime } from '@/lib';
 import { format } from 'date-fns';
-import { showToast } from '@/components/common/Toast';
 import ImageModal from '@/components/domain/anime/ImageModal';
 import EpisodeTable, { EpisodeTableColumn } from './EpisodeTable';
 import {
@@ -25,41 +18,9 @@ import { useQuarters } from '@/features/admin/hooks/useQuarters';
 import { useAnimesByQuarter } from '@/features/admin/hooks/useAnimesByQuarter';
 import { useEpisodesByAnime } from '@/features/admin/hooks/useEpisodesByAnime';
 import { useAnimeFieldEdit } from '@/features/admin/hooks/useAnimeFieldEdit';
+import { useEpisodeActions } from '@/features/admin/hooks/useEpisodeActions';
 
 export default function AnimationManagementTab() {
-  const { quarterOptions, selectedQuarter, setSelectedQuarter } = useQuarters();
-  const {
-    animes,
-    setAnimes,
-    loading: loadingAnimes,
-  } = useAnimesByQuarter(selectedQuarter);
-  const { episodesByAnime, loadingEpisodes, loadEpisodes, refreshEpisodes } =
-    useEpisodesByAnime();
-  const {
-    editingField,
-    editingValues,
-    setEditingValues,
-    handleFieldEdit,
-    handleFieldSave,
-    handleFieldCancel,
-  } = useAnimeFieldEdit(animes, setAnimes, async () => {
-    if (selectedQuarter) {
-      try {
-        const res = await getAnimesByQuarter(
-          selectedQuarter.year,
-          selectedQuarter.quarter,
-          0,
-          100
-        );
-        if (res.isSuccess && res.result?.adminAnimeDtos) {
-          setAnimes(res.result.adminAnimeDtos);
-        }
-      } catch (e) {
-        // 에러 처리
-      }
-    }
-  });
-
   const [expandedAnimeId, setExpandedAnimeId] = useState<number | null>(null);
   const [logFilterType, setLogFilterType] = useState<LogFilterType>(
     LogFilterType.ANIME
@@ -67,53 +28,31 @@ export default function AnimationManagementTab() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageTitle, setSelectedImageTitle] = useState<string>('');
 
-  const toggleExpand = async (animeId: number) => {
+  const { quarterOptions, selectedQuarter, setSelectedQuarter } = useQuarters();
+  const { animes, loading: loadingAnimes } =
+    useAnimesByQuarter(selectedQuarter);
+  const { episodes, loading: loadingEpisodes } =
+    useEpisodesByAnime(expandedAnimeId);
+  const {
+    editingField,
+    editingValues,
+    setEditingValues,
+    handleFieldEdit,
+    handleFieldSave,
+    handleFieldCancel,
+  } = useAnimeFieldEdit(animes, selectedQuarter);
+  const { handleQueueEpisode, handleBreakEpisode, handleDeleteEpisode } =
+    useEpisodeActions();
+
+  const toggleExpand = (animeId: number) => {
     if (expandedAnimeId === animeId) {
       setExpandedAnimeId(null);
       return;
     }
     setExpandedAnimeId(animeId);
-    await loadEpisodes(animeId);
   };
 
-  const handleQueueEpisode = async (animeId: number) => {
-    try {
-      const res = await queueEpisode(animeId);
-      if (res.isSuccess) {
-        showToast.success('에피소드가 추가되었습니다.');
-        refreshEpisodes(animeId);
-      }
-    } catch (e) {
-      showToast.error('에피소드 추가에 실패했습니다.');
-    }
-  };
-
-  const handleBreakEpisode = async (episodeId: number, animeId: number) => {
-    try {
-      const res = await breakEpisode(episodeId);
-      if (res.isSuccess) {
-        showToast.success('휴방 처리되었습니다.');
-        refreshEpisodes(animeId);
-      }
-    } catch (e) {
-      showToast.error('휴방 처리에 실패했습니다.');
-    }
-  };
-
-  const handleDeleteEpisode = async (episodeId: number, animeId: number) => {
-    if (!confirm('이 에피소드를 삭제하시겠습니까?')) return;
-    try {
-      await deleteEpisode(episodeId);
-      showToast.success('에피소드가 삭제되었습니다.');
-      refreshEpisodes(animeId);
-    } catch (e) {
-      showToast.error('에피소드 삭제에 실패했습니다.');
-    }
-  };
-
-  const getEpisodeColumns = (
-    animeId: number
-  ): EpisodeTableColumn<AdminEpisodeDto>[] => [
+  const episodeColumns: EpisodeTableColumn<AdminEpisodeDto>[] = [
     {
       key: 'episodeNumber',
       header: '에피소드 번호',
@@ -151,7 +90,10 @@ export default function AnimationManagementTab() {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleBreakEpisode(item.episodeDto.episodeId, animeId);
+                  expandedAnimeId &&
+                    handleBreakEpisode(item.episodeDto.episodeId, {
+                      animeId: expandedAnimeId,
+                    });
                 }}
                 className="rounded bg-orange-100 px-2 py-0.5 text-xs text-orange-500 hover:bg-orange-200/80 dark:bg-orange-400/20 dark:text-orange-400 dark:hover:bg-orange-400/40"
               >
@@ -165,7 +107,10 @@ export default function AnimationManagementTab() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              handleDeleteEpisode(item.episodeDto.episodeId, animeId);
+              expandedAnimeId &&
+                handleDeleteEpisode(item.episodeDto.episodeId, {
+                  animeId: expandedAnimeId,
+                });
             }}
             className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-800 hover:bg-red-200/80 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-500/30"
           >
@@ -478,14 +423,14 @@ export default function AnimationManagementTab() {
                           colSpan={8}
                           className="bg-gray-50 py-4 pl-10 dark:bg-zinc-800/80"
                         >
-                          {loadingEpisodes[row.animeId] ? (
+                          {loadingEpisodes ? (
                             <div className="flex justify-center py-4">
                               <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
                             </div>
                           ) : (
                             <EpisodeTable
-                              columns={getEpisodeColumns(row.animeId)}
-                              rows={episodesByAnime[row.animeId] ?? []}
+                              columns={episodeColumns}
+                              rows={episodes ?? []}
                               getRowKey={(item) => item.episodeDto.episodeId}
                               footer={
                                 <div className="flex w-full justify-end">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateAnimeInfo, updateAnimeTotalEpisodes } from '@/api/admin';
 import { Schemas } from '@/types';
 import {
@@ -7,6 +8,7 @@ import {
 } from '@/types/generated/api';
 import { showToast } from '@/components/common/Toast';
 import { parseAirTime, airTimeToString } from '@/features/admin/utils';
+import { QuarterOption } from './useQuarters';
 
 type EditableField =
   | 'dayOfWeek'
@@ -30,11 +32,67 @@ interface EditingValues {
 
 export function useAnimeFieldEdit(
   animes: Schemas['AdminAnimeDto'][],
-  setAnimes: React.Dispatch<React.SetStateAction<Schemas['AdminAnimeDto'][]>>,
+  selectedQuarter: QuarterOption | null,
   onSuccess?: () => void
 ) {
+  const queryClient = useQueryClient();
   const [editingField, setEditingField] = useState<EditingField | null>(null);
   const [editingValues, setEditingValues] = useState<EditingValues>({});
+
+  const updateAnimeInfoMutation = useMutation({
+    mutationFn: ({
+      animeId,
+      updateData,
+    }: {
+      animeId: number;
+      updateData: Schemas['InfoRequestDto'];
+    }) => updateAnimeInfo(animeId, updateData),
+    onSuccess: () => {
+      showToast.success('수정되었습니다.');
+      // 애니메이션 목록 쿼리 무효화
+      if (selectedQuarter) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            'admin',
+            'animes',
+            selectedQuarter.year,
+            selectedQuarter.quarter,
+          ],
+        });
+      }
+      onSuccess?.();
+    },
+    onError: () => {
+      showToast.error('수정에 실패했습니다.');
+    },
+  });
+
+  const updateTotalEpisodesMutation = useMutation({
+    mutationFn: ({
+      animeId,
+      totalEpisodes,
+    }: {
+      animeId: number;
+      totalEpisodes: number;
+    }) => updateAnimeTotalEpisodes(animeId, totalEpisodes),
+    onSuccess: (_, variables) => {
+      showToast.success('총 화수가 수정되었습니다.');
+      // 애니메이션 목록 쿼리 무효화
+      if (selectedQuarter) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            'admin',
+            'animes',
+            selectedQuarter.year,
+            selectedQuarter.quarter,
+          ],
+        });
+      }
+    },
+    onError: () => {
+      showToast.error('총 화수 수정에 실패했습니다.');
+    },
+  });
 
   const handleFieldEdit = (
     animeId: number,
@@ -89,24 +147,15 @@ export function useAnimeFieldEdit(
         return;
       }
 
-      try {
-        const res = await updateAnimeTotalEpisodes(animeId, newTotal);
-        if (res.isSuccess) {
-          showToast.success('총 화수가 수정되었습니다.');
-          setAnimes((prev) =>
-            prev.map((a) =>
-              a.animeId === animeId ? { ...a, totalEpisodes: newTotal } : a
-            )
-          );
-        } else {
-          showToast.error('총 화수 수정에 실패했습니다.');
+      updateTotalEpisodesMutation.mutate(
+        { animeId, totalEpisodes: newTotal },
+        {
+          onSettled: () => {
+            setEditingField(null);
+            setEditingValues({});
+          },
         }
-      } catch (e) {
-        showToast.error('총 화수 수정에 실패했습니다.');
-      } finally {
-        setEditingField(null);
-        setEditingValues({});
-      }
+      );
 
       return;
     }
@@ -162,50 +211,45 @@ export function useAnimeFieldEdit(
       return;
     }
 
-    try {
-      const updateData: Schemas['InfoRequestDto'] =
-        {} as Schemas['InfoRequestDto'];
+    const updateData: Schemas['InfoRequestDto'] =
+      {} as Schemas['InfoRequestDto'];
 
-      if (field === 'airTime') {
-        const parsedTime = parseAirTime(value as string);
-        if (!parsedTime) {
-          showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
-          return;
-        }
-        updateData.airTime = parsedTime;
-        updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
-        updateData.status = anime.status as InfoRequestDtoStatus;
-        updateData.corp = anime.corp ?? '';
-      } else if (field === 'corp') {
-        updateData.corp = value as string;
-        updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
-        updateData.status = anime.status as InfoRequestDtoStatus;
-        updateData.airTime = anime.airTime as Schemas['LocalTime'];
-      } else if (field === 'dayOfWeek') {
-        updateData.dayOfWeek = value as PostRequestDtoDayOfWeek;
-        updateData.status = anime.status as InfoRequestDtoStatus;
-        updateData.airTime = anime.airTime as Schemas['LocalTime'];
-        updateData.corp = anime.corp ?? '';
-      } else if (field === 'status') {
-        updateData.status = value as InfoRequestDtoStatus;
-        updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
-        updateData.airTime = anime.airTime as Schemas['LocalTime'];
-        updateData.corp = anime.corp ?? '';
+    if (field === 'airTime') {
+      const parsedTime = parseAirTime(value as string);
+      if (!parsedTime) {
+        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
+        return;
       }
-
-      const res = await updateAnimeInfo(animeId, updateData);
-      if (res.isSuccess) {
-        showToast.success('수정되었습니다.');
-        onSuccess?.();
-      } else {
-        showToast.error('수정에 실패했습니다.');
-      }
-    } catch (e) {
-      showToast.error('수정에 실패했습니다.');
-    } finally {
-      setEditingField(null);
-      setEditingValues({});
+      updateData.airTime = parsedTime;
+      updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
+      updateData.status = anime.status as InfoRequestDtoStatus;
+      updateData.corp = anime.corp ?? '';
+    } else if (field === 'corp') {
+      updateData.corp = value as string;
+      updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
+      updateData.status = anime.status as InfoRequestDtoStatus;
+      updateData.airTime = anime.airTime as Schemas['LocalTime'];
+    } else if (field === 'dayOfWeek') {
+      updateData.dayOfWeek = value as PostRequestDtoDayOfWeek;
+      updateData.status = anime.status as InfoRequestDtoStatus;
+      updateData.airTime = anime.airTime as Schemas['LocalTime'];
+      updateData.corp = anime.corp ?? '';
+    } else if (field === 'status') {
+      updateData.status = value as InfoRequestDtoStatus;
+      updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
+      updateData.airTime = anime.airTime as Schemas['LocalTime'];
+      updateData.corp = anime.corp ?? '';
     }
+
+    updateAnimeInfoMutation.mutate(
+      { animeId, updateData },
+      {
+        onSettled: () => {
+          setEditingField(null);
+          setEditingValues({});
+        },
+      }
+    );
   };
 
   const handleFieldCancel = () => {

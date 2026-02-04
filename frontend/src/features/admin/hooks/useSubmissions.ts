@@ -1,59 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { getSubmissionCountGroupByIp } from '@/api/admin';
 import { SubmissionCountDto } from '@/types';
 import {
   SUBMISSIONS_PAGE_SIZE,
   SCROLL_THRESHOLD,
 } from '@/features/admin/constants';
+import { queryConfig } from '@/lib';
 
 export function useSubmissions() {
-  const [submissions, setSubmissions] = useState<SubmissionCountDto[]>([]);
-  const [submissionsPage, setSubmissionsPage] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const loadSubmissions = useCallback(
-    async (page: number = 0, reset: boolean = false) => {
-      if (reset) {
-        setIsLoadingSubmissions(true);
-      } else {
-        setIsLoadingMore(true);
-      }
-      try {
+  const { data, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ['admin', 'submissions'],
+      queryFn: async ({ pageParam = 0 }) => {
         const response = await getSubmissionCountGroupByIp(
-          page,
+          pageParam as number,
           SUBMISSIONS_PAGE_SIZE
         );
         if (response.isSuccess) {
-          if (reset) {
-            setSubmissions(response.result.submissionCountDtos);
-          } else {
-            setSubmissions((prev) => [
-              ...prev,
-              ...response.result.submissionCountDtos,
-            ]);
-          }
-          setHasNextPage(response.result.pageInfo.hasNext);
-          setSubmissionsPage(page);
+          return {
+            submissions: response.result.submissionCountDtos,
+            hasNext: response.result.pageInfo.hasNext,
+          };
         }
-      } catch (error) {
-        console.error('제출 현황 조회 실패:', error);
-        if (reset) {
-          setSubmissions([]);
-        }
-      } finally {
-        setIsLoadingSubmissions(false);
-        setIsLoadingMore(false);
-      }
-    },
-    []
-  );
+        return { submissions: [], hasNext: false };
+      },
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, allPages) => {
+        return lastPage.hasNext ? allPages.length : undefined;
+      },
+      ...queryConfig.search,
+    });
 
-  // 제출 현황 조회 (초기 로드)
-  useEffect(() => {
-    loadSubmissions(0, true);
-  }, [loadSubmissions]);
+  const submissions: SubmissionCountDto[] =
+    data?.pages.flatMap((page) => page.submissions) ?? [];
 
   // 무한 스크롤 처리
   useEffect(() => {
@@ -68,13 +48,13 @@ export function useSubmissions() {
       if (
         isNearBottom &&
         hasNextPage &&
-        !isLoadingMore &&
-        !isLoadingSubmissions &&
+        !isFetchingNextPage &&
+        !isFetching &&
         !isRequestingSubmissions
       ) {
         isRequestingSubmissions = true;
         try {
-          await loadSubmissions(submissionsPage + 1, false);
+          await fetchNextPage();
         } catch (error) {
           console.error('제출 현황 조회 실패:', error);
         } finally {
@@ -85,19 +65,11 @@ export function useSubmissions() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [
-    hasNextPage,
-    isLoadingMore,
-    isLoadingSubmissions,
-    submissionsPage,
-    loadSubmissions,
-  ]);
+  }, [hasNextPage, isFetchingNextPage, isFetching, fetchNextPage]);
 
   return {
     submissions,
-    setSubmissions,
-    isLoadingSubmissions,
-    isLoadingMore,
-    loadSubmissions,
+    isLoadingSubmissions: isFetching && !isFetchingNextPage,
+    isLoadingMore: isFetchingNextPage,
   };
 }

@@ -1,41 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { getAdminLogs } from '@/api/admin';
+import { useRef } from 'react';
 import { LogFilterType, ManagementLogDto } from '@/types';
 import { format } from 'date-fns';
 import { cn, formatWeekLabel } from '@/lib';
 import { ManagerProfileDtoTaskType } from '@/types/generated/api';
-
-const FILTER_OPTIONS: { value: LogFilterType; label: string }[] = [
-  { value: LogFilterType.ALL, label: '전체' },
-  { value: LogFilterType.ANIME, label: '애니메이션' },
-  { value: LogFilterType.EPISODE, label: '에피소드' },
-  { value: LogFilterType.IP, label: 'IP' },
-];
-
-const TASK_TYPE: Record<
-  ManagerProfileDtoTaskType,
-  { label: string; color: string }
-> = {
-  BAN: { label: '차단', color: 'text-red-400' },
-  UNBAN: { label: '차단 해제', color: 'text-pink-400' },
-  WITHDRAW: { label: '표 몰수', color: 'text-orange-400' },
-  UNDO_WITHDRAW: { label: '표 몰수 롤백', color: 'text-blue-400' },
-  EPISODE_BREAK: { label: '휴방', color: 'text-orange-400' },
-  EPISODE_RESCHEDULE: { label: '편성 변경', color: 'text-pink-400' },
-  EPISODE_CREATE: { label: '에피소드 추가', color: 'text-blue-500' },
-  FUTURE_EPISODE_DELETE: { label: '에피소드 삭제', color: 'text-red-400' },
-  EPISODE_MODIFY_NUMBER: { label: '화수 수정', color: 'text-purple-400' },
-  ANIME_CREATE: { label: '애니 등록', color: 'text-orange-400' },
-  ANIME_INFO_UPDATE: { label: '애니 정보 수정', color: 'text-orange-400' },
-  ANIME_STATUS_UPDATE: { label: '애니 상태 수정', color: 'text-pink-400' },
-  ANIME_DIRECTION_UPDATE: { label: '애니 방향 수정', color: 'text-yellow-500' },
-  ANIME_EPISODE_TOTAL_COUNT: {
-    label: '애니 총 화수 수정',
-    color: 'text-orange-500',
-  },
-};
+import { FILTER_OPTIONS, TASK_TYPE } from '@/features/admin/constants';
+import { useAdminLogs } from '@/features/admin/hooks/useAdminLogs';
 
 function formatLogSentence(log: ManagementLogDto): React.ReactNode {
   const subject = log.memberProfileDto?.managerNickname ?? '관리자';
@@ -58,6 +29,7 @@ function formatLogSentence(log: ManagementLogDto): React.ReactNode {
       <span className="text-cyan-400">{target}</span>
       <span className="text-gray-400">
         {log.ipHash != null &&
+          log.weekDto &&
           ` (${formatWeekLabel(log.weekDto.year, log.weekDto.quarter, log.weekDto.week)})에 대해`}{' '}
       </span>
       <span className={cn(textColor)}>{taskLabel}</span>
@@ -79,62 +51,11 @@ export default function AdminLogSection({
   onUndo,
   title = '관리 로그',
 }: AdminLogSectionProps) {
-  const [logs, setLogs] = useState<ManagementLogDto[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const loadLogs = async (pageNum: number, reset: boolean) => {
-    if (reset) {
-      setIsLoading(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    try {
-      const res = await getAdminLogs(pageNum, 10, filterType);
-      if (res.isSuccess && res.result) {
-        const list = res.result.managementLogDtos ?? [];
-        if (reset) {
-          setLogs(list);
-        } else {
-          setLogs((prev) => [...prev, ...list]);
-        }
-        setHasNextPage(res.result.pageInfo?.hasNext ?? false);
-        setPage(pageNum);
-      }
-    } catch (e) {
-      console.error('로그 조회 실패:', e);
-      if (reset) setLogs([]);
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    }
-  };
-
-  useEffect(() => {
-    setLogs([]);
-    setPage(0);
-    loadLogs(0, true);
-  }, [filterType]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    let requesting = false;
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = el;
-      if (scrollHeight - scrollTop - clientHeight > 100) return;
-      if (!hasNextPage || isLoadingMore || isLoading || requesting) return;
-      requesting = true;
-      loadLogs(page + 1, false).finally(() => {
-        requesting = false;
-      });
-    };
-    el.addEventListener('scroll', handleScroll);
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [hasNextPage, isLoadingMore, isLoading, page, filterType]);
+  const { logs, isLoading, isLoadingMore } = useAdminLogs(
+    filterType,
+    scrollRef
+  );
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-700 bg-gray-900 shadow-lg">
@@ -156,7 +77,7 @@ export default function AdminLogSection({
       </div>
       <div className="p-4 font-mono text-sm">
         <div ref={scrollRef} className="max-h-96 space-y-1 overflow-y-auto">
-          {isLoading ? (
+          {isLoading && logs.length === 0 ? (
             <div className="flex justify-center py-8">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-500 border-t-green-400" />
             </div>

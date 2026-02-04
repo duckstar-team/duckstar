@@ -1,55 +1,36 @@
-import { useState } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getEpisodesByAnimeAdmin } from '@/api/admin';
-import { AdminEpisodeDto } from '@/types';
+import { queryConfig } from '@/lib';
 
-export function useEpisodesByAnime() {
-  const [episodesByAnime, setEpisodesByAnime] = useState<
-    Record<number, AdminEpisodeDto[]>
-  >({});
-  const [loadingEpisodes, setLoadingEpisodes] = useState<
-    Record<number, boolean>
-  >({});
+export function useEpisodesByAnime(animeId: number | null) {
+  const queryClient = useQueryClient();
 
-  const loadEpisodes = async (animeId: number) => {
-    if (episodesByAnime[animeId]) return;
-
-    setLoadingEpisodes((prev) => ({ ...prev, [animeId]: true }));
-    try {
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin', 'episodes', animeId],
+    queryFn: async () => {
+      if (!animeId) return null;
       const res = await getEpisodesByAnimeAdmin(animeId);
       if (res.isSuccess && res.result?.adminEpisodeDtos) {
-        setEpisodesByAnime((prev) => ({
-          ...prev,
-          [animeId]: res.result!.adminEpisodeDtos!,
-        }));
+        return res.result.adminEpisodeDtos;
       }
-    } catch (e) {
-      // 에러 처리
-    } finally {
-      setLoadingEpisodes((prev) => ({ ...prev, [animeId]: false }));
-    }
-  };
+      return null;
+    },
+    enabled: animeId !== null,
+    ...queryConfig.search,
+  });
 
-  const refreshEpisodes = async (animeId: number) => {
-    setLoadingEpisodes((prev) => ({ ...prev, [animeId]: true }));
-    try {
-      const res = await getEpisodesByAnimeAdmin(animeId);
-      if (res.isSuccess && res.result?.adminEpisodeDtos) {
-        setEpisodesByAnime((prev) => ({
-          ...prev,
-          [animeId]: res.result!.adminEpisodeDtos!,
-        }));
-      }
-    } catch (e) {
-      // 에러 처리
-    } finally {
-      setLoadingEpisodes((prev) => ({ ...prev, [animeId]: false }));
+  const refreshEpisodes = useCallback(() => {
+    if (animeId !== null) {
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'episodes', animeId],
+      });
     }
-  };
+  }, [animeId, queryClient]);
 
   return {
-    episodesByAnime,
-    loadingEpisodes,
-    loadEpisodes,
+    episodes: data ?? null,
+    loading: isLoading,
     refreshEpisodes,
   };
 }
