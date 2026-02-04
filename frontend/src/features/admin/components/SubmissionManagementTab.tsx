@@ -7,14 +7,14 @@ import AdminLogSection from './AdminLogSection';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { formatWeekLabel } from '@/lib';
-import { useSubmissions } from '@/features/admin/hooks/useSubmissions';
+import { useSubmissions } from '@/features/admin/hooks/queries/useSubmissions';
 import { useScrollSync } from '@/features/admin/hooks/useScrollSync';
-import { useSubmissionMutations } from '@/features/admin/hooks/useSubmissionMutations';
+import { useSubmissionActions } from '@/features/admin/hooks/mutations/useSubmissionActions';
 
 export default function SubmissionManagementTab() {
   const { submissions, isLoadingSubmissions, isLoadingMore } = useSubmissions();
   const { handleBanIp, handleWithdrawVotes, handleUndoWithdraw, isProcessing } =
-    useSubmissionMutations();
+    useSubmissionActions();
 
   const [submissionsLogFilterType, setSubmissionsLogFilterType] =
     useState<LogFilterType>(LogFilterType.IP);

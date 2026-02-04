@@ -8,7 +8,7 @@ import {
 } from '@/types/generated/api';
 import { showToast } from '@/components/common/Toast';
 import { parseAirTime, airTimeToString } from '@/features/admin/utils';
-import { QuarterOption } from './useQuarters';
+import { QuarterOption } from '../queries/useQuarters';
 
 type EditableField =
   | 'dayOfWeek'
@@ -75,7 +75,7 @@ export function useAnimeFieldEdit(
       animeId: number;
       totalEpisodes: number;
     }) => updateAnimeTotalEpisodes(animeId, totalEpisodes),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       showToast.success('총 화수가 수정되었습니다.');
       // 애니메이션 목록 쿼리 무효화
       if (selectedQuarter) {

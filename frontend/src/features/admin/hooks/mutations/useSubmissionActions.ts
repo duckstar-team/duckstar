@@ -31,7 +31,7 @@ type UndoWithdrawVariables = {
   reason: string;
 };
 
-export function useSubmissionMutations() {
+export function useSubmissionActions() {
   const queryClient = useQueryClient();
 
   const invalidateQueries = () => {
@@ -70,12 +70,10 @@ export function useSubmissionMutations() {
     (banIpMutation.isPending && banIpMutation.variables?.id === id) ||
     (withdrawVotesMutation.isPending &&
       withdrawVotesMutation.variables?.id === id) ||
-    (undoWithdrawMutation.isPending && undoWithdrawMutation.variables?.id === id);
+    (undoWithdrawMutation.isPending &&
+      undoWithdrawMutation.variables?.id === id);
 
-  const handleBanIp = (
-    submission: SubmissionCountDto,
-    e: React.MouseEvent
-  ) => {
+  const handleBanIp = (submission: SubmissionCountDto, e: React.MouseEvent) => {
     e.stopPropagation();
     const id = `${submission.weekId}-${submission.ipHash}`;
     if (banIpMutation.isPending || withdrawVotesMutation.isPending) return;
@@ -91,7 +89,10 @@ export function useSubmissionMutations() {
       return;
     }
 
-    const reason = prompt(`${action} 사유를 입력해주세요 (최대 ${REASON_MAX_LENGTH}자):`, '');
+    const reason = prompt(
+      `${action} 사유를 입력해주세요 (최대 ${REASON_MAX_LENGTH}자):`,
+      ''
+    );
     if (reason === null) return;
     if (reason.length > REASON_MAX_LENGTH) {
       alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
@@ -132,7 +133,10 @@ export function useSubmissionMutations() {
       return;
     }
 
-    const reason = prompt(`표 몰수 사유를 입력해주세요 (최대 ${REASON_MAX_LENGTH}자):`, '');
+    const reason = prompt(
+      `표 몰수 사유를 입력해주세요 (최대 ${REASON_MAX_LENGTH}자):`,
+      ''
+    );
     if (reason === null) return;
     if (reason.length > REASON_MAX_LENGTH) {
       alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
@@ -168,7 +172,10 @@ export function useSubmissionMutations() {
       return;
     }
 
-    const reason = prompt(`되돌리기 사유를 입력해주세요 (최대 ${REASON_MAX_LENGTH}자):`, '');
+    const reason = prompt(
+      `되돌리기 사유를 입력해주세요 (최대 ${REASON_MAX_LENGTH}자):`,
+      ''
+    );
     if (reason === null) return;
     if (reason.length > REASON_MAX_LENGTH) {
       alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);

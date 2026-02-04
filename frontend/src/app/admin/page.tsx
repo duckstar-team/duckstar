@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import AnimationManagementTab from './_components/AnimationManagementTab';
-import ScheduleManagementTab from './_components/ScheduleManagementTab';
-import ContentManagementTab from './_components/ContentManagementTab';
-import SubmissionManagementTab from './_components/SubmissionManagementTab';
+import AnimationManagementTab from '@/features/admin/components/AnimationManagementTab';
+import ScheduleManagementTab from '@/features/admin/components/ScheduleManagementTab';
+import ContentManagementTab from '@/features/admin/components/ContentManagementTab';
+import SubmissionManagementTab from '@/features/admin/components/SubmissionManagementTab';
 
 export default function AdminPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();

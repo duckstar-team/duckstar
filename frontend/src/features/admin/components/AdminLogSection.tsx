@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { cn, formatWeekLabel } from '@/lib';
 import { ManagerProfileDtoTaskType } from '@/types/generated/api';
 import { FILTER_OPTIONS, TASK_TYPE } from '@/features/admin/constants';
-import { useAdminLogs } from '@/features/admin/hooks/useAdminLogs';
+import { useAdminLogs } from '@/features/admin/hooks/queries/useAdminLogs';
 
 function formatLogSentence(log: ManagementLogDto): React.ReactNode {
   const subject = log.memberProfileDto?.managerNickname ?? '관리자';

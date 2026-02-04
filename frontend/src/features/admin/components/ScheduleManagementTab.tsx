@@ -5,9 +5,9 @@ import { LogFilterType, Schemas } from '@/types';
 import AdminLogSection from './AdminLogSection';
 import EpisodeTable, { EpisodeTableColumn } from './EpisodeTable';
 import { format } from 'date-fns';
-import { useWeeks } from '@/features/admin/hooks/useWeeks';
-import { useScheduleByWeek } from '@/features/admin/hooks/useScheduleByWeek';
-import { useEpisodeActions } from '@/features/admin/hooks/useEpisodeActions';
+import { useWeeks } from '@/features/admin/hooks/queries/useWeeks';
+import { useScheduleByWeek } from '@/features/admin/hooks/queries/useScheduleByWeek';
+import { useEpisodeActions } from '@/features/admin/hooks/mutations/useEpisodeActions';
 
 export default function ScheduleManagementTab() {
   const { weekOptions, selectedWeek, setSelectedWeek } = useWeeks();

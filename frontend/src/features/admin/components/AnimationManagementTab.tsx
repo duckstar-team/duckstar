@@ -14,11 +14,11 @@ import {
 } from '@/types/generated/api';
 import { ANIME_HEADERS } from '@/features/admin/constants';
 import { formatStatus, formatDayOfWeek } from '@/features/admin/utils';
-import { useQuarters } from '@/features/admin/hooks/useQuarters';
-import { useAnimesByQuarter } from '@/features/admin/hooks/useAnimesByQuarter';
-import { useEpisodesByAnime } from '@/features/admin/hooks/useEpisodesByAnime';
-import { useAnimeFieldEdit } from '@/features/admin/hooks/useAnimeFieldEdit';
-import { useEpisodeActions } from '@/features/admin/hooks/useEpisodeActions';
+import { useQuarters } from '@/features/admin/hooks/queries/useQuarters';
+import { useAnimesByQuarter } from '@/features/admin/hooks/queries/useAnimesByQuarter';
+import { useEpisodesByAnime } from '@/features/admin/hooks/queries/useEpisodesByAnime';
+import { useAnimeFieldEdit } from '@/features/admin/hooks/mutations/useUpdateAnime';
+import { useEpisodeActions } from '@/features/admin/hooks/mutations/useEpisodeActions';
 
 export default function AnimationManagementTab() {
   const [expandedAnimeId, setExpandedAnimeId] = useState<number | null>(null);

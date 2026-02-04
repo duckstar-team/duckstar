@@ -1,6 +1,6 @@
 'use client';
 
-import { useAnimeForm } from '@/features/admin/hooks/useAnimeForm';
+import { useAnimeForm } from '@/features/admin/hooks/mutations/useAnimeForm';
 
 export default function ContentManagementTab() {
   const { animeData, isLoading, message, handleInputChange, handleSubmit } =
