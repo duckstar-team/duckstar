@@ -9,9 +9,17 @@ import {
   banIp,
   withdrawVotesByWeekAndIp,
   undoWithdrawnSubmissions,
-  getAdminLogsOnIpManagement,
 } from '@/api/admin';
-import { OttType, OttDto, IpManagementLogDto, SubmissionCountDto } from '@/types';
+import {
+  OttType,
+  OttDto,
+  SubmissionCountDto,
+  LogFilterType,
+  Schemas,
+} from '@/types';
+import AnimationManagementTab from './_components/AnimationManagementTab';
+import ScheduleManagementTab from './_components/ScheduleManagementTab';
+import AdminLogSection from './_components/AdminLogSection';
 
 // 기존 AnimeData 인터페이스와 컴포넌트는 그대로 유지
 
@@ -46,9 +54,9 @@ interface AnimeData {
 export default function AdminPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'content' | 'submissions'>(
-    'content'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'content' | 'anime' | 'schedule' | 'submissions'
+  >('content');
 
   // 애니메이션 등록 관련 상태
   const [animeData, setAnimeData] = useState<AnimeData>({
@@ -89,17 +97,15 @@ export default function AdminPage() {
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // IP 관리 로그 관련 상태
-  const [logs, setLogs] = useState<IpManagementLogDto[]>([]);
-  const [logsPage, setLogsPage] = useState(0);
-  const [logsHasNextPage, setLogsHasNextPage] = useState(false);
-  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
-  const [isLoadingMoreLogs, setIsLoadingMoreLogs] = useState(false);
+  // 제출 현황 탭용 로그 (AdminLogSection에서 filterType=IP, 롤백 시 목록 갱신용)
+  const [logRefreshKey, setLogRefreshKey] = useState(0);
+  const [submissionsLogFilterType, setSubmissionsLogFilterType] = useState<
+    'ALL' | 'ANIME' | 'EPISODE' | 'IP'
+  >('IP');
 
   // 스크롤 동기화를 위한 ref
   const leftScrollTopRef = useRef<HTMLDivElement>(null);
   const leftScrollBottomRef = useRef<HTMLDivElement>(null);
-  const logsScrollRef = useRef<HTMLDivElement>(null);
 
   // 권한 확인
   useEffect(() => {
@@ -115,11 +121,6 @@ export default function AdminPage() {
       setSubmissions([]);
       setSubmissionsPage(0);
       loadSubmissions(0, true);
-
-      // 로그도 함께 로드
-      setLogs([]);
-      setLogsPage(0);
-      loadLogs(0, true);
     }
   }, [activeTab]);
 
@@ -176,62 +177,6 @@ export default function AdminPage() {
     submissionsPage,
   ]);
 
-  // 로그 섹션 내부 스크롤 무한 스크롤 처리
-  useEffect(() => {
-    if (activeTab !== 'submissions') return;
-
-    const logsScrollContainer = logsScrollRef.current;
-    if (!logsScrollContainer) return;
-
-    let isRequestingLogs = false;
-
-    const handleLogsScroll = async () => {
-      const { scrollTop, scrollHeight, clientHeight } = logsScrollContainer;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-
-      // 로그 로드
-      if (
-        isNearBottom &&
-        logsHasNextPage &&
-        !isLoadingMoreLogs &&
-        !isLoadingLogs &&
-        !isRequestingLogs
-      ) {
-        isRequestingLogs = true;
-        setIsLoadingMoreLogs(true);
-        try {
-          const response = await getAdminLogsOnIpManagement(logsPage + 1, 10, 'IP');
-          if (response.isSuccess) {
-            // 백엔드 응답 필드명: managementLogDtos
-            const logs = (response.result as any).managementLogDtos || response.result.ipManagementLogDtos || [];
-            setLogs((prev) => [
-              ...prev,
-              ...logs,
-            ]);
-            setLogsHasNextPage(response.result.pageInfo.hasNext);
-            setLogsPage((prev) => prev + 1);
-          }
-        } catch (error) {
-          console.error('로그 조회 실패:', error);
-        } finally {
-          setIsLoadingMoreLogs(false);
-          isRequestingLogs = false;
-        }
-      }
-    };
-
-    logsScrollContainer.addEventListener('scroll', handleLogsScroll);
-    return () =>
-      logsScrollContainer.removeEventListener('scroll', handleLogsScroll);
-  }, [
-    activeTab,
-    logsHasNextPage,
-    isLoadingMoreLogs,
-    isLoadingLogs,
-    logsPage,
-    logs,
-  ]);
-
   // 왼쪽 패널 스크롤 동기화 및 너비 동기화
   useEffect(() => {
     const topScroll = leftScrollTopRef.current;
@@ -269,36 +214,6 @@ export default function AdminPage() {
       bottomScroll.removeEventListener('scroll', handleBottomScroll);
     };
   }, [submissions]);
-
-  const loadLogs = async (page: number = 0, reset: boolean = false) => {
-    if (reset) {
-      setIsLoadingLogs(true);
-    } else {
-      setIsLoadingMoreLogs(true);
-    }
-    try {
-      const response = await getAdminLogsOnIpManagement(page, 10, 'IP');
-      if (response.isSuccess) {
-        // 백엔드 응답 필드명: managementLogDtos (generated API 문서가 업데이트되면 타입도 변경 필요)
-        const logs = (response.result as any).managementLogDtos || response.result.ipManagementLogDtos || [];
-        if (reset) {
-          setLogs(logs);
-        } else {
-          setLogs((prev) => [...prev, ...logs]);
-        }
-        setLogsHasNextPage(response.result.pageInfo.hasNext);
-        setLogsPage(page);
-      }
-    } catch (error) {
-      console.error('로그 조회 실패:', error);
-      if (reset) {
-        setLogs([]);
-      }
-    } finally {
-      setIsLoadingLogs(false);
-      setIsLoadingMoreLogs(false);
-    }
-  };
 
   const loadSubmissions = async (page: number = 0, reset: boolean = false) => {
     if (reset) {
@@ -375,9 +290,7 @@ export default function AdminPage() {
         )
       );
 
-      // 로그 새로고침
-      await loadLogs(0, true);
-
+      setLogRefreshKey((k) => k + 1);
       setMessage(`IP가 ${action}되었습니다.`);
     } catch (error) {
       console.error('IP 차단 실패:', error);
@@ -437,10 +350,8 @@ export default function AdminPage() {
         reason
       );
       setMessage('표가 성공적으로 몰수되었습니다.');
-      // 목록 새로고침
       await loadSubmissions(0, true);
-      // 로그 새로고침
-      await loadLogs(0, true);
+      setLogRefreshKey((k) => k + 1);
     } catch (error) {
       console.error('표 몰수 실패:', error);
       setMessage('표 몰수에 실패했습니다.');
@@ -453,46 +364,41 @@ export default function AdminPage() {
     }
   };
 
-  const handleUndoWithdraw = async (
-    log: IpManagementLogDto,
-    e: React.MouseEvent
-  ) => {
-    e.stopPropagation();
-
-    if (!log.isUndoable || !log.weekId || !log.logId) {
+  // AdminLogSection용 롤백 핸들러 (IP 필터에서만 롤백 버튼 노출)
+  const handleUndoWithdrawForLog = (log: Schemas['ManagementLogDto']) => {
+    if (!log.isUndoable || log.weekId == null || !log.logId) {
       alert('되돌릴 수 없는 작업입니다.');
       return;
     }
-
+    const weekYear = (log as any).weekDto?.year ?? (log as any).year;
+    const weekQuarter = (log as any).weekDto?.quarter ?? (log as any).quarter;
+    const weekWeek = (log as any).weekDto?.week ?? (log as any).week;
+    const weekInfo =
+      weekYear != null && weekQuarter != null && weekWeek != null
+        ? formatDate(weekYear, weekQuarter, weekWeek)
+        : '알 수 없음';
     if (
       !confirm(
-        `정말로 이 표 몰수를 되돌리시겠습니까?\n주차: ${log.year && log.quarter && log.week ? formatDate(log.year, log.quarter, log.week) : '알 수 없음'}\nIP: ${log.ipHash}`
+        `정말로 이 표 몰수를 되돌리시겠습니까?\n주차: ${weekInfo}\nIP: ${log.ipHash}`
       )
-    ) {
+    )
       return;
-    }
-
-    // reason 입력 받기
     const reason = prompt('되돌리기 사유를 입력해주세요 (최대 300자):', '');
-    if (reason === null) {
-      return; // 취소 버튼 클릭
-    }
+    if (reason === null) return;
     if (reason.length > 300) {
       alert('사유는 300자 이하여야 합니다.');
       return;
     }
-
-    try {
-      await undoWithdrawnSubmissions(log.logId, log.weekId, log.ipHash, reason);
-      setMessage('표 몰수가 성공적으로 되돌려졌습니다.');
-      // 목록 새로고침
-      await loadSubmissions(0, true);
-      // 로그 새로고침
-      await loadLogs(0, true);
-    } catch (error) {
-      console.error('표 몰수 되돌리기 실패:', error);
-      setMessage('표 몰수 되돌리기에 실패했습니다.');
-    }
+    undoWithdrawnSubmissions(log.logId, log.weekId, log.ipHash, reason)
+      .then(() => {
+        setMessage('표 몰수가 성공적으로 되돌려졌습니다.');
+        loadSubmissions(0, true);
+        setLogRefreshKey((k) => k + 1);
+      })
+      .catch((error) => {
+        console.error('표 몰수 되돌리기 실패:', error);
+        setMessage('표 몰수 되돌리기에 실패했습니다.');
+      });
   };
 
   const handleSubmissionClick = async (submission: SubmissionCountDto) => {
@@ -1266,6 +1172,26 @@ export default function AdminPage() {
               컨텐츠 관리
             </button>
             <button
+              onClick={() => setActiveTab('anime')}
+              className={`border-b-2 px-1 py-4 text-sm font-medium ${
+                activeTab === 'anime'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
+              }`}
+            >
+              애니메이션 관리
+            </button>
+            <button
+              onClick={() => setActiveTab('schedule')}
+              className={`border-b-2 px-1 py-4 text-sm font-medium ${
+                activeTab === 'schedule'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
+              }`}
+            >
+              주차별 편성표 관리
+            </button>
+            <button
               onClick={() => setActiveTab('submissions')}
               className={`border-b-2 px-1 py-4 text-sm font-medium ${
                 activeTab === 'submissions'
@@ -1681,151 +1607,22 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* 애니메이션 관리 탭 */}
+        {activeTab === 'anime' && <AnimationManagementTab />}
+
+        {/* 주차별 편성표 관리 탭 */}
+        {activeTab === 'schedule' && <ScheduleManagementTab />}
+
         {/* 제출 현황 관리 탭 */}
         {activeTab === 'submissions' && (
           <div className="space-y-6">
-            {/* IP 관리 로그 섹션 */}
-            <div className="overflow-hidden rounded-lg border border-gray-700 bg-gray-900 shadow-lg">
-              <div className="border-b border-gray-700 bg-gray-800 px-4 py-2">
-                <h2 className="text-sm font-semibold text-gray-300">
-                  IP 관리 로그
-                </h2>
-              </div>
-
-              {isLoadingLogs ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-green-400"></div>
-                </div>
-              ) : (
-                <div className="p-4 font-mono text-sm">
-                  <div
-                    ref={logsScrollRef}
-                    className="max-h-96 space-y-1 overflow-y-auto"
-                  >
-                    {logs.length === 0 && !isLoadingLogs ? (
-                      <div className="text-gray-500">로그가 없습니다.</div>
-                    ) : (
-                      logs.map((log, index) => {
-                        const taskType = log.memberProfileDto?.taskType;
-                        const taskTypeText =
-                          taskType === 'BAN'
-                            ? '차단'
-                            : taskType === 'UNBAN'
-                              ? '차단 해제'
-                              : taskType === 'WITHDRAW'
-                                ? '표 몰수'
-                                : '표 몰수 롤백';
-
-                        // 백엔드 응답이 weekDto를 반환할 수도 있고, year/quarter/week를 직접 반환할 수도 있음
-                        const weekYear = (log as any).weekDto?.year || log.year;
-                        const weekQuarter = (log as any).weekDto?.quarter || log.quarter;
-                        const weekWeek = (log as any).weekDto?.week || log.week;
-                        const weekInfo =
-                          log.weekId && weekYear && weekQuarter && weekWeek
-                            ? formatDate(weekYear, weekQuarter, weekWeek)
-                            : '알 수 없음';
-
-                        const dateTime = new Date(log.memberProfileDto?.managedAt || '');
-                        const formattedDate = `${dateTime.getFullYear()}.${String(dateTime.getMonth() + 1).padStart(2, '0')}.${String(dateTime.getDate()).padStart(2, '0')}.${String(dateTime.getHours()).padStart(2, '0')}:${String(dateTime.getMinutes()).padStart(2, '0')}`;
-
-                        const taskTypeColor =
-                          taskType === 'BAN'
-                            ? 'text-red-400'
-                            : taskType === 'UNBAN'
-                              ? 'text-green-400'
-                              : taskType === 'WITHDRAW'
-                                ? 'text-orange-400'
-                                : 'text-blue-400';
-
-                        return (
-                          <div
-                            key={`log-${index}`}
-                            className="leading-relaxed text-gray-300"
-                          >
-                            {log.memberProfileDto?.profileImageUrl && (
-                              <img
-                                src={log.memberProfileDto.profileImageUrl}
-                                alt={log.memberProfileDto.managerNickname}
-                                className="mr-1.5 inline-block h-4 w-4 rounded-full align-middle"
-                              />
-                            )}
-                            <span className="text-green-400">
-                              {log.memberProfileDto?.managerNickname}
-                            </span>
-                            <span className="text-gray-400"> 님이 </span>
-                            <span className="font-mono text-cyan-400">
-                              {log.ipHash}
-                            </span>
-                            {log.weekId &&
-                              ((log as any).weekDto?.year || log.year) &&
-                              ((log as any).weekDto?.quarter || log.quarter) &&
-                              ((log as any).weekDto?.week || log.week) && (
-                                <span className="text-gray-400">
-                                  {' '}
-                                  ({weekInfo})
-                                </span>
-                              )}
-                            <span className="text-gray-400">에 대해 </span>
-                            <span className={taskTypeColor}>
-                              {taskTypeText}
-                            </span>
-                            <span className="text-gray-400"> 하였습니다. </span>
-                            <span className="text-gray-500">
-                              {formattedDate}
-                            </span>
-                            {taskType === 'WITHDRAW' && (
-                              <button
-                                onClick={(e) => handleUndoWithdraw(log, e)}
-                                disabled={
-                                  !log.isUndoable || !log.weekId || !log.logId
-                                }
-                                className={`ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
-                                  log.isUndoable && log.weekId
-                                    ? 'cursor-pointer border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-gray-900'
-                                    : 'cursor-not-allowed border-gray-600 text-gray-600 opacity-50'
-                                }`}
-                                title="되돌리기"
-                              >
-                                <svg
-                                  className="h-3 w-3"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                  />
-                                </svg>
-                              </button>
-                            )}
-                            {log.reason && (
-                              <>
-                                <br />
-                                <span className="ml-4 text-gray-500">
-                                  └ 사유:{' '}
-                                </span>
-                                <span className="text-gray-400">
-                                  {log.reason}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {isLoadingMoreLogs && (
-                    <div className="mt-2 text-gray-500">
-                      <span className="animate-pulse">더 불러오는 중...</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <AdminLogSection
+              key={logRefreshKey}
+              filterType={submissionsLogFilterType as LogFilterType}
+              onFilterChange={setSubmissionsLogFilterType}
+              onUndo={handleUndoWithdrawForLog}
+              title="IP 관리 로그"
+            />
 
             {/* IP별 제출 수 테이블 */}
             <div className="border-brand-zinc-200 rounded-lg border p-6 shadow-sm dark:border-none dark:bg-zinc-800">
