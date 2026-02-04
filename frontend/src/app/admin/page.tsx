@@ -52,7 +52,7 @@ interface AnimeData {
 }
 
 export default function AdminPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
     'content' | 'anime' | 'schedule' | 'submissions'
@@ -107,13 +107,26 @@ export default function AdminPage() {
   const leftScrollTopRef = useRef<HTMLDivElement>(null);
   const leftScrollBottomRef = useRef<HTMLDivElement>(null);
 
+  // 인증 체크 완료 여부 추적
+  const [hasCheckedAuth, sethasCheckedAuth] = useState(false);
+
   // 권한 확인
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== 'ADMIN') {
+    // 로딩 중이면 아무 것도 하지 않음
+    if (isAuthLoading) {
+      sethasCheckedAuth(false);
+      return;
+    }
+    if (!hasCheckedAuth) {
+      sethasCheckedAuth(true);
+    }
+
+    // 인증 체크가 완료된 후에만 권한 확인
+    if (hasCheckedAuth && (!isAuthenticated || user?.role !== 'ADMIN')) {
       router.push('/');
       return;
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, isAuthLoading, hasCheckedAuth, router]);
 
   // 제출 현황 조회 (초기 로드)
   useEffect(() => {
@@ -1135,8 +1148,8 @@ export default function AdminPage() {
     return `${shortYear}년 ${quarter}분기 ${week}주차`;
   };
 
-  // 권한이 없는 경우 로딩 표시
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
+  // 인증/권한 체크 중에는 로딩 표시
+  if (!hasCheckedAuth || isAuthLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -1145,6 +1158,11 @@ export default function AdminPage() {
         </div>
       </div>
     );
+  }
+
+  // 인증/권한 체크가 끝난 뒤, ADMIN 이 아닌 경우에는 아무 것도 렌더링하지 않음
+  if (!isAuthenticated || user?.role !== 'ADMIN') {
+    return null;
   }
 
   return (
