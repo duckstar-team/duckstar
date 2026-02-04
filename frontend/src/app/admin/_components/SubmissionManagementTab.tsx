@@ -10,22 +10,9 @@ import {
 } from '@/api/admin';
 import { SubmissionCountDto, LogFilterType, Schemas } from '@/types';
 import AdminLogSection from './AdminLogSection';
-
-const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-const formatDate = (year: number, quarter: number, week: number) => {
-  const shortYear = year.toString().slice(-2);
-  return `${shortYear}년 ${quarter}분기 ${week}주차`;
-};
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { formatWeekLabel } from '@/lib';
 
 export default function SubmissionManagementTab() {
   const [submissions, setSubmissions] = useState<SubmissionCountDto[]>([]);
@@ -37,9 +24,8 @@ export default function SubmissionManagementTab() {
 
   // 제출 현황 탭용 로그 (AdminLogSection에서 filterType=IP, 롤백 시 목록 갱신용)
   const [logRefreshKey, setLogRefreshKey] = useState(0);
-  const [submissionsLogFilterType, setSubmissionsLogFilterType] = useState<
-    'ALL' | 'ANIME' | 'EPISODE' | 'IP'
-  >('IP');
+  const [submissionsLogFilterType, setSubmissionsLogFilterType] =
+    useState<LogFilterType>(LogFilterType.IP);
 
   // 스크롤 동기화를 위한 ref
   const leftScrollTopRef = useRef<HTMLDivElement>(null);
@@ -180,7 +166,7 @@ export default function SubmissionManagementTab() {
 
     if (
       !confirm(
-        `정말로 이 IP를 ${action}하시겠습니까?\n주차: ${formatDate(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}`
+        `정말로 이 IP를 ${action}하시겠습니까?\n주차: ${formatWeekLabel(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}`
       )
     ) {
       return;
@@ -243,7 +229,7 @@ export default function SubmissionManagementTab() {
 
     if (
       !confirm(
-        `정말로 이 IP의 모든 표를 몰수하시겠습니까?\n주차: ${formatDate(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}\n제출 수: ${submission.count}`
+        `정말로 이 IP의 모든 표를 몰수하시겠습니까?\n주차: ${formatWeekLabel(submission.year, submission.quarter, submission.week)}\nIP: ${submission.ipHash}\n제출 수: ${submission.count}`
       )
     ) {
       return;
@@ -291,7 +277,7 @@ export default function SubmissionManagementTab() {
     const weekWeek = (log as any).weekDto?.week ?? (log as any).week;
     const weekInfo =
       weekYear != null && weekQuarter != null && weekWeek != null
-        ? formatDate(weekYear, weekQuarter, weekWeek)
+        ? formatWeekLabel(weekYear, weekQuarter, weekWeek)
         : '알 수 없음';
     if (
       !confirm(
@@ -356,67 +342,6 @@ export default function SubmissionManagementTab() {
       );
       if (response.isSuccess) {
         const episodeStars = response.result;
-
-        // 정렬 함수 (클라이언트 사이드)
-        const sortData = (
-          data: typeof episodeStars,
-          column: string,
-          direction: 'asc' | 'desc'
-        ) => {
-          return [...data].sort((a, b) => {
-            let aValue: any, bValue: any;
-
-            switch (column) {
-              case 'titleKor':
-                aValue = a.titleKor;
-                bValue = b.titleKor;
-                break;
-              case 'starScore':
-                aValue = a.starScore;
-                bValue = b.starScore;
-                break;
-              case 'isBlocked':
-                aValue = a.isBlocked ? 1 : 0;
-                bValue = b.isBlocked ? 1 : 0;
-                break;
-              case 'createdAt':
-                aValue = new Date(a.createdAt).getTime();
-                bValue = new Date(b.createdAt).getTime();
-                break;
-              case 'updatedAt':
-                aValue = new Date(a.updatedAt).getTime();
-                bValue = new Date(b.updatedAt).getTime();
-                break;
-              default:
-                return 0;
-            }
-
-            if (typeof aValue === 'string' && typeof bValue === 'string') {
-              return direction === 'asc'
-                ? aValue.localeCompare(bValue, 'ko')
-                : bValue.localeCompare(aValue, 'ko');
-            } else {
-              return direction === 'asc' ? aValue - bValue : bValue - aValue;
-            }
-          });
-        };
-
-        const formatDateTime = (dateString: string) => {
-          const date = new Date(dateString);
-          return date.toLocaleString('ko-KR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-          });
-        };
-
-        const formatDate = (year: number, quarter: number, week: number) => {
-          const shortYear = year.toString().slice(-2);
-          return `${shortYear}년 ${quarter}분기 ${week}주차`;
-        };
-
         // HTML 생성
         const html = `
           <!DOCTYPE html>
@@ -448,7 +373,7 @@ export default function SubmissionManagementTab() {
                   
                   <div class="mb-4 p-4 bg-gray-50 rounded-lg">
                     <p class="text-sm text-gray-600">
-                      <span class="font-medium">주차:</span> ${formatDate(submission.year, submission.quarter, submission.week)}
+                      <span class="font-medium">주차:</span> ${formatWeekLabel(submission.year, submission.quarter, submission.week)}
                     </p>
                     <p class="text-sm text-gray-600 mt-1">
                       <span class="font-medium">IP Hash:</span> <span class="font-mono">${submission.ipHash}</span>
@@ -538,7 +463,7 @@ export default function SubmissionManagementTab() {
                             episodeStars.length === 0
                               ? '<tr><td colSpan="5" class="px-4 py-8 text-center text-sm text-gray-500">제출 내역이 없습니다</td></tr>'
                               : episodeStars
-                                  .map((episode, index) => {
+                                  .map((episode) => {
                                     return `
                                   <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-sm text-gray-900" style="max-width: 300px; word-break: break-word; white-space: normal; min-width: 150px;">${episode.titleKor}</td>
@@ -550,8 +475,8 @@ export default function SubmissionManagementTab() {
                                           : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">정상</span>'
                                       }
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${formatDateTime(episode.createdAt)}</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${formatDateTime(episode.updatedAt)}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${format(episode.createdAt, 'yyyy. MM. dd a hh:mm', { locale: ko })}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${format(episode.updatedAt, 'yyyy. MM. dd a hh:mm', { locale: ko })}</td>
                                   </tr>
                                 `;
                                   })
@@ -610,7 +535,7 @@ export default function SubmissionManagementTab() {
                   });
                 };
 
-                const formatDateTime = (dateString) => {
+                const formatWeekLabelTime = (dateString) => {
                   const date = new Date(dateString);
                   return date.toLocaleString('ko-KR', {
                     year: 'numeric',
@@ -639,8 +564,8 @@ export default function SubmissionManagementTab() {
                             : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">정상</span>'
                           }
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">\${formatDateTime(episode.createdAt)}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">\${formatDateTime(episode.updatedAt)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">\${formatWeekLabelTime(episode.createdAt)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">\${formatWeekLabelTime(episode.updatedAt)}</td>
                       </tr>
                     \`;
                   }).join('');
@@ -856,7 +781,7 @@ export default function SubmissionManagementTab() {
                           }`}
                         >
                           <td className="px-4 py-3 text-sm whitespace-nowrap">
-                            {formatDate(
+                            {formatWeekLabel(
                               submission.year,
                               submission.quarter,
                               submission.week
@@ -880,10 +805,18 @@ export default function SubmissionManagementTab() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-500">
-                            {formatDateTime(submission.firstCreatedAt)}
+                            {format(
+                              submission.firstCreatedAt,
+                              'yyyy. MM. dd a hh:mm',
+                              { locale: ko }
+                            )}
                           </td>
                           <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-500">
-                            {formatDateTime(submission.lastCreatedAt)}
+                            {format(
+                              submission.lastCreatedAt,
+                              'yyyy. MM. dd a hh:mm',
+                              { locale: ko }
+                            )}
                           </td>
                           <td className="px-4 py-3 text-sm whitespace-nowrap">
                             <div className="flex items-center justify-end gap-2">

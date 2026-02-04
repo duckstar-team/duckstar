@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { getAdminLogs } from '@/api/admin';
 import { LogFilterType, ManagementLogDto } from '@/types';
 import { format } from 'date-fns';
-import { cn } from '@/lib';
+import { cn, formatWeekLabel } from '@/lib';
 import { ManagerProfileDtoTaskType } from '@/types/generated/api';
 
 const FILTER_OPTIONS: { value: LogFilterType; label: string }[] = [
@@ -58,7 +58,7 @@ function formatLogSentence(log: ManagementLogDto): React.ReactNode {
       <span className="text-cyan-400">{target}</span>
       <span className="text-gray-400">
         {log.ipHash != null &&
-          ` (${log.weekDto.year}년 ${log.weekDto.quarter}분기 ${log.weekDto.week}주차)에 대해`}{' '}
+          ` (${formatWeekLabel(log.weekDto.year, log.weekDto.quarter, log.weekDto.week)})에 대해`}{' '}
       </span>
       <span className={cn(textColor)}>{taskLabel}</span>
       <span className="text-gray-400"> 하였습니다.</span>
@@ -179,7 +179,7 @@ export default function AdminLogSection({
                 <span className="ml-1 text-gray-500">
                   {format(log.memberProfileDto?.managedAt, 'yyyy.MM.dd HH:mm')}
                 </span>
-                {filterType === LogFilterType.IP && (
+                {filterType === LogFilterType.IP && log.isUndoable && (
                   <button
                     type="button"
                     onClick={() => onUndo?.(log)}

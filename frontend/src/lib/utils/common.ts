@@ -6,7 +6,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// 방영 시간 포맷팅
+/**
+ * 방영 시간 포맷팅
+ */
 export function formatAirTime(airTime?: Schemas['LocalTime'] | string | null) {
   if (!airTime) {
     return '';
@@ -39,4 +41,12 @@ export function formatAirTime(airTime?: Schemas['LocalTime'] | string | null) {
   }
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+/**
+ * 주차 라벨 포맷팅
+ */
+export function formatWeekLabel(year: number, quarter: number, week: number) {
+  const shortYear = year?.toString().slice(-2) ?? '';
+  return `${shortYear ?? ''}년 ${quarter ?? ''}분기 ${week ?? ''}주차`;
 }
