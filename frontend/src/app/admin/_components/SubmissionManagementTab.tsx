@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import {
-  getSubmissionCountGroupByIp,
   getSubmissionsByWeekAndIp,
   banIp,
   withdrawVotesByWeekAndIp,
@@ -13,14 +12,19 @@ import AdminLogSection from './AdminLogSection';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { formatWeekLabel } from '@/lib';
+import { REASON_MAX_LENGTH } from '@/features/admin/constants';
+import { useSubmissions } from '@/features/admin/hooks/useSubmissions';
+import { useScrollSync } from '@/features/admin/hooks/useScrollSync';
 
 export default function SubmissionManagementTab() {
-  const [submissions, setSubmissions] = useState<SubmissionCountDto[]>([]);
-  const [submissionsPage, setSubmissionsPage] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
+  const {
+    submissions,
+    setSubmissions,
+    isLoadingSubmissions,
+    isLoadingMore,
+    loadSubmissions,
+  } = useSubmissions();
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // 제출 현황 탭용 로그 (AdminLogSection에서 filterType=IP, 롤백 시 목록 갱신용)
   const [logRefreshKey, setLogRefreshKey] = useState(0);
@@ -31,126 +35,7 @@ export default function SubmissionManagementTab() {
   const leftScrollTopRef = useRef<HTMLDivElement>(null);
   const leftScrollBottomRef = useRef<HTMLDivElement>(null);
 
-  // 제출 현황 조회 (초기 로드)
-  useEffect(() => {
-    setSubmissions([]);
-    setSubmissionsPage(0);
-    loadSubmissions(0, true);
-  }, []);
-
-  // 무한 스크롤 처리 (전역 스크롤 - 제출 현황용)
-  useEffect(() => {
-    let isRequestingSubmissions = false;
-
-    const handleScroll = async () => {
-      const { scrollTop, scrollHeight, clientHeight } =
-        document.documentElement;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
-
-      // 제출 현황 로드
-      if (
-        isNearBottom &&
-        hasNextPage &&
-        !isLoadingMore &&
-        !isLoadingSubmissions &&
-        !isRequestingSubmissions
-      ) {
-        isRequestingSubmissions = true;
-        setIsLoadingMore(true);
-        try {
-          const response = await getSubmissionCountGroupByIp(
-            submissionsPage + 1,
-            50
-          );
-          if (response.isSuccess) {
-            setSubmissions((prev) => [
-              ...prev,
-              ...response.result.submissionCountDtos,
-            ]);
-            setHasNextPage(response.result.pageInfo.hasNext);
-            setSubmissionsPage((prev) => prev + 1);
-          }
-        } catch (error) {
-          console.error('제출 현황 조회 실패:', error);
-        } finally {
-          setIsLoadingMore(false);
-          isRequestingSubmissions = false;
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasNextPage, isLoadingMore, isLoadingSubmissions, submissionsPage]);
-
-  // 왼쪽 패널 스크롤 동기화 및 너비 동기화
-  useEffect(() => {
-    const topScroll = leftScrollTopRef.current;
-    const bottomScroll = leftScrollBottomRef.current;
-
-    if (!topScroll || !bottomScroll) return;
-
-    // 테이블의 실제 너비를 계산하여 상단 스크롤 영역의 너비를 맞춤
-    const table = bottomScroll.querySelector('table');
-    if (table) {
-      const tableWidth = table.scrollWidth;
-      const topScrollContent = topScroll.querySelector('div');
-      if (topScrollContent) {
-        topScrollContent.style.minWidth = `${tableWidth}px`;
-      }
-    }
-
-    const handleTopScroll = () => {
-      if (bottomScroll) {
-        bottomScroll.scrollLeft = topScroll.scrollLeft;
-      }
-    };
-
-    const handleBottomScroll = () => {
-      if (topScroll) {
-        topScroll.scrollLeft = bottomScroll.scrollLeft;
-      }
-    };
-
-    topScroll.addEventListener('scroll', handleTopScroll);
-    bottomScroll.addEventListener('scroll', handleBottomScroll);
-
-    return () => {
-      topScroll.removeEventListener('scroll', handleTopScroll);
-      bottomScroll.removeEventListener('scroll', handleBottomScroll);
-    };
-  }, [submissions]);
-
-  const loadSubmissions = async (page: number = 0, reset: boolean = false) => {
-    if (reset) {
-      setIsLoadingSubmissions(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    try {
-      const response = await getSubmissionCountGroupByIp(page, 50);
-      if (response.isSuccess) {
-        if (reset) {
-          setSubmissions(response.result.submissionCountDtos);
-        } else {
-          setSubmissions((prev) => [
-            ...prev,
-            ...response.result.submissionCountDtos,
-          ]);
-        }
-        setHasNextPage(response.result.pageInfo.hasNext);
-        setSubmissionsPage(page);
-      }
-    } catch (error) {
-      console.error('제출 현황 조회 실패:', error);
-      if (reset) {
-        setSubmissions([]);
-      }
-    } finally {
-      setIsLoadingSubmissions(false);
-      setIsLoadingMore(false);
-    }
-  };
+  useScrollSync(leftScrollTopRef, leftScrollBottomRef, [submissions]);
 
   const handleBanIp = async (
     submission: SubmissionCountDto,
@@ -177,8 +62,8 @@ export default function SubmissionManagementTab() {
     if (reason === null) {
       return; // 취소 버튼 클릭
     }
-    if (reason.length > 300) {
-      alert('사유는 300자 이하여야 합니다.');
+    if (reason.length > REASON_MAX_LENGTH) {
+      alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
       return;
     }
 
@@ -240,8 +125,8 @@ export default function SubmissionManagementTab() {
     if (reason === null) {
       return; // 취소 버튼 클릭
     }
-    if (reason.length > 300) {
-      alert('사유는 300자 이하여야 합니다.');
+    if (reason.length > REASON_MAX_LENGTH) {
+      alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
       return;
     }
 
@@ -287,8 +172,8 @@ export default function SubmissionManagementTab() {
       return;
     const reason = prompt('되돌리기 사유를 입력해주세요 (최대 300자):', '');
     if (reason === null) return;
-    if (reason.length > 300) {
-      alert('사유는 300자 이하여야 합니다.');
+    if (reason.length > REASON_MAX_LENGTH) {
+      alert(`사유는 ${REASON_MAX_LENGTH}자 이하여야 합니다.`);
       return;
     }
     undoWithdrawnSubmissions(log.logId, log.weekId, log.ipHash, reason)

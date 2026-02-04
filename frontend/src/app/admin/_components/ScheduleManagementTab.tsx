@@ -1,84 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getWeeks } from '@/api/chart';
-import { getEpisodesByWeek, breakEpisode, deleteEpisode } from '@/api/admin';
-import { LogFilterType, Schemas, WeekDto } from '@/types';
+import { useState } from 'react';
+import { breakEpisode, deleteEpisode } from '@/api/admin';
+import { LogFilterType, Schemas } from '@/types';
 import AdminLogSection from './AdminLogSection';
 import EpisodeTable, { EpisodeTableColumn } from './EpisodeTable';
 import { format } from 'date-fns';
 import { showToast } from '@/components/common/Toast';
-
-function weekLabel(w: WeekDto): string {
-  return `${w.year}년 ${w.quarter}분기 ${w.week}주차`;
-}
-
-/** 드롭다운 옵션 구분용 (year*10000+quarter*100+week) */
-function toOptionValue(w: WeekDto): number {
-  return (w.year ?? 0) * 10000 + (w.quarter ?? 0) * 100 + (w.week ?? 0);
-}
-
-interface WeekOption {
-  /** API에 넘길 weekId (주차 번호 1, 2, 3, 4, ...) */
-  weekId: number;
-  label: string;
-  week: WeekDto;
-  /** 드롭다운 옵션 구분용 */
-  optionValue: number;
-}
+import { useWeeks } from '@/features/admin/hooks/useWeeks';
+import { useScheduleByWeek } from '@/features/admin/hooks/useScheduleByWeek';
 
 export default function ScheduleManagementTab() {
-  const [weekOptions, setWeekOptions] = useState<WeekOption[]>([]);
-  const [selectedWeek, setSelectedWeek] = useState<WeekOption | null>(null);
-  const [schedule, setSchedule] = useState<
-    Schemas['AdminScheduleInfoDto'] | null
-  >(null);
-  const [loading, setLoading] = useState(false);
+  const { weekOptions, selectedWeek, setSelectedWeek } = useWeeks();
+  const { schedule, loading, refreshSchedule } =
+    useScheduleByWeek(selectedWeek);
   const [logFilterType, setLogFilterType] = useState<LogFilterType>(
     LogFilterType.EPISODE
   );
-
-  useEffect(() => {
-    let cancelled = false;
-    getWeeks().then((res) => {
-      if (cancelled || !res.isSuccess || !res.result) return;
-      const list = (res.result as WeekDto[]).map((w) => ({
-        weekId: w.id ?? 0,
-        label: weekLabel(w),
-        week: w,
-        optionValue: toOptionValue(w),
-      }));
-      setWeekOptions(list);
-      if (list.length > 0 && selectedWeek === null) {
-        setSelectedWeek(list[0]);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedWeek == null) return;
-    setLoading(true);
-    getEpisodesByWeek(selectedWeek.weekId)
-      .then((res) => {
-        if (res.isSuccess && res.result) {
-          setSchedule(res.result);
-        } else {
-          setSchedule(null);
-        }
-      })
-      .catch(() => setSchedule(null))
-      .finally(() => setLoading(false));
-  }, [selectedWeek]);
-
-  const refreshSchedule = () => {
-    if (selectedWeek == null) return;
-    getEpisodesByWeek(selectedWeek.weekId).then((res) => {
-      if (res.isSuccess && res.result) setSchedule(res.result);
-    });
-  };
 
   const handleBreakEpisode = async (episodeId: number) => {
     try {

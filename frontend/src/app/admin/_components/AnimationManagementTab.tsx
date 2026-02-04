@@ -1,20 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { getQuarters } from '@/api/search';
+import React, { useState } from 'react';
 import {
-  getAnimesByQuarter,
-  getEpisodesByAnimeAdmin,
-  updateAnimeInfo,
-  updateAnimeTotalEpisodes,
-  setAnimeTotalEpisodesUnknown,
-  updateAnimeImage,
-  patchEpisode,
   breakEpisode,
   deleteEpisode,
   queueEpisode,
+  getAnimesByQuarter,
 } from '@/api/admin';
-import { AdminEpisodeDto, LogFilterType, Schemas } from '@/types';
+import { AdminEpisodeDto, LogFilterType } from '@/types';
 import AdminLogSection from './AdminLogSection';
 import { MdPlayArrow } from 'react-icons/md';
 import { cn, formatAirTime } from '@/lib';
@@ -26,117 +19,31 @@ import {
   InfoRequestDtoStatus,
   PostRequestDtoDayOfWeek,
 } from '@/types/generated/api';
-
-const ANIME_HEADERS = [
-  { label: '애니메이션 ID', key: 'animeId' },
-  { label: '애니메이션 제목', key: 'titleKor' },
-  { label: '제작사', key: 'corp' },
-  { label: '상태', key: 'status' },
-  { label: '방영 요일', key: 'dayOfWeek' },
-  { label: '방영 시간', key: 'airTime' },
-  { label: '총 에피소드 수', key: 'totalEpisodes' },
-];
-
-function formatStatus(s: string): string {
-  const map: Record<string, string> = {
-    UPCOMING: '예정',
-    NOW_SHOWING: '방영중',
-    COOLING: '휴방',
-    ENDED: '종영',
-  };
-  return map[s] ?? s;
-}
-
-function formatDayOfWeek(d?: string | null): string {
-  const map: Record<string, string> = {
-    MON: '월',
-    TUE: '화',
-    WED: '수',
-    THU: '목',
-    FRI: '금',
-    SAT: '토',
-    SUN: '일',
-  };
-  return map[d ?? ''] ?? d ?? '';
-}
-
-interface QuarterOption {
-  label: string;
-  year: number;
-  quarter: number;
-  /** 드롭다운 옵션 구분용 (year*100+quarter) */
-  optionValue: number;
-}
+import { ANIME_HEADERS } from '@/features/admin/constants';
+import { formatStatus, formatDayOfWeek } from '@/features/admin/utils';
+import { useQuarters } from '@/features/admin/hooks/useQuarters';
+import { useAnimesByQuarter } from '@/features/admin/hooks/useAnimesByQuarter';
+import { useEpisodesByAnime } from '@/features/admin/hooks/useEpisodesByAnime';
+import { useAnimeFieldEdit } from '@/features/admin/hooks/useAnimeFieldEdit';
 
 export default function AnimationManagementTab() {
-  const [quarterOptions, setQuarterOptions] = useState<QuarterOption[]>([]);
-  const [selectedQuarter, setSelectedQuarter] = useState<QuarterOption | null>(
-    null
-  );
-  const [animes, setAnimes] = useState<Schemas['AdminAnimeDto'][]>([]);
-  const [loadingAnimes, setLoadingAnimes] = useState(false);
-  const [expandedAnimeId, setExpandedAnimeId] = useState<number | null>(null);
-  const [episodesByAnime, setEpisodesByAnime] = useState<
-    Record<number, AdminEpisodeDto[]>
-  >({});
-  const [loadingEpisodes, setLoadingEpisodes] = useState<
-    Record<number, boolean>
-  >({});
-  const [logFilterType, setLogFilterType] = useState<LogFilterType>(
-    LogFilterType.ANIME
-  );
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [selectedImageTitle, setSelectedImageTitle] = useState<string>('');
-  const [editingField, setEditingField] = useState<{
-    animeId: number;
-    field: 'dayOfWeek' | 'status' | 'airTime' | 'corp' | 'totalEpisodes';
-  } | null>(null);
-  const [editingValues, setEditingValues] = useState<{
-    dayOfWeek?: PostRequestDtoDayOfWeek;
-    status?: InfoRequestDtoStatus;
-    airTime?: string;
-    corp?: string;
-    totalEpisodes?: string;
-  }>({});
-
-  // 분기 목록: getQuarters() 리턴값만 사용 (GET /api/v1/search/quarters)
-  useEffect(() => {
-    let cancelled = false;
-    const fetchQuarters = async () => {
-      try {
-        const res = await getQuarters();
-        if (cancelled || !res.isSuccess || !res.result) return;
-        const list: QuarterOption[] = [];
-        res.result.forEach((item: Schemas['QuarterResponseDto']) => {
-          const year = item.year;
-          (item.quarters ?? []).forEach((q: number) => {
-            list.push({
-              label: `${year}년 ${q}분기`,
-              year,
-              quarter: q,
-              optionValue: year * 100 + q,
-            });
-          });
-        });
-        setQuarterOptions(list);
-        if (list.length > 0 && selectedQuarter === null) {
-          setSelectedQuarter(list[0]);
-        }
-      } catch (e) {
-        // 에러 처리
-      }
-    };
-    fetchQuarters();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // getAnimesByQuarter의 quarterId는 getQuarters() 리턴으로 만든 선택값 사용
-  useEffect(() => {
-    if (selectedQuarter == null) return;
-    setLoadingAnimes(true);
-    const fetchAnimes = async () => {
+  const { quarterOptions, selectedQuarter, setSelectedQuarter } = useQuarters();
+  const {
+    animes,
+    setAnimes,
+    loading: loadingAnimes,
+  } = useAnimesByQuarter(selectedQuarter);
+  const { episodesByAnime, loadingEpisodes, loadEpisodes, refreshEpisodes } =
+    useEpisodesByAnime();
+  const {
+    editingField,
+    editingValues,
+    setEditingValues,
+    handleFieldEdit,
+    handleFieldSave,
+    handleFieldCancel,
+  } = useAnimeFieldEdit(animes, setAnimes, async () => {
+    if (selectedQuarter) {
       try {
         const res = await getAnimesByQuarter(
           selectedQuarter.year,
@@ -146,17 +53,19 @@ export default function AnimationManagementTab() {
         );
         if (res.isSuccess && res.result?.adminAnimeDtos) {
           setAnimes(res.result.adminAnimeDtos);
-        } else {
-          setAnimes([]);
         }
       } catch (e) {
-        setAnimes([]);
-      } finally {
-        setLoadingAnimes(false);
+        // 에러 처리
       }
-    };
-    fetchAnimes();
-  }, [selectedQuarter]);
+    }
+  });
+
+  const [expandedAnimeId, setExpandedAnimeId] = useState<number | null>(null);
+  const [logFilterType, setLogFilterType] = useState<LogFilterType>(
+    LogFilterType.ANIME
+  );
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageTitle, setSelectedImageTitle] = useState<string>('');
 
   const toggleExpand = async (animeId: number) => {
     if (expandedAnimeId === animeId) {
@@ -164,38 +73,7 @@ export default function AnimationManagementTab() {
       return;
     }
     setExpandedAnimeId(animeId);
-    if (episodesByAnime[animeId]) return;
-    setLoadingEpisodes((prev) => ({ ...prev, [animeId]: true }));
-    try {
-      const res = await getEpisodesByAnimeAdmin(animeId);
-      if (res.isSuccess && res.result?.adminEpisodeDtos) {
-        setEpisodesByAnime((prev) => ({
-          ...prev,
-          [animeId]: res.result!.adminEpisodeDtos!,
-        }));
-      }
-    } catch (e) {
-      // 에러 처리
-    } finally {
-      setLoadingEpisodes((prev) => ({ ...prev, [animeId]: false }));
-    }
-  };
-
-  const refreshEpisodes = async (animeId: number) => {
-    setLoadingEpisodes((prev) => ({ ...prev, [animeId]: true }));
-    try {
-      const res = await getEpisodesByAnimeAdmin(animeId);
-      if (res.isSuccess && res.result?.adminEpisodeDtos) {
-        setEpisodesByAnime((prev) => ({
-          ...prev,
-          [animeId]: res.result!.adminEpisodeDtos!,
-        }));
-      }
-    } catch (e) {
-      // 에러 처리
-    } finally {
-      setLoadingEpisodes((prev) => ({ ...prev, [animeId]: false }));
-    }
+    await loadEpisodes(animeId);
   };
 
   const handleQueueEpisode = async (animeId: number) => {
@@ -231,228 +109,6 @@ export default function AnimationManagementTab() {
     } catch (e) {
       showToast.error('에피소드 삭제에 실패했습니다.');
     }
-  };
-
-  // airTime 문자열을 LocalTime 객체로 변환
-  // formatAirTime의 로직에 맞춰 24:00~28:59 (실제로는 00:00~04:59)도 허용
-  const parseAirTime = (timeStr: string): Schemas['LocalTime'] | null => {
-    const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
-    if (!match) return null;
-    let hour = parseInt(match[1], 10);
-    const minute = parseInt(match[2], 10);
-    if (minute < 0 || minute > 59) return null;
-
-    // 24시간 이상의 시간은 실제로는 전날 밤 시간 (예: 25:00 = 01:00)
-    if (hour >= 24 && hour <= 28) {
-      hour -= 24;
-    } else if (hour < 0 || hour > 23) {
-      return null;
-    }
-
-    return { hour, minute, second: 0, nano: 0 };
-  };
-
-  // airTime LocalTime 객체를 문자열로 변환
-  const airTimeToString = (airTime?: Schemas['LocalTime'] | null): string => {
-    if (!airTime) return '';
-    return formatAirTime(airTime);
-  };
-
-  const handleFieldEdit = (
-    animeId: number,
-    field: 'dayOfWeek' | 'status' | 'airTime' | 'corp' | 'totalEpisodes',
-    currentValue: any
-  ) => {
-    setEditingField({ animeId, field });
-    if (field === 'airTime') {
-      setEditingValues({ airTime: airTimeToString(currentValue) });
-    } else if (field === 'corp') {
-      setEditingValues({ corp: currentValue ?? '' });
-    } else if (field === 'dayOfWeek') {
-      setEditingValues({ dayOfWeek: currentValue });
-    } else if (field === 'status') {
-      setEditingValues({ status: currentValue });
-    } else if (field === 'totalEpisodes') {
-      setEditingValues({
-        totalEpisodes:
-          currentValue === null || currentValue === undefined
-            ? ''
-            : String(currentValue),
-      });
-    }
-  };
-
-  const handleFieldSave = async (
-    animeId: number,
-    field: 'dayOfWeek' | 'status' | 'airTime' | 'corp' | 'totalEpisodes'
-  ) => {
-    if (field === 'totalEpisodes') {
-      const valueStr = (editingValues.totalEpisodes ?? '').trim();
-
-      const anime = animes.find((a) => a.animeId === animeId);
-      if (!anime) {
-        setEditingField(null);
-        setEditingValues({});
-        return;
-      }
-
-      if (!valueStr) {
-        // 비어 있으면 변경 취소
-        setEditingField(null);
-        setEditingValues({});
-        return;
-      }
-
-      const newTotal = Number(valueStr);
-      if (!Number.isFinite(newTotal) || newTotal <= 0) {
-        showToast.error('올바른 총 화수를 입력하세요.');
-        return;
-      }
-
-      if ((anime.totalEpisodes ?? null) === newTotal) {
-        setEditingField(null);
-        setEditingValues({});
-        return;
-      }
-
-      try {
-        const res = await updateAnimeTotalEpisodes(animeId, newTotal);
-        if (res.isSuccess) {
-          showToast.success('총 화수가 수정되었습니다.');
-          // 로컬 상태 갱신
-          setAnimes((prev) =>
-            prev.map((a) =>
-              a.animeId === animeId ? { ...a, totalEpisodes: newTotal } : a
-            )
-          );
-        } else {
-          showToast.error('총 화수 수정에 실패했습니다.');
-        }
-      } catch (e) {
-        showToast.error('총 화수 수정에 실패했습니다.');
-      } finally {
-        setEditingField(null);
-        setEditingValues({});
-      }
-
-      return;
-    }
-
-    const value = editingValues[field];
-    if (value === undefined) {
-      setEditingField(null);
-      setEditingValues({});
-      return;
-    }
-
-    const anime = animes.find((a) => a.animeId === animeId);
-    if (!anime) {
-      setEditingField(null);
-      setEditingValues({});
-      return;
-    }
-
-    // 값 변화 체크
-    let hasChanged = false;
-    if (field === 'airTime') {
-      const parsedTime = parseAirTime(value as string);
-      if (!parsedTime) {
-        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
-        return;
-      }
-      const currentTime = anime.airTime;
-      if (
-        !currentTime ||
-        currentTime.hour !== parsedTime.hour ||
-        currentTime.minute !== parsedTime.minute
-      ) {
-        hasChanged = true;
-      }
-    } else if (field === 'corp') {
-      if ((anime.corp ?? '') !== (value as string)) {
-        hasChanged = true;
-      }
-    } else if (field === 'dayOfWeek') {
-      if (anime.dayOfWeek !== (value as PostRequestDtoDayOfWeek)) {
-        hasChanged = true;
-      }
-    } else if (field === 'status') {
-      if (anime.status !== (value as InfoRequestDtoStatus)) {
-        hasChanged = true;
-      }
-    }
-
-    // 값 변화가 없으면 요청하지 않음
-    if (!hasChanged) {
-      setEditingField(null);
-      setEditingValues({});
-      return;
-    }
-
-    try {
-      const updateData: Schemas['InfoRequestDto'] =
-        {} as Schemas['InfoRequestDto'];
-
-      if (field === 'airTime') {
-        const parsedTime = parseAirTime(value as string);
-        if (!parsedTime) {
-          showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
-          return;
-        }
-        updateData.airTime = parsedTime;
-        updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
-        updateData.status = anime.status as InfoRequestDtoStatus;
-        updateData.corp = anime.corp ?? '';
-      } else if (field === 'corp') {
-        updateData.corp = value as string;
-        updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
-        updateData.status = anime.status as InfoRequestDtoStatus;
-        updateData.airTime = anime.airTime as Schemas['LocalTime'];
-      } else if (field === 'dayOfWeek') {
-        updateData.dayOfWeek = value as PostRequestDtoDayOfWeek;
-        updateData.status = anime.status as InfoRequestDtoStatus;
-        updateData.airTime = anime.airTime as Schemas['LocalTime'];
-        updateData.corp = anime.corp ?? '';
-      } else if (field === 'status') {
-        updateData.status = value as InfoRequestDtoStatus;
-        updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
-        updateData.airTime = anime.airTime as Schemas['LocalTime'];
-        updateData.corp = anime.corp ?? '';
-      }
-
-      const res = await updateAnimeInfo(animeId, updateData);
-      if (res.isSuccess) {
-        showToast.success('수정되었습니다.');
-        // 목록 새로고침
-        if (selectedQuarter) {
-          try {
-            const refreshRes = await getAnimesByQuarter(
-              selectedQuarter.year,
-              selectedQuarter.quarter,
-              0,
-              100
-            );
-            if (refreshRes.isSuccess && refreshRes.result?.adminAnimeDtos) {
-              setAnimes(refreshRes.result.adminAnimeDtos);
-            }
-          } catch (e) {
-            // 에러 처리
-          }
-        }
-      } else {
-        showToast.error('수정에 실패했습니다.');
-      }
-    } catch (e) {
-      showToast.error('수정에 실패했습니다.');
-    } finally {
-      setEditingField(null);
-      setEditingValues({});
-    }
-  };
-
-  const handleFieldCancel = () => {
-    setEditingField(null);
-    setEditingValues({});
   };
 
   const getEpisodeColumns = (
@@ -793,7 +449,6 @@ export default function AnimationManagementTab() {
                               if (e.key === 'Enter') {
                                 handleFieldSave(row.animeId, 'totalEpisodes');
                               } else if (e.key === 'Escape') {
-                                setEditingField(null);
                                 setEditingValues({});
                               }
                             }}
