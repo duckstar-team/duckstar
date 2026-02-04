@@ -27,6 +27,7 @@ export default function ChartPage() {
         );
 
         setSelectedWeek({
+          id: weekInfo?.id ?? 0,
           year,
           quarter,
           week,

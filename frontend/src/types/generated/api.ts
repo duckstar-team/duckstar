@@ -4,3880 +4,3869 @@
  */
 
 export interface paths {
-    "/api/v1/vote/withdraw/{episodeId}/{episodeStarId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 별점 회수 API
-         * @description starScore 를 null 로 셋팅
-         */
-        post: operations["withdrawStar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/vote/withdraw/{episodeId}/{episodeStarId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/surveys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Survey 정보 리스트 조회 API */
-        get: operations["getSurveys"];
-        put?: never;
-        /** Survey 투표 API */
-        post: operations["voteSurvey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * 별점 회수 API
+     * @description starScore 를 null 로 셋팅
+     */
+    post: operations['withdrawStar'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/surveys': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/surveys/{surveyId}/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Survey 투표 기록 조회 API */
-        get: operations["getAnimeVoteHistory"];
-        put?: never;
-        /** Survey 히스토리용 댓글 작성 API (로그인 ONLY) */
-        post: operations["voteOrUpdateWithStarForm"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Survey 정보 리스트 조회 API */
+    get: operations['getSurveys'];
+    put?: never;
+    /** Survey 투표 API */
+    post: operations['voteSurvey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/surveys/{surveyId}/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/surveys/{submissionId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Survey 재투표 API */
-        post: operations["revoteSurvey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Survey 투표 기록 조회 API */
+    get: operations['getAnimeVoteHistory'];
+    put?: never;
+    /** Survey 히스토리용 댓글 작성 API (로그인 ONLY) */
+    post: operations['voteOrUpdateWithStarForm'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/surveys/{submissionId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/star": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 실시간 투표 리스트 조회 API
-         * @description now - 36시간 ~ now 범위의 에피소드들 (VOTING_WINDOW 상태) 조회
-         */
-        get: operations["getLiveCandidates"];
-        put?: never;
-        /**
-         * 실시간 투표/수정 API (비로그인 허용)
-         * @description TVA 투표: Episode 기반, 방송 후 36시간 동안 오픈.
-         */
-        post: operations["voteOrUpdateStar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Survey 재투표 API */
+    post: operations['revoteSurvey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/star': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/star-form": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 투표 폼(모달) 투표/수정 API (로그인 ONLY)
-         * @description TVA 투표 : Episode 기반, 방송 후 투표시간부터 주차 마감 전까지, Comment 5글자 이상 필수
-         */
-        post: operations["voteOrUpdateWithStarForm_1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 실시간 투표 리스트 조회 API
+     * @description now - 36시간 ~ now 범위의 에피소드들 (VOTING_WINDOW 상태) 조회
+     */
+    get: operations['getLiveCandidates'];
+    put?: never;
+    /**
+     * 실시간 투표/수정 API (비로그인 허용)
+     * @description TVA 투표: Episode 기반, 방송 후 36시간 동안 오픈.
+     */
+    post: operations['voteOrUpdateStar'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/star-form': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/replies/{replyId}/like": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 답글 좋아요 API */
-        post: operations["likeReply"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * 투표 폼(모달) 투표/수정 API (로그인 ONLY)
+     * @description TVA 투표 : Episode 기반, 방송 후 투표시간부터 주차 마감 전까지, Comment 5글자 이상 필수
+     */
+    post: operations['voteOrUpdateWithStarForm_1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/replies/{replyId}/like': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/csv/import/{year}/{quarter}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 새로운 분기 정보 csv를 서버에 변환 및 업로드 */
-        post: operations["importNewQuarter"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 답글 좋아요 API */
+    post: operations['likeReply'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/csv/import/{year}/{quarter}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/csv/import/{year}/{quarter}/{week}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["importAbroad"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 새로운 분기 정보 csv를 서버에 변환 및 업로드 */
+    post: operations['importNewQuarter'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/csv/import/{year}/{quarter}/{week}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/csv/import/surveys/{surveyId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 어워드 후보 csv를 서버에 변환 및 업로드 */
-        post: operations["importYearCandidates"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['importAbroad'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/csv/import/surveys/{surveyId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/comments/{commentId}/replies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 답글 조회 API */
-        get: operations["getReplies"];
-        put?: never;
-        /** 답글 작성 API */
-        post: operations["leaveReply"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 어워드 후보 csv를 서버에 변환 및 업로드 */
+    post: operations['importYearCandidates'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/comments/{commentId}/replies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/comments/{commentId}/like": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 댓글 좋아요 API */
-        post: operations["likeComment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 답글 조회 API */
+    get: operations['getReplies'];
+    put?: never;
+    /** 답글 작성 API */
+    post: operations['leaveReply'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/comments/{commentId}/like': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/withdraw/naver": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 네이버 회원 탈퇴 API */
-        post: operations["withdrawNaver"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 댓글 좋아요 API */
+    post: operations['likeComment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/withdraw/naver': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/withdraw/kakao": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 카카오 회원 탈퇴 API */
-        post: operations["withdrawKakao"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 네이버 회원 탈퇴 API */
+    post: operations['withdrawNaver'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/withdraw/kakao': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/withdraw/google": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 구글 회원 탈퇴 API */
-        post: operations["withdrawGoogle"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 카카오 회원 탈퇴 API */
+    post: operations['withdrawKakao'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/withdraw/google': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/token/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refresh Token 재발급 API */
-        post: operations["refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 구글 회원 탈퇴 API */
+    post: operations['withdrawGoogle'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/token/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/set-withdraw-mode": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 회원탈퇴 모드 설정 API */
-        post: operations["setWithdrawMode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Refresh Token 재발급 API */
+    post: operations['refresh'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/set-withdraw-mode': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 로그아웃 API
-         * @description 로그아웃 시, 회원이 투표한 후보들 중 가장 마지막에 투표가 마감되는 후보에 대해 투표의 남은 시간만큼 프론트에 반환: 프론트는 해당 시간만큼 중복 투표 방지 화면을 띄움.
-         */
-        post: operations["logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 회원탈퇴 모드 설정 API */
+    post: operations['setWithdrawMode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/animes/{animeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 애니메이션 홈 조회 API */
-        get: operations["getAnimeHomeById"];
-        put?: never;
-        /** 애니메이션 댓글 작성 API */
-        post: operations["leaveComment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * 로그아웃 API
+     * @description 로그아웃 시, 회원이 투표한 후보들 중 가장 마지막에 투표가 마감되는 후보에 대해 투표의 남은 시간만큼 프론트에 반환: 프론트는 해당 시간만큼 중복 투표 방지 화면을 띄움.
+     */
+    post: operations['logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/animes/{animeId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/ip/withdraw": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 특정 주차, 특정 ip와 표 몰수 (전체 차단) */
-        post: operations["withdrawVotesByWeekAndIp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 애니메이션 홈 조회 API */
+    get: operations['getAnimeHomeById'];
+    put?: never;
+    /** 애니메이션 댓글 작성 API */
+    post: operations['leaveComment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/ip/withdraw': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/ip/withdraw/undo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 되돌리기 - 특정 주차, 특정 ip와 표 몰수 롤백 */
-        post: operations["undoWithdrawnSubmissions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 특정 주차, 특정 ip와 표 몰수 (전체 차단) */
+    post: operations['withdrawVotesByWeekAndIp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/ip/withdraw/undo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/ip/ban": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** ip 밴 토글 API */
-        post: operations["banIp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 되돌리기 - 특정 주차, 특정 ip와 표 몰수 롤백 */
+    post: operations['undoWithdrawnSubmissions'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/ip/ban': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/episodes/{episodeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 에피소드 휴방 API */
-        post: operations["breakEpisode"];
-        /**
-         * 에피소드 삭제 API
-         * @description 다음 주부터의 에피소드만 삭제 가능
-         */
-        delete: operations["deleteMoreThanNextWeekEpisode"];
-        options?: never;
-        head?: never;
-        /** 에피소드 정보 수정 API */
-        patch: operations["rescheduleEpisode"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** ip 밴 토글 API */
+    post: operations['banIp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/episodes/{episodeId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/chart/{year}/{quarter}/{week}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 편의용 주간 마감 API
-         * @description 주간 덕스타 차트 계산, AniLab 차트 csv 읽고 등록
-         */
-        post: operations["calculateRankAndImportAniLab"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 에피소드 휴방 API */
+    post: operations['breakEpisode'];
+    /**
+     * 에피소드 삭제 API
+     * @description 다음 주부터의 에피소드만 삭제 가능
+     */
+    delete: operations['deleteMoreThanNextWeekEpisode'];
+    options?: never;
+    head?: never;
+    /** 에피소드 정보 수정 API */
+    patch: operations['rescheduleEpisode'];
+    trace?: never;
+  };
+  '/api/admin/chart/{year}/{quarter}/{week}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/animes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAnimes"];
-        put?: never;
-        /** 애니메이션 등록 API */
-        post: operations["createAnime"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * 편의용 주간 마감 API
+     * @description 주간 덕스타 차트 계산, AniLab 차트 csv 읽고 등록
+     */
+    post: operations['calculateRankAndImportAniLab'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/animes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/animes/{animeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 애니메이션 메인 이미지 수정 API */
-        post: operations["updateAnimeImage"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 애니메이션 정보 수정 API
-         * @description TVA의 방향 업데이트, 애니메이션의 상태, 제작사 업데이트
-         */
-        patch: operations["updateInfo"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 애니메이션 등록 API */
+    post: operations['createAnime'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/animes/{animeId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/animes/{animeId}/total-episodes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 애니메이션 총 화수 수정 API */
-        post: operations["updateTotalEpisodes"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 애니메이션 메인 이미지 수정 API */
+    post: operations['updateAnimeImage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 애니메이션 정보 수정 API
+     * @description TVA의 방향 업데이트, 애니메이션의 상태, 제작사 업데이트
+     */
+    patch: operations['updateInfo'];
+    trace?: never;
+  };
+  '/api/admin/animes/{animeId}/total-episodes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/animes/{animeId}/episodes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 애니메이션 별 에피소드 조회 */
-        get: operations["getEpisodesByAnime"];
-        put?: never;
-        /**
-         * 에피소드 추가(큐잉) API
-         * @description 큐잉만 가능 - Tail(끝) 에피소드 추가 방식
-         */
-        post: operations["queueEpisode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** 애니메이션 총 화수 수정 API */
+    post: operations['updateTotalEpisodes'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/animes/{animeId}/episodes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/replies/{replyId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** 답글 삭제 API */
-        patch: operations["deleteReply"];
-        trace?: never;
+    /** 애니메이션 별 에피소드 조회 */
+    get: operations['getEpisodesByAnime'];
+    put?: never;
+    /**
+     * 에피소드 추가(큐잉) API
+     * @description 큐잉만 가능 - Tail(끝) 에피소드 추가 방식
+     */
+    post: operations['queueEpisode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/replies/{replyId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/replies/{replyId}/like/{replyLikeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** 답글 좋아요 취소 API */
-        patch: operations["dislikeReply"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** 답글 삭제 API */
+    patch: operations['deleteReply'];
+    trace?: never;
+  };
+  '/api/v1/replies/{replyId}/like/{replyLikeId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/members/me/profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 프로필 수정 API
-         * @description 닉네임 또는 프로필 이미지를 수정합니다.
-         */
-        patch: operations["updateProfile"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** 답글 좋아요 취소 API */
+    patch: operations['dislikeReply'];
+    trace?: never;
+  };
+  '/api/v1/members/me/profile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/comments/{commentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** 댓글 삭제 API */
-        patch: operations["deleteComment"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 프로필 수정 API
+     * @description 닉네임 또는 프로필 이미지를 수정합니다.
+     */
+    patch: operations['updateProfile'];
+    trace?: never;
+  };
+  '/api/v1/comments/{commentId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/comments/{commentId}/like/{commentLikeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** 댓글 좋아요 취소 API */
-        patch: operations["dislikeComment"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** 댓글 삭제 API */
+    patch: operations['deleteComment'];
+    trace?: never;
+  };
+  '/api/v1/comments/{commentId}/like/{commentLikeId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/{animeId}/total-episodes/unknown": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** 애니메이션 총 화수 알 수 없음 Set API */
-        patch: operations["updateTotalEpisodes_1"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** 댓글 좋아요 취소 API */
+    patch: operations['dislikeComment'];
+    trace?: never;
+  };
+  '/api/admin/{animeId}/total-episodes/unknown': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/surveys/{surveyId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Survey 정보 단건 조회 API */
-        get: operations["getSurvey"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** 애니메이션 총 화수 알 수 없음 Set API */
+    patch: operations['updateTotalEpisodes_1'];
+    trace?: never;
+  };
+  '/api/v1/vote/surveys/{surveyId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/surveys/{surveyId}/candidates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Survey 후보자 리스트 조회 API */
-        get: operations["getAnimeCandidateList"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Survey 정보 단건 조회 API */
+    get: operations['getSurvey'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/surveys/{surveyId}/candidates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/episodes/{year}/{quarter}/{week}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 주차 후보 목록 조회 API */
-        get: operations["getWeekCandidatesByYQW"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Survey 후보자 리스트 조회 API */
+    get: operations['getAnimeCandidateList'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/episodes/{year}/{quarter}/{week}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/vote/episodes/{episodeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 후보 단건 조회 API
-         * @description 단일 후보 모달에 사용
-         */
-        get: operations["getEpisode"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 주차 후보 목록 조회 API */
+    get: operations['getWeekCandidatesByYQW'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vote/episodes/{episodeId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 금주의 분류된 편성표 조회 API
-         * @description - 조회 주차 구분의 시작점은 월요일 + offset 시간.
-         *     - 분기 신작 애니는 많아도 100개 이하 -> 전체 조회
-         *
-         *     -서버 역할
-         *     1. 정렬 - airTime asc
-         *     2. 그룹핑 - 총 9개 그룹: MON ~ SUN, SPECIAL(특별편성 및 극장판), NONE(TVA지만 미정 or 정보없음)
-         *     3. 상태 부여 - UPCOMING, NOW_SHOWING, COOLING, ENDED
-         *
-         *     -클라이언트 역할
-         *     1. 그룹별 탭 전환
-         *     2. 기본 AnimeStatus 표시
-         *     3. 첫 방영 애니들만: 방영까지 남은 시간 표시
-         */
-        get: operations["getWeeklySchedule"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 후보 단건 조회 API
+     * @description 단일 후보 모달에 사용
+     */
+    get: operations['getEpisode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/search/{year}/{quarter}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 특정 시즌의 분류된 편성표 조회 API */
-        get: operations["getScheduleByQuarter"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 금주의 분류된 편성표 조회 API
+     * @description - 조회 주차 구분의 시작점은 월요일 + offset 시간.
+     *     - 분기 신작 애니는 많아도 100개 이하 -> 전체 조회
+     *
+     *     -서버 역할
+     *     1. 정렬 - airTime asc
+     *     2. 그룹핑 - 총 9개 그룹: MON ~ SUN, SPECIAL(특별편성 및 극장판), NONE(TVA지만 미정 or 정보없음)
+     *     3. 상태 부여 - UPCOMING, NOW_SHOWING, COOLING, ENDED
+     *
+     *     -클라이언트 역할
+     *     1. 그룹별 탭 전환
+     *     2. 기본 AnimeStatus 표시
+     *     3. 첫 방영 애니들만: 방영까지 남은 시간 표시
+     */
+    get: operations['getWeeklySchedule'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/{year}/{quarter}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/search/quarters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuarters"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 특정 시즌의 분류된 편성표 조회 API */
+    get: operations['getScheduleByQuarter'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/quarters': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/search/animes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 키워드를 통한 애니메이션 검색 API */
-        get: operations["searchAnimes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['getQuarters'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/search/animes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/members/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCurrentUser"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 키워드를 통한 애니메이션 검색 API */
+    get: operations['searchAnimes'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/members/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/members/me/anime/weeks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 참여한 투표 주차 조회 API */
-        get: operations["getParticipatedWeeks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['getCurrentUser'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/members/me/anime/weeks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/members/me/anime/weeks/{weekId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 특정 주차의 투표 기록 조회 API */
-        get: operations["getHistoryByWeek"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 참여한 투표 주차 조회 API */
+    get: operations['getParticipatedWeeks'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/members/me/anime/weeks/{weekId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/images/og": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Open Graph 이미지 변환 API
-         * @description WebP 이미지를 JPG 또는 PNG로 변환하여 반환 (OG 태그용)
-         */
-        get: operations["convertForOpenGraph"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 특정 주차의 투표 기록 조회 API */
+    get: operations['getHistoryByWeek'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/images/og': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/home": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 홈페이지 초기 데이터 조회 API
-         * @description 투표가 완료된 지난 주차
-         *     1. 애니 & Anilab TOP N개
-         *     2. Hot 급상승 애니/캐릭터 리스트 (각 최소 2개, 합 최대 6개)
-         *     3. 드롭다운용 최근 12주
-         */
-        get: operations["getHome"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Open Graph 이미지 변환 API
+     * @description WebP 이미지를 JPG 또는 PNG로 변환하여 반환 (OG 태그용)
+     */
+    get: operations['convertForOpenGraph'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/home': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/home/{year}/{quarter}/{week}/anime": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 주차별 덕스타 애니메이션 TOP N개 조회 API (with 해외 순위)
-         * @description path variable 해당 주차
-         *     애니 & Anime Corner TOP N개
-         */
-        get: operations["getWeeklyDuckstar"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 홈페이지 초기 데이터 조회 API
+     * @description 투표가 완료된 지난 주차
+     *     1. 애니 & Anilab TOP N개
+     *     2. Hot 급상승 애니/캐릭터 리스트 (각 최소 2개, 합 최대 6개)
+     *     3. 드롭다운용 최근 12주
+     */
+    get: operations['getHome'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/home/{year}/{quarter}/{week}/anime': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/chart/{year}/{quarter}/{week}/anime": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 주차별 애니메이션 차트 슬라이스 조회 API (with Anime Trend, AniLab)
-         * @description path variable 해당 주차 애니, Anime Trend, AniLab 커서 기반 무한 스크롤
-         */
-        get: operations["getWeeklyAnimeChart"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 주차별 덕스타 애니메이션 TOP N개 조회 API (with 해외 순위)
+     * @description path variable 해당 주차
+     *     애니 & Anime Corner TOP N개
+     */
+    get: operations['getWeeklyDuckstar'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/chart/{year}/{quarter}/{week}/anime': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/chart/weeks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 모든 주차 조회 API */
-        get: operations["getAllWeeks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 주차별 애니메이션 차트 슬라이스 조회 API (with Anime Trend, AniLab)
+     * @description path variable 해당 주차 애니, Anime Trend, AniLab 커서 기반 무한 스크롤
+     */
+    get: operations['getWeeklyAnimeChart'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/chart/weeks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/chart/surveys/{surveyId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 서베이 차트 슬라이스 조회 API
-         * @description (25/12/30 결정) 이미지 다운로드를 목적으로 페이지 당 10개씩
-         */
-        get: operations["getSurveyChart"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 모든 주차 조회 API */
+    get: operations['getAllWeeks'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/chart/surveys/{surveyId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/animes/{animeId}/episodes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 애니메이션 에피소드 조회 API */
-        get: operations["getEpisodesByAnime_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 서베이 차트 슬라이스 조회 API
+     * @description (25/12/30 결정) 이미지 다운로드를 목적으로 페이지 당 10개씩
+     */
+    get: operations['getSurveyChart'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/animes/{animeId}/episodes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/animes/{animeId}/comments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 애니메이션 댓글 조회 API */
-        get: operations["getAnimeComments"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 애니메이션 에피소드 조회 API */
+    get: operations['getEpisodesByAnime_1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/animes/{animeId}/comments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/animes/ids": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 모든 애니메이션 ID 조회 API (SEO용) */
-        get: operations["getAllAnimeIds"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 애니메이션 댓글 조회 API */
+    get: operations['getAnimeComments'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/animes/ids': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/weeks/{weekId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 주간(월 18시 정책 기준) 에피소드 조회 */
-        get: operations["getEpisodes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 모든 애니메이션 ID 조회 API (SEO용) */
+    get: operations['getAllAnimeIds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/submissions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/submissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * IP별 제출 수 슬라이스 조회 API
-         * @description 커서 기반 무한 스크롤
-         */
-        get: operations["getSubmissionCountGroupByIp"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * IP별 제출 수 슬라이스 조회 API
+     * @description 커서 기반 무한 스크롤
+     */
+    get: operations['getSubmissionCountGroupByIp'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/logs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 매니저 관리 로그 조회 API
-         * @description 커서 기반 무한 스크롤
-         */
-        get: operations["getAdminLogsOnIpManagement"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * 매니저 관리 로그 조회 API
+     * @description 커서 기반 무한 스크롤
+     */
+    get: operations['getAdminLogsOnIpManagement'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/ip': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/admin/ip": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 특정 주차, 특정 ip 제출 현황 전체 조회 API */
-        get: operations["getSubmissionsByWeekAndIp"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** 특정 주차, 특정 ip 제출 현황 전체 조회 API */
+    get: operations['getSubmissionsByWeekAndIp'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/episodes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /** 주간(월 18시 정책 기준) 에피소드 조회 */
+    get: operations['getEpisodes'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/animes/{year}/{quarter}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getAnimes'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        ApiResponseVoid: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: Record<string, never>;
-        };
-        AnimeVoteRequest: {
-            /** Format: int64 */
-            surveyId: number;
-            /** @enum {string} */
-            gender: AnimeVoteRequestGender;
-            /** @enum {string} */
-            ageGroup: AnimeVoteRequestAgeGroup;
-            ballotRequests: components["schemas"]["BallotRequestDto"][];
-        };
-        BallotRequestDto: {
-            /** Format: int64 */
-            candidateId: number;
-            /** @enum {string} */
-            ballotType: BallotRequestDtoBallotType;
-        };
-        SurveyCommentRequestDto: {
-            /** Format: int64 */
-            animeId: number;
-            body: string;
-            /** Format: int64 */
-            candidateId?: number;
-        };
-        ApiResponseSurveyCommentDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["SurveyCommentDto"];
-        };
-        SurveyCommentDto: {
-            /** Format: date-time */
-            commentCreatedAt: string;
-            /** Format: int64 */
-            commentId: number;
-            body: string;
-        };
-        AnimeRevoteRequest: {
-            /** Format: int64 */
-            surveyId: number;
-            /** @enum {string} */
-            gender: AnimeVoteRequestGender;
-            /** @enum {string} */
-            ageGroup: AnimeVoteRequestAgeGroup;
-            added?: components["schemas"]["BallotRequestDto"][];
-            removed?: components["schemas"]["BallotRequestDto"][];
-            updated?: components["schemas"]["BallotRequestDto"][];
-        };
-        StarRequestDto: {
-            /** Format: int64 */
-            episodeId: number;
-            /** Format: int32 */
-            starScore: number;
-            /** Format: int64 */
-            episodeStarId?: number;
-        };
-        ApiResponseVoteResultDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["VoteResultDto"];
-        };
-        StarInfoDto: {
-            isBlocked: boolean;
-            /** Format: int64 */
-            episodeStarId: number;
-            /** Format: int32 */
-            userStarScore: number;
-            /** Format: double */
-            starAverage: number;
-            /** Format: int32 */
-            star_0_5: number;
-            /** Format: int32 */
-            star_1_0: number;
-            /** Format: int32 */
-            star_1_5: number;
-            /** Format: int32 */
-            star_2_0: number;
-            /** Format: int32 */
-            star_2_5: number;
-            /** Format: int32 */
-            star_3_0: number;
-            /** Format: int32 */
-            star_3_5: number;
-            /** Format: int32 */
-            star_4_0: number;
-            /** Format: int32 */
-            star_4_5: number;
-            /** Format: int32 */
-            star_5_0: number;
-        };
-        VoteResultDto: {
-            /** Format: int32 */
-            voterCount: number;
-            info: components["schemas"]["StarInfoDto"];
-        };
-        LateStarRequestDto: {
-            /** Format: int64 */
-            episodeId: number;
-            /** Format: int32 */
-            starScore: number;
-            body: string;
-            /** Format: int64 */
-            episodeStarId?: number;
-        };
-        ApiResponseVoteFormResultDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["VoteFormResultDto"];
-        };
-        VoteFormResultDto: {
-            isLateParticipating: boolean;
-            /** Format: int32 */
-            voterCount: number;
-            info: components["schemas"]["StarInfoDto"];
-            /** Format: date-time */
-            voteUpdatedAt: string;
-            /** Format: int64 */
-            commentId: number;
-            body: string;
-        };
-        LikeRequestDto: {
-            /** Format: int64 */
-            likeId: number;
-        };
-        ApiResponseLikeResultDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["LikeResultDto"];
-        };
-        LikeResultDto: {
-            /** Format: int64 */
-            likeId: number;
-            /** Format: int32 */
-            likeCount: number;
-            /** Format: date-time */
-            likedAt: string;
-        };
-        NewQuarterRequestDto: {
-            /** Format: binary */
-            animeCsv: string;
-            /** Format: binary */
-            charactersCsv: string;
-            /** Format: binary */
-            animeCharactersCsv: string;
-            /** Format: binary */
-            episodesCsv: string;
-        };
-        AbroadRequestDto: {
-            /** Format: binary */
-            animeCornerCsv: string;
-            /** Format: binary */
-            anilabCsv: string;
-        };
-        CandidatesCsvRequest: {
-            /** Format: binary */
-            candidatesCsv: string;
-        };
-        CommentRequestDto: {
-            /** Format: int64 */
-            episodeId?: number;
-            /** Format: binary */
-            attachedImage?: string;
-            body: string;
-        };
-        ReplyRequestDto: {
-            /** Format: int64 */
-            listenerId: number;
-            commentRequestDto: components["schemas"]["CommentRequestDto"];
-        };
-        ApiResponseReplyDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["ReplyDto"];
-        };
-        ReplyDto: {
-            /** @enum {string} */
-            status: ReplyDtoStatus;
-            /** Format: int64 */
-            replyId: number;
-            canDeleteThis: boolean;
-            isLiked: boolean;
-            /** Format: int64 */
-            replyLikeId: number;
-            /** Format: int32 */
-            likeCount: number;
-            /** Format: int64 */
-            authorId: number;
-            nickname: string;
-            profileImageUrl: string;
-            /** Format: int32 */
-            voteCount: number;
-            /** Format: date-time */
-            createdAt: string;
-            listenerNickname: string;
-            attachedImageUrl: string;
-            body: string;
-        };
-        ApiResponseLong: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            /** Format: int64 */
-            result: number;
-        };
-        ApiResponseCommentDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["CommentDto"];
-        };
-        CommentDto: {
-            /** @enum {string} */
-            status: ReplyDtoStatus;
-            /** Format: int64 */
-            commentId: number;
-            canDeleteThis: boolean;
-            isLiked: boolean;
-            /** Format: int64 */
-            commentLikeId: number;
-            /** Format: int32 */
-            likeCount: number;
-            /** Format: int64 */
-            authorId: number;
-            nickname: string;
-            profileImageUrl: string;
-            /** Format: int32 */
-            voteCount: number;
-            /** Format: int32 */
-            episodeNumber: number;
-            /** Format: date-time */
-            createdAt: string;
-            attachedImageUrl: string;
-            body: string;
-            /** Format: int32 */
-            replyCount: number;
-            /** Format: int32 */
-            starScore: number;
-            isLateParticipating: boolean;
-            /** Format: int64 */
-            surveyCandidateId: number;
-        };
-        ApiResponseEpisodeManageResultDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["EpisodeManageResultDto"];
-        };
-        EpisodeDto: {
-            weekDto: components["schemas"]["WeekDto"];
-            /** Format: int64 */
-            episodeId: number;
-            /** Format: int32 */
-            episodeNumber: number;
-            isBreak: boolean;
-            isRescheduled: boolean;
-            /** Format: date-time */
-            scheduledAt: string;
-            /** Format: date-time */
-            nextEpScheduledAt: string;
-        };
-        EpisodeManageResultDto: {
-            episodeResultDto: components["schemas"]["EpisodeResultDto"];
-            managerProfileDto: components["schemas"]["ManagerProfileDto"];
-        };
-        EpisodeResultDto: {
-            addedEpisodes: components["schemas"]["EpisodeDto"][];
-            deletedEpisodes: components["schemas"]["EpisodeDto"][];
-        };
-        ManagerProfileDto: {
-            /** Format: int64 */
-            memberId: number;
-            profileImageUrl: string;
-            managerNickname: string;
-            /** @enum {string} */
-            taskType: ManagerProfileDtoTaskType;
-            /** Format: date-time */
-            managedAt: string;
-        };
-        WeekDto: {
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            /** Format: int32 */
-            week: number;
-            /** Format: date */
-            startDate: string;
-            /** Format: date */
-            endDate: string;
-        };
-        LocalTime: {
-            /** Format: int32 */
-            hour: number;
-            /** Format: int32 */
-            minute: number;
-            /** Format: int32 */
-            second: number;
-            /** Format: int32 */
-            nano: number;
-        };
-        OttDto: {
-            /** @enum {string} */
-            ottType: OttDtoOttType;
-            watchUrl: string;
-        };
-        PostRequestDto: {
-            titleKor: string;
-            titleOrigin?: string;
-            titleEng?: string;
-            /** @enum {string} */
-            medium: PostRequestDtoMedium;
-            /** Format: date-time */
-            premiereDateTime?: string;
-            /** @enum {string} */
-            dayOfWeek?: PostRequestDtoDayOfWeek;
-            airTime?: components["schemas"]["LocalTime"];
-            /** Format: int32 */
-            totalEpisodes?: number;
-            corp?: string;
-            director?: string;
-            genre?: string;
-            author?: string;
-            /** Format: int32 */
-            minAge?: number;
-            officialSiteString?: string;
-            synopsis?: string;
-            /** Format: binary */
-            mainImage?: string;
-            ottDtos?: components["schemas"]["OttDto"][];
-        };
-        ImageRequestDto: {
-            /** Format: binary */
-            mainImage: string;
-        };
-        TotalEpisodesRequestDto: {
-            /** Format: int32 */
-            totalEpisodes: number;
-        };
-        ApiResponseDeleteResultDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["DeleteResultDto"];
-        };
-        DeleteResultDto: {
-            /** @enum {string} */
-            status: ReplyDtoStatus;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            deletedAt: string;
-        };
-        ApiResponseDiscardLikeResultDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["DiscardLikeResultDto"];
-        };
-        DiscardLikeResultDto: {
-            /** Format: int32 */
-            likeCount: number;
-            /** Format: date-time */
-            discardedAt: string;
-        };
-        ProfileRequestDto: {
-            isSkip: boolean;
-            nickname: string;
-            /** Format: binary */
-            image: string;
-        };
-        ApiResponseUpdateReceiptDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["UpdateReceiptDto"];
-        };
-        MePreviewDto: {
-            /** Format: int64 */
-            id: number;
-            /** @enum {string} */
-            provider: MePreviewDtoProvider;
-            nickname: string;
-            profileImageUrl: string;
-            /** @enum {string} */
-            role: MePreviewDtoRole;
-            isProfileInitialized: boolean;
-        };
-        UpdateReceiptDto: {
-            isChanged: boolean;
-            mePreviewDto: components["schemas"]["MePreviewDto"];
-        };
-        ModifyRequestDto: {
-            /** Format: int32 */
-            episodeNumber: number;
-            /** Format: date-time */
-            rescheduledAt: string;
-        };
-        ApiResponseListManagerProfileDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["ManagerProfileDto"][];
-        };
-        InfoRequestDto: {
-            /** @enum {string} */
-            dayOfWeek: PostRequestDtoDayOfWeek;
-            airTime: components["schemas"]["LocalTime"];
-            /** @enum {string} */
-            status: InfoRequestDtoStatus;
-            corp: string;
-        };
-        ApiResponseListSurveyDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["SurveyDto"][];
-        };
-        SurveyDto: {
-            thumbnailUrl: string;
-            /** Format: int64 */
-            surveyId: number;
-            hasVoted: boolean;
-            /** @enum {string} */
-            status: SurveyDtoStatus;
-            /** Format: int32 */
-            year: number;
-            /** @enum {string} */
-            type: SurveyDtoType;
-            /** Format: date-time */
-            startDateTime: string;
-            /** Format: date-time */
-            endDateTime: string;
-        };
-        ApiResponseSurveyDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["SurveyDto"];
-        };
-        AnimeBallotDto: {
-            /** @enum {string} */
-            ballotType: BallotRequestDtoBallotType;
-            /** Format: int64 */
-            animeCandidateId: number;
-            /** Format: int64 */
-            animeId: number;
-            mainThumbnailUrl: string;
-            titleKor: string;
-            /** Format: int32 */
-            totalEpisodes: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            /** @enum {string} */
-            medium: PostRequestDtoMedium;
-            surveyCommentDto: components["schemas"]["SurveyCommentDto"];
-        };
-        AnimeVoteHistoryDto: {
-            /** Format: int64 */
-            memberId: number;
-            nickName: string;
-            /** Format: int64 */
-            submissionId: number;
-            /** Format: int32 */
-            year: number;
-            /** @enum {string} */
-            type: SurveyDtoType;
-            /** Format: int32 */
-            normalCount: number;
-            /** Format: int32 */
-            bonusCount: number;
-            /** Format: date-time */
-            submittedAt: string;
-            animeBallotDtos: components["schemas"]["AnimeBallotDto"][];
-        };
-        ApiResponseAnimeVoteHistoryDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AnimeVoteHistoryDto"];
-        };
-        AnimeCandidateDto: {
-            /** Format: int64 */
-            animeCandidateId: number;
-            mainThumbnailUrl: string;
-            titleKor: string;
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            /** @enum {string} */
-            medium: PostRequestDtoMedium;
-        };
-        AnimeCandidateListDto: {
-            /** Format: int32 */
-            year: number;
-            /** @enum {string} */
-            type: SurveyDtoType;
-            animeCandidates: components["schemas"]["AnimeCandidateDto"][];
-            /** Format: int32 */
-            candidatesCount: number;
-            /** @enum {string} */
-            memberGender: AnimeVoteRequestGender;
-            /** @enum {string} */
-            memberAgeGroup: AnimeVoteRequestAgeGroup;
-        };
-        ApiResponseAnimeCandidateListDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AnimeCandidateListDto"];
-        };
-        ApiResponseLiveCandidateListDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["LiveCandidateListDto"];
-        };
-        LiveCandidateDto: {
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            /** Format: int32 */
-            week: number;
-            /** Format: int64 */
-            episodeId: number;
-            /** Format: int64 */
-            animeId: number;
-            mainThumbnailUrl: string;
-            titleKor: string;
-            /** @enum {string} */
-            dayOfWeek: PostRequestDtoDayOfWeek;
-            /** Format: date-time */
-            scheduledAt: string;
-            genre: string;
-            /** @enum {string} */
-            medium: PostRequestDtoMedium;
-            result: components["schemas"]["VoteResultDto"];
-        };
-        LiveCandidateListDto: {
-            weekDto: components["schemas"]["WeekDto"];
-            currentWeekLiveCandidates: components["schemas"]["LiveCandidateDto"][];
-            lastWeekLiveCandidates: components["schemas"]["LiveCandidateDto"][];
-        };
-        ApiResponseListWeekCandidateDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["WeekCandidateDto"][];
-        };
-        WeekCandidateDto: {
-            /** Format: int64 */
-            episodeId: number;
-            /** @enum {string} */
-            state: WeekCandidateDtoState;
-            hasVoted: boolean;
-            mainThumbnailUrl: string;
-            titleKor: string;
-        };
-        ApiResponseCandidateFormDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["CandidateFormDto"];
-        };
-        CandidateFormDto: {
-            /** Format: int64 */
-            episodeId: number;
-            /** Format: int32 */
-            voterCount: number;
-            /** Format: int64 */
-            animeId: number;
-            mainThumbnailUrl: string;
-            result: components["schemas"]["VoteFormResultDto"];
-        };
-        AnimePreviewDto: {
-            /** Format: int64 */
-            animeId: number;
-            titleKor: string;
-            mainThumbnailUrl: string;
-            /** @enum {string} */
-            status: InfoRequestDtoStatus;
-            isBreak: boolean;
-            isRescheduled: boolean;
-            genre: string;
-            /** @enum {string} */
-            medium: PostRequestDtoMedium;
-            ottDtos: components["schemas"]["OttDto"][];
-            /** @enum {string} */
-            dayOfWeek: PostRequestDtoDayOfWeek;
-            /** Format: date-time */
-            scheduledAt: string;
-            airTime: components["schemas"]["LocalTime"];
-        };
-        AnimePreviewListDto: {
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            scheduleDtos: components["schemas"]["ScheduleDto"][];
-        };
-        ApiResponseAnimePreviewListDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AnimePreviewListDto"];
-        };
-        ScheduleDto: {
-            /** @enum {string} */
-            dayOfWeekShort: PostRequestDtoDayOfWeek;
-            animePreviews: components["schemas"]["AnimePreviewDto"][];
-        };
-        ApiResponseListQuarterResponseDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["QuarterResponseDto"][];
-        };
-        QuarterResponseDto: {
-            /** Format: int32 */
-            year: number;
-            quarters: number[];
-        };
-        ApiResponseSearchResponseDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["SearchResponseDto"];
-        };
-        SearchResponseDto: {
-            /** Format: int32 */
-            size: number;
-            animePreviews: components["schemas"]["AnimePreviewDto"][];
-        };
-        ApiResponseMePreviewDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["MePreviewDto"];
-        };
-        ApiResponseHomeDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["HomeDto"];
-        };
-        DuckstarRankPreviewDto: {
-            /** Format: double */
-            averageRating: number;
-            /** Format: int32 */
-            voterCount: number;
-            rankPreviewDto: components["schemas"]["RankPreviewDto"];
-        };
-        HomeBannerDto: {
-            /** @enum {string} */
-            bannerType: HomeBannerDtoBannerType;
-            /** @enum {string} */
-            contentType: HomeBannerDtoContentType;
-            /** Format: int64 */
-            animeId: number;
-            /** Format: int64 */
-            characterId: number;
-            mainTitle: string;
-            subTitle: string;
-            animeImageUrl: string;
-            characterImageUrl: string;
-        };
-        HomeDto: {
-            weeklyTopDto: components["schemas"]["WeeklyTopDto"];
-            homeBannerDtos: components["schemas"]["HomeBannerDto"][];
-            currentWeekDto: components["schemas"]["WeekDto"];
-            pastWeekDtos: components["schemas"]["WeekDto"][];
-        };
-        RankPreviewDto: {
-            /** @enum {string} */
-            type: HomeBannerDtoContentType;
-            /** Format: int64 */
-            contentId: number;
-            /** Format: int32 */
-            rank: number;
-            /** Format: int32 */
-            rankDiff: number;
-            /** Format: int32 */
-            consecutiveWeeksAtSameRank: number;
-            mainThumbnailUrl: string;
-            title: string;
-            subTitle: string;
-        };
-        WeeklyTopDto: {
-            isPrepared: boolean;
-            duckstarRankPreviews: components["schemas"]["DuckstarRankPreviewDto"][];
-            animeCornerRankPreviews: components["schemas"]["RankPreviewDto"][];
-            anilabRankPreviews: components["schemas"]["RankPreviewDto"][];
-        };
-        ApiResponseWeeklyTopDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["WeeklyTopDto"];
-        };
-        ApiResponseReplySliceDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["ReplySliceDto"];
-        };
-        PageInfo: {
-            hasNext: boolean;
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            size: number;
-        };
-        ReplySliceDto: {
-            /** Format: int32 */
-            totalCount: number;
-            replyDtos: components["schemas"]["ReplyDto"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        AnimeRankDto: {
-            rankPreviewDto: components["schemas"]["RankPreviewDto"];
-            medalPreviews: components["schemas"]["MedalPreviewDto"][];
-            animeStatDto: components["schemas"]["AnimeStatDto"];
-            voteResultDto: components["schemas"]["VoteResultDto"];
-        };
-        AnimeRankSliceDto: {
-            /** Format: int32 */
-            voterCount: number;
-            /** Format: int32 */
-            voteTotalCount: number;
-            animeRankDtos: components["schemas"]["AnimeRankDto"][];
-            animeTrendRankPreviews: components["schemas"]["RankPreviewDto"][];
-            aniLabRankPreviews: components["schemas"]["RankPreviewDto"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        AnimeStatDto: {
-            /** Format: int32 */
-            debutRank: number;
-            /** Format: date */
-            debutDate: string;
-            /** Format: int32 */
-            peakRank: number;
-            /** Format: date */
-            peakDate: string;
-            /** Format: int32 */
-            weeksOnTop10: number;
-        };
-        ApiResponseAnimeRankSliceDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AnimeRankSliceDto"];
-        };
-        MedalPreviewDto: {
-            /** @enum {string} */
-            type: MedalPreviewDtoType;
-            /** Format: int32 */
-            rank: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            /** Format: int32 */
-            week: number;
-        };
-        ApiResponseListWeekDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["WeekDto"][];
-        };
-        ApiResponseSurveyRankPage: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["SurveyRankPage"];
-        };
-        SurveyRankDto: {
-            /** Format: int32 */
-            rank: number;
-            /** Format: int64 */
-            animeId: number;
-            animeCandidateDto: components["schemas"]["AnimeCandidateDto"];
-            voteRatioDto: components["schemas"]["VoteRatioDto"];
-            /** Format: int64 */
-            commentTotalCount: number;
-            commentDtos: components["schemas"]["CommentDto"][];
-        };
-        SurveyRankPage: {
-            /** Format: int32 */
-            voteTotalCount: number;
-            surveyRankDtos: components["schemas"]["SurveyRankDto"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            size: number;
-            /** Format: int32 */
-            totalPages: number;
-            /** Format: int64 */
-            totalElements: number;
-            isFirst: boolean;
-            isLast: boolean;
-        };
-        VoteRatioDto: {
-            /** Format: double */
-            votePercent: number;
-            /** Format: double */
-            normalPercent: number;
-            /** Format: double */
-            bonusPercent: number;
-            /** Format: double */
-            malePercent: number;
-            /** Format: double */
-            femalePercent: number;
-            /** Format: double */
-            under14Percent: number;
-            /** Format: double */
-            to19Percent: number;
-            /** Format: double */
-            to24Percent: number;
-            /** Format: double */
-            to29Percent: number;
-            /** Format: double */
-            to34Percent: number;
-            /** Format: double */
-            over35Percent: number;
-        };
-        AnimeHomeDto: {
-            animeInfoDto: components["schemas"]["AnimeInfoDto"];
-            animeStatDto: components["schemas"]["AnimeStatDto"];
-            episodeResponseDtos: components["schemas"]["EpisodeDto"][];
-            rackUnitDtos: components["schemas"]["RackUnitDto"][];
-            castPreviews: components["schemas"]["CastPreviewDto"][];
-        };
-        AnimeInfoDto: {
-            /** @enum {string} */
-            medium: PostRequestDtoMedium;
-            /** @enum {string} */
-            status: InfoRequestDtoStatus;
-            /** Format: int32 */
-            totalEpisodes: number;
-            /** Format: date-time */
-            premiereDateTime: string;
-            titleKor: string;
-            titleOrigin: string;
-            /** @enum {string} */
-            dayOfWeek: PostRequestDtoDayOfWeek;
-            airTime: components["schemas"]["LocalTime"];
-            synopsis: string;
-            corp: string;
-            director: string;
-            genre: string;
-            author: string;
-            /** Format: int32 */
-            minAge: number;
-            officialSite: {
-                [key: string]: string;
-            };
-            mainImageUrl: string;
-            mainThumbnailUrl: string;
-            quarterDtos: components["schemas"]["QuarterDto"][];
-            ottDtos: components["schemas"]["OttDto"][];
-        };
-        ApiResponseAnimeHomeDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AnimeHomeDto"];
-        };
-        CastPreviewDto: {
-            mainThumbnailUrl: string;
-            nameKor: string;
-            cv: string;
-        };
-        QuarterDto: {
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-        };
-        RackUnitDto: {
-            /** Format: date */
-            startDate: string;
-            /** Format: date */
-            endDate: string;
-            medalPreviewDto: components["schemas"]["MedalPreviewDto"];
-        };
-        ApiResponseListEpisodeDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["EpisodeDto"][];
-        };
-        AnimeCommentSliceDto: {
-            /** Format: int32 */
-            totalCount: number;
-            commentDtos: components["schemas"]["CommentDto"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        ApiResponseAnimeCommentSliceDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AnimeCommentSliceDto"];
-        };
-        ApiResponseListLong: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: number[];
-        };
-        AdminScheduleInfoDto: {
-            weekDto: components["schemas"]["WeekDto"];
-            /** Format: int32 */
-            animeTotalCount: number;
-            scheduleInfoDtos: components["schemas"]["ScheduleInfoDto"][];
-        };
-        ApiResponseAdminScheduleInfoDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AdminScheduleInfoDto"];
-        };
-        ScheduleInfoDto: {
-            titleKor: string;
-            mainThumbnailUrl: string;
-            episodeDto: components["schemas"]["EpisodeDto"];
-            managerProfileDto: components["schemas"]["ManagerProfileDto"];
-        };
-        ApiResponseSubmissionCountSliceDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["SubmissionCountSliceDto"];
-        };
-        SubmissionCountDto: {
-            /** Format: int64 */
-            weekId: number;
-            /** Format: int32 */
-            year: number;
-            /** Format: int32 */
-            quarter: number;
-            /** Format: int32 */
-            week: number;
-            ipHash: string;
-            /** Format: int64 */
-            count: number;
-            isBlocked: boolean;
-            isAllWithdrawn: boolean;
-            /** Format: date-time */
-            firstCreatedAt: string;
-            /** Format: date-time */
-            lastCreatedAt: string;
-        };
-        SubmissionCountSliceDto: {
-            submissionCountDtos: components["schemas"]["SubmissionCountDto"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        ApiResponseManagementLogSliceDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["ManagementLogSliceDto"];
-        };
-        ManagementLogDto: {
-            /** Format: int64 */
-            logId: number;
-            /** Format: int64 */
-            animeId: number;
-            /** Format: int64 */
-            episodeId: number;
-            ipHash: string;
-            titleKor: string;
-            /** Format: int32 */
-            episodeNumber: number;
-            /** Format: int64 */
-            weekId: number;
-            weekDto: components["schemas"]["WeekDto"];
-            reason: string;
-            isUndoable: boolean;
-            memberProfileDto: components["schemas"]["ManagerProfileDto"];
-        };
-        ManagementLogSliceDto: {
-            managementLogDtos: components["schemas"]["ManagementLogDto"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        ApiResponseListEpisodeStarDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["EpisodeStarDto"][];
-        };
-        EpisodeStarDto: {
-            titleKor: string;
-            /** Format: int32 */
-            starScore: number;
-            isBlocked: boolean;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        AdminAnimeDto: {
-            /** Format: int64 */
-            animeId: number;
-            titleKor: string;
-            corp: string;
-            mainThumbnailUrl: string;
-            /** @enum {string} */
-            status: InfoRequestDtoStatus;
-            /** @enum {string} */
-            dayOfWeek: PostRequestDtoDayOfWeek;
-            airTime: components["schemas"]["LocalTime"];
-            /** Format: int32 */
-            totalEpisodes: number;
-            managerProfileDto: components["schemas"]["ManagerProfileDto"];
-        };
-        AdminAnimeListDto: {
-            adminAnimeDtos: components["schemas"]["AdminAnimeDto"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            size: number;
-            /** Format: int32 */
-            totalPages: number;
-            /** Format: int64 */
-            totalElements: number;
-            isFirst: boolean;
-            isLast: boolean;
-        };
-        ApiResponseAdminAnimeListDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AdminAnimeListDto"];
-        };
-        AdminEpisodeDto: {
-            episodeDto: components["schemas"]["EpisodeDto"];
-            managerProfileDto: components["schemas"]["ManagerProfileDto"];
-        };
-        AdminEpisodeListDto: {
-            /** Format: int32 */
-            episodeTotalCount: number;
-            adminEpisodeDtos: components["schemas"]["AdminEpisodeDto"][];
-        };
-        ApiResponseAdminEpisodeListDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["AdminEpisodeListDto"];
-        };
-        ApiResponseManagerProfileDto: {
-            isSuccess: boolean;
-            code: string;
-            message: string;
-            result: components["schemas"]["ManagerProfileDto"];
-        };
+  schemas: {
+    ApiResponseVoid: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: Record<string, never>;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: {
-        multipartRequestBody: {
-            content: {
-                "multipart/form-data": Record<string, never>;
-            };
-        };
+    AnimeVoteRequest: {
+      /** Format: int64 */
+      surveyId: number;
+      /** @enum {string} */
+      gender: AnimeVoteRequestGender;
+      /** @enum {string} */
+      ageGroup: AnimeVoteRequestAgeGroup;
+      ballotRequests: components['schemas']['BallotRequestDto'][];
     };
-    headers: never;
-    pathItems: never;
+    BallotRequestDto: {
+      /** Format: int64 */
+      candidateId: number;
+      /** @enum {string} */
+      ballotType: BallotRequestDtoBallotType;
+    };
+    SurveyCommentRequestDto: {
+      /** Format: int64 */
+      animeId: number;
+      body: string;
+      /** Format: int64 */
+      candidateId?: number;
+    };
+    ApiResponseSurveyCommentDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['SurveyCommentDto'];
+    };
+    SurveyCommentDto: {
+      /** Format: date-time */
+      commentCreatedAt: string;
+      /** Format: int64 */
+      commentId: number;
+      body: string;
+    };
+    AnimeRevoteRequest: {
+      /** Format: int64 */
+      surveyId: number;
+      /** @enum {string} */
+      gender: AnimeVoteRequestGender;
+      /** @enum {string} */
+      ageGroup: AnimeVoteRequestAgeGroup;
+      added?: components['schemas']['BallotRequestDto'][];
+      removed?: components['schemas']['BallotRequestDto'][];
+      updated?: components['schemas']['BallotRequestDto'][];
+    };
+    StarRequestDto: {
+      /** Format: int64 */
+      episodeId: number;
+      /** Format: int32 */
+      starScore: number;
+      /** Format: int64 */
+      episodeStarId?: number;
+    };
+    ApiResponseVoteResultDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['VoteResultDto'];
+    };
+    StarInfoDto: {
+      isBlocked: boolean;
+      /** Format: int64 */
+      episodeStarId: number;
+      /** Format: int32 */
+      userStarScore: number;
+      /** Format: double */
+      starAverage: number;
+      /** Format: int32 */
+      star_0_5: number;
+      /** Format: int32 */
+      star_1_0: number;
+      /** Format: int32 */
+      star_1_5: number;
+      /** Format: int32 */
+      star_2_0: number;
+      /** Format: int32 */
+      star_2_5: number;
+      /** Format: int32 */
+      star_3_0: number;
+      /** Format: int32 */
+      star_3_5: number;
+      /** Format: int32 */
+      star_4_0: number;
+      /** Format: int32 */
+      star_4_5: number;
+      /** Format: int32 */
+      star_5_0: number;
+    };
+    VoteResultDto: {
+      /** Format: int32 */
+      voterCount: number;
+      info: components['schemas']['StarInfoDto'];
+    };
+    LateStarRequestDto: {
+      /** Format: int64 */
+      episodeId: number;
+      /** Format: int32 */
+      starScore: number;
+      body: string;
+      /** Format: int64 */
+      episodeStarId?: number;
+    };
+    ApiResponseVoteFormResultDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['VoteFormResultDto'];
+    };
+    VoteFormResultDto: {
+      isLateParticipating: boolean;
+      /** Format: int32 */
+      voterCount: number;
+      info: components['schemas']['StarInfoDto'];
+      /** Format: date-time */
+      voteUpdatedAt: string;
+      /** Format: int64 */
+      commentId: number;
+      body: string;
+    };
+    LikeRequestDto: {
+      /** Format: int64 */
+      likeId: number;
+    };
+    ApiResponseLikeResultDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['LikeResultDto'];
+    };
+    LikeResultDto: {
+      /** Format: int64 */
+      likeId: number;
+      /** Format: int32 */
+      likeCount: number;
+      /** Format: date-time */
+      likedAt: string;
+    };
+    NewQuarterRequestDto: {
+      /** Format: binary */
+      animeCsv: string;
+      /** Format: binary */
+      charactersCsv: string;
+      /** Format: binary */
+      animeCharactersCsv: string;
+      /** Format: binary */
+      episodesCsv: string;
+    };
+    AbroadRequestDto: {
+      /** Format: binary */
+      animeCornerCsv: string;
+      /** Format: binary */
+      anilabCsv: string;
+    };
+    CandidatesCsvRequest: {
+      /** Format: binary */
+      candidatesCsv: string;
+    };
+    CommentRequestDto: {
+      /** Format: int64 */
+      episodeId?: number;
+      /** Format: binary */
+      attachedImage?: string;
+      body: string;
+    };
+    ReplyRequestDto: {
+      /** Format: int64 */
+      listenerId: number;
+      commentRequestDto: components['schemas']['CommentRequestDto'];
+    };
+    ApiResponseReplyDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['ReplyDto'];
+    };
+    ReplyDto: {
+      /** @enum {string} */
+      status: ReplyDtoStatus;
+      /** Format: int64 */
+      replyId: number;
+      canDeleteThis: boolean;
+      isLiked: boolean;
+      /** Format: int64 */
+      replyLikeId: number;
+      /** Format: int32 */
+      likeCount: number;
+      /** Format: int64 */
+      authorId: number;
+      nickname: string;
+      profileImageUrl: string;
+      /** Format: int32 */
+      voteCount: number;
+      /** Format: date-time */
+      createdAt: string;
+      listenerNickname: string;
+      attachedImageUrl: string;
+      body: string;
+    };
+    ApiResponseLong: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      /** Format: int64 */
+      result: number;
+    };
+    ApiResponseCommentDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['CommentDto'];
+    };
+    CommentDto: {
+      /** @enum {string} */
+      status: ReplyDtoStatus;
+      /** Format: int64 */
+      commentId: number;
+      canDeleteThis: boolean;
+      isLiked: boolean;
+      /** Format: int64 */
+      commentLikeId: number;
+      /** Format: int32 */
+      likeCount: number;
+      /** Format: int64 */
+      authorId: number;
+      nickname: string;
+      profileImageUrl: string;
+      /** Format: int32 */
+      voteCount: number;
+      /** Format: int32 */
+      episodeNumber: number;
+      /** Format: date-time */
+      createdAt: string;
+      attachedImageUrl: string;
+      body: string;
+      /** Format: int32 */
+      replyCount: number;
+      /** Format: int32 */
+      starScore: number;
+      isLateParticipating: boolean;
+      /** Format: int64 */
+      surveyCandidateId: number;
+    };
+    ApiResponseEpisodeManageResultDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['EpisodeManageResultDto'];
+    };
+    EpisodeDto: {
+      weekDto: components['schemas']['WeekDto'];
+      /** Format: int64 */
+      episodeId: number;
+      /** Format: int32 */
+      episodeNumber: number;
+      isBreak: boolean;
+      isRescheduled: boolean;
+      /** Format: date-time */
+      scheduledAt: string;
+      /** Format: date-time */
+      nextEpScheduledAt: string;
+    };
+    EpisodeManageResultDto: {
+      episodeResultDto: components['schemas']['EpisodeResultDto'];
+      managerProfileDto: components['schemas']['ManagerProfileDto'];
+    };
+    EpisodeResultDto: {
+      addedEpisodes: components['schemas']['EpisodeDto'][];
+      deletedEpisodes: components['schemas']['EpisodeDto'][];
+    };
+    LocalTime: {
+      /** Format: int32 */
+      hour: number;
+      /** Format: int32 */
+      minute: number;
+      /** Format: int32 */
+      second: number;
+      /** Format: int32 */
+      nano: number;
+    };
+    OttDto: {
+      /** @enum {string} */
+      ottType: OttDtoOttType;
+      watchUrl: string;
+    };
+    PostRequestDto: {
+      titleKor: string;
+      titleOrigin?: string;
+      titleEng?: string;
+      /** @enum {string} */
+      medium: PostRequestDtoMedium;
+      /** Format: date-time */
+      premiereDateTime?: string;
+      /** @enum {string} */
+      dayOfWeek?: PostRequestDtoDayOfWeek;
+      airTime?: components['schemas']['LocalTime'];
+      /** Format: int32 */
+      totalEpisodes?: number;
+      corp?: string;
+      director?: string;
+      genre?: string;
+      author?: string;
+      /** Format: int32 */
+      minAge?: number;
+      officialSiteString?: string;
+      synopsis?: string;
+      /** Format: binary */
+      mainImage?: string;
+      ottDtos?: components['schemas']['OttDto'][];
+    };
+    ImageRequestDto: {
+      /** Format: binary */
+      mainImage: string;
+    };
+    TotalEpisodesRequestDto: {
+      /** Format: int32 */
+      totalEpisodes: number;
+    };
+    ApiResponseDeleteResultDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['DeleteResultDto'];
+    };
+    DeleteResultDto: {
+      /** @enum {string} */
+      status: ReplyDtoStatus;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      deletedAt: string;
+    };
+    ApiResponseDiscardLikeResultDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['DiscardLikeResultDto'];
+    };
+    DiscardLikeResultDto: {
+      /** Format: int32 */
+      likeCount: number;
+      /** Format: date-time */
+      discardedAt: string;
+    };
+    ProfileRequestDto: {
+      isSkip: boolean;
+      nickname: string;
+      /** Format: binary */
+      image: string;
+    };
+    ApiResponseUpdateReceiptDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['UpdateReceiptDto'];
+    };
+    MePreviewDto: {
+      /** Format: int64 */
+      id: number;
+      /** @enum {string} */
+      provider: MePreviewDtoProvider;
+      nickname: string;
+      profileImageUrl: string;
+      /** @enum {string} */
+      role: MePreviewDtoRole;
+      isProfileInitialized: boolean;
+    };
+    UpdateReceiptDto: {
+      isChanged: boolean;
+      mePreviewDto: components['schemas']['MePreviewDto'];
+    };
+    ModifyRequestDto: {
+      /** Format: int32 */
+      episodeNumber: number;
+      /** Format: date-time */
+      rescheduledAt: string;
+    };
+    ApiResponseListManagerProfileDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['ManagerProfileDto'][];
+    };
+    ManagerProfileDto: {
+      /** Format: int64 */
+      memberId: number;
+      profileImageUrl: string;
+      managerNickname: string;
+      /** @enum {string} */
+      taskType: ManagerProfileDtoTaskType;
+      /** Format: date-time */
+      managedAt: string;
+    };
+    InfoRequestDto: {
+      /** @enum {string} */
+      dayOfWeek: PostRequestDtoDayOfWeek;
+      airTime: components['schemas']['LocalTime'];
+      /** @enum {string} */
+      status: InfoRequestDtoStatus;
+      corp: string;
+    };
+    ApiResponseListSurveyDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['SurveyDto'][];
+    };
+    SurveyDto: {
+      thumbnailUrl: string;
+      /** Format: int64 */
+      surveyId: number;
+      hasVoted: boolean;
+      /** @enum {string} */
+      status: SurveyDtoStatus;
+      /** Format: int32 */
+      year: number;
+      /** @enum {string} */
+      type: SurveyDtoType;
+      /** Format: date-time */
+      startDateTime: string;
+      /** Format: date-time */
+      endDateTime: string;
+    };
+    ApiResponseSurveyDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['SurveyDto'];
+    };
+    AnimeBallotDto: {
+      /** @enum {string} */
+      ballotType: BallotRequestDtoBallotType;
+      /** Format: int64 */
+      animeCandidateId: number;
+      /** Format: int64 */
+      animeId: number;
+      mainThumbnailUrl: string;
+      titleKor: string;
+      /** Format: int32 */
+      totalEpisodes: number;
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+      /** @enum {string} */
+      medium: PostRequestDtoMedium;
+      surveyCommentDto: components['schemas']['SurveyCommentDto'];
+    };
+    AnimeVoteHistoryDto: {
+      /** Format: int64 */
+      memberId: number;
+      nickName: string;
+      /** Format: int64 */
+      submissionId: number;
+      /** Format: int32 */
+      year: number;
+      /** @enum {string} */
+      type: SurveyDtoType;
+      /** Format: int32 */
+      normalCount: number;
+      /** Format: int32 */
+      bonusCount: number;
+      /** Format: date-time */
+      submittedAt: string;
+      animeBallotDtos: components['schemas']['AnimeBallotDto'][];
+    };
+    ApiResponseAnimeVoteHistoryDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AnimeVoteHistoryDto'];
+    };
+    AnimeCandidateDto: {
+      /** Format: int64 */
+      animeCandidateId: number;
+      mainThumbnailUrl: string;
+      titleKor: string;
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+      /** @enum {string} */
+      medium: PostRequestDtoMedium;
+    };
+    AnimeCandidateListDto: {
+      /** Format: int32 */
+      year: number;
+      /** @enum {string} */
+      type: SurveyDtoType;
+      animeCandidates: components['schemas']['AnimeCandidateDto'][];
+      /** Format: int32 */
+      candidatesCount: number;
+      /** @enum {string} */
+      memberGender: AnimeVoteRequestGender;
+      /** @enum {string} */
+      memberAgeGroup: AnimeVoteRequestAgeGroup;
+    };
+    ApiResponseAnimeCandidateListDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AnimeCandidateListDto'];
+    };
+    ApiResponseLiveCandidateListDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['LiveCandidateListDto'];
+    };
+    LiveCandidateDto: {
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+      /** Format: int32 */
+      week: number;
+      /** Format: int64 */
+      episodeId: number;
+      /** Format: int64 */
+      animeId: number;
+      mainThumbnailUrl: string;
+      titleKor: string;
+      /** @enum {string} */
+      dayOfWeek: PostRequestDtoDayOfWeek;
+      /** Format: date-time */
+      scheduledAt: string;
+      genre: string;
+      /** @enum {string} */
+      medium: PostRequestDtoMedium;
+      result: components['schemas']['VoteResultDto'];
+    };
+    LiveCandidateListDto: {
+      weekDto: components['schemas']['WeekDto'];
+      currentWeekLiveCandidates: components['schemas']['LiveCandidateDto'][];
+      lastWeekLiveCandidates: components['schemas']['LiveCandidateDto'][];
+    };
+    WeekDto: {
+      /** Format: int64 */
+      id: number;
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+      /** Format: int32 */
+      week: number;
+      /** Format: date */
+      startDate: string;
+      /** Format: date */
+      endDate: string;
+    };
+    ApiResponseListWeekCandidateDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['WeekCandidateDto'][];
+    };
+    WeekCandidateDto: {
+      /** Format: int64 */
+      episodeId: number;
+      /** @enum {string} */
+      state: WeekCandidateDtoState;
+      hasVoted: boolean;
+      mainThumbnailUrl: string;
+      titleKor: string;
+    };
+    ApiResponseCandidateFormDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['CandidateFormDto'];
+    };
+    CandidateFormDto: {
+      /** Format: int64 */
+      episodeId: number;
+      /** Format: int32 */
+      voterCount: number;
+      /** Format: int64 */
+      animeId: number;
+      mainThumbnailUrl: string;
+      result: components['schemas']['VoteFormResultDto'];
+    };
+    AnimePreviewDto: {
+      /** Format: int64 */
+      animeId: number;
+      titleKor: string;
+      mainThumbnailUrl: string;
+      /** @enum {string} */
+      status: InfoRequestDtoStatus;
+      isBreak: boolean;
+      isRescheduled: boolean;
+      genre: string;
+      /** @enum {string} */
+      medium: PostRequestDtoMedium;
+      ottDtos: components['schemas']['OttDto'][];
+      /** @enum {string} */
+      dayOfWeek: PostRequestDtoDayOfWeek;
+      /** Format: date-time */
+      scheduledAt: string;
+      airTime: components['schemas']['LocalTime'];
+    };
+    AnimePreviewListDto: {
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+      scheduleDtos: components['schemas']['ScheduleDto'][];
+    };
+    ApiResponseAnimePreviewListDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AnimePreviewListDto'];
+    };
+    ScheduleDto: {
+      /** @enum {string} */
+      dayOfWeekShort: PostRequestDtoDayOfWeek;
+      animePreviews: components['schemas']['AnimePreviewDto'][];
+    };
+    ApiResponseListQuarterResponseDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['QuarterResponseDto'][];
+    };
+    QuarterResponseDto: {
+      /** Format: int32 */
+      year: number;
+      quarters: number[];
+    };
+    ApiResponseSearchResponseDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['SearchResponseDto'];
+    };
+    SearchResponseDto: {
+      /** Format: int32 */
+      size: number;
+      animePreviews: components['schemas']['AnimePreviewDto'][];
+    };
+    ApiResponseMePreviewDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['MePreviewDto'];
+    };
+    ApiResponseHomeDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['HomeDto'];
+    };
+    DuckstarRankPreviewDto: {
+      /** Format: double */
+      averageRating: number;
+      /** Format: int32 */
+      voterCount: number;
+      rankPreviewDto: components['schemas']['RankPreviewDto'];
+    };
+    HomeBannerDto: {
+      /** @enum {string} */
+      bannerType: HomeBannerDtoBannerType;
+      /** @enum {string} */
+      contentType: HomeBannerDtoContentType;
+      /** Format: int64 */
+      animeId: number;
+      /** Format: int64 */
+      characterId: number;
+      mainTitle: string;
+      subTitle: string;
+      animeImageUrl: string;
+      characterImageUrl: string;
+    };
+    HomeDto: {
+      weeklyTopDto: components['schemas']['WeeklyTopDto'];
+      homeBannerDtos: components['schemas']['HomeBannerDto'][];
+      currentWeekDto: components['schemas']['WeekDto'];
+      pastWeekDtos: components['schemas']['WeekDto'][];
+    };
+    RankPreviewDto: {
+      /** @enum {string} */
+      type: HomeBannerDtoContentType;
+      /** Format: int64 */
+      contentId: number;
+      /** Format: int32 */
+      rank: number;
+      /** Format: int32 */
+      rankDiff: number;
+      /** Format: int32 */
+      consecutiveWeeksAtSameRank: number;
+      mainThumbnailUrl: string;
+      title: string;
+      subTitle: string;
+    };
+    WeeklyTopDto: {
+      isPrepared: boolean;
+      duckstarRankPreviews: components['schemas']['DuckstarRankPreviewDto'][];
+      animeCornerRankPreviews: components['schemas']['RankPreviewDto'][];
+      anilabRankPreviews: components['schemas']['RankPreviewDto'][];
+    };
+    ApiResponseWeeklyTopDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['WeeklyTopDto'];
+    };
+    ApiResponseReplySliceDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['ReplySliceDto'];
+    };
+    PageInfo: {
+      hasNext: boolean;
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+    };
+    ReplySliceDto: {
+      /** Format: int32 */
+      totalCount: number;
+      replyDtos: components['schemas']['ReplyDto'][];
+      pageInfo: components['schemas']['PageInfo'];
+    };
+    AnimeRankDto: {
+      rankPreviewDto: components['schemas']['RankPreviewDto'];
+      medalPreviews: components['schemas']['MedalPreviewDto'][];
+      animeStatDto: components['schemas']['AnimeStatDto'];
+      voteResultDto: components['schemas']['VoteResultDto'];
+    };
+    AnimeRankSliceDto: {
+      /** Format: int32 */
+      voterCount: number;
+      /** Format: int32 */
+      voteTotalCount: number;
+      animeRankDtos: components['schemas']['AnimeRankDto'][];
+      animeTrendRankPreviews: components['schemas']['RankPreviewDto'][];
+      aniLabRankPreviews: components['schemas']['RankPreviewDto'][];
+      pageInfo: components['schemas']['PageInfo'];
+    };
+    AnimeStatDto: {
+      /** Format: int32 */
+      debutRank: number;
+      /** Format: date */
+      debutDate: string;
+      /** Format: int32 */
+      peakRank: number;
+      /** Format: date */
+      peakDate: string;
+      /** Format: int32 */
+      weeksOnTop10: number;
+    };
+    ApiResponseAnimeRankSliceDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AnimeRankSliceDto'];
+    };
+    MedalPreviewDto: {
+      /** @enum {string} */
+      type: MedalPreviewDtoType;
+      /** Format: int32 */
+      rank: number;
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+      /** Format: int32 */
+      week: number;
+    };
+    ApiResponseListWeekDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['WeekDto'][];
+    };
+    ApiResponseSurveyRankPage: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['SurveyRankPage'];
+    };
+    SurveyRankDto: {
+      /** Format: int32 */
+      rank: number;
+      /** Format: int64 */
+      animeId: number;
+      animeCandidateDto: components['schemas']['AnimeCandidateDto'];
+      voteRatioDto: components['schemas']['VoteRatioDto'];
+      /** Format: int64 */
+      commentTotalCount: number;
+      commentDtos: components['schemas']['CommentDto'][];
+    };
+    SurveyRankPage: {
+      /** Format: int32 */
+      voteTotalCount: number;
+      surveyRankDtos: components['schemas']['SurveyRankDto'][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int32 */
+      totalPages: number;
+      /** Format: int64 */
+      totalElements: number;
+      isFirst: boolean;
+      isLast: boolean;
+    };
+    VoteRatioDto: {
+      /** Format: double */
+      votePercent: number;
+      /** Format: double */
+      normalPercent: number;
+      /** Format: double */
+      bonusPercent: number;
+      /** Format: double */
+      malePercent: number;
+      /** Format: double */
+      femalePercent: number;
+      /** Format: double */
+      under14Percent: number;
+      /** Format: double */
+      to19Percent: number;
+      /** Format: double */
+      to24Percent: number;
+      /** Format: double */
+      to29Percent: number;
+      /** Format: double */
+      to34Percent: number;
+      /** Format: double */
+      over35Percent: number;
+    };
+    AnimeHomeDto: {
+      animeInfoDto: components['schemas']['AnimeInfoDto'];
+      animeStatDto: components['schemas']['AnimeStatDto'];
+      episodeResponseDtos: components['schemas']['EpisodeDto'][];
+      rackUnitDtos: components['schemas']['RackUnitDto'][];
+      castPreviews: components['schemas']['CastPreviewDto'][];
+    };
+    AnimeInfoDto: {
+      /** @enum {string} */
+      medium: PostRequestDtoMedium;
+      /** @enum {string} */
+      status: InfoRequestDtoStatus;
+      /** Format: int32 */
+      totalEpisodes: number;
+      /** Format: date-time */
+      premiereDateTime: string;
+      titleKor: string;
+      titleOrigin: string;
+      /** @enum {string} */
+      dayOfWeek: PostRequestDtoDayOfWeek;
+      airTime: components['schemas']['LocalTime'];
+      synopsis: string;
+      corp: string;
+      director: string;
+      genre: string;
+      author: string;
+      /** Format: int32 */
+      minAge: number;
+      officialSite: {
+        [key: string]: string;
+      };
+      mainImageUrl: string;
+      mainThumbnailUrl: string;
+      quarterDtos: components['schemas']['QuarterDto'][];
+      ottDtos: components['schemas']['OttDto'][];
+    };
+    ApiResponseAnimeHomeDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AnimeHomeDto'];
+    };
+    CastPreviewDto: {
+      mainThumbnailUrl: string;
+      nameKor: string;
+      cv: string;
+    };
+    QuarterDto: {
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+    };
+    RackUnitDto: {
+      /** Format: date */
+      startDate: string;
+      /** Format: date */
+      endDate: string;
+      medalPreviewDto: components['schemas']['MedalPreviewDto'];
+    };
+    ApiResponseListEpisodeDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['EpisodeDto'][];
+    };
+    AnimeCommentSliceDto: {
+      /** Format: int32 */
+      totalCount: number;
+      commentDtos: components['schemas']['CommentDto'][];
+      pageInfo: components['schemas']['PageInfo'];
+    };
+    ApiResponseAnimeCommentSliceDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AnimeCommentSliceDto'];
+    };
+    ApiResponseListLong: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: number[];
+    };
+    AdminScheduleInfoDto: {
+      weekDto: components['schemas']['WeekDto'];
+      /** Format: int32 */
+      animeTotalCount: number;
+      scheduleInfoDtos: components['schemas']['ScheduleInfoDto'][];
+    };
+    ApiResponseAdminScheduleInfoDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AdminScheduleInfoDto'];
+    };
+    ScheduleInfoDto: {
+      titleKor: string;
+      mainThumbnailUrl: string;
+      episodeDto: components['schemas']['EpisodeDto'];
+      managerProfileDto: components['schemas']['ManagerProfileDto'];
+    };
+    ApiResponseSubmissionCountSliceDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['SubmissionCountSliceDto'];
+    };
+    SubmissionCountDto: {
+      /** Format: int64 */
+      weekId: number;
+      /** Format: int32 */
+      year: number;
+      /** Format: int32 */
+      quarter: number;
+      /** Format: int32 */
+      week: number;
+      ipHash: string;
+      /** Format: int64 */
+      count: number;
+      isBlocked: boolean;
+      isAllWithdrawn: boolean;
+      /** Format: date-time */
+      firstCreatedAt: string;
+      /** Format: date-time */
+      lastCreatedAt: string;
+    };
+    SubmissionCountSliceDto: {
+      submissionCountDtos: components['schemas']['SubmissionCountDto'][];
+      pageInfo: components['schemas']['PageInfo'];
+    };
+    ApiResponseManagementLogSliceDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['ManagementLogSliceDto'];
+    };
+    ManagementLogDto: {
+      /** Format: int64 */
+      logId: number;
+      /** Format: int64 */
+      animeId: number;
+      /** Format: int64 */
+      episodeId: number;
+      ipHash: string;
+      titleKor: string;
+      /** Format: int32 */
+      episodeNumber: number;
+      /** Format: int64 */
+      weekId: number;
+      weekDto: components['schemas']['WeekDto'];
+      reason: string;
+      isUndoable: boolean;
+      memberProfileDto: components['schemas']['ManagerProfileDto'];
+    };
+    ManagementLogSliceDto: {
+      managementLogDtos: components['schemas']['ManagementLogDto'][];
+      pageInfo: components['schemas']['PageInfo'];
+    };
+    ApiResponseListEpisodeStarDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['EpisodeStarDto'][];
+    };
+    EpisodeStarDto: {
+      titleKor: string;
+      /** Format: int32 */
+      starScore: number;
+      isBlocked: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    AdminAnimeDto: {
+      /** Format: int64 */
+      animeId: number;
+      titleKor: string;
+      corp: string;
+      mainThumbnailUrl: string;
+      /** @enum {string} */
+      status: InfoRequestDtoStatus;
+      /** @enum {string} */
+      dayOfWeek: PostRequestDtoDayOfWeek;
+      airTime: components['schemas']['LocalTime'];
+      /** Format: int32 */
+      totalEpisodes: number;
+      managerProfileDto: components['schemas']['ManagerProfileDto'];
+    };
+    AdminAnimeListDto: {
+      adminAnimeDtos: components['schemas']['AdminAnimeDto'][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int32 */
+      totalPages: number;
+      /** Format: int64 */
+      totalElements: number;
+      isFirst: boolean;
+      isLast: boolean;
+    };
+    ApiResponseAdminAnimeListDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['AdminAnimeListDto'];
+    };
+    ApiResponseManagerProfileDto: {
+      isSuccess: boolean;
+      code: string;
+      message: string;
+      result: components['schemas']['ManagerProfileDto'];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: {
+    multipartRequestBody: {
+      content: {
+        'multipart/form-data': Record<string, never>;
+      };
+    };
+  };
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    withdrawStar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-                episodeStarId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    getSurveys: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListSurveyDto"];
-                };
-            };
-        };
-    };
-    voteSurvey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AnimeVoteRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    getAnimeVoteHistory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                surveyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAnimeVoteHistoryDto"];
-                };
-            };
-        };
-    };
-    voteOrUpdateWithStarForm: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SurveyCommentRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseSurveyCommentDto"];
-                };
-            };
-        };
-    };
-    revoteSurvey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                submissionId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AnimeRevoteRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    getLiveCandidates: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseLiveCandidateListDto"];
-                };
-            };
-        };
-    };
-    voteOrUpdateStar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StarRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoteResultDto"];
-                };
-            };
-        };
-    };
-    voteOrUpdateWithStarForm_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LateStarRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoteFormResultDto"];
-                };
-            };
-        };
-    };
-    likeReply: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                replyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LikeRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseLikeResultDto"];
-                };
-            };
-        };
-    };
-    importNewQuarter: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                year: number;
-                quarter: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": components["schemas"]["NewQuarterRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": Record<string, never>;
-                };
-            };
-        };
-    };
-    importAbroad: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                year: number;
-                quarter: number;
-                week: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": components["schemas"]["AbroadRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": Record<string, never>;
-                };
-            };
-        };
-    };
-    importYearCandidates: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                surveyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": components["schemas"]["CandidatesCsvRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": Record<string, never>;
-                };
-            };
-        };
-    };
-    getReplies: {
-        parameters: {
-            query?: {
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path: {
-                commentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseReplySliceDto"];
-                };
-            };
-        };
-    };
-    leaveReply: {
-        parameters: {
-            query: {
-                request: components["schemas"]["ReplyRequestDto"];
-            };
-            header?: never;
-            path: {
-                commentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseReplyDto"];
-                };
-            };
-        };
-    };
-    likeComment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                commentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LikeRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseLikeResultDto"];
-                };
-            };
-        };
-    };
-    withdrawNaver: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    withdrawKakao: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    withdrawGoogle: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
-    setWithdrawMode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseLong"];
-                };
-            };
-        };
-    };
-    getAnimeHomeById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAnimeHomeDto"];
-                };
-            };
-        };
-    };
-    leaveComment: {
-        parameters: {
-            query: {
-                request: components["schemas"]["CommentRequestDto"];
-            };
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseCommentDto"];
-                };
-            };
-        };
-    };
-    withdrawVotesByWeekAndIp: {
-        parameters: {
-            query: {
-                weekId: number;
-                ipHash: string;
-                reason: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    undoWithdrawnSubmissions: {
-        parameters: {
-            query: {
-                logId: number;
-                weekId: number;
-                ipHash: string;
-                reason: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    banIp: {
-        parameters: {
-            query: {
-                ipHash: string;
-                enabled: boolean;
-                reason: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    breakEpisode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
-                };
-            };
-        };
-    };
-    deleteMoreThanNextWeekEpisode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseManagerProfileDto"];
-                };
-            };
-        };
-    };
-    rescheduleEpisode: {
-        parameters: {
-            query: {
-                request: components["schemas"]["ModifyRequestDto"];
-            };
-            header?: never;
-            path: {
-                episodeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListManagerProfileDto"];
-                };
-            };
-        };
-    };
-    calculateRankAndImportAniLab: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                year: number;
-                quarter: number;
-                week: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": components["schemas"]["AbroadRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    getAnimes: {
-        parameters: {
-            query: {
-                quarterId: number;
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAdminAnimeListDto"];
-                };
-            };
-        };
-    };
-    createAnime: {
-        parameters: {
-            query: {
-                request: components["schemas"]["PostRequestDto"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseLong"];
-                };
-            };
-        };
-    };
-    updateAnimeImage: {
-        parameters: {
-            query: {
-                request: components["schemas"]["ImageRequestDto"];
-            };
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseLong"];
-                };
-            };
-        };
-    };
-    updateInfo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InfoRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListManagerProfileDto"];
-                };
-            };
-        };
-    };
-    updateTotalEpisodes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TotalEpisodesRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
-                };
-            };
-        };
-    };
-    getEpisodesByAnime: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAdminEpisodeListDto"];
-                };
-            };
-        };
-    };
-    queueEpisode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
-                };
-            };
-        };
-    };
-    deleteReply: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                replyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseDeleteResultDto"];
-                };
-            };
-        };
-    };
-    dislikeReply: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                replyId: number;
-                replyLikeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseDiscardLikeResultDto"];
-                };
-            };
-        };
-    };
-    updateProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": components["schemas"]["ProfileRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseUpdateReceiptDto"];
-                };
-            };
-        };
-    };
-    deleteComment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                commentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseDeleteResultDto"];
-                };
-            };
-        };
-    };
-    dislikeComment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                commentId: number;
-                commentLikeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseDiscardLikeResultDto"];
-                };
-            };
-        };
-    };
-    updateTotalEpisodes_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseEpisodeManageResultDto"];
-                };
-            };
-        };
-    };
-    getSurvey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                surveyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseSurveyDto"];
-                };
-            };
-        };
-    };
-    getAnimeCandidateList: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                surveyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAnimeCandidateListDto"];
-                };
-            };
-        };
-    };
-    getWeekCandidatesByYQW: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                year: number;
-                quarter: number;
-                week: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListWeekCandidateDto"];
-                };
-            };
-        };
-    };
-    getEpisode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseCandidateFormDto"];
-                };
-            };
-        };
-    };
-    getWeeklySchedule: {
-        parameters: {
-            query: {
-                hour: number;
-                minute: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAnimePreviewListDto"];
-                };
-            };
-        };
-    };
-    getScheduleByQuarter: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                year: number;
-                quarter: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAnimePreviewListDto"];
-                };
-            };
-        };
-    };
-    getQuarters: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListQuarterResponseDto"];
-                };
-            };
-        };
-    };
-    searchAnimes: {
-        parameters: {
-            query: {
-                query: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseSearchResponseDto"];
-                };
-            };
-        };
-    };
-    getCurrentUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseMePreviewDto"];
-                };
-            };
-        };
-    };
-    getParticipatedWeeks: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    getHistoryByWeek: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                weekId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    convertForOpenGraph: {
-        parameters: {
-            query: {
-                url: string;
-                format?: string;
-                width?: number;
-                height?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": string;
-                };
-            };
-        };
-    };
-    getHome: {
-        parameters: {
-            query?: {
-                size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseHomeDto"];
-                };
-            };
-        };
-    };
-    getWeeklyDuckstar: {
-        parameters: {
-            query?: {
-                size?: number;
-            };
-            header?: never;
-            path: {
-                year: number;
-                quarter: number;
-                week: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseWeeklyTopDto"];
-                };
-            };
-        };
-    };
-    getWeeklyAnimeChart: {
-        parameters: {
-            query?: {
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path: {
-                year: number;
-                quarter: number;
-                week: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAnimeRankSliceDto"];
-                };
-            };
-        };
-    };
-    getAllWeeks: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListWeekDto"];
-                };
-            };
-        };
-    };
-    getSurveyChart: {
-        parameters: {
-            query?: {
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path: {
-                surveyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseSurveyRankPage"];
-                };
-            };
-        };
-    };
-    getEpisodesByAnime_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListEpisodeDto"];
-                };
-            };
-        };
-    };
-    getAnimeComments: {
-        parameters: {
-            query?: {
-                episodeIds?: number[];
-                sortBy?: PathsApiV1AnimesAnimeIdCommentsGetParametersQuerySortBy;
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path: {
-                animeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAnimeCommentSliceDto"];
-                };
-            };
-        };
-    };
-    getAllAnimeIds: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListLong"];
-                };
-            };
-        };
-    };
-    getEpisodes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                weekId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAdminScheduleInfoDto"];
-                };
-            };
-        };
-    };
-    getSubmissionCountGroupByIp: {
-        parameters: {
-            query?: {
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseSubmissionCountSliceDto"];
-                };
-            };
-        };
-    };
-    getAdminLogsOnIpManagement: {
-        parameters: {
-            query: {
-                filterType: PathsApiAdminLogsGetParametersQueryFilterType;
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseManagementLogSliceDto"];
-                };
-            };
-        };
-    };
-    getSubmissionsByWeekAndIp: {
-        parameters: {
-            query: {
-                weekId: number;
-                ipHash: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseListEpisodeStarDto"];
-                };
-            };
-        };
-    };
+  withdrawStar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episodeId: number;
+        episodeStarId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  getSurveys: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListSurveyDto'];
+        };
+      };
+    };
+  };
+  voteSurvey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AnimeVoteRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  getAnimeVoteHistory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        surveyId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseAnimeVoteHistoryDto'];
+        };
+      };
+    };
+  };
+  voteOrUpdateWithStarForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SurveyCommentRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseSurveyCommentDto'];
+        };
+      };
+    };
+  };
+  revoteSurvey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        submissionId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AnimeRevoteRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  getLiveCandidates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseLiveCandidateListDto'];
+        };
+      };
+    };
+  };
+  voteOrUpdateStar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoteResultDto'];
+        };
+      };
+    };
+  };
+  voteOrUpdateWithStarForm_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LateStarRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoteFormResultDto'];
+        };
+      };
+    };
+  };
+  likeReply: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        replyId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LikeRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseLikeResultDto'];
+        };
+      };
+    };
+  };
+  importNewQuarter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'multipart/form-data': components['schemas']['NewQuarterRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': Record<string, never>;
+        };
+      };
+    };
+  };
+  importAbroad: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+        week: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'multipart/form-data': components['schemas']['AbroadRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': Record<string, never>;
+        };
+      };
+    };
+  };
+  importYearCandidates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        surveyId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'multipart/form-data': components['schemas']['CandidatesCsvRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': Record<string, never>;
+        };
+      };
+    };
+  };
+  getReplies: {
+    parameters: {
+      query?: {
+        /** @description Zero-based page index (0..N) */
+        page?: number;
+        /** @description The size of the page to be returned */
+        size?: number;
+        /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+      header?: never;
+      path: {
+        commentId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseReplySliceDto'];
+        };
+      };
+    };
+  };
+  leaveReply: {
+    parameters: {
+      query: {
+        request: components['schemas']['ReplyRequestDto'];
+      };
+      header?: never;
+      path: {
+        commentId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseReplyDto'];
+        };
+      };
+    };
+  };
+  likeComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LikeRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseLikeResultDto'];
+        };
+      };
+    };
+  };
+  withdrawNaver: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  withdrawKakao: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  withdrawGoogle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  refresh: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': {
+            [key: string]: string;
+          };
+        };
+      };
+    };
+  };
+  setWithdrawMode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: Record<string, never>;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseLong'];
+        };
+      };
+    };
+  };
+  getAnimeHomeById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  leaveComment: {
+    parameters: {
+      query: {
+        request: components['schemas']['CommentRequestDto'];
+      };
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseCommentDto'];
+        };
+      };
+    };
+  };
+  withdrawVotesByWeekAndIp: {
+    parameters: {
+      query: {
+        weekId: number;
+        ipHash: string;
+        reason: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  undoWithdrawnSubmissions: {
+    parameters: {
+      query: {
+        logId: number;
+        weekId: number;
+        ipHash: string;
+        reason: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  banIp: {
+    parameters: {
+      query: {
+        ipHash: string;
+        enabled: boolean;
+        reason: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  breakEpisode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episodeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteMoreThanNextWeekEpisode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episodeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseManagerProfileDto'];
+        };
+      };
+    };
+  };
+  rescheduleEpisode: {
+    parameters: {
+      query: {
+        request: components['schemas']['ModifyRequestDto'];
+      };
+      header?: never;
+      path: {
+        episodeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListManagerProfileDto'];
+        };
+      };
+    };
+  };
+  calculateRankAndImportAniLab: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+        week: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'multipart/form-data': components['schemas']['AbroadRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  createAnime: {
+    parameters: {
+      query: {
+        request: components['schemas']['PostRequestDto'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseLong'];
+        };
+      };
+    };
+  };
+  updateAnimeImage: {
+    parameters: {
+      query: {
+        request: components['schemas']['ImageRequestDto'];
+      };
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseLong'];
+        };
+      };
+    };
+  };
+  updateInfo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InfoRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListManagerProfileDto'];
+        };
+      };
+    };
+  };
+  updateTotalEpisodes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TotalEpisodesRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getEpisodesByAnime: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  queueEpisode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteReply: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        replyId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseDeleteResultDto'];
+        };
+      };
+    };
+  };
+  dislikeReply: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        replyId: number;
+        replyLikeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseDiscardLikeResultDto'];
+        };
+      };
+    };
+  };
+  updateProfile: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'multipart/form-data': components['schemas']['ProfileRequestDto'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseUpdateReceiptDto'];
+        };
+      };
+    };
+  };
+  deleteComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseDeleteResultDto'];
+        };
+      };
+    };
+  };
+  dislikeComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: number;
+        commentLikeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseDiscardLikeResultDto'];
+        };
+      };
+    };
+  };
+  updateTotalEpisodes_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getSurvey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        surveyId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseSurveyDto'];
+        };
+      };
+    };
+  };
+  getAnimeCandidateList: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        surveyId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseAnimeCandidateListDto'];
+        };
+      };
+    };
+  };
+  getWeekCandidatesByYQW: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+        week: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListWeekCandidateDto'];
+        };
+      };
+    };
+  };
+  getEpisode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episodeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseCandidateFormDto'];
+        };
+      };
+    };
+  };
+  getWeeklySchedule: {
+    parameters: {
+      query: {
+        hour: number;
+        minute: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseAnimePreviewListDto'];
+        };
+      };
+    };
+  };
+  getScheduleByQuarter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseAnimePreviewListDto'];
+        };
+      };
+    };
+  };
+  getQuarters: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListQuarterResponseDto'];
+        };
+      };
+    };
+  };
+  searchAnimes: {
+    parameters: {
+      query: {
+        query: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseSearchResponseDto'];
+        };
+      };
+    };
+  };
+  getCurrentUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseMePreviewDto'];
+        };
+      };
+    };
+  };
+  getParticipatedWeeks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  getHistoryByWeek: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        weekId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseVoid'];
+        };
+      };
+    };
+  };
+  convertForOpenGraph: {
+    parameters: {
+      query: {
+        url: string;
+        format?: string;
+        width?: number;
+        height?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': string;
+        };
+      };
+    };
+  };
+  getHome: {
+    parameters: {
+      query?: {
+        size?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseHomeDto'];
+        };
+      };
+    };
+  };
+  getWeeklyDuckstar: {
+    parameters: {
+      query?: {
+        size?: number;
+      };
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+        week: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseWeeklyTopDto'];
+        };
+      };
+    };
+  };
+  getWeeklyAnimeChart: {
+    parameters: {
+      query?: {
+        /** @description Zero-based page index (0..N) */
+        page?: number;
+        /** @description The size of the page to be returned */
+        size?: number;
+        /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+        week: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseAnimeRankSliceDto'];
+        };
+      };
+    };
+  };
+  getAllWeeks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListWeekDto'];
+        };
+      };
+    };
+  };
+  getSurveyChart: {
+    parameters: {
+      query?: {
+        /** @description Zero-based page index (0..N) */
+        page?: number;
+        /** @description The size of the page to be returned */
+        size?: number;
+        /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+      header?: never;
+      path: {
+        surveyId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseSurveyRankPage'];
+        };
+      };
+    };
+  };
+  getEpisodesByAnime_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getAnimeComments: {
+    parameters: {
+      query?: {
+        episodeIds?: number[];
+        sortBy?: PathsApiV1AnimesAnimeIdCommentsGetParametersQuerySortBy;
+        /** @description Zero-based page index (0..N) */
+        page?: number;
+        /** @description The size of the page to be returned */
+        size?: number;
+        /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+      header?: never;
+      path: {
+        animeId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseAnimeCommentSliceDto'];
+        };
+      };
+    };
+  };
+  getAllAnimeIds: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListLong'];
+        };
+      };
+    };
+  };
+  getSubmissionCountGroupByIp: {
+    parameters: {
+      query?: {
+        /** @description Zero-based page index (0..N) */
+        page?: number;
+        /** @description The size of the page to be returned */
+        size?: number;
+        /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseSubmissionCountSliceDto'];
+        };
+      };
+    };
+  };
+  getAdminLogsOnIpManagement: {
+    parameters: {
+      query: {
+        filterType: PathsApiAdminLogsGetParametersQueryFilterType;
+        /** @description Zero-based page index (0..N) */
+        page?: number;
+        /** @description The size of the page to be returned */
+        size?: number;
+        /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseManagementLogSliceDto'];
+        };
+      };
+    };
+  };
+  getSubmissionsByWeekAndIp: {
+    parameters: {
+      query: {
+        weekId: number;
+        ipHash: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseListEpisodeStarDto'];
+        };
+      };
+    };
+  };
+  getEpisodes: {
+    parameters: {
+      query: {
+        weekId: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getAnimes: {
+    parameters: {
+      query?: {
+        /** @description Zero-based page index (0..N) */
+        page?: number;
+        /** @description The size of the page to be returned */
+        size?: number;
+        /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+      header?: never;
+      path: {
+        year: number;
+        quarter: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['ApiResponseAdminAnimeListDto'];
+        };
+      };
+    };
+  };
 }
 export enum PathsApiV1AnimesAnimeIdCommentsGetParametersQuerySortBy {
-    POPULAR = "POPULAR",
-    RECENT = "RECENT",
-    OLDEST = "OLDEST"
+  POPULAR = 'POPULAR',
+  RECENT = 'RECENT',
+  OLDEST = 'OLDEST',
 }
 export enum PathsApiAdminLogsGetParametersQueryFilterType {
-    ALL = "ALL",
-    ANIME = "ANIME",
-    EPISODE = "EPISODE",
-    IP = "IP"
+  ALL = 'ALL',
+  ANIME = 'ANIME',
+  EPISODE = 'EPISODE',
+  IP = 'IP',
 }
 export enum AnimeVoteRequestGender {
-    MALE = "MALE",
-    FEMALE = "FEMALE",
-    UNKNOWN = "UNKNOWN"
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  UNKNOWN = 'UNKNOWN',
 }
 export enum AnimeVoteRequestAgeGroup {
-    UNDER_14 = "UNDER_14",
-    AGE_15_19 = "AGE_15_19",
-    AGE_20_24 = "AGE_20_24",
-    AGE_25_29 = "AGE_25_29",
-    AGE_30_34 = "AGE_30_34",
-    OVER_35 = "OVER_35"
+  UNDER_14 = 'UNDER_14',
+  AGE_15_19 = 'AGE_15_19',
+  AGE_20_24 = 'AGE_20_24',
+  AGE_25_29 = 'AGE_25_29',
+  AGE_30_34 = 'AGE_30_34',
+  OVER_35 = 'OVER_35',
 }
 export enum BallotRequestDtoBallotType {
-    NORMAL = "NORMAL",
-    BONUS = "BONUS"
+  NORMAL = 'NORMAL',
+  BONUS = 'BONUS',
 }
 export enum ReplyDtoStatus {
-    NORMAL = "NORMAL",
-    DELETED = "DELETED",
-    ADMIN_DELETED = "ADMIN_DELETED"
-}
-export enum ManagerProfileDtoTaskType {
-    BAN = "BAN",
-    UNBAN = "UNBAN",
-    WITHDRAW = "WITHDRAW",
-    UNDO_WITHDRAW = "UNDO_WITHDRAW",
-    EPISODE_BREAK = "EPISODE_BREAK",
-    EPISODE_RESCHEDULE = "EPISODE_RESCHEDULE",
-    EPISODE_CREATE = "EPISODE_CREATE",
-    FUTURE_EPISODE_DELETE = "FUTURE_EPISODE_DELETE",
-    EPISODE_MODIFY_NUMBER = "EPISODE_MODIFY_NUMBER",
-    ANIME_CREATE = "ANIME_CREATE",
-    ANIME_INFO_UPDATE = "ANIME_INFO_UPDATE",
-    ANIME_STATUS_UPDATE = "ANIME_STATUS_UPDATE",
-    ANIME_DIRECTION_UPDATE = "ANIME_DIRECTION_UPDATE",
-    ANIME_EPISODE_TOTAL_COUNT = "ANIME_EPISODE_TOTAL_COUNT"
+  NORMAL = 'NORMAL',
+  DELETED = 'DELETED',
+  ADMIN_DELETED = 'ADMIN_DELETED',
 }
 export enum OttDtoOttType {
-    LAFTEL = "LAFTEL",
-    NETFLIX = "NETFLIX",
-    WAVVE = "WAVVE",
-    TVING = "TVING",
-    WATCHA = "WATCHA",
-    PRIME = "PRIME"
+  LAFTEL = 'LAFTEL',
+  NETFLIX = 'NETFLIX',
+  WAVVE = 'WAVVE',
+  TVING = 'TVING',
+  WATCHA = 'WATCHA',
+  PRIME = 'PRIME',
 }
 export enum PostRequestDtoMedium {
-    TVA = "TVA",
-    MOVIE = "MOVIE",
-    SPECIAL = "SPECIAL",
-    OTT = "OTT"
+  TVA = 'TVA',
+  MOVIE = 'MOVIE',
+  SPECIAL = 'SPECIAL',
+  OTT = 'OTT',
 }
 export enum PostRequestDtoDayOfWeek {
-    MON = "MON",
-    TUE = "TUE",
-    WED = "WED",
-    THU = "THU",
-    FRI = "FRI",
-    SAT = "SAT",
-    SUN = "SUN",
-    SPECIAL = "SPECIAL"
+  MON = 'MON',
+  TUE = 'TUE',
+  WED = 'WED',
+  THU = 'THU',
+  FRI = 'FRI',
+  SAT = 'SAT',
+  SUN = 'SUN',
+  SPECIAL = 'SPECIAL',
 }
 export enum MePreviewDtoProvider {
-    KAKAO = "KAKAO",
-    NAVER = "NAVER",
-    GOOGLE = "GOOGLE",
-    LOCAL = "LOCAL"
+  KAKAO = 'KAKAO',
+  NAVER = 'NAVER',
+  GOOGLE = 'GOOGLE',
+  LOCAL = 'LOCAL',
 }
 export enum MePreviewDtoRole {
-    ADMIN = "ADMIN",
-    USER = "USER",
-    NONE = "NONE"
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  NONE = 'NONE',
+}
+export enum ManagerProfileDtoTaskType {
+  BAN = 'BAN',
+  UNBAN = 'UNBAN',
+  WITHDRAW = 'WITHDRAW',
+  UNDO_WITHDRAW = 'UNDO_WITHDRAW',
+  EPISODE_BREAK = 'EPISODE_BREAK',
+  EPISODE_RESCHEDULE = 'EPISODE_RESCHEDULE',
+  EPISODE_CREATE = 'EPISODE_CREATE',
+  FUTURE_EPISODE_DELETE = 'FUTURE_EPISODE_DELETE',
+  EPISODE_MODIFY_NUMBER = 'EPISODE_MODIFY_NUMBER',
+  ANIME_CREATE = 'ANIME_CREATE',
+  ANIME_INFO_UPDATE = 'ANIME_INFO_UPDATE',
+  ANIME_STATUS_UPDATE = 'ANIME_STATUS_UPDATE',
+  ANIME_DIRECTION_UPDATE = 'ANIME_DIRECTION_UPDATE',
+  ANIME_EPISODE_TOTAL_COUNT = 'ANIME_EPISODE_TOTAL_COUNT',
 }
 export enum InfoRequestDtoStatus {
-    UPCOMING = "UPCOMING",
-    NOW_SHOWING = "NOW_SHOWING",
-    COOLING = "COOLING",
-    ENDED = "ENDED"
+  UPCOMING = 'UPCOMING',
+  NOW_SHOWING = 'NOW_SHOWING',
+  COOLING = 'COOLING',
+  ENDED = 'ENDED',
 }
 export enum SurveyDtoStatus {
-    NOT_YET = "NOT_YET",
-    OPEN = "OPEN",
-    PAUSED = "PAUSED",
-    CLOSED = "CLOSED",
-    RESULT_OPEN = "RESULT_OPEN"
+  NOT_YET = 'NOT_YET',
+  OPEN = 'OPEN',
+  PAUSED = 'PAUSED',
+  CLOSED = 'CLOSED',
+  RESULT_OPEN = 'RESULT_OPEN',
 }
 export enum SurveyDtoType {
-    Q1_END = "Q1_END",
-    Q2_END = "Q2_END",
-    Q3_END = "Q3_END",
-    Q4_END = "Q4_END",
-    YEAR_END = "YEAR_END",
-    ANTICIPATED = "ANTICIPATED"
+  Q1_END = 'Q1_END',
+  Q2_END = 'Q2_END',
+  Q3_END = 'Q3_END',
+  Q4_END = 'Q4_END',
+  YEAR_END = 'YEAR_END',
+  ANTICIPATED = 'ANTICIPATED',
 }
 export enum WeekCandidateDtoState {
-    CLOSED = "CLOSED",
-    VOTING_WINDOW = "VOTING_WINDOW",
-    LOGIN_REQUIRED = "LOGIN_REQUIRED",
-    ALWAYS_OPEN = "ALWAYS_OPEN"
+  CLOSED = 'CLOSED',
+  VOTING_WINDOW = 'VOTING_WINDOW',
+  LOGIN_REQUIRED = 'LOGIN_REQUIRED',
+  ALWAYS_OPEN = 'ALWAYS_OPEN',
 }
 export enum HomeBannerDtoBannerType {
-    HOT = "HOT",
-    NOTICEABLE = "NOTICEABLE"
+  HOT = 'HOT',
+  NOTICEABLE = 'NOTICEABLE',
 }
 export enum HomeBannerDtoContentType {
-    ANIME = "ANIME",
-    HERO = "HERO",
-    HEROINE = "HEROINE"
+  ANIME = 'ANIME',
+  HERO = 'HERO',
+  HEROINE = 'HEROINE',
 }
 export enum MedalPreviewDtoType {
-    GOLD = "GOLD",
-    SILVER = "SILVER",
-    BRONZE = "BRONZE",
-    NONE = "NONE"
+  GOLD = 'GOLD',
+  SILVER = 'SILVER',
+  BRONZE = 'BRONZE',
+  NONE = 'NONE',
 }

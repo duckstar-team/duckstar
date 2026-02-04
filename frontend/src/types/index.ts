@@ -9,12 +9,13 @@ export type Schemas = components['schemas'];
  */
 export type WeekDto = Schemas['WeekDto'];
 export type PageInfo = Schemas['PageInfo'];
+export type LocalTime = Schemas['LocalTime'];
 
 /**
  * 백엔드 enum 이름과 동일하게 별칭으로 재정의하여 export
  */
 // Anime 관련
-export { AnimePreviewDtoStatus as AnimeStatus } from './generated/api';
+export { InfoRequestDtoStatus as AnimeStatus } from './generated/api';
 export { PostRequestDtoDayOfWeek as DayOfWeek } from './generated/api';
 export { OttDtoOttType as OttType } from './generated/api';
 export { PostRequestDtoMedium as Medium } from './generated/api';
@@ -39,6 +40,17 @@ export { HomeBannerDtoContentType as ContentType } from './generated/api';
 export { MedalPreviewDtoType as MedalType } from './generated/api';
 
 // Admin 관련
+export { PathsApiAdminLogsGetParametersQueryFilterType as LogFilterType } from './generated/api';
 export type OttDto = Schemas['OttDto'];
-export type IpManagementLogDto = Schemas['IpManagementLogDto'];
+export type ManagementLogDto = Schemas['ManagementLogDto'];
 export type SubmissionCountDto = Schemas['SubmissionCountDto'];
+
+// TODO: 임시
+export type AdminEpisodeDto = {
+  episodeDto: Schemas['EpisodeDto'];
+  managerProfileDto: Schemas['ManagerProfileDto'];
+};
+export type AdminEpisodeListDto = {
+  episodeTotalCount: number;
+  adminEpisodeDtos: AdminEpisodeDto[];
+};
