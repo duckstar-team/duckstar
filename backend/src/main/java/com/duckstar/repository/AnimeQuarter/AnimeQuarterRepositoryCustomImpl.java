@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -158,7 +159,6 @@ public class AnimeQuarterRepositoryCustomImpl implements AnimeQuarterRepositoryC
                 .from(anime)
                 .leftJoin(animeQuarter).on(animeQuarter.anime.id.eq(anime.id))
                 .where(quarterIdEq(quarterId))
-                .orderBy(anime.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -182,7 +182,32 @@ public class AnimeQuarterRepositoryCustomImpl implements AnimeQuarterRepositoryC
                 );
 
         content.forEach(dto ->
-                dto.setManagerProfileDto(latestLogMap.get(dto.getAnimeId())));
+                {
+                    dto.setManagerProfileDto(latestLogMap.get(dto.getAnimeId()));
+
+                    // 요일 포맷팅
+                    dto.setDayOfWeek(
+                            DayOfWeekShort.getLogicalDay(dto.getAirTime(), dto.getDayOfWeek())
+                    );
+                }
+        );
+
+        // 정렬
+        Comparator<AdminAnimeDto> scheduleComparator = (a, b) -> {
+            int hourA = DayOfWeekShort.getLogicalHour(a.getAirTime());
+            int hourB = DayOfWeekShort.getLogicalHour(b.getAirTime());
+
+            if (hourA != hourB) return Integer.compare(hourA, hourB);
+
+            // 시간이 같으면 분 단위 비교
+            return a.getAirTime().getMinute() - b.getAirTime().getMinute();
+        };
+
+        content = content.stream()
+                .sorted(
+                        Comparator.comparing(AdminAnimeDto::getDayOfWeekNumber)
+                                .thenComparing(scheduleComparator)
+                ).toList();
 
         // 전체 카운트 쿼리
         Long totalCount = queryFactory

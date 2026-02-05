@@ -21,6 +21,8 @@ public class AnimeRequestDto {
     @Builder
     @Getter
     @Setter  // ModelAttribute 는 세터 필수
+    @NoArgsConstructor // 역직렬화를 위해 기본 생성자 추가 권장
+    @AllArgsConstructor
     public static class PostRequestDto {
 
         @NotNull
@@ -33,7 +35,11 @@ public class AnimeRequestDto {
 
         LocalDateTime premiereDateTime;  // 입력 시 프론트에서 아래 요일에 우선 채워줌
         DayOfWeekShort dayOfWeek;
-        LocalTime airTime;     // 문자열, 입력 시 프론트에서 아래 방영일에 우선 채워줌
+
+        @Schema(example = "23:00:00", type = "string")
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss", timezone = "Asia/Seoul")
+        LocalTime airTime;
+
         Integer totalEpisodes;
 
         String corp;
