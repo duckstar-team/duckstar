@@ -1069,6 +1069,7 @@ export default function VotePageContent() {
           {voteInfo && (
             <VoteBanner
               weekDto={{
+                id: 0,
                 year: voteInfo.year,
                 quarter: voteInfo.quarter,
                 week: voteInfo.week - 1,
