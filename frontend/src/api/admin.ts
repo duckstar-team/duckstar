@@ -185,7 +185,7 @@ export async function updateAnimeTotalEpisodes(
 // 애니메이션 총 화수 알 수 없음 PATCH
 export async function setAnimeTotalEpisodesUnknown(animeId: number) {
   return apiCall<Schemas['EpisodeManageResultDto']>(
-    `/api/admin/animes/${animeId}/total-episodes/unknown`,
+    `/api/admin/${animeId}/total-episodes/unknown`,
     {
       method: 'PATCH',
     }
@@ -195,10 +195,13 @@ export async function setAnimeTotalEpisodesUnknown(animeId: number) {
 // 에피소드 정보 수정 PATCH
 export async function patchEpisode(
   episodeId: number,
-  body: Schemas['ModifyRequestDto']
+  request: Schemas['ModifyRequestDto']
 ) {
   const params = new URLSearchParams();
-  params.set('request', JSON.stringify(body));
+  params.append('episodeNumber', request.episodeNumber.toString());
+  if (request.rescheduledAt) {
+    params.append('rescheduledAt', request.rescheduledAt.toString());
+  }
   return apiCall<Schemas['ManagerProfileDto'][]>(
     `/api/admin/episodes/${episodeId}?${params.toString()}`,
     { method: 'PATCH' }

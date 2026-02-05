@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateAnimeInfo, updateAnimeTotalEpisodes } from '@/api/admin';
+import {
+  setAnimeTotalEpisodesUnknown,
+  updateAnimeInfo,
+  updateAnimeTotalEpisodes,
+  updateAnimeImage,
+} from '@/api/admin';
 import { Schemas } from '@/types';
 import {
   InfoRequestDtoStatus,
@@ -60,6 +65,10 @@ export function useAnimeFieldEdit(
           ],
         });
       }
+      // 관리 로그도 함께 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'logs'],
+      });
       onSuccess?.();
     },
     onError: () => {
@@ -75,7 +84,46 @@ export function useAnimeFieldEdit(
       animeId: number;
       totalEpisodes: number;
     }) => updateAnimeTotalEpisodes(animeId, totalEpisodes),
-    onSuccess: () => {
+    onSuccess: async (_, { animeId }) => {
+      showToast.success('총 화수가 수정되었습니다.');
+      // 애니메이션 목록 쿼리 무효화 및 refetch
+      if (selectedQuarter) {
+        await queryClient.invalidateQueries({
+          queryKey: [
+            'admin',
+            'animes',
+            selectedQuarter.year,
+            selectedQuarter.quarter,
+          ],
+        });
+        // 명시적으로 refetch
+        await queryClient.refetchQueries({
+          queryKey: [
+            'admin',
+            'animes',
+            selectedQuarter.year,
+            selectedQuarter.quarter,
+          ],
+        });
+      }
+      // 에피소드 목록도 함께 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'episodes', animeId],
+      });
+      // 관리 로그도 함께 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'logs'],
+      });
+    },
+    onError: () => {
+      showToast.error('총 화수 수정에 실패했습니다.');
+    },
+  });
+
+  const setAnimeTotalEpisodesUnknownMutation = useMutation({
+    mutationFn: ({ animeId }: { animeId: number }) =>
+      setAnimeTotalEpisodesUnknown(animeId),
+    onSuccess: (_, { animeId }) => {
       showToast.success('총 화수가 수정되었습니다.');
       // 애니메이션 목록 쿼리 무효화
       if (selectedQuarter) {
@@ -88,6 +136,15 @@ export function useAnimeFieldEdit(
           ],
         });
       }
+      // 에피소드 목록도 함께 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'episodes', animeId],
+      });
+      // 관리 로그도 함께 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'logs'],
+      });
+      onSuccess?.();
     },
     onError: () => {
       showToast.error('총 화수 수정에 실패했습니다.');
@@ -118,7 +175,11 @@ export function useAnimeFieldEdit(
     }
   };
 
-  const handleFieldSave = async (animeId: number, field: EditableField) => {
+  const handleFieldSave = async (
+    animeId: number,
+    field: EditableField,
+    valueOverride?: any
+  ) => {
     if (field === 'totalEpisodes') {
       const valueStr = (editingValues.totalEpisodes ?? '').trim();
 
@@ -160,7 +221,8 @@ export function useAnimeFieldEdit(
       return;
     }
 
-    const value = editingValues[field];
+    const value =
+      valueOverride !== undefined ? valueOverride : editingValues[field];
     if (value === undefined) {
       setEditingField(null);
       setEditingValues({});
@@ -177,7 +239,12 @@ export function useAnimeFieldEdit(
     // 값 변화 체크
     let hasChanged = false;
     if (field === 'airTime') {
-      const parsedTime = parseAirTime(value as string);
+      const timeStr = (value as string).trim();
+      if (!timeStr) {
+        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
+        return;
+      }
+      const parsedTime = parseAirTime(timeStr);
       if (!parsedTime) {
         showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
         return;
@@ -211,16 +278,15 @@ export function useAnimeFieldEdit(
       return;
     }
 
-    const updateData: Schemas['InfoRequestDto'] =
-      {} as Schemas['InfoRequestDto'];
+    const updateData: any = {};
 
     if (field === 'airTime') {
-      const parsedTime = parseAirTime(value as string);
-      if (!parsedTime) {
-        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
-        return;
-      }
-      updateData.airTime = parsedTime;
+      const timeStr = (value as string).trim();
+      // 백엔드 @JsonFormat이 "HH:mm:ss" 형식의 문자열을 기대함
+      updateData.airTime =
+        timeStr.includes(':') && timeStr.split(':').length === 2
+          ? `${timeStr}:00` // "HH:mm" -> "HH:mm:ss"
+          : timeStr;
       updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
       updateData.status = anime.status as InfoRequestDtoStatus;
       updateData.corp = anime.corp ?? '';
@@ -228,16 +294,56 @@ export function useAnimeFieldEdit(
       updateData.corp = value as string;
       updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
       updateData.status = anime.status as InfoRequestDtoStatus;
-      updateData.airTime = anime.airTime as Schemas['LocalTime'];
+      // 기존 airTime 그대로 전송 (백엔드가 보낸 형식을 유지)
+      const airTime: any = anime.airTime;
+      if (typeof airTime === 'string') {
+        // 예: "23:00:00" 그대로 사용
+        updateData.airTime = airTime;
+      } else if (
+        airTime &&
+        typeof airTime.hour === 'number' &&
+        typeof airTime.minute === 'number'
+      ) {
+        // LocalTime 객체 형태인 경우 "HH:mm:00"로 변환
+        updateData.airTime = `${String(airTime.hour).padStart(2, '0')}:${String(
+          airTime.minute
+        ).padStart(2, '0')}:00`;
+      }
     } else if (field === 'dayOfWeek') {
       updateData.dayOfWeek = value as PostRequestDtoDayOfWeek;
       updateData.status = anime.status as InfoRequestDtoStatus;
-      updateData.airTime = anime.airTime as Schemas['LocalTime'];
+      // 기존 airTime 그대로 전송
+      const airTime: any = anime.airTime;
+      if (typeof airTime === 'string') {
+        updateData.airTime = airTime;
+      } else if (
+        airTime &&
+        typeof airTime.hour === 'number' &&
+        typeof airTime.minute === 'number'
+      ) {
+        updateData.airTime = `${String(airTime.hour).padStart(
+          2,
+          '0'
+        )}:${String(airTime.minute).padStart(2, '0')}:00`;
+      }
       updateData.corp = anime.corp ?? '';
     } else if (field === 'status') {
       updateData.status = value as InfoRequestDtoStatus;
       updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
-      updateData.airTime = anime.airTime as Schemas['LocalTime'];
+      // 기존 airTime 그대로 전송
+      const airTime: any = anime.airTime;
+      if (typeof airTime === 'string') {
+        updateData.airTime = airTime;
+      } else if (
+        airTime &&
+        typeof airTime.hour === 'number' &&
+        typeof airTime.minute === 'number'
+      ) {
+        updateData.airTime = `${String(airTime.hour).padStart(
+          2,
+          '0'
+        )}:${String(airTime.minute).padStart(2, '0')}:00`;
+      }
       updateData.corp = anime.corp ?? '';
     }
 
@@ -257,6 +363,65 @@ export function useAnimeFieldEdit(
     setEditingValues({});
   };
 
+  const handleSetTotalEpisodesUnknown = (animeId: number) => {
+    const anime = animes.find((a) => a.animeId === animeId);
+    if (!anime) return;
+
+    // 이미 unknown이면 요청하지 않음
+    if (anime.totalEpisodes === null || anime.totalEpisodes === undefined) {
+      return;
+    }
+
+    setAnimeTotalEpisodesUnknownMutation.mutate(
+      { animeId },
+      {
+        onSettled: () => {
+          setEditingField(null);
+          setEditingValues({});
+        },
+      }
+    );
+  };
+
+  const updateAnimeImageMutation = useMutation({
+    mutationFn: ({
+      animeId,
+      imageFile,
+    }: {
+      animeId: number;
+      imageFile: File;
+    }) => updateAnimeImage(animeId, imageFile),
+    onSuccess: () => {
+      showToast.success('이미지가 업로드되었습니다.');
+      // 애니메이션 목록 쿼리 무효화
+      if (selectedQuarter) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            'admin',
+            'animes',
+            selectedQuarter.year,
+            selectedQuarter.quarter,
+          ],
+        });
+      }
+      // 관리 로그도 함께 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'logs'],
+      });
+      onSuccess?.();
+    },
+    onError: () => {
+      showToast.error('이미지 업로드에 실패했습니다.');
+    },
+    onSettled: () => {
+      // 업로드 완료 후 상태 초기화는 컴포넌트에서 처리
+    },
+  });
+
+  const handleUpdateAnimeImage = (animeId: number, imageFile: File) => {
+    updateAnimeImageMutation.mutate({ animeId, imageFile });
+  };
+
   return {
     editingField,
     editingValues,
@@ -264,5 +429,8 @@ export function useAnimeFieldEdit(
     handleFieldEdit,
     handleFieldSave,
     handleFieldCancel,
+    handleSetTotalEpisodesUnknown,
+    handleUpdateAnimeImage,
+    isUploadingImage: updateAnimeImageMutation.isPending,
   };
 }

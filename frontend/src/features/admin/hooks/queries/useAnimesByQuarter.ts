@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getAnimesByQuarter } from '@/api/admin';
-import { QuarterOption } from '../useQuarters';
+import { QuarterOption } from './useQuarters';
 import { queryConfig } from '@/lib';
 
 export function useAnimesByQuarter(selectedQuarter: QuarterOption | null) {

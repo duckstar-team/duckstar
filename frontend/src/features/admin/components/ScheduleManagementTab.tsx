@@ -9,13 +9,25 @@ import { useWeeks } from '@/features/admin/hooks/queries/useWeeks';
 import { useScheduleByWeek } from '@/features/admin/hooks/queries/useScheduleByWeek';
 import { useEpisodeActions } from '@/features/admin/hooks/mutations/useEpisodeActions';
 
+type EditingEpisodeField = {
+  episodeId: number;
+  field: 'episodeNumber' | 'scheduledAt';
+};
+
 export default function ScheduleManagementTab() {
   const { weekOptions, selectedWeek, setSelectedWeek } = useWeeks();
   const { schedule, loading } = useScheduleByWeek(selectedWeek);
-  const { handleBreakEpisode, handleDeleteEpisode } = useEpisodeActions();
+  const { handleBreakEpisode, handleDeleteEpisode, handleUpdateEpisode } =
+    useEpisodeActions();
   const [logFilterType, setLogFilterType] = useState<LogFilterType>(
     LogFilterType.EPISODE
   );
+  const [editingEpisode, setEditingEpisode] =
+    useState<EditingEpisodeField | null>(null);
+  const [editingValues, setEditingValues] = useState<{
+    episodeNumber?: string;
+    scheduledAt?: string;
+  }>({});
 
   const rows = schedule?.scheduleInfoDtos ?? [];
 
@@ -28,12 +40,165 @@ export default function ScheduleManagementTab() {
     {
       key: 'episodeNumber',
       header: '에피소드 번호',
-      render: (row) => row.episodeDto.episodeNumber,
+      render: (row) => {
+        const isEditing =
+          editingEpisode?.episodeId === row.episodeDto.episodeId &&
+          editingEpisode?.field === 'episodeNumber';
+        return isEditing ? (
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={
+              editingValues.episodeNumber ?? row.episodeDto.episodeNumber ?? ''
+            }
+            onChange={(e) =>
+              setEditingValues({ episodeNumber: e.target.value })
+            }
+            onBlur={() => {
+              const valueStr = editingValues.episodeNumber?.trim();
+              if (!valueStr) {
+                setEditingEpisode(null);
+                setEditingValues({});
+                return;
+              }
+              const num = Number(valueStr);
+              if (!Number.isFinite(num) || num <= 0) {
+                alert('올바른 에피소드 번호를 입력하세요.');
+                setEditingEpisode(null);
+                setEditingValues({});
+                return;
+              }
+              if (num === row.episodeDto.episodeNumber) {
+                setEditingEpisode(null);
+                setEditingValues({});
+                return;
+              }
+              // 번호만 수정하는 경우 시간은 그대로 두기 위해 episodeNumber만 전송
+              handleUpdateEpisode(
+                row.episodeDto.episodeId,
+                {
+                  episodeNumber: num,
+                },
+                { weekId: selectedWeek?.weekId }
+              );
+              setEditingEpisode(null);
+              setEditingValues({});
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              } else if (e.key === 'Escape') {
+                setEditingEpisode(null);
+                setEditingValues({});
+              }
+            }}
+            className="w-16 -translate-x-2 rounded bg-gray-100 px-2 py-0.5 text-sm outline-none dark:bg-zinc-700 dark:text-white"
+            autoFocus
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setEditingEpisode({
+                episodeId: row.episodeDto.episodeId,
+                field: 'episodeNumber',
+              });
+              setEditingValues({
+                episodeNumber: row.episodeDto.episodeNumber?.toString() ?? '',
+              });
+            }}
+          >
+            {row.episodeDto.episodeNumber}
+          </button>
+        );
+      },
     },
     {
       key: 'scheduledAt',
       header: '방영 시간',
-      render: (row) => format(row.episodeDto.scheduledAt, 'yyyy-MM-dd HH:mm'),
+      render: (row) => {
+        const isEditing =
+          editingEpisode?.episodeId === row.episodeDto.episodeId &&
+          editingEpisode?.field === 'scheduledAt';
+        const dateValue =
+          editingValues.scheduledAt ??
+          (row.episodeDto.scheduledAt
+            ? new Date(row.episodeDto.scheduledAt).toISOString().slice(0, 16)
+            : '');
+        const display = format(row.episodeDto.scheduledAt, 'yyyy-MM-dd HH:mm');
+        return isEditing ? (
+          <input
+            type="datetime-local"
+            value={dateValue}
+            onChange={(e) => setEditingValues({ scheduledAt: e.target.value })}
+            onBlur={() => {
+              const valueStr = editingValues.scheduledAt?.trim();
+              if (!valueStr) {
+                // 값이 비어있으면 원래 값과 동일한 것으로 간주 (변경 없음)
+                setEditingEpisode(null);
+                setEditingValues({});
+                return;
+              }
+              const date = new Date(valueStr);
+              if (Number.isNaN(date.getTime())) {
+                alert('올바른 날짜/시간 형식이 아닙니다.');
+                setEditingEpisode(null);
+                setEditingValues({});
+                return;
+              }
+              // 원래 값과 비교하여 변경되지 않았으면 요청하지 않음
+              const currentDate = new Date(row.episodeDto.scheduledAt);
+              if (date.getTime() === currentDate.getTime()) {
+                setEditingEpisode(null);
+                setEditingValues({});
+                return;
+              }
+              // datetime-local 값(YYYY-MM-DDTHH:mm)에 초만 붙여 LocalDateTime 문자열로 전송
+              handleUpdateEpisode(
+                row.episodeDto.episodeId,
+                {
+                  episodeNumber: row.episodeDto.episodeNumber,
+                  rescheduledAt: `${valueStr}:00`,
+                },
+                { weekId: selectedWeek?.weekId }
+              );
+              setEditingEpisode(null);
+              setEditingValues({});
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              } else if (e.key === 'Escape') {
+                setEditingEpisode(null);
+                setEditingValues({});
+              }
+            }}
+            className="-translate-x-2 rounded bg-gray-100 px-2 py-1 text-sm outline-none dark:bg-zinc-700 dark:text-white"
+            autoFocus
+          />
+        ) : (
+          <button
+            type="button"
+            className="min-w-60 text-left"
+            onClick={() => {
+              setEditingEpisode({
+                episodeId: row.episodeDto.episodeId,
+                field: 'scheduledAt',
+              });
+              setEditingValues({
+                scheduledAt: row.episodeDto.scheduledAt
+                  ? new Date(row.episodeDto.scheduledAt)
+                      .toISOString()
+                      .slice(0, 16)
+                  : '',
+              });
+            }}
+          >
+            {display}
+          </button>
+        );
+      },
     },
     {
       key: 'nextEpScheduledAt',
