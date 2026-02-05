@@ -402,7 +402,7 @@ export default function AnimationManagementTab() {
                         onMouseEnter={() => setHoveredAnimeId(row.animeId)}
                         onMouseLeave={() => setHoveredAnimeId(null)}
                       >
-                        <div className="relative">
+                        <div className="relative shrink-0">
                           <img
                             src={row.mainThumbnailUrl}
                             alt={row.titleKor}
