@@ -249,11 +249,34 @@ export function useAnimeFieldEdit(
         showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
         return;
       }
-      const currentTime = anime.airTime;
+
+      // 기존 airTime은 문자열("HH:mm:ss") 또는 LocalTime 객체일 수 있으므로
+      // 둘 다 hour/minute 기준으로 비교해서 실제로 변했을 때만 변경으로 간주
+      const rawCurrentTime: any = anime.airTime;
+      let currentTimeHour: number | null = null;
+      let currentTimeMinute: number | null = null;
+
+      if (typeof rawCurrentTime === 'string') {
+        const [h, m] = rawCurrentTime.split(':');
+        const normalized = parseAirTime(`${h}:${m}`);
+        if (normalized) {
+          currentTimeHour = normalized.hour;
+          currentTimeMinute = normalized.minute;
+        }
+      } else if (
+        rawCurrentTime &&
+        typeof rawCurrentTime.hour === 'number' &&
+        typeof rawCurrentTime.minute === 'number'
+      ) {
+        currentTimeHour = rawCurrentTime.hour;
+        currentTimeMinute = rawCurrentTime.minute;
+      }
+
       if (
-        !currentTime ||
-        currentTime.hour !== parsedTime.hour ||
-        currentTime.minute !== parsedTime.minute
+        currentTimeHour === null ||
+        currentTimeMinute === null ||
+        currentTimeHour !== parsedTime.hour ||
+        currentTimeMinute !== parsedTime.minute
       ) {
         hasChanged = true;
       }
