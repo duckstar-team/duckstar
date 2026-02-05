@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import { useModal } from '@/components/layout/AppContainer';
 
 interface CommentInputFormProps {
   onSubmit: (content: string) => Promise<void>;
@@ -21,6 +22,7 @@ export default function CommentInputForm({
   const [comment, setComment] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
   const [isConfirm, setIsConfirm] = useState(false);
+  const { openLoginModal } = useModal();
 
   const handleCommentFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     if (!user) {
@@ -100,6 +102,7 @@ export default function CommentInputForm({
           title="댓글 작성"
           description="댓글을 작성하기 위해서는 로그인이 필요합니다."
           setIsConfirm={setIsConfirm}
+          onConfirm={openLoginModal}
         />
       )}
     </>

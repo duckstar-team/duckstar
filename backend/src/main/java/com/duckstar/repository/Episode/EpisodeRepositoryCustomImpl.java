@@ -1,8 +1,6 @@
 package com.duckstar.repository.Episode;
 
-import com.duckstar.domain.QAnime;
-import com.duckstar.domain.QOtt;
-import com.duckstar.domain.QWeek;
+import com.duckstar.domain.*;
 import com.duckstar.domain.enums.*;
 import com.duckstar.domain.mapping.*;
 import com.duckstar.domain.mapping.comment.QAnimeComment;
@@ -18,6 +16,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -51,6 +50,7 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
     private final QEpisodeStar episodeStar = QEpisodeStar.episodeStar;
     private final QAnimeComment animeComment = QAnimeComment.animeComment;
     private final QAdminActionLog adminActionLog = QAdminActionLog.adminActionLog;
+    private final QMember member = QMember.member;
 
     @Override
     public List<EpisodeDto> getEpisodeDtosByAnimeId(Long animeId) {
@@ -176,11 +176,12 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                 .join(episode.anime, anime)
                 .join(week).on(week.id.eq(weekId))
                 .leftJoin(episodeStar)
-                    .on(
-                            episodeStar.episode.id.eq(episode.id),
-                            episodeStar.weekVoteSubmission.principalKey.eq(principalKey)
-                    )
+                .on(
+                        episodeStar.episode.id.eq(episode.id),
+                        episodeStar.weekVoteSubmission.principalKey.eq(principalKey)
+                )
                 .where(
+                        episode.isBreak.isFalse(),
                         episode.scheduledAt.between(week.startDateTime, week.endDateTime)
                 )
                 .orderBy(episode.scheduledAt.asc())
@@ -475,20 +476,20 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
         // 최종 DTO 리턴
         return Optional.of(
                 CandidateFormDto.builder()
-                .episodeId(episodeId)
-                .voterCount(voterCount)
-                .animeId(t.get(anime.id))
-                .mainThumbnailUrl(t.get(anime.mainThumbnailUrl))
-                .result(result)
-                .build()
+                        .episodeId(episodeId)
+                        .voterCount(voterCount)
+                        .animeId(t.get(anime.id))
+                        .mainThumbnailUrl(t.get(anime.mainThumbnailUrl))
+                        .result(result)
+                        .build()
         );
     }
 
     @Override
-    public List<EpisodeInfoDto> getEpisodeInfoDtosByAnimeId(Long animeId) {
-        List<EpisodeInfoDto> dtos = queryFactory.select(
+    public List<AdminEpisodeDto> getEpisodeInfoDtosByAnimeId(Long animeId) {
+        List<AdminEpisodeDto> dtos = queryFactory.select(
                         Projections.constructor(
-                                EpisodeInfoDto.class,
+                                AdminEpisodeDto.class,
                                 Projections.constructor(
                                         EpisodeDto.class,
                                         Expressions.as(
@@ -503,35 +504,50 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                                         episode.scheduledAt,
                                         episode.nextEpScheduledAt
                                 ),
-                                Projections.constructor(
-                                        ManagerProfileDto.class,
-                                        adminActionLog.member.id,
-                                        adminActionLog.member.profileImageUrl,
-                                        adminActionLog.member.nickname,
-                                        adminActionLog.adminTaskType,
-                                        adminActionLog.createdAt
+                                Expressions.as(
+                                        Expressions.nullExpression(ManagerProfileDto.class),
+                                        "managerProfileDto"
                                 )
                         ))
                 .from(episode)
-                .leftJoin(adminActionLog).on(adminActionLog.episode.id.eq(episode.id))
                 .where(episode.anime.id.eq(animeId))
                 .orderBy(episode.scheduledAt.asc())
                 .fetch();
 
+        List<Long> episodesIds = dtos.stream()
+                .map(dto -> dto.getEpisodeDto().getEpisodeId())
+                .toList();
+        if (episodesIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, ManagerProfileDto> latestLogMap = queryFactory.selectFrom(adminActionLog)
+                .join(adminActionLog.member, member)
+                .where(adminActionLog.episode.id.in(episodesIds))
+                .orderBy(adminActionLog.createdAt.desc(), adminActionLog.id.desc())
+                .fetch()
+                .stream()
+                .collect(Collectors.toMap(
+                        log -> log.getEpisode().getId(),
+                        log -> ManagerProfileDto.of(log.getMember(), log),
+                        (existing, replacement) -> existing
+                ));
+
         // 이후 세팅
-        dtos.forEach(dto ->
-                dto.getEpisodeDto().setWeekDto(dto.getEpisodeDto().getScheduledAt())
-        );
+        dtos.forEach(dto -> {
+                    dto.getEpisodeDto().setWeekDto(dto.getEpisodeDto().getScheduledAt());
+                    dto.setManagerProfileDto(latestLogMap.get(dto.getEpisodeDto().getEpisodeId()));
+        });
         return dtos;
     }
 
     @Override
-    public List<ScheduleInfoDto> getScheduleInfoDtosByWeekId(Long weekId) {
+    public List<ScheduleInfoDto> getScheduleInfoDtosByWeekId(Week week) {
         List<ScheduleInfoDto> dtos = queryFactory.select(
                         Projections.constructor(
                                 ScheduleInfoDto.class,
-                                anime.titleKor,
-                                anime.mainThumbnailUrl,
+                                episode.anime.titleKor,
+                                episode.anime.mainThumbnailUrl,
                                 Projections.constructor(
                                         EpisodeDto.class,
                                         Expressions.as(
@@ -546,29 +562,45 @@ public class EpisodeRepositoryCustomImpl implements EpisodeRepositoryCustom {
                                         episode.scheduledAt,
                                         episode.nextEpScheduledAt
                                 ),
-                                Projections.constructor(
-                                        ManagerProfileDto.class,
-                                        adminActionLog.member.id,
-                                        adminActionLog.member.profileImageUrl,
-                                        adminActionLog.member.nickname,
-                                        adminActionLog.adminTaskType,
-                                        adminActionLog.createdAt
+                                Expressions.as(
+                                        Expressions.nullExpression(ManagerProfileDto.class),
+                                        "managerProfileDto"
                                 )
                         ))
                 .from(episode)
-                .join(episode.anime, anime)
                 .leftJoin(adminActionLog).on(adminActionLog.episode.id.eq(episode.id))
-                .join(week).on(week.id.eq(weekId))
+                .leftJoin(member).on(adminActionLog.member.id.eq(member.id))
                 .where(
-                        episode.scheduledAt.between(week.startDateTime, week.endDateTime)
+                        episode.scheduledAt.between(week.getStartDateTime(), week.getEndDateTime())
                 )
                 .orderBy(episode.scheduledAt.asc())
                 .fetch();
 
+        List<Long> episodesIds = dtos.stream()
+                .map(dto -> dto.getEpisodeDto().getEpisodeId())
+                .toList();
+        if (episodesIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, ManagerProfileDto> latestLogMap = queryFactory.selectFrom(adminActionLog)
+                .join(adminActionLog.member, member)
+                .where(adminActionLog.episode.id.in(episodesIds))
+                .orderBy(adminActionLog.createdAt.desc(), adminActionLog.id.desc())
+                .fetch()
+                .stream()
+                .collect(Collectors.toMap(
+                        log -> log.getEpisode().getId(),
+                        log -> ManagerProfileDto.of(log.getMember(), log),
+                        (existing, replacement) -> existing
+                ));
+
         // 이후 세팅
-        dtos.forEach(dto ->
-                dto.getEpisodeDto().setWeekDto(dto.getEpisodeDto().getScheduledAt())
-        );
+        dtos.forEach(dto -> {
+            dto.getEpisodeDto().setWeekDto(dto.getEpisodeDto().getScheduledAt());
+            dto.setManagerProfileDto(latestLogMap.get(dto.getEpisodeDto().getEpisodeId()));
+        });
+
         return dtos;
     }
 

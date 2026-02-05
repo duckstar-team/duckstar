@@ -31,4 +31,6 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long>, Episode
             @Param("weekId") Long weekId,
             Pageable pageable
     );
+
+    List<Episode> findByAnime_IdAndEpisodeNumber(Long animeId, Integer episodeNumber);
 }

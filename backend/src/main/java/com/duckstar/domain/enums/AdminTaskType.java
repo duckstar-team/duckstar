@@ -6,17 +6,19 @@ package com.duckstar.domain.enums;
 public enum AdminTaskType {
     BAN,
     UNBAN,
-
     WITHDRAW,
     UNDO_WITHDRAW,
 
     EPISODE_BREAK,
     EPISODE_RESCHEDULE,
     EPISODE_CREATE,
-    EPISODE_DELETE,
-
+    FUTURE_EPISODE_DELETE,
     EPISODE_MODIFY_NUMBER,
 
     // 애니메이션 정보 관리
+    ANIME_CREATE,
+    ANIME_INFO_UPDATE,
+    ANIME_STATUS_UPDATE,
+    ANIME_DIRECTION_UPDATE,
     ANIME_EPISODE_TOTAL_COUNT
 }

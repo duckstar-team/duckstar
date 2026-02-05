@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib';
+import { cn, formatAirTime } from '@/lib';
 import CharacterList from '@/components/domain/anime/CharacterList';
 import { Schemas, OttType } from '@/types';
 import ImageModal from '@/components/domain/anime/ImageModal';
@@ -502,41 +502,6 @@ export default function LeftInfoPanel({
       SUN: '일',
     };
     return dayMap[day] || day;
-  };
-
-  // 방영 시간 포맷팅
-  const formatAirTime = (airTime?: Schemas['LocalTime'] | string | null) => {
-    if (!airTime) {
-      return '';
-    }
-
-    let hours: number;
-    let minutes: number;
-
-    // 문자열 형태로 오는 경우 (예: "20:00:00" 또는 "20:00")
-    if (typeof airTime === 'string') {
-      const timeMatch = airTime.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-      if (!timeMatch) {
-        return '';
-      }
-      hours = parseInt(timeMatch[1], 10);
-      minutes = parseInt(timeMatch[2], 10);
-    }
-    // 객체 형태로 오는 경우
-    else {
-      if (airTime.hour === undefined || airTime.minute === undefined) {
-        return '';
-      }
-      hours = airTime.hour;
-      minutes = airTime.minute;
-    }
-
-    // 00:00 ~ 04:59인 경우 24시간 더하기
-    if (hours < 5) {
-      hours += 24;
-    }
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
   // OTT 클릭 핸들러
