@@ -655,7 +655,7 @@ export default function AnimationManagementTab() {
                                 setEditingValues({});
                               }
                             }}
-                            placeholder="예: 12"
+                            placeholder="예: 13"
                             className="w-16 -translate-x-2 rounded bg-gray-100 px-2 py-1 text-sm dark:bg-zinc-700 dark:text-white"
                             autoFocus
                           />
@@ -671,7 +671,7 @@ export default function AnimationManagementTab() {
                                 )
                               }
                             >
-                              {row.totalEpisodes ?? 12}
+                              {row.totalEpisodes ?? '?'}
                             </span>
                             {row.totalEpisodes && (
                               <button
@@ -679,7 +679,7 @@ export default function AnimationManagementTab() {
                                 onClick={() =>
                                   handleSetTotalEpisodesUnknown(row.animeId)
                                 }
-                                className="border-brand-zinc-300 rounded border px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                                className="rounded bg-blue-600/10 px-2 py-1 text-xs text-blue-600 hover:bg-blue-600/20 dark:bg-blue-600/20 dark:text-blue-400 dark:hover:bg-blue-600/40"
                               >
                                 알 수 없음
                               </button>
