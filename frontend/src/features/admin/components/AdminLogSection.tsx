@@ -10,12 +10,7 @@ import { useAdminLogs } from '@/features/admin/hooks/queries/useAdminLogs';
 
 function formatLogSentence(log: ManagementLogDto): React.ReactNode {
   const subject = log.memberProfileDto?.managerNickname ?? '관리자';
-  const target =
-    log.ipHash != null
-      ? log.ipHash
-      : log.episodeNumber != null && log.episodeNumber > 0
-        ? `${log.titleKor} ${log.episodeNumber}화`
-        : (log.titleKor ?? '');
+  const target = log.ipHash ?? log.titleKor;
   const taskType = log.memberProfileDto?.taskType ?? '';
   const taskLabel =
     TASK_TYPE[taskType as ManagerProfileDtoTaskType]?.label ?? taskType;
@@ -25,6 +20,9 @@ function formatLogSentence(log: ManagementLogDto): React.ReactNode {
       <span className="text-green-400">{subject}</span>
       <span className="text-gray-400"> 님이 </span>
       <span className="text-cyan-400">{target}</span>
+      {log.episodeId && (
+        <span className="text-white"> {log.episodeNumber}화</span>
+      )}
       <span className="text-gray-400">
         {log.ipHash != null &&
           log.weekDto &&
