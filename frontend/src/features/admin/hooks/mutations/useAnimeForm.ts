@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { PostRequestDtoMedium } from '@/types/generated/api';
 import { Schemas } from '@/types';
+import { showToast } from '@/components/common/Toast';
+import { createAnime } from '@/api/admin';
 
 /** PostRequestDto + airTime을 string으로 처리 (기존 방식) */
 export type AnimeFormData = Omit<Schemas['PostRequestDto'], 'airTime'> & {
@@ -30,42 +32,24 @@ export function useAnimeForm() {
 
   const submitMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch('/api/admin/animes', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || '애니메이션 추가에 실패했습니다.'
-          );
-        } catch (jsonError) {
-          throw new Error(
-            `애니메이션 추가에 실패했습니다. (상태 코드: ${response.status})`
-          );
-        }
-      }
-
-      try {
-        const result = await response.json();
-        return result;
-      } catch (jsonError) {
-        return { result: null };
-      }
+      const { result } = await createAnime(formData);
+      return result;
     },
-    onSuccess: (result) => {
-      setMessage(
-        result.result
-          ? `애니메이션이 성공적으로 추가되었습니다. (ID: ${result.result})`
-          : '애니메이션이 성공적으로 추가되었습니다.'
-      );
-      resetForm();
+    onSuccess: (animeId) => {
+      const successMessage = `id:${animeId} 애니메이션이 성공적으로 등록되었습니다.`;
+      setMessage(successMessage);
+      showToast.success('애니메이션이 성공적으로 등록되었습니다.');
+      // 폼 데이터만 리셋하고 메시지는 유지
+      resetForm(true);
+      // 5초 후에 메시지도 초기화
+      setTimeout(() => {
+        setMessage('');
+      }, 5000);
     },
     onError: (error: Error) => {
-      setMessage(`오류: ${error.message}`);
+      const errorMessage = `오류: ${error.message}`;
+      setMessage(errorMessage);
+      showToast.error('애니메이션 등록에 실패하였습니다.');
     },
   });
 
@@ -116,10 +100,12 @@ export function useAnimeForm() {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = (keepMessage: boolean = false) => {
     setAnimeData(getDefaultAnimeData());
     mainImageRef.current = null;
-    setMessage('');
+    if (!keepMessage) {
+      setMessage('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,8 +138,7 @@ export function useAnimeForm() {
           : `${animeData.premiereDateTime}:00`;
       formData.append('premiereDateTime', dt);
     }
-    if (animeData.dayOfWeek)
-      formData.append('dayOfWeek', animeData.dayOfWeek);
+    if (animeData.dayOfWeek) formData.append('dayOfWeek', animeData.dayOfWeek);
     if (animeData.totalEpisodes)
       formData.append('totalEpisodes', animeData.totalEpisodes.toString());
     if (animeData.corp) formData.append('corp', animeData.corp);

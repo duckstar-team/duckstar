@@ -2,11 +2,10 @@ import { AdminEpisodeListDto, LogFilterType, Schemas } from '@/types';
 import { apiCall } from './http';
 
 // 애니메이션 등록 API
-// TODO: 미사용 확인 필요, 이름 addAnime로 수정
-export async function createAnime(animeData: Record<string, unknown>) {
-  return apiCall<void>('/api/admin/animes', {
+export async function createAnime(animeData: FormData) {
+  return apiCall<number>('/api/admin/animes', {
     method: 'POST',
-    body: JSON.stringify(animeData),
+    body: animeData,
   });
 }
 
