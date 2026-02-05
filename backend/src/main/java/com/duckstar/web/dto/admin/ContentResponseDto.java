@@ -39,6 +39,14 @@ public class ContentResponseDto {
         public void setManagerProfileDto(ManagerProfileDto managerProfileDto) {
             this.managerProfileDto = managerProfileDto;
         }
+
+        public void setDayOfWeek(DayOfWeekShort dayOfWeek) {
+            this.dayOfWeek = dayOfWeek;
+        }
+
+        public int getDayOfWeekNumber() {
+            return this.dayOfWeek.getValue();
+        }
     }
 
     @Builder
