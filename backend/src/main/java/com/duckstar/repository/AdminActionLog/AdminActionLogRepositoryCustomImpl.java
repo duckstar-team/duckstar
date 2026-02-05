@@ -33,14 +33,18 @@ public class AdminActionLogRepositoryCustomImpl implements AdminActionLogReposit
 
     @Override
     public List<ManagementLogDto> getManagementLogDtos(ManageFilterType filterType, int offset, int limit) {
+        // 1. 별칭용 QAnime 추가 생성
+        QAnime anime = QAnime.anime;
+        QAnime epAnime = new QAnime("epAnime"); // 에피소드를 통한 애니 정보 별칭
+
         return queryFactory.select(
                         Projections.constructor(
                                 ManagementLogDto.class,
                                 adminActionLog.id,
-                                anime.id,
+                                anime.id.coalesce(epAnime.id),
                                 episode.id,
                                 adminActionLog.targetIpHash,
-                                anime.titleKor,
+                                anime.titleKor.coalesce(epAnime.titleKor),
                                 episode.episodeNumber,
                                 week.id,
                                 Projections.constructor(
@@ -71,8 +75,9 @@ public class AdminActionLogRepositoryCustomImpl implements AdminActionLogReposit
                         ))
                 .from(adminActionLog)
                 .join(adminActionLog.member, member)
-                .leftJoin(adminActionLog.anime, anime)
+                .leftJoin(adminActionLog.anime, anime)  // 직접 연관 조인
                 .leftJoin(adminActionLog.episode, episode)
+                .leftJoin(episode.anime, epAnime)  // 에피소드를 통한 애니메이션 조인
                 .leftJoin(adminActionLog.week, week)
                 .leftJoin(week.quarter, quarter)
                 .where(eqFilterType(filterType))
