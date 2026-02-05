@@ -12,7 +12,7 @@ import com.duckstar.web.dto.AnimeResponseDto.QuarterDto;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
-import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -139,8 +139,6 @@ public class AnimeQuarterRepositoryCustomImpl implements AnimeQuarterRepositoryC
 
     @Override
     public Page<AdminAnimeDto> getAdminAnimeDtosByQuarterId(Long quarterId, Pageable pageable) {
-        QAdminActionLog subLog = new QAdminActionLog("subLog");
-
         List<AdminAnimeDto> content = queryFactory.select(
                         Projections.constructor(
                                 AdminAnimeDto.class,
@@ -152,30 +150,39 @@ public class AnimeQuarterRepositoryCustomImpl implements AnimeQuarterRepositoryC
                                 anime.dayOfWeek,
                                 anime.airTime,
                                 anime.totalEpisodes,
-                                Projections.constructor(
-                                        ManagerProfileDto.class,
-                                        member.id,
-                                        member.profileImageUrl,
-                                        member.nickname,
-                                        adminActionLog.adminTaskType,
-                                        adminActionLog.createdAt
+                                Expressions.as(
+                                        Expressions.nullExpression(ManagerProfileDto.class),
+                                        "managerProfileDto"
                                 )
                         ))
                 .from(anime)
                 .leftJoin(animeQuarter).on(animeQuarter.anime.id.eq(anime.id))
-                .leftJoin(adminActionLog).on(adminActionLog.id.eq(
-                        JPAExpressions.select(subLog.id)
-                                .from(subLog)
-                                .where(subLog.anime.eq(anime))
-                                .orderBy(subLog.createdAt.desc(), subLog.id.desc())
-                                .limit(1)
-                ))
-                .leftJoin(adminActionLog.member, member)
                 .where(quarterIdEq(quarterId))
                 .orderBy(anime.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
+
+        List<Long> animeIds = content.stream().map(AdminAnimeDto::getAnimeId).toList();
+        if (animeIds.isEmpty()) {
+            return Page.empty();
+        }
+
+        Map<Long, ManagerProfileDto> latestLogMap = queryFactory.selectFrom(adminActionLog)
+                .join(adminActionLog.member, member)
+                .where(adminActionLog.anime.id.in(animeIds))
+                .orderBy(adminActionLog.createdAt.desc(), adminActionLog.id.desc())
+                .fetch()
+                .stream()
+                .collect(Collectors.toMap(
+                                log -> log.getAnime().getId(),
+                                log -> ManagerProfileDto.of(log.getMember(), log),
+                                (existing, replacement) -> existing
+                        )
+                );
+
+        content.forEach(dto ->
+                dto.setManagerProfileDto(latestLogMap.get(dto.getAnimeId())));
 
         // 전체 카운트 쿼리
         Long totalCount = queryFactory

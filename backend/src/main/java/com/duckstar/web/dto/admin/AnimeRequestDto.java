@@ -4,12 +4,12 @@ import com.duckstar.domain.enums.AnimeStatus;
 import com.duckstar.domain.enums.DayOfWeekShort;
 import com.duckstar.domain.enums.Medium;
 import com.duckstar.web.dto.OttDto;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -66,8 +66,13 @@ public class AnimeRequestDto {
 
     @Builder
     @Getter
+    @NoArgsConstructor // 역직렬화를 위해 기본 생성자 추가 권장
+    @AllArgsConstructor
     public static class InfoRequestDto {
         DayOfWeekShort dayOfWeek;
+
+        @Schema(example = "23:00:00", type = "string")
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss", timezone = "Asia/Seoul")
         LocalTime airTime;
 
         AnimeStatus status;
