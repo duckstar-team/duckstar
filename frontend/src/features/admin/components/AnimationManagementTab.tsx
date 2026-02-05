@@ -14,7 +14,7 @@ import { formatStatus, formatDayOfWeek } from '@/features/admin/utils';
 import { useQuarters } from '@/features/admin/hooks/queries/useQuarters';
 import { useAnimesByQuarter } from '@/features/admin/hooks/queries/useAnimesByQuarter';
 import { useAnimeFieldEdit } from '@/features/admin/hooks/mutations/useUpdateAnime';
-import { PanelTopClose, Pencil } from 'lucide-react';
+import { ListCollapse, Pencil } from 'lucide-react';
 import TooltipBtn from '@/components/common/TooltipBtn';
 import AnimeEpisodeRow, { EditingEpisodeField } from './AnimeEpisodeRow';
 
@@ -47,6 +47,14 @@ export default function AnimationManagementTab() {
   const handleUpdateAnimeImage = (animeId: number, imageFile: File) => {
     setUploadingAnimeId(animeId);
     handleUpdateAnimeImageBase(animeId, imageFile);
+  };
+
+  const toggleExpandedAnimeIds = () => {
+    if (expandedAnimeIds.size === 0) {
+      setExpandedAnimeIds(new Set(animes.map((anime) => anime.animeId)));
+    } else {
+      setExpandedAnimeIds(new Set());
+    }
   };
 
   // 업로드 완료 후 상태 초기화
@@ -106,16 +114,16 @@ export default function AnimationManagementTab() {
                 <tr>
                   <th>
                     <TooltipBtn
-                      text="토글 전체 닫기"
+                      text="에피소드 목록 전체 열기/닫기"
                       variant="light"
                       className="text-xs!"
                     >
                       <button
                         type="button"
-                        onClick={() => setExpandedAnimeIds(new Set())}
+                        onClick={toggleExpandedAnimeIds}
                         className="flex w-full items-center justify-center"
                       >
-                        <PanelTopClose className="size-4 text-zinc-500" />
+                        <ListCollapse className="size-4 text-zinc-500" />
                       </button>
                     </TooltipBtn>
                   </th>

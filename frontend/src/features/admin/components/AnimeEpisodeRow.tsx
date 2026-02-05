@@ -289,7 +289,7 @@ export default function AnimeEpisodeRow({
                     e.stopPropagation();
                     handleQueueEpisode(animeId);
                   }}
-                  className="rounded border border-dashed border-gray-400 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:border-zinc-500 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                  className="mr-4 rounded border border-dashed border-gray-400 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:border-zinc-500 dark:text-zinc-400 dark:hover:bg-zinc-700"
                 >
                   에피소드 추가
                 </button>
