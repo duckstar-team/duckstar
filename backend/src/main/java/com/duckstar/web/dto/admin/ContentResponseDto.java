@@ -62,6 +62,10 @@ public class ContentResponseDto {
         EpisodeDto episodeDto;
 
         ManagerProfileDto managerProfileDto;
+
+        public void setManagerProfileDto(ManagerProfileDto managerProfileDto) {
+            this.managerProfileDto = managerProfileDto;
+        }
     }
 
     @Builder
@@ -83,6 +87,10 @@ public class ContentResponseDto {
         EpisodeDto episodeDto;
 
         ManagerProfileDto managerProfileDto;
+
+        public void setManagerProfileDto(ManagerProfileDto managerProfileDto) {
+            this.managerProfileDto = managerProfileDto;
+        }
     }
 
     @Builder

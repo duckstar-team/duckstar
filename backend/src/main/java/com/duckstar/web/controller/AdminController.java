@@ -74,6 +74,7 @@ public class AdminController {
      */
     // 모든 분기 조회 API : GET /api/v1/search/quarters 재사용
 
+    @Operation(summary = "분기별 애니메이션 조회 API")
     @GetMapping("/animes/{year}/{quarter}")
     public ApiResponse<AdminAnimeListDto> getAnimes(
             @PathVariable Integer year,
