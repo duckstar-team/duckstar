@@ -6,6 +6,8 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-backend.yml'
+    # 수동 깃액션
+    workflow_dispatch:
 
 # 동시 배포 제어: 같은 EC2 인스턴스에 대한 배포는 순차적으로 실행
 concurrency:
