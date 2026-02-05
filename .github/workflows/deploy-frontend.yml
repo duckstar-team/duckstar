@@ -229,9 +229,10 @@ jobs:
           MAX_ATTEMPTS=12
           for i in $(seq 1 $MAX_ATTEMPTS); do
             echo "Checking health... (attempt $i of $MAX_ATTEMPTS)"
+
             if ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
              "docker exec duckstar-frontend \
-              wget --no-verbose --tries=1 --spider http://localhost:3000/ > /dev/null 2>&1"; then
+              node -e'require(\"http\").get(\"http://127.0.0.1:3000/\", (res) => (res.statusCode === 200 ? process.exit(0) : process.exit(1))).on(\"error\", () => process.exit(1))'"; then
               echo "✅ 헬스체크 성공!"
               echo "status=success" >> $GITHUB_OUTPUT
               exit 0
