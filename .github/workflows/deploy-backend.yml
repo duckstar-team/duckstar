@@ -117,7 +117,7 @@ jobs:
                 image: ${DOCKERHUB_USERNAME}/duckstar-docker-hub:backend
                 container_name: duckstar-backend
                 env_file:
-                  - .env
+                  - .env.backend
                 environment:
                   SPRING_PROFILES_ACTIVE: prod
                 expose:
@@ -201,7 +201,7 @@ jobs:
             DOCKER_COMPOSE_EOF
 
             # 1. .env 파일 생성 (도커 아이디와 서비스 환경변수 주입)
-            cat <<EOF > .env
+            cat <<EOF > .env.backend
             SPRING_PROFILES_ACTIVE=prod
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
