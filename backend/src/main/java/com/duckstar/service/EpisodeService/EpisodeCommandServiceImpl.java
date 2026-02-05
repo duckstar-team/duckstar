@@ -268,9 +268,12 @@ public class EpisodeCommandServiceImpl implements EpisodeCommandService {
                     airTime
             );
 
+            anime.setTotalEpisodes(episodes.size() + 1);
+
         } else {
             // 에피소드가 없다면 첫 방영시간 기준의 1화부터 생성
             scheduledAt = anime.getPremiereDateTime();
+            anime.setTotalEpisodes(1);
         }
 
         Episode newLast = Episode.create(

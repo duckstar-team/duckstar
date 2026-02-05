@@ -35,6 +35,10 @@ public class ContentResponseDto {
         Integer totalEpisodes;
 
         ManagerProfileDto managerProfileDto;
+
+        public void setManagerProfileDto(ManagerProfileDto managerProfileDto) {
+            this.managerProfileDto = managerProfileDto;
+        }
     }
 
     @Builder
