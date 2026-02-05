@@ -7,13 +7,14 @@ import AnimationManagementTab from '@/features/admin/components/AnimationManagem
 import ScheduleManagementTab from '@/features/admin/components/ScheduleManagementTab';
 import ContentManagementTab from '@/features/admin/components/ContentManagementTab';
 import SubmissionManagementTab from '@/features/admin/components/SubmissionManagementTab';
+import { ADMIN_TABS } from '@/features/admin/constants';
+
+type AdminTab = (typeof ADMIN_TABS)[number]['value'];
 
 export default function AdminPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<
-    'content' | 'anime' | 'schedule' | 'submissions'
-  >('content');
+  const [activeTab, setActiveTab] = useState<AdminTab>(ADMIN_TABS[0].value);
 
   // 인증 체크 완료 여부 추적
   const [hasCheckedAuth, sethasCheckedAuth] = useState(false);
@@ -65,50 +66,21 @@ export default function AdminPage() {
         </div>
 
         {/* 탭 */}
-        <div className="border-brand-zinc-200 mb-6 border-b">
-          <nav className="-mb-px flex space-x-8">
+        <nav className="border-brand-zinc-200 mb-6 flex border-b">
+          {ADMIN_TABS.map((tab) => (
             <button
-              onClick={() => setActiveTab('content')}
-              className={`border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === 'content'
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`-mb-px border-b-2 p-4 text-sm font-medium ${
+                activeTab === tab.value
                   ? 'border-blue-500 text-blue-600'
-                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
+                  : 'border-transparent text-gray-500 hover:text-black dark:border-none dark:hover:text-zinc-400'
               }`}
             >
-              컨텐츠 관리
+              {tab.label}
             </button>
-            <button
-              onClick={() => setActiveTab('anime')}
-              className={`border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === 'anime'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
-              }`}
-            >
-              애니메이션 관리
-            </button>
-            <button
-              onClick={() => setActiveTab('schedule')}
-              className={`border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === 'schedule'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
-              }`}
-            >
-              주차별 편성표 관리
-            </button>
-            <button
-              onClick={() => setActiveTab('submissions')}
-              className={`border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === 'submissions'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'hover:border-brand-zinc-300 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-zinc-400'
-              }`}
-            >
-              제출 현황 관리
-            </button>
-          </nav>
-        </div>
+          ))}
+        </nav>
 
         {/* 컨텐츠 관리 탭 */}
         {activeTab === 'content' && <ContentManagementTab />}
