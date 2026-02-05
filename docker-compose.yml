@@ -3,7 +3,7 @@ services:
     image: ${DOCKERHUB_USERNAME}/duckstar-docker-hub:backend
     container_name: duckstar-backend
     env_file:
-      - .env
+      - .env.backend
     environment:
       SPRING_PROFILES_ACTIVE: prod
     expose:
@@ -27,6 +27,8 @@ services:
   frontend:
     image: ${DOCKERHUB_USERNAME}/duckstar-docker-hub:frontend
     container_name: duckstar-frontend
+    env_file:
+      - .env.frontend
     expose:
       - '3000'
     restart: always
