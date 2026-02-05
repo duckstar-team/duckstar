@@ -19,9 +19,7 @@ function formatLogSentence(log: ManagementLogDto): React.ReactNode {
   const taskType = log.memberProfileDto?.taskType ?? '';
   const taskLabel =
     TASK_TYPE[taskType as ManagerProfileDtoTaskType]?.label ?? taskType;
-  const textColor =
-    TASK_TYPE[taskType as ManagerProfileDtoTaskType]?.color ??
-    'text-orange-400';
+  const textColor = TASK_TYPE[taskType as ManagerProfileDtoTaskType]?.color;
   return (
     <>
       <span className="text-green-400">{subject}</span>
@@ -30,7 +28,8 @@ function formatLogSentence(log: ManagementLogDto): React.ReactNode {
       <span className="text-gray-400">
         {log.ipHash != null &&
           log.weekDto &&
-          ` (${formatWeekLabel(log.weekDto.year, log.weekDto.quarter, log.weekDto.week)})에 대해`}{' '}
+          `${formatWeekLabel(log.weekDto.year, log.weekDto.quarter, log.weekDto.week)}`}
+        에 대해{' '}
       </span>
       <span className={cn(textColor)}>{taskLabel}</span>
       <span className="text-gray-400"> 하였습니다.</span>

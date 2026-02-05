@@ -37,7 +37,7 @@ export default function EpisodeTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="bg-white dark:bg-zinc-800">
           {rows.length === 0 ? (
             emptyMessage ? (
               <tr>
