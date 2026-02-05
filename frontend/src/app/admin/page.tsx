@@ -19,6 +19,27 @@ export default function AdminPage() {
   // 인증 체크 완료 여부 추적
   const [hasCheckedAuth, sethasCheckedAuth] = useState(false);
 
+  // activeTab 초기화
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const saved = window.sessionStorage.getItem('admin-active-tab');
+    if (
+      saved === 'content' ||
+      saved === 'anime' ||
+      saved === 'schedule' ||
+      saved === 'submissions'
+    ) {
+      setActiveTab(saved);
+    }
+  }, []);
+
+  // activeTab 저장
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem('admin-active-tab', activeTab);
+  }, [activeTab]);
+
   // 권한 확인
   useEffect(() => {
     // 로딩 중이면 아무 것도 하지 않음
