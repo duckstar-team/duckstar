@@ -12,7 +12,11 @@ import {
   PostRequestDtoDayOfWeek,
 } from '@/types/generated/api';
 import { showToast } from '@/components/common/Toast';
-import { parseAirTime, airTimeToString } from '@/features/admin/utils';
+import {
+  parseAirTime,
+  airTimeToString,
+  convertAirTimeForServer,
+} from '@/features/admin/utils';
 import { QuarterOption } from '../queries/useQuarters';
 
 type EditableField =
@@ -241,19 +245,53 @@ export function useAnimeFieldEdit(
     if (field === 'airTime') {
       const timeStr = (value as string).trim();
       if (!timeStr) {
-        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
+        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00 또는 24:00~28:59)');
         return;
       }
       const parsedTime = parseAirTime(timeStr);
       if (!parsedTime) {
-        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00)');
+        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00 또는 24:00~28:59)');
         return;
       }
-      const currentTime = anime.airTime;
+
+      // 기존 airTime은 문자열("HH:mm:ss") 또는 LocalTime 객체일 수 있으므로
+      // 둘 다 hour/minute 기준으로 비교해서 실제로 변했을 때만 변경으로 간주
+      // 서버에서 온 값이 0~4인 경우(formatAirTime이 24~28로 표시), 사용자 입력(24~28)과 비교하기 위해
+      // 서버 값도 24시간 형식으로 변환하여 비교
+      const rawCurrentTime: any = anime.airTime;
+      let currentTimeHour: number | null = null;
+      let currentTimeMinute: number | null = null;
+
+      if (typeof rawCurrentTime === 'string') {
+        const [h, m] = rawCurrentTime.split(':');
+        const hourNum = parseInt(h, 10);
+        const minuteNum = parseInt(m, 10);
+        // 서버에서 온 값이 0~4인 경우 24~28로 변환하여 비교
+        if (hourNum >= 0 && hourNum < 5) {
+          currentTimeHour = hourNum + 24;
+        } else {
+          currentTimeHour = hourNum;
+        }
+        currentTimeMinute = minuteNum;
+      } else if (
+        rawCurrentTime &&
+        typeof rawCurrentTime.hour === 'number' &&
+        typeof rawCurrentTime.minute === 'number'
+      ) {
+        // 서버에서 온 값이 0~4인 경우 24~28로 변환하여 비교
+        if (rawCurrentTime.hour >= 0 && rawCurrentTime.hour < 5) {
+          currentTimeHour = rawCurrentTime.hour + 24;
+        } else {
+          currentTimeHour = rawCurrentTime.hour;
+        }
+        currentTimeMinute = rawCurrentTime.minute;
+      }
+
       if (
-        !currentTime ||
-        currentTime.hour !== parsedTime.hour ||
-        currentTime.minute !== parsedTime.minute
+        currentTimeHour === null ||
+        currentTimeMinute === null ||
+        currentTimeHour !== parsedTime.hour ||
+        currentTimeMinute !== parsedTime.minute
       ) {
         hasChanged = true;
       }
@@ -282,11 +320,16 @@ export function useAnimeFieldEdit(
 
     if (field === 'airTime') {
       const timeStr = (value as string).trim();
+      const parsedTime = parseAirTime(timeStr);
+      if (!parsedTime) {
+        showToast.error('올바른 시간 형식을 입력하세요 (예: 23:00 또는 24:00~28:59)');
+        return;
+      }
+      // 서버 전송 시 24:00~28:59를 00:00~04:59로 변환
+      const serverTime = convertAirTimeForServer(parsedTime);
       // 백엔드 @JsonFormat이 "HH:mm:ss" 형식의 문자열을 기대함
-      updateData.airTime =
-        timeStr.includes(':') && timeStr.split(':').length === 2
-          ? `${timeStr}:00` // "HH:mm" -> "HH:mm:ss"
-          : timeStr;
+      updateData.airTime = `${String(serverTime.hour).padStart(2, '0')}:${String(serverTime.minute).padStart(2, '0')}:00`;
+      // 00:00~28:59 입력 시 요일 변화 없음
       updateData.dayOfWeek = anime.dayOfWeek as PostRequestDtoDayOfWeek;
       updateData.status = anime.status as InfoRequestDtoStatus;
       updateData.corp = anime.corp ?? '';

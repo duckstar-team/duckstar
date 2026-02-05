@@ -349,8 +349,8 @@ export default function ContentManagementTab() {
           <div
             className={`rounded-md p-4 ${
               message.includes('성공')
-                ? 'border border-green-200 bg-green-50 text-green-800 dark:bg-green-900/50 dark:text-green-400'
-                : 'border border-red-200 bg-red-50 text-red-800'
+                ? 'border border-green-200 bg-green-100/80 text-green-500 dark:border-green-400/20 dark:bg-green-900/20'
+                : 'border border-red-200 bg-red-100/80 text-red-500 dark:border-red-400/20 dark:bg-red-900/20'
             }`}
           >
             {message}
