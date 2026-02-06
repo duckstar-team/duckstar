@@ -45,7 +45,6 @@ services:
     networks:
       - duckstar-net
     volumes:
-      - frontend-static:/app/.next/static
       - frontend-public:/app/public
 
   nginx:
@@ -54,7 +53,6 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - /etc/letsencrypt:/etc/letsencrypt
-      - frontend-static:/app/.next/static:ro # 읽기 전용으로 연결
       - frontend-public:/app/public:ro
     ports:
       - '80:80'
@@ -84,5 +82,4 @@ networks:
     driver: bridge
 
 volumes:
-  frontend-static:
   frontend-public:
