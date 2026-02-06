@@ -29,7 +29,7 @@ export function useAnimesByQuarter(selectedQuarter: QuarterOption | null) {
   });
 
   return {
-    animes: data?.sort((a, b) => b.animeId - a.animeId) ?? [],
+    animes: data ?? [],
     loading: isLoading,
     refetch,
   };

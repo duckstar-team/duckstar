@@ -194,6 +194,8 @@ public class AnimeQuarterRepositoryCustomImpl implements AnimeQuarterRepositoryC
 
         // 정렬
         Comparator<AdminAnimeDto> scheduleComparator = (a, b) -> {
+            if (a.getAirTime() == null || b.getAirTime() == null) return 0;
+
             int hourA = DayOfWeekShort.getLogicalHour(a.getAirTime());
             int hourB = DayOfWeekShort.getLogicalHour(b.getAirTime());
 
@@ -207,6 +209,7 @@ public class AnimeQuarterRepositoryCustomImpl implements AnimeQuarterRepositoryC
                 .sorted(
                         Comparator.comparing(AdminAnimeDto::getDayOfWeekNumber)
                                 .thenComparing(scheduleComparator)
+                                .thenComparing(AdminAnimeDto::getAnimeId)
                 ).toList();
 
         // 전체 카운트 쿼리

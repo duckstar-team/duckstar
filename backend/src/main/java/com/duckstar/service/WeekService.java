@@ -81,6 +81,8 @@ public class WeekService {
                 ));
 
         Comparator<AnimePreviewDto> scheduleComparator = (a, b) -> {
+            if (a.getAirTime() == null || b.getAirTime() == null) return 0;
+
             int hourA = DayOfWeekShort.getLogicalHour(a.getScheduledAt().toLocalTime());
             int hourB = DayOfWeekShort.getLogicalHour(b.getScheduledAt().toLocalTime());
 
@@ -124,6 +126,8 @@ public class WeekService {
                 ));
 
         Comparator<AnimePreviewDto> scheduleComparator = (a, b) -> {
+            if (a.getAirTime() == null || b.getAirTime() == null) return 0;
+
             LocalDateTime aScheduledAt = a.getScheduledAt();
             LocalTime aLocalTime = aScheduledAt == null ? a.getAirTime() : aScheduledAt.toLocalTime();
             LocalDateTime bScheduledAt = b.getScheduledAt();

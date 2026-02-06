@@ -45,7 +45,7 @@ public class ContentResponseDto {
         }
 
         public int getDayOfWeekNumber() {
-            return this.dayOfWeek.getValue();
+            return this.dayOfWeek != null ? this.dayOfWeek.getValue() : 99;
         }
     }
 
