@@ -29,8 +29,8 @@ public class ChartController {
 
     @Operation(summary = "모든 주차 조회 API")
     @GetMapping("/weeks")
-    public ApiResponse<List<WeekDto>> getAllWeeks() {
-        return ApiResponse.onSuccess(weekService.getAllWeeks());
+    public ApiResponse<List<WeekDto>> getAllWeeks(@RequestParam boolean isPrepared) {
+        return ApiResponse.onSuccess(weekService.getAllWeeks(isPrepared));
     }
 
     @Operation(summary = "주차별 애니메이션 차트 슬라이스 조회 API (with Anime Trend, AniLab)",
