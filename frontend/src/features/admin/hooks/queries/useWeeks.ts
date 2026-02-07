@@ -20,7 +20,7 @@ export function useWeeks() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'weeks'],
     queryFn: async () => {
-      const res = await getWeeks();
+      const res = await getWeeks(false);
       if (!res.isSuccess || !res.result) return [];
       return (res.result as WeekDto[]).map((w) => ({
         weekId: w.id ?? 0,
