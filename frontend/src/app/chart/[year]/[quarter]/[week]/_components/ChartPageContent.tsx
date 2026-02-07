@@ -76,7 +76,7 @@ export default function ChartPageContent() {
   // 주간 정보 조회
   const { data: weeksData } = useQuery({
     queryKey: ['weeks'],
-    queryFn: getWeeks,
+    queryFn: () => getWeeks(true),
     ...queryConfig.home,
   });
 
