@@ -24,8 +24,8 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.duckstar.util.QuarterUtil.*;
 import static com.duckstar.web.dto.AnimeResponseDto.*;
 import static com.duckstar.web.dto.ChartDto.*;
 import static com.duckstar.web.dto.SearchResponseDto.*;
@@ -228,11 +228,15 @@ public class WeekService {
                 .orElseGet(() -> weekRepository.save(Week.create(quarter, weekValue, weekStartedAt)));
     }
 
-    public List<WeekDto> getAllWeeks() {
-        return weekRepository.findAll().stream()
-                .filter(Week::getAnnouncePrepared)
-                .sorted(Comparator.comparing(Week::getStartDateTime))
-                .map(WeekDto::of)
-                .toList();
+    public List<WeekDto> getAllWeeks(boolean isPrepared) {
+        Stream<Week> stream = weekRepository.findAll().stream();
+        return isPrepared ?
+                stream.filter(Week::getAnnouncePrepared)
+                        .sorted(Comparator.comparing(Week::getStartDateTime))
+                        .map(WeekDto::of)
+                        .toList() :
+                stream.sorted(Comparator.comparing(Week::getStartDateTime))
+                        .map(WeekDto::of)
+                        .toList();
     }
 }
