@@ -5,6 +5,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import {
@@ -56,13 +57,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-  const [tokenExpiryTimer, setTokenExpiryTimer] =
-    useState<NodeJS.Timeout | null>(null);
-  const [lastActivityTime, setLastActivityTime] = useState<number>(Date.now());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(
-    null
-  );
+
+  const tokenExpiryTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // user 상태 변경 시 GA 사용자 ID 자동 동기화
   useEffect(() => {
@@ -78,76 +75,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     setIsLoading(false);
     setHasCheckedAuth(false);
-    // 토큰 만료 타이머 정리
-    if (tokenExpiryTimer) {
-      clearTimeout(tokenExpiryTimer);
-      setTokenExpiryTimer(null);
-    }
-    // 비활성 타이머 정리
-    if (inactivityTimer) {
-      clearTimeout(inactivityTimer);
-      setInactivityTimer(null);
+    if (tokenExpiryTimerRef.current) {
+      clearTimeout(tokenExpiryTimerRef.current);
+      tokenExpiryTimerRef.current = null;
     }
   };
 
-  // 사용자 활동 감지 (타이머 리셋만)
-  const handleUserActivity = async () => {
-    const now = Date.now();
-    setLastActivityTime(now);
-
-    // 비활성 타이머 재설정
-    setupInactivityTimer();
-  };
-
-  // 비활성 상태 자동 감지 타이머 (1시간 후 로그아웃)
-  const setupInactivityTimer = () => {
-    // 기존 비활성 타이머 정리
-    if (inactivityTimer) {
-      clearTimeout(inactivityTimer);
-    }
-
-    const inactivityTime = 60 * 60 * 1000; // 1시간
-
-    const timer = setTimeout(async () => {
-      // 1시간 비활성 시 로그아웃
-      logoutUser();
-    }, inactivityTime);
-
-    setInactivityTimer(timer);
-  };
-
-  // 토큰 만료 감지 및 자동 로그아웃
+  // 토큰 갱신만 수행, 자동 로그아웃 없음 (직접 로그아웃 시에만 로그아웃)
   const setupTokenExpiryTimer = () => {
-    // 기존 타이머 정리
-    if (tokenExpiryTimer) {
-      clearTimeout(tokenExpiryTimer);
+    if (tokenExpiryTimerRef.current) {
+      clearTimeout(tokenExpiryTimerRef.current);
     }
 
-    // 운영 환경: 50분 후 자동 토큰 갱신 시도
-    const refreshTime = 50 * 60 * 1000; // 50분
-    const logoutTime = 60 * 60 * 1000; // 1시간
+    const refreshInterval = 50 * 60 * 1000; // 50분마다 갱신 시도 (access token 1시간 전)
 
-    setTimeout(async () => {
-      const refreshSuccess = await attemptTokenRefresh();
-
-      if (!refreshSuccess) {
-        // 갱신 실패 시에만 사용자에게 알림
-        if (typeof window !== 'undefined' && (window as any).showToast) {
+    const scheduleRefresh = () => {
+      tokenExpiryTimerRef.current = setTimeout(async () => {
+        const refreshSuccess = await attemptTokenRefresh();
+        if (
+          !refreshSuccess &&
+          typeof window !== 'undefined' &&
+          (window as any).showToast
+        ) {
           (window as any).showToast(
-            '세션이 만료되었습니다. 다시 로그인해주세요.',
+            '세션 갱신에 실패했습니다. 일부 기능 사용 시 재로그인이 필요할 수 있습니다.',
             'error',
             5000
           );
         }
-      }
-    }, refreshTime);
+        scheduleRefresh(); // 다음 주기 예약 (자동 로그아웃 없이 계속 시도)
+      }, refreshInterval);
+    };
 
-    // 자동 로그아웃 타이머
-    const timer = setTimeout(() => {
-      logoutUser();
-    }, logoutTime);
-
-    setTokenExpiryTimer(timer);
+    scheduleRefresh();
   };
 
   // 토큰 갱신 시도 (중복 요청 방지)
@@ -166,17 +126,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // 토큰 갱신 성공, 새로운 만료 타이머 설정
+        await response.json();
         setupTokenExpiryTimer();
         return true;
       } else {
         // 토큰 갱신 실패, 로그아웃
-        logoutUser();
         return false;
       }
     } catch (error) {
-      logoutUser();
       return false;
     } finally {
       setIsRefreshing(false);
@@ -189,10 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
       setIsLoading(false);
-      // 중복 투표 방지 시간 초기화
       localStorage.removeItem('duckstar_vote_block_until');
-      // 토큰 만료 타이머 설정
-      console.log('로그인 성공, 토큰 만료 타이머 설정');
       setupTokenExpiryTimer();
     } else {
       // 수동 로그인의 경우 API에서 사용자 정보 가져오기
@@ -206,9 +160,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('duckstar_vote_block_until');
         // 토큰 만료 타이머 설정
         setupTokenExpiryTimer();
-
-        // 비활성 감지 타이머 설정
-        setupInactivityTimer();
       } catch (error) {
         resetAuthState();
       } finally {
@@ -306,50 +257,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // 최적화된 인증 로직: 쿠키 체크 후 API 호출
-  // 사용자 활동 이벤트 리스너 설정
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const activityEvents = [
-      'mousedown',
-      'mousemove',
-      'keypress',
-      'scroll',
-      'touchstart',
-      'click',
-    ];
-
-    const handleActivity = () => {
-      handleUserActivity();
-    };
-
-    // 이벤트 리스너 등록
-    activityEvents.forEach((event) => {
-      document.addEventListener(event, handleActivity, true);
-    });
-
-    return () => {
-      // 이벤트 리스너 정리
-      activityEvents.forEach((event) => {
-        document.removeEventListener(event, handleActivity, true);
-      });
-    };
-  }, [isAuthenticated, lastActivityTime]);
-
   useEffect(() => {
     const checkAuthStatus = async () => {
       if (hasCheckedAuth || isLoading) return;
-
-      // AUTH_STATUS 쿠키 체크 (백엔드에서 설정한 인증 상태 쿠키)
-      const hasAuthStatus = document.cookie.includes('AUTH_STATUS=');
-      const hasLoginState = document.cookie.includes('LOGIN_STATE=');
-
-      if (!hasAuthStatus && !hasLoginState) {
-        setHasCheckedAuth(true);
-        setIsLoading(false);
-        return;
-      }
 
       setIsLoading(true);
       setHasCheckedAuth(true);
@@ -359,6 +269,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const user = userData.result || userData;
         setUser(user as User);
         setIsAuthenticated(true);
+        setupTokenExpiryTimer();
 
         // OAuth 콜백 처리 (LOGIN_STATE 쿠키가 있을 때만)
         const hasLoginState = document.cookie.includes('LOGIN_STATE=');
