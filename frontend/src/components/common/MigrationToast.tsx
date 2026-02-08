@@ -99,12 +99,25 @@ export default function MigrationToast() {
         }, 6000);
       }
 
-      // returnUrl이 있으면 해당 페이지로 이동
+      // returnUrl이 있으면 해당 페이지로 이동 (같은 경로면 스킵 → 무한 리프레시 방지)
       const returnUrl = sessionStorage.getItem('returnUrl');
-      if (returnUrl && returnUrl !== window.location.href) {
+      if (returnUrl) {
+        try {
+          const returnPath = new URL(returnUrl, window.location.origin)
+            .pathname;
+          if (returnPath !== window.location.pathname) {
+            sessionStorage.removeItem('returnUrl');
+            router.replace(returnUrl);
+            return;
+          }
+        } catch {
+          if (returnUrl !== window.location.href) {
+            sessionStorage.removeItem('returnUrl');
+            router.replace(returnUrl);
+            return;
+          }
+        }
         sessionStorage.removeItem('returnUrl');
-        router.replace(returnUrl);
-        return;
       }
 
       // LOGIN_STATE 쿠키 삭제

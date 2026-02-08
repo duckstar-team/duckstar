@@ -121,7 +121,7 @@ export default function AppContainer({ children }: AppContainerProps) {
     if (isChartPage && weeks.length === 0) {
       const fetchWeeks = async () => {
         try {
-          const response = await getWeeks();
+          const response = await getWeeks(true);
           setWeeks(response.result);
           // selectedWeek는 각 페이지에서 개별적으로 설정
         } catch (error) {
