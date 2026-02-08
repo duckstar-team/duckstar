@@ -67,17 +67,34 @@ export async function apiCall<T>(
         return retryResponse.json();
       } else {
         console.log('토큰 갱신 실패, 로그아웃 필요');
-        // 갱신 실패 시 로그아웃 처리
+        // 갱신 실패 시 쿠키 정리를 위해 로그아웃 호출 후 리다이렉트 (무한 리프레시 방지)
         if (typeof window !== 'undefined') {
-          window.location.href = '/';
+          const targetUrl = '/';
+          // 이미 홈(/)이면 리다이렉트하지 않고 인증 실패 응답 반환 → 콘솔 에러 방지
+          if (window.location.pathname === targetUrl) {
+            return {
+              isSuccess: false,
+              code: 'UNAUTHORIZED',
+              message: '토큰 갱신 실패',
+              result: undefined as T,
+            } as ApiResponse<T>;
+          }
+          try {
+            await fetch('/api/v1/auth/logout', {
+              method: 'POST',
+              credentials: 'include',
+            });
+          } catch (_) {
+            // 로그아웃 실패해도 리다이렉트 진행
+          }
+          window.location.href = targetUrl;
         }
         throw new Error('토큰 갱신 실패');
       }
     } catch (error) {
       console.error('토큰 갱신 중 오류:', error);
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
+      // 네트워크 오류(ECONNREFUSED 등) 시 리다이렉트하지 않음 → 무한 리프레시 방지
+      // 백엔드 다운 시 에러 UI만 표시하고 사용자가 "다시 시도" 가능하도록 함
       throw error;
     }
   }

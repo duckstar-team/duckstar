@@ -9,13 +9,16 @@ export async function middleware(request: NextRequest) {
     try {
       // API URL 구성 (서버 사이드에서는 절대 경로 필요)
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(`${apiUrl}/api/v1/chart/weeks`, {
+      const response = await fetch(
+        `${apiUrl}/api/v1/chart/weeks?isPrepared=true`,
+        {
         headers: {
           'Content-Type': 'application/json',
         },
         // 서버 사이드에서 실행되므로 캐시 사용
         next: { revalidate: 60 }, // 60초마다 재검증
-      });
+        },
+      );
 
       if (!response.ok) {
         // API 호출 실패 시 원래 경로로 진행

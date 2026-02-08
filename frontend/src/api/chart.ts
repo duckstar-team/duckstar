@@ -12,9 +12,9 @@ export async function getChartData(
   );
 }
 
-export async function getWeeks(isPrepared: boolean) {
+export async function getWeeks(isPrepared: boolean = false) {
   const params = new URLSearchParams({
-    isPrepared: isPrepared.toString(),
+    isPrepared: String(isPrepared),
   });
   return apiCall<WeekDto[]>(`/api/v1/chart/weeks?${params}`);
 }
