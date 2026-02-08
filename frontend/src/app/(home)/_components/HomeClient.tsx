@@ -98,7 +98,8 @@ export default function HomeClient() {
   } = useQuery<ApiResponse<Schemas['HomeDto']>>({
     queryKey: ['home'],
     queryFn: () => homeApi.getHome(10),
-    ...queryConfig.home, // 통일된 홈 데이터 캐싱 전략 적용
+    ...queryConfig.home,
+    retry: false, // API 실패 시 재시도 없음 → 백엔드 다운 시 무한 요청 방지
   });
 
   // 홈 상태 저장 함수

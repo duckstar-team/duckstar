@@ -266,6 +266,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       try {
         const userData = await getCurrentUser();
+        // 토큰 갱신 실패 등 인증 실패 시 조용히 비로그인 상태로 처리 (콘솔 에러 방지)
+        if (!userData?.isSuccess && userData?.code === 'UNAUTHORIZED') {
+          resetAuthState();
+          return;
+        }
         const user = userData.result || userData;
         setUser(user as User);
         setIsAuthenticated(true);
@@ -284,7 +289,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const decoded = atob(encoded);
               const loginState = JSON.parse(decoded);
 
-              // returnUrl 처리
+              // returnUrl 처리 (같은 경로면 리다이렉트 스킵 → 무한 리프레시 방지)
               const returnUrl = sessionStorage.getItem('returnUrl');
               if (returnUrl) {
                 if (
@@ -300,7 +305,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 }
 
                 sessionStorage.removeItem('returnUrl');
-                window.location.href = returnUrl;
+                try {
+                  const returnPath = new URL(returnUrl, window.location.origin)
+                    .pathname;
+                  if (returnPath !== window.location.pathname) {
+                    window.location.href = returnUrl;
+                  }
+                } catch {
+                  window.location.href = returnUrl;
+                }
                 return;
               }
 
