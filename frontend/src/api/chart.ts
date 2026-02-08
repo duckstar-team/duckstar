@@ -12,8 +12,11 @@ export async function getChartData(
   );
 }
 
-export async function getWeeks() {
-  return apiCall<WeekDto[]>('/api/v1/chart/weeks');
+export async function getWeeks(isPrepared: boolean) {
+  const params = new URLSearchParams({
+    isPrepared: isPrepared.toString(),
+  });
+  return apiCall<WeekDto[]>(`/api/v1/chart/weeks?${params}`);
 }
 
 export async function getSurveyResult(
